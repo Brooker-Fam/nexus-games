@@ -169,10 +169,7 @@ function drawRTSBaseHP(rc){
   for(const base of bases){
     const cfg=FACTION_CFG[base.side==='player'?rtsPlayerFaction:rtsEnemyFaction];
     const bw=60, bh=6;
-    rc.fillStyle='rgba(0,0,0,0.6)'; rc.fillRect(base.x-bw/2,base.y-80,bw,bh);
-    const frac=Math.max(0,base.hp/base.maxHp);
-    rc.fillStyle=frac>0.5?'#00ff88':frac>0.25?'#ffaa00':'#ff2244';
-    rc.fillRect(base.x-bw/2,base.y-80,bw*frac,bh);
+    drawHealthBar(rc, base.x, base.y-80, bw, bh, base.hp, base.maxHp);
     rc.strokeStyle='rgba(255,255,255,0.1)'; rc.lineWidth=0.5; rc.strokeRect(base.x-bw/2,base.y-80,bw,bh);
     // queue bar above HP bar
     if(base.queue && base.queue.length>0){

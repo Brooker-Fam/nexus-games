@@ -110,11 +110,7 @@ function drawRTSStructure(rc, s){
   rc.save();
   rc.shadowColor=cfg.color; rc.shadowBlur=16;
 
-  // selection ring
-  if(s.selected){
-    rc.strokeStyle='#00ff88'; rc.lineWidth=2.5; rc.shadowColor='#00ff88'; rc.shadowBlur=12;
-    rc.beginPath(); rc.ellipse(x,y,52,26,0,0,Math.PI*2); rc.stroke();
-  }
+  if(s.selected) drawSelectionRing(rc, x, y, 52, 26, 2.5);
 
   if(s.structType==='shrine'){
     // ── SHRINE (Prism) ── circular crystal altar
@@ -342,11 +338,8 @@ function drawRTSStructure(rc, s){
   }
 
   // HP bar
-  const hpFrac=Math.max(0,s.hp/s.maxHp);
   const bw=48, bh=4;
-  rc.fillStyle='rgba(0,0,0,0.6)'; rc.fillRect(x-bw/2,y-52,bw,bh);
-  rc.fillStyle=hpFrac>0.5?'#00ff88':hpFrac>0.25?'#ffaa00':'#ff2244';
-  rc.fillRect(x-bw/2,y-52,bw*hpFrac,bh);
+  drawHealthBar(rc, x, y-52, bw, bh, s.hp, s.maxHp);
 
   // ── CONSTRUCTION OVERLAY ──
   if(s.underConstruction){
@@ -374,13 +367,7 @@ function drawRTSCannon(rc, c){
     rc.beginPath(); rc.ellipse(x,y,26,14,0,0,Math.PI*2); rc.stroke();
   }
   // HP bar
-  if(c.hp<c.maxHp){
-    const bw=36, bh=4;
-    rc.fillStyle='rgba(0,0,0,0.6)'; rc.fillRect(x-bw/2,y-30,bw,bh);
-    const hpF=c.hp/c.maxHp;
-    rc.fillStyle=hpF>0.5?'#00ff88':hpF>0.25?'#ffaa00':'#ff2244';
-    rc.fillRect(x-bw/2,y-30,bw*hpF,bh);
-  }
+  if(c.hp<c.maxHp) drawHealthBar(rc, x, y-30, 36, 4, c.hp, c.maxHp);
   const _cLabels={prism:'PRISM GUN',shadow:'VOID CANNON',roboto:'TURRET'};
   const _cLabelColors={prism:'rgba(0,220,255,0.8)',shadow:'rgba(180,80,255,0.8)',roboto:'rgba(255,160,50,0.8)'};
   rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';

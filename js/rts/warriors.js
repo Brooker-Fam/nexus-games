@@ -25,21 +25,8 @@ function drawRTSWarrior(rc,w){
 
   rc.restore();
   // selection ring
-  if(w.selected){
-    rc.save();
-    rc.strokeStyle='#00ff88'; rc.lineWidth=2.5;
-    rc.shadowColor='#00ff88'; rc.shadowBlur=12;
-    rc.beginPath(); rc.ellipse(w.x,w.y,18,8,0,0,Math.PI*2); rc.stroke();
-    rc.restore();
-  }
-  // HP bar
-  if(w.hp<w.maxHp){
-    const bw=20,bh=3;
-    rc.fillStyle='rgba(0,0,0,0.5)'; rc.fillRect(w.x-bw/2,w.y-26,bw,bh);
-    const frac=w.hp/w.maxHp;
-    rc.fillStyle=frac>0.5?'#00ff88':frac>0.25?'#ffaa00':'#ff2244';
-    rc.fillRect(w.x-bw/2,w.y-26,bw*frac,bh);
-  }
+  if(w.selected) drawSelectionRing(rc, w.x, w.y, 18, 8, 2.5);
+  if(w.hp<w.maxHp) drawHealthBar(rc, w.x, w.y-26, 20, 3, w.hp, w.maxHp);
 }
 
 function drawWarriorPrism(rc,cfg,w){

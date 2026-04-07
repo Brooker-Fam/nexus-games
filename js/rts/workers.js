@@ -37,20 +37,8 @@ function drawRTSWorker(rc,w){
   rc.restore();
 
   // selection ring
-  if(w.selected){
-    rc.save();
-    rc.strokeStyle='#00ff88'; rc.lineWidth=2;
-    rc.shadowColor='#00ff88'; rc.shadowBlur=10;
-    rc.beginPath(); rc.ellipse(w.x,w.y,14,6,0,0,Math.PI*2); rc.stroke();
-    rc.restore();
-  }
-
-  // HP bar
-  if(w.hp<w.maxHp){
-    const bw=16,bh=3;
-    rc.fillStyle='rgba(0,0,0,0.5)'; rc.fillRect(w.x-bw/2,w.y-22,bw,bh);
-    rc.fillStyle='#00ff88'; rc.fillRect(w.x-bw/2,w.y-22,bw*(w.hp/w.maxHp),bh);
-  }
+  if(w.selected) drawSelectionRing(rc, w.x, w.y, 14, 6);
+  if(w.hp<w.maxHp) drawHealthBar(rc, w.x, w.y-22, 16, 3, w.hp, w.maxHp, 'fixed');
 }
 
 function drawWorkerPrism(rc, cfg, w, isMining, isMoving){
