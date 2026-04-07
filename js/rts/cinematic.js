@@ -19,15 +19,16 @@ function startRevealAnimation(faction){
     });
   }
 
+  // Pre-parse accent color
+  const hex=fd.accentColor;
+  const r2=parseInt(hex.slice(1,3),16),g2=parseInt(hex.slice(3,5),16),b2=parseInt(hex.slice(5,7),16);
+
   function drawReveal(){
     dsoRevealFrame++;
     rc.clearRect(0,0,RW,RH);
 
     // background
     const bgGrad=rc.createRadialGradient(RW/2,RH*0.65,0,RW/2,RH*0.5,400);
-    bgGrad.addColorStop(0,fd.accentColor.replace('#',`rgba(`)+',0)');
-    const hex=fd.accentColor;
-    const r2=parseInt(hex.slice(1,3),16),g2=parseInt(hex.slice(3,5),16),b2=parseInt(hex.slice(5,7),16);
     bgGrad.addColorStop(0,`rgba(${r2},${g2},${b2},0.12)`);
     bgGrad.addColorStop(0.5,`rgba(${r2},${g2},${b2},0.04)`);
     bgGrad.addColorStop(1,'rgba(2,8,16,0)');
