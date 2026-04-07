@@ -262,11 +262,12 @@
     padding:5px; cursor:pointer; transition:all 0.15s;
   }
   .rbp-close:hover { border-color:rgba(255,100,100,0.4); color:#ff8888; }
-    color:#ff8888 !important;
-    background:rgba(80,0,0,0.3) !important;
+  .rts-attack-btn {
+    color:#ff8888;
+    background:rgba(80,0,0,0.3);
   }
   .rts-attack-btn:hover {
-    border-color:#ff4444 !important; color:#ffaaaa !important;
-    background:rgba(255,40,40,0.15) !important;
-    box-shadow:0 0 16px rgba(255,60,60,0.3) !important;
+    border-color:#ff4444; color:#ffaaaa;
+    background:rgba(255,40,40,0.15);
+    box-shadow:0 0 16px rgba(255,60,60,0.3);
   }
