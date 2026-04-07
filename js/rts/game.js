@@ -198,31 +198,35 @@ function rtsTick(){
   updateRtsHUD();
 }
 
-function workerTick(w, playerBase, enemyBase){
-  const myBase = w.side==='player'?playerBase:enemyBase;
+// ── WORKER STATE HANDLERS ──
+const MINE_TICKS = 60;
+const MINE_DROPOFF_DIST = 55;
+const BUILD_ARRIVE_DIST = 20;
+const MOVE_ARRIVE_DIST = 10;
+const MINE_ARRIVE_DIST = 8;
+const GOLD_NODE_PENALTIES = { neutral:200, player:0, enemy:400 };
 
-  // building a structure: walk to build location then place it
-  if(w.state==='building' && w.buildTarget){
-    const dx=w.buildTarget.x-w.x, dy=w.buildTarget.y-w.y, d=Math.hypot(dx,dy);
-    if(d>20){ w.x+=dx/d*w.speed; w.y+=dy/d*w.speed; return; }
-    // arrived — start or continue constructing
+function moveToward(unit, tx, ty, arrivedDist){
+  const dx=tx-unit.x, dy=ty-unit.y, d=Math.hypot(dx,dy);
+  if(d<arrivedDist) return true;
+  unit.x+=dx/d*unit.speed; unit.y+=dy/d*unit.speed;
+  return false;
+}
+
+function workerBuild(w){
+  if(moveToward(w, w.buildTarget.x, w.buildTarget.y, BUILD_ARRIVE_DIST)) {
     const bt=w.buildTarget.buildType||'structure';
-    // place a ghost building on first arrival
     if(!w.buildTarget.ghost){
-      let ghost=null;
-      if(bt==='cannon') ghost=makeCannon(w.side,w.faction,w.buildTarget.x,w.buildTarget.y);
-      else if(bt==='barracks') ghost=makeBarracks(w.side,w.faction,w.buildTarget.x,w.buildTarget.y);
-      else ghost=makeStructure(w.side,w.faction,w.buildTarget.x,w.buildTarget.y);
+      const makers={cannon:makeCannon, barracks:makeBarracks, base:makeBase};
+      const ghost=(makers[bt]||makeStructure)(w.side, w.faction, w.buildTarget.x, w.buildTarget.y);
       rtsEntities.push(ghost);
       w.buildTarget.ghost=ghost;
     }
-    // advance construction
     const ghost=w.buildTarget.ghost;
     if(!ghost || ghost.hp<=0){ w.state='idle'; w.buildTarget=null; return; }
     ghost.buildProgress=(ghost.buildProgress||0)+1;
     w.buildTimer=(w.buildTimer||0)+1;
     w.hammerSwing=Math.sin(w.buildTimer*0.4);
-    // hammer sound on the downswing
     if(w.hammerSwing<-0.95 && w.buildTimer>2) sfx('rtsHammer',200);
     if(ghost.buildProgress>=ghost.buildTime){
       ghost.underConstruction=false;
@@ -234,57 +238,63 @@ function workerTick(w, playerBase, enemyBase){
       }
       w.state='idle'; w.buildTarget=null; w.hammerSwing=0; w.buildTimer=0;
     }
-    return;
   }
+}
 
-  // manual move order overrides normal AI
+function workerFindGold(w){
+  let best=null, bestScore=Infinity;
+  for(const node of rtsGoldNodes){
+    if(node.gold<=0) continue;
+    const d=Math.hypot(node.x-w.x, node.y-w.y);
+    const penalty=GOLD_NODE_PENALTIES[node.owner]||(node.owner===w.side?0:400);
+    const score=d+penalty;
+    if(score<bestScore){ bestScore=score; best=node; }
+  }
+  if(!best){ w.state='idle'; return; }
+  w.target=best; w.state='moving';
+  if(moveToward(w, best.x, best.y, MINE_ARRIVE_DIST)){
+    w.state='mining'; w.mineTimer=0;
+  }
+}
+
+function workerMine(w){
+  w.mineTimer++;
+  if(w.mineTimer>MINE_TICKS){
+    if(w.target && w.target.gold>0){
+      w.target.gold--; w.goldCarry++;
+      if(w.goldCarry>=w.goldCap) w.state='returning';
+    } else { w.state='idle'; }
+    w.mineTimer=0;
+  }
+}
+
+function workerReturn(w, myBase){
+  let nearestBase=null, nearestDist=Infinity;
+  for(const ent of rtsEntities){
+    if(ent.type!=='base'||ent.side!==w.side) continue;
+    const d=Math.hypot(ent.x-w.x,ent.y-w.y);
+    if(d<nearestDist){ nearestDist=d; nearestBase=ent; }
+  }
+  const dropoff=nearestBase||myBase;
+  if(moveToward(w, dropoff.x, dropoff.y, MINE_DROPOFF_DIST)){
+    if(w.side==='player') rtsGold+=w.goldCarry;
+    else aiGold+=w.goldCarry;
+    w.goldCarry=0; w.state='idle';
+  }
+}
+
+function workerTick(w, playerBase, enemyBase){
+  const myBase=w.side==='player'?playerBase:enemyBase;
+  if(w.state==='building' && w.buildTarget){ workerBuild(w); return; }
   if(w.moveTarget){
-    const dx=w.moveTarget.x-w.x, dy=w.moveTarget.y-w.y, d=Math.hypot(dx,dy);
-    if(d<10){ w.moveTarget=null; w.state='idle'; return; }
-    w.x+=dx/d*w.speed; w.y+=dy/d*w.speed;
+    if(moveToward(w, w.moveTarget.x, w.moveTarget.y, MOVE_ARRIVE_DIST)){
+      w.moveTarget=null; w.state='idle';
+    }
     return;
   }
-  if(w.state==='idle'||w.state==='moving'){
-    // find nearest node with gold (prefer own-side nodes)
-    let best=null, bestScore=Infinity;
-    for(const node of rtsGoldNodes){
-      if(node.gold<=0) continue;
-      const d=Math.hypot(node.x-w.x, node.y-w.y);
-      // prefer nodes on own side; neutral is fine too; enemy nodes are far anyway
-      const penalty = node.owner==='neutral'?200: node.owner===w.side?0:400;
-      const score=d+penalty;
-      if(score<bestScore){ bestScore=score; best=node; }
-    }
-    if(!best){ w.state='idle'; return; }
-    w.target=best; w.state='moving';
-    const dx=best.x-w.x, dy=best.y-w.y, d=Math.hypot(dx,dy);
-    if(d<8){ w.state='mining'; w.mineTimer=0; return; }
-    w.x+=dx/d*w.speed; w.y+=dy/d*w.speed;
-  } else if(w.state==='mining'){
-    w.mineTimer++;
-    if(w.mineTimer>60){
-      if(w.target && w.target.gold>0){
-        w.target.gold--; w.goldCarry++;
-        if(w.goldCarry>=w.goldCap) w.state='returning';
-      } else { w.state='idle'; }
-      w.mineTimer=0;
-    }
-  } else if(w.state==='returning'){
-    // return to nearest friendly base (not always the original)
-    let nearestBase=null, nearestBaseDist=Infinity;
-    for(const ent of rtsEntities){
-      if(ent.type!=='base'||ent.side!==w.side) continue;
-      const d=Math.hypot(ent.x-w.x,ent.y-w.y);
-      if(d<nearestBaseDist){ nearestBaseDist=d; nearestBase=ent; }
-    }
-    const dropoff = nearestBase || myBase;
-    const dx=dropoff.x-w.x, dy=dropoff.y-w.y, d=Math.hypot(dx,dy);
-    if(d<55){
-      if(w.side==='player') rtsGold+=w.goldCarry;
-      else aiGold+=w.goldCarry;
-      w.goldCarry=0; w.state='idle';
-    } else { w.x+=dx/d*w.speed; w.y+=dy/d*w.speed; }
-  }
+  if(w.state==='idle'||w.state==='moving') workerFindGold(w);
+  else if(w.state==='mining') workerMine(w);
+  else if(w.state==='returning') workerReturn(w, myBase);
 }
 
 // ── CANNON TICK ──
@@ -338,73 +348,78 @@ function queueUnit(building, label, time, fn){
   return true;
 }
 
-// player attack order
+// ── WARRIOR STATE HANDLERS ──
+const MELEE_ATTACK_TICKS = 45;
+
+function warriorFindTarget(w, enemyBase2){
+  // Forced target (right-click)
+  if(w.forcedTarget){
+    if(w.forcedTarget.hp<=0||!rtsEntities.includes(w.forcedTarget)){
+      w.forcedTarget=null;
+    } else {
+      return { target:w.forcedTarget, dist:Math.hypot(w.forcedTarget.x-w.x, w.forcedTarget.y-w.y) };
+    }
+  }
+  // Auto-target nearest enemy
+  let nearest=null, nearestDist=Infinity;
+  for(const e of rtsEntities){
+    if(e.side===w.side||e.type==='base') continue;
+    const d=Math.hypot(e.x-w.x,e.y-w.y);
+    if(d<nearestDist){ nearestDist=d; nearest=e; }
+  }
+  const target=nearest||enemyBase2;
+  const dist=nearest?nearestDist:Math.hypot(enemyBase2.x-w.x,enemyBase2.y-w.y);
+  return { target, dist };
+}
+
+function warriorMarchToward(w, target, spreadMod, spreadScale){
+  w.state='march';
+  const dx=target.x-w.x, dy=target.y-w.y, d=Math.hypot(dx,dy)||1;
+  const spread=(w.id%spreadMod)*spreadScale-(spreadMod*spreadScale/2);
+  w.x+=dx/d*w.speed; w.y+=(dy+spread*0.05)/d*w.speed;
+}
+
+function warriorRangedAttack(w, target, targetDist){
+  if(targetDist<=w.range){
+    w.state='attack';
+    w.attackTimer++;
+    if(w.attackTimer>=(w.fireRate||50)){ w.attackTimer=0; spawnProjectile(w, target); }
+  } else {
+    warriorMarchToward(w, target, 13, 4);
+  }
+}
+
+function warriorMeleeAttack(w, target, targetDist){
+  if(targetDist<=w.range){
+    w.state='attack';
+    w.attackTimer++;
+    if(w.attackTimer>=MELEE_ATTACK_TICKS){
+      w.attackTimer=0;
+      target.hp-=w.damage;
+      if(target.type==='base') spawnHitFlash(target.x+(w.side==='player'?-30:30),target.y+(Math.random()-0.5)*60,'#ff4444');
+      else spawnHitFlash(target.x,target.y,FACTION_CFG[w.faction].color);
+    }
+  } else {
+    warriorMarchToward(w, target, 11, 5);
+  }
+}
+
 function warriorTick(w, playerBase, enemyBase){
   if(w.state==='idle') return;
+  const enemyBase2=w.side==='player'?enemyBase:playerBase;
 
-  const enemyBase2 = w.side==='player'?enemyBase:playerBase;
-
-  // --- MOVE ORDER: walk to position first ---
   if(w.moveTarget){
-    const dx=w.moveTarget.x-w.x, dy=w.moveTarget.y-w.y, d=Math.hypot(dx,dy);
-    if(d<8){ w.moveTarget=null; w.state='idle'; return; }
-    w.x+=dx/d*w.speed; w.y+=dy/d*w.speed;
+    if(moveToward(w, w.moveTarget.x, w.moveTarget.y, 8)){
+      w.moveTarget=null; w.state='idle';
+    }
     return;
   }
 
-  // --- FORCED ATTACK TARGET (right-click on enemy) ---
-  let target=null, targetDist=Infinity;
-  if(w.forcedTarget){
-    if(w.forcedTarget.hp<=0||!rtsEntities.includes(w.forcedTarget)){
-      w.forcedTarget=null; // target dead, resume normal
-    } else {
-      target=w.forcedTarget;
-      targetDist=Math.hypot(target.x-w.x, target.y-w.y);
-    }
-  }
-
-  // --- AUTO-TARGETING (march mode, no forced target) ---
-  if(!target){
-    let nearestEnemy=null, nearestDist=Infinity;
-    for(const e of rtsEntities){
-      if(e.side===w.side||e.type==='base') continue;
-      const d=Math.hypot(e.x-w.x,e.y-w.y);
-      if(d<nearestDist){ nearestDist=d; nearestEnemy=e; }
-    }
-    target = nearestEnemy || enemyBase2;
-    targetDist = nearestEnemy ? nearestDist : Math.hypot(enemyBase2.x-w.x,enemyBase2.y-w.y);
-  }
-
+  const {target, dist}=warriorFindTarget(w, enemyBase2);
   if(!target) return;
 
-  if(w.ranged){
-    if(targetDist<=w.range){
-      w.state='attack';
-      w.attackTimer++;
-      if(w.attackTimer>=(w.fireRate||50)){ w.attackTimer=0; spawnProjectile(w, target); }
-    } else {
-      w.state='march';
-      const dx=target.x-w.x, dy=target.y-w.y, d=Math.hypot(dx,dy)||1;
-      const spread=(w.id%13)*4-24;
-      w.x+=dx/d*w.speed; w.y+=(dy+spread*0.05)/d*w.speed;
-    }
-  } else {
-    if(targetDist<=w.range){
-      w.state='attack';
-      w.attackTimer++;
-      if(w.attackTimer>=45){
-        w.attackTimer=0;
-        target.hp-=w.damage;
-        if(target.type==='base') spawnHitFlash(target.x+(w.side==='player'?-30:30),target.y+(Math.random()-0.5)*60,'#ff4444');
-        else spawnHitFlash(target.x,target.y,FACTION_CFG[w.faction].color);
-      }
-    } else {
-      w.state='march';
-      const dx=target.x-w.x, dy=target.y-w.y, d=Math.hypot(dx,dy)||1;
-      const spread=(w.id%11)*5-25;
-      w.x+=dx/d*w.speed; w.y+=(dy+spread*0.04)/d*w.speed;
-    }
-  }
+  if(w.ranged) warriorRangedAttack(w, target, dist);
+  else warriorMeleeAttack(w, target, dist);
 }
 
 // ── COMBAT CONSTANTS ──
