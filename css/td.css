@@ -178,3 +178,13 @@
     box-shadow: 0 0 30px rgba(0,245,255,0.3);
   }
 
+  .stat-val.gold { color: gold; }
+  .canvas-wrap { position: relative; }
+  .tower-preview { display: block; margin: 0 auto 3px; }
+  .place-hint { margin-top:10px; font-size:10px; color:var(--text-dim); letter-spacing:1px; text-align:center; }
+  .wave-section { margin-top: 10px; }
+  .panel-title.speed { margin-bottom: 6px; }
+  .panel.flex { flex: 1; }
+  .rts-enemy-color { color: #ff4444; }
+  .rts-hp-color { color: #00ff88; }
+  .rts-build-hint { font-size:10px; color:rgba(0,245,255,0.5); }

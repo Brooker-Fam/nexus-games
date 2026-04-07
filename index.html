@@ -56,13 +56,13 @@
       <div class="game-stats">
         <div class="stat-box"><div class="stat-label">WAVE</div><div class="stat-val cyan" id="waveNum">0</div></div>
         <div class="stat-box"><div class="stat-label">LIVES</div><div class="stat-val pink" id="livesNum">20</div></div>
-        <div class="stat-box"><div class="stat-label">GOLD</div><div class="stat-val" style="color:gold" id="goldNum">200</div></div>
+        <div class="stat-box"><div class="stat-label">GOLD</div><div class="stat-val gold" id="goldNum">200</div></div>
         <div class="stat-box"><div class="stat-label">SCORE</div><div class="stat-val purple" id="scoreNum">0</div></div>
       </div>
     </div>
 
     <div class="game-area">
-      <div style="position:relative">
+      <div class="canvas-wrap">
         <canvas id="tdCanvas" width="700" height="500"></canvas>
         <div class="overlay" id="overlay">
           <div class="overlay-title" id="overlayTitle">GAME OVER</div>
@@ -76,27 +76,27 @@
           <div class="panel-title">▸ DEPLOY TOWER</div>
           <div class="tower-grid" id="towerGrid">
             <button class="tower-btn selected" data-type="gun">
-              <canvas id="prev-gun" width="44" height="44" style="display:block;margin:0 auto 3px"></canvas>
+              <canvas id="prev-gun" class="tower-preview" width="44" height="44"></canvas>
               <span class="tower-name">GUN</span>
               <span class="tower-cost">50g</span>
             </button>
             <button class="tower-btn" data-type="laser">
-              <canvas id="prev-laser" width="44" height="44" style="display:block;margin:0 auto 3px"></canvas>
+              <canvas id="prev-laser" class="tower-preview" width="44" height="44"></canvas>
               <span class="tower-name">LASER</span>
               <span class="tower-cost">80g</span>
             </button>
             <button class="tower-btn" data-type="missile">
-              <canvas id="prev-missile" width="44" height="44" style="display:block;margin:0 auto 3px"></canvas>
+              <canvas id="prev-missile" class="tower-preview" width="44" height="44"></canvas>
               <span class="tower-name">MISSILE</span>
               <span class="tower-cost">120g</span>
             </button>
             <button class="tower-btn" data-type="slow">
-              <canvas id="prev-slow" width="44" height="44" style="display:block;margin:0 auto 3px"></canvas>
+              <canvas id="prev-slow" class="tower-preview" width="44" height="44"></canvas>
               <span class="tower-name">CRYO</span>
               <span class="tower-cost">70g</span>
             </button>
           </div>
-          <div style="margin-top:10px;font-size:10px;color:var(--text-dim);letter-spacing:1px;text-align:center">
+          <div class="place-hint">
             CLICK CANVAS TO PLACE
           </div>
         </div>
@@ -104,8 +104,8 @@
         <div class="panel">
           <div class="panel-title">▸ WAVE CONTROL</div>
           <button class="wave-btn" id="waveBtn">▶ SEND WAVE</button>
-          <div style="margin-top:10px">
-            <div class="panel-title" style="margin-bottom:6px">▸ SPEED</div>
+          <div class="wave-section">
+            <div class="panel-title speed">▸ SPEED</div>
             <div class="speed-btns">
               <button class="speed-btn active">1×</button>
               <button class="speed-btn">2×</button>
@@ -114,7 +114,7 @@
           </div>
         </div>
 
-        <div class="panel" style="flex:1">
+        <div class="panel flex">
           <div class="panel-title">▸ BATTLE LOG</div>
           <div class="log-box" id="logBox"></div>
         </div>
@@ -204,7 +204,7 @@
           </div>
           <div class="rts-hud-mid">
             <div class="rts-build-panel">
-              <div class="rts-build-label" style="font-size:10px;color:rgba(0,245,255,0.5)">
+              <div class="rts-build-label rts-build-hint">
                 Click your <span id="hud-building-name">TEMPLE</span> to build
               </div>
               <button class="rts-build-btn rts-attack-btn" id="btn-attack">
@@ -214,8 +214,8 @@
             </div>
           </div>
           <div class="rts-hud-right">
-            <div class="rts-resource">ENEMY: <span id="rts-enemy-faction" style="color:#ff4444">???</span></div>
-            <div class="rts-resource">BASE HP: <span id="rts-base-hp" style="color:#00ff88">100</span></div>
+            <div class="rts-resource">ENEMY: <span id="rts-enemy-faction" class="rts-enemy-color">???</span></div>
+            <div class="rts-resource">BASE HP: <span id="rts-base-hp" class="rts-hp-color">100</span></div>
             <button class="rts-retreat-btn" id="btn-rts-menu">◂ MENU</button>
           </div>
         </div>
