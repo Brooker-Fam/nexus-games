@@ -499,5 +499,3 @@ function rtsLoop(ts){
   rtsRAF=requestAnimationFrame(rtsLoop);
 }
 
-const rc2=()=>document.getElementById('rts-canvas').getContext('2d');
-

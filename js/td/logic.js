@@ -39,7 +39,6 @@ function initState(){
   setLog([]);
 }
 
-let logs = [];
 function addLog(msg, cls=''){
   const box = document.getElementById('logBox');
   const d = document.createElement('div');
@@ -66,7 +65,7 @@ function buildPath(){
     const dx=Math.sign(b.x-a.x), dy=Math.sign(b.y-a.y);
     let cx=Math.round(a.x), cy=Math.round(a.y);
     while(cx!==Math.round(b.x)||cy!==Math.round(b.y)){
-      for(let r=0;r<1;r++) pathCells.add(`${cx},${cy}`);
+      pathCells.add(`${cx},${cy}`);
       if(dx!==0) cx+=dx; else cy+=dy;
     }
     pathCells.add(`${Math.round(b.x)},${Math.round(b.y)}`);

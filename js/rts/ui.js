@@ -201,9 +201,6 @@ function trainUnit(unitType){
   openBuildPopup(building.x-camX, building.y-camY, building.isBarracks?'barracks':'base');
 }
 
-// stub so old references don't break
-function rtsBuild(unitType){ trainUnit(unitType); }
-
 function rtsOrderAttack(){
   let count=0;
   for(const e of rtsSelected.length ? rtsSelected : rtsEntities){
