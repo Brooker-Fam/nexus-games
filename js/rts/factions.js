@@ -16,6 +16,7 @@ const FACTION_CFG={
     // UI icons
     workerIcon:'🧙', warriorIcon:'✨',
     barracksIcon:'🌀', structIcon:'🏛', baseIcon:'🏰',
+    cannonColor:'#00f5ff', cannonSound:'rtsPrismCannon',
   },
   shadow:{
     color:'#9922ff', accent:'#dd88ff', workerColor:'#8855cc',
@@ -32,6 +33,7 @@ const FACTION_CFG={
     // UI icons
     workerIcon:'🥷', warriorIcon:'⚔',
     barracksIcon:'⚔', structIcon:'⚡', baseIcon:'🏰',
+    cannonColor:'#cc44ff', cannonSound:'rtsShadowCannon',
   },
   roboto:{
     color:'#ff8800', accent:'#ffcc44', workerColor:'#aa6622',
@@ -48,6 +50,7 @@ const FACTION_CFG={
     // UI icons
     workerIcon:'🤖', warriorIcon:'🦾',
     barracksIcon:'🪖', structIcon:'🏭', baseIcon:'🏗',
+    cannonColor:'#ffaa00', cannonSound:'rtsCannonFire',
   },
 };
 

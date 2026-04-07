@@ -313,14 +313,12 @@ function cannonTick(c){
   if(!target) return;
   c.aimAngle=Math.atan2(target.y-c.y,target.x-c.x);
   c.cooldown=c.rate;
-  const _cSnd={prism:'rtsPrismCannon',shadow:'rtsShadowCannon',roboto:'rtsCannonFire'};
-  sfx(_cSnd[c.faction]||'rtsCannonFire',300);
-  const _cCol={prism:'#00f5ff',shadow:'#cc44ff',roboto:'#ffaa00'};
-  // fire a cannon projectile
+  const cCfg=FACTION_CFG[c.faction];
+  sfx(cCfg.cannonSound||'rtsCannonFire',300);
   rtsProjectiles.push({
     x:c.x, y:c.y, tx:target,
     speed:8, damage:c.damage,
-    faction:c.faction, color:_cCol[c.faction]||'#ffaa00',
+    faction:c.faction, color:cCfg.cannonColor||'#ffaa00',
     type:'cannonball', trail:[], side:c.side,
   });
 }
