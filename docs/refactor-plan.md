@@ -4,28 +4,34 @@
 - Static site, no build step, no bundler, no npm
 - Plain `<script>` tags loading separate JS files
 - Vercel serves files as-is
-- Each file should be a single clear responsibility, under ~500 lines ideally
+- Each file: single responsibility, under ~500 lines
 - Extract and split incrementally — never rewrite logic, just move code
 
-## Current File Structure
+## File Structure
 ```
-index.html              — HTML markup only (256 lines)
-styles.css              — All CSS (622 lines)
-js/audio.js             — Sound engine + SFX definitions (85 lines)
-js/ui.js                — Particles + tab switching (27 lines)
-js/tower-defense.js     — TD: state, logic, game loop (335 lines)
-js/td-rendering.js      — TD: all drawing (657 lines)
-js/faction-cards.js     — Faction character art + sidebar previews (577 lines)
-js/rts-camera.js        — RTS: state vars, camera system (129 lines)
-js/rts-entities.js      — RTS: faction config, entity factories, startRTS (262 lines)
-js/rts-ui.js            — RTS: build popup, click handling, HUD (357 lines)
-js/rts-game.js          — RTS: AI, tick, combat, projectiles, game loop (512 lines)
-js/rts-rendering.js     — RTS: environment, structures, cannons, minimap (822 lines)
-js/rts-workers.js       — RTS: worker drawing per faction (247 lines)
-js/rts-warriors.js      — RTS: warrior drawing + projectile drawing (425 lines)
-js/rts-elites.js        — RTS: elite, wizard, necromancer, tank drawing (410 lines)
-js/cinematic.js         — Faction reveal animation (105 lines)
-js/init.js              — Bootstrap, screen navigation, faction data (62 lines)
+index.html                 — HTML markup (267 lines)
+styles.css                 — All CSS (622 lines)
+
+js/shared/audio.js         — Sound engine + SFX definitions (85)
+js/shared/ui.js            — Particles + tab switching (27)
+
+js/td/logic.js             — TD: state, enemies, towers, game loop (335)
+js/td/towers.js            — TD: tower drawing (gun, laser, missile, cryo) (377)
+js/td/rendering.js         — TD: background, path, enemies, bullets, particles (280)
+
+js/rts/camera.js           — RTS: state vars, camera, input (129)
+js/rts/entities.js         — RTS: faction config, entity factories, startRTS (262)
+js/rts/ui.js               — RTS: build popup, click handling, HUD (357)
+js/rts/game.js             — RTS: AI, tick, combat, projectiles, game loop (512)
+js/rts/rendering.js        — RTS: draw orchestration, minimap, background (200)
+js/rts/structures.js       — RTS: base, temple, structures, cannons (622)
+js/rts/faction-cards.js    — Faction character art + sidebar previews (577)
+js/rts/workers.js          — RTS: worker drawing per faction (247)
+js/rts/warriors.js         — RTS: warrior + projectile drawing (425)
+js/rts/elites.js           — RTS: elite, wizard, necromancer, tank (410)
+js/rts/cinematic.js        — Faction reveal animation (105)
+
+js/init.js                 — Bootstrap, screen nav, faction data (62)
 ```
 
 ## Completed
@@ -34,40 +40,28 @@ js/init.js              — Bootstrap, screen navigation, faction data (62 lines
 - [x] Extract particles + tab switching
 - [x] Extract tower defense game
 - [x] Extract faction card art + previews
-- [x] Extract RTS engine (logic)
-- [x] Split RTS rendering from logic
-- [x] Split RTS unit drawing from environment drawing
-- [x] Extract cinematic reveal animation
+- [x] Extract RTS engine
+- [x] Split all files under ~625 lines
 - [x] Move all inline JS out of index.html
-- [x] Split tower-defense.js into logic + td-rendering.js
-- [x] Split rts-game.js into camera, entities, UI, game logic
-- [x] Split rts-units.js into workers, warriors, elites
+- [x] Organize into game folders (js/td/, js/rts/, js/shared/)
 
 ## Next Steps
 
-### Phase A: Break down remaining large files
-- [ ] Split rts-rendering.js (822) — structures/cannons vs environment/minimap
-- [ ] Split td-rendering.js (657) — tower drawing vs effects/bullets/background
-- [ ] Split faction-cards.js (577) — per-faction character art into separate files
-
 ### Phase B: Shared code cleanup
-- [ ] Centralize faction config (FACTION_CFG + FACTION_DATA) into one file
-- [ ] Extract shared particle spawn patterns into utils
-- [ ] Move dso* state vars (dsoSelectedFaction, dsoRevealFrame, etc.) into a single place
+- [ ] Centralize faction config (FACTION_CFG in entities.js + FACTION_DATA in init.js → one file)
+- [ ] Move dso* state vars into a shared RTS state object
+- [ ] Extract shared particle helpers
 
-### Phase C: Game folder structure
-- [ ] Move TD files into js/td/ folder
-- [ ] Move RTS files into js/rts/ folder
-- [ ] Standardize game lifecycle (init, tick, draw, cleanup)
-- [ ] Tab system registers games cleanly
-- [ ] Adding a game = add folder + register in init
+### Phase C: Standardize game lifecycle
+- [ ] Each game exports: init(), cleanup()
+- [ ] Tab switching calls cleanup() on old game, init() on new
+- [ ] Adding a game = add folder + register in init.js
 
-### Phase D: CSS organization
-- [ ] Split styles.css into base.css + td.css + rts.css + components.css
-- [ ] Each game's CSS lives alongside its JS
+### Phase D: CSS split
+- [ ] Split styles.css into base.css + td.css + rts.css
 
 ## Principles
 - No build tools. No frameworks. Vanilla JS + Canvas.
 - Small files > clever abstractions.
-- Every change must deploy and work. Test in prod after each push.
-- Don't refactor logic — just relocate it. Logic changes come later.
+- Deploy and test after every push.
+- Relocate first, refactor logic later.
