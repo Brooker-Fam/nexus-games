@@ -93,7 +93,7 @@ document.getElementById('btn-dso-back').onclick=dsoBack;
 document.getElementById('btn-dso-play').onclick=dsoPlay;
 
 // RTS controls
-document.getElementById('btn-attack').onclick=rtsOrderAttack;
+document.getElementById('btn-attack').onclick=function(e){ e.preventDefault(); rtsOrderAttack(); this.blur(); };
 document.getElementById('btn-rts-menu').onclick=rtsMenuBack;
 document.getElementById('btn-rts-menu-over').onclick=rtsMenuBack;
 document.getElementById('btn-popup-close').onclick=closeBuildPopup;

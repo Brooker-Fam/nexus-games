@@ -102,6 +102,8 @@ function setupCameraControls(){
 
   // Scroll wheel pans the camera
   wrap.addEventListener('wheel', e=>{
+    const game = document.getElementById('dso-game');
+    if(!game || game.style.display==='none') return;
     e.preventDefault();
     if(e.deltaX) camX += e.deltaX;
     if(e.deltaY) camY += e.deltaY * 0.5;
