@@ -5,6 +5,27 @@ const W = canvas.width, H = canvas.height;
 const CELL = 40;
 const COLS = W/CELL, ROWS = H/CELL;
 
+// ── GAME CONFIG ──
+const TD_CONFIG = {
+  initialGold: 200,
+  initialLives: 20,
+  maxLogEntries: 40,
+  waveSpawnInterval: 45,
+  enemyBaseHp: 40,
+  enemyHpScaling: 20,
+  enemyBaseSpeed: 0.6,
+  enemySpeedScaling: 0.05,
+  missileAoeRadius: 55,
+  slowDuration: 60,
+  slowFactor: 0.4,
+  waveReward: 50,
+  bossWaveInterval: 5,
+  bossHpMultiplier: 4,
+  bossSpeedMultiplier: 0.5,
+  baseEnemyCount: 8,
+  enemyCountScaling: 3,
+};
+
 // Path waypoints (grid coords)
 const PATH_WAYPOINTS = [
   {x:0,y:3},{x:4,y:3},{x:4,y:1},{x:8,y:1},
@@ -22,20 +43,17 @@ const TOWER_TYPES = {
   slow:    { color:'#8888ff', range:100, damage:2,  rate:25,  cost:70,  bullet:'blue',   aoe:false },
 };
 
-let state = {
-  gold:200, lives:20, score:0, wave:0,
-  towers:[], enemies:[], bullets:[], particles:[],
-  waveActive:false, waveEnemyTimer:0, waveEnemiesLeft:0,
-  selectedTower:'gun', speed:1, frame:0, gameOver:false,
+const TD_DEFAULTS = {
+  gold: TD_CONFIG.initialGold, lives: TD_CONFIG.initialLives, score: 0, wave: 0,
+  towers: [], enemies: [], bullets: [], particles: [],
+  waveActive: false, waveEnemyTimer: 0, waveEnemiesLeft: 0,
+  selectedTower: 'gun', speed: 1, frame: 0, gameOver: false,
 };
 
+let state = {...TD_DEFAULTS, towers:[], enemies:[], bullets:[], particles:[]};
+
 function initState(){
-  state = {
-    gold: 200, lives: 20, score: 0, wave: 0,
-    towers: [], enemies: [], bullets: [], particles: [],
-    waveActive: false, waveEnemyTimer: 0, waveEnemiesLeft: 0,
-    selectedTower: 'gun', speed: 1, frame: 0, gameOver: false,
-  };
+  state = {...TD_DEFAULTS, towers:[], enemies:[], bullets:[], particles:[]};
   setLog([]);
 }
 
@@ -45,7 +63,7 @@ function addLog(msg, cls=''){
   d.className = 'log-entry '+(cls||'');
   d.textContent = msg;
   box.insertBefore(d, box.firstChild);
-  if(box.children.length > 40) box.removeChild(box.lastChild);
+  if(box.children.length > TD_CONFIG.maxLogEntries) box.removeChild(box.lastChild);
 }
 function setLog(arr){ document.getElementById('logBox').innerHTML=''; }
 
@@ -116,7 +134,7 @@ function setSpeed(s, btn){
 function startWave(){
   if(state.waveActive || state.gameOver) return;
   state.wave++;
-  const count = 8 + state.wave * 3;
+  const count = TD_CONFIG.baseEnemyCount + state.wave * TD_CONFIG.enemyCountScaling;
   state.waveActive = true;
   state.waveEnemiesLeft = count;
   state.waveEnemyTimer = 0;
@@ -127,16 +145,16 @@ function startWave(){
 }
 
 function spawnEnemy(){
-  const hp = 40 + state.wave * 20 + Math.random()*20;
-  const spd = 0.6 + state.wave * 0.05 + Math.random()*0.2;
-  const isBoss = state.waveEnemiesLeft === 1 && state.wave % 5 === 0;
+  const hp = TD_CONFIG.enemyBaseHp + state.wave * TD_CONFIG.enemyHpScaling + Math.random()*20;
+  const spd = TD_CONFIG.enemyBaseSpeed + state.wave * TD_CONFIG.enemySpeedScaling + Math.random()*0.2;
+  const isBoss = state.waveEnemiesLeft === 1 && state.wave % TD_CONFIG.bossWaveInterval === 0;
   state.enemies.push({
     x: PATH_WAYPOINTS[0].x*CELL,
     y: PATH_WAYPOINTS[0].y*CELL + CELL/2,
     wpIdx: 0, progress: 0,
-    hp: isBoss ? hp*4 : hp,
-    maxHp: isBoss ? hp*4 : hp,
-    speed: isBoss ? spd*0.5 : spd,
+    hp: isBoss ? hp*TD_CONFIG.bossHpMultiplier : hp,
+    maxHp: isBoss ? hp*TD_CONFIG.bossHpMultiplier : hp,
+    speed: isBoss ? spd*TD_CONFIG.bossSpeedMultiplier : spd,
     slow: 0, boss: isBoss,
     reward: isBoss ? 60 : 10 + state.wave * 2,
   });
@@ -145,7 +163,7 @@ function spawnEnemy(){
 function moveEnemy(e){
   if(e.wpIdx >= PATH_WAYPOINTS.length-1){ return true; }
   const target = wpPx(PATH_WAYPOINTS[e.wpIdx+1]);
-  const spd = e.slow > 0 ? e.speed * 0.4 : e.speed;
+  const spd = e.slow > 0 ? e.speed * TD_CONFIG.slowFactor : e.speed;
   const dx = target.x - e.x, dy = target.y - e.y;
   const dist = Math.hypot(dx,dy);
   if(dist < spd+1){ e.x=target.x; e.y=target.y; e.wpIdx++; return false; }
@@ -199,13 +217,13 @@ function moveBullets(){
       // hit
       if(b.aoe){
         for(const e of state.enemies){
-          if(Math.hypot(e.x-b.tx.x,e.y-b.tx.y)<55){ e.hp-=b.dmg; }
+          if(Math.hypot(e.x-b.tx.x,e.y-b.tx.y)<TD_CONFIG.missileAoeRadius){ e.hp-=b.dmg; }
         }
         sfx('tdExplode',200);
         spawnHitParticles(b.tx.x, b.tx.y, 'explosion');
       } else {
         b.tx.hp -= b.dmg;
-        if(b.slow) b.tx.slow = 60;
+        if(b.slow) b.tx.slow = TD_CONFIG.slowDuration;
         spawnHitParticles(b.tx.x, b.tx.y, b.towerType);
       }
       state.bullets.splice(i,1);
@@ -276,7 +294,7 @@ function tick(){
   // spawn enemies
   if(state.waveActive && state.waveEnemiesLeft>0){
     state.waveEnemyTimer++;
-    if(state.waveEnemyTimer >= 45){
+    if(state.waveEnemyTimer >= TD_CONFIG.waveSpawnInterval){
       spawnEnemy(); state.waveEnemiesLeft--;
       state.waveEnemyTimer=0;
     }
@@ -306,9 +324,9 @@ function tick(){
   if(state.waveActive && state.waveEnemiesLeft===0 && state.enemies.length===0){
     state.waveActive=false;
     document.getElementById('waveBtn').disabled=false;
-    addLog(`✓ Wave ${state.wave} complete! +50g`,'good');
+    addLog(`✓ Wave ${state.wave} complete! +${TD_CONFIG.waveReward}g`,'good');
     sfx('tdVictory'); sfx('rtsGoldIn');
-    state.gold+=50; updateHUD();
+    state.gold+=TD_CONFIG.waveReward; updateHUD();
   }
 }
 
