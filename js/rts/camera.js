@@ -100,10 +100,11 @@ function setupCameraControls(){
   },{passive:true});
   wrap.addEventListener('touchend', ()=>{ camDragging=false; });
 
-  // Scroll wheel pans horizontally
+  // Scroll wheel pans the camera
   wrap.addEventListener('wheel', e=>{
     e.preventDefault();
-    camX += e.deltaX || e.deltaY * 0.5;
+    if(e.deltaX) camX += e.deltaX;
+    if(e.deltaY) camY += e.deltaY * 0.5;
     clampCam();
   },{passive:false});
 
