@@ -271,7 +271,8 @@ function rtsHandleClick(e){
       openBuildPopup(sx,sy,'worker');
       rtsSetLog(`${cfg.workerLabel} selected — build or right-click to move.`);
     } else if(hit.type==='warrior'){
-      const lbl=hit.subtype==='elite'?cfg.eliteLabel:hit.subtype==='wizard'?cfg.elite2Label:hit.subtype==='necromancer'?cfg.elite2Label:hit.subtype==='tank'?cfg.elite2Label:cfg.warriorLabel;
+      const UNIT_LABELS={elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label'};
+      const lbl=cfg[UNIT_LABELS[hit.subtype]]||cfg.warriorLabel;
       rtsSetLog(`${lbl} selected — right-click to move or attack.`);
     }
   }
