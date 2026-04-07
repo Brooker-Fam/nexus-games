@@ -162,8 +162,10 @@ function towerShoot(t){
   for(const e of state.enemies){
     const d=Math.hypot(e.x-t.x,e.y-t.y);
     if(d<t.range && e.wpIdx<PATH_WAYPOINTS.length-1){
-      if(e.wpIdx>bd||(e.wpIdx===bd&&d<bd)){ best=e; bd=d; }
-      if(!best||(e.wpIdx>best.wpIdx||(e.wpIdx===best.wpIdx&&d<bd))){ best=e; bd=d; }
+      // Prioritize enemies furthest along path, then closest by distance
+      if(!best || e.wpIdx>best.wpIdx || (e.wpIdx===best.wpIdx && d<bd)){
+        best=e; bd=d;
+      }
     }
   }
   if(!best) return;
