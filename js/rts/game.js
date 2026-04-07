@@ -267,14 +267,6 @@ function queueUnit(building, label, time, fn){
 }
 
 // player attack order
-function rtsOrderAttack(){
-  let count=0;
-  for(const e of rtsEntities){
-    if(e.type==='warrior'&&e.side==='player'&&e.state==='idle'){ e.state='march'; count++; }
-  }
-  rtsSetLog(count>0?`${count} warriors advancing!`:'No idle warriors to command.');
-}
-
 function warriorTick(w, playerBase, enemyBase){
   if(w.state==='idle') return;
 
