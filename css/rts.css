@@ -154,6 +154,8 @@
   .rts-build-btn:disabled { opacity:0.35; cursor:not-allowed; }
   .rts-build-icon { font-size:16px; display:block; margin-bottom:2px; }
   .rts-cost { font-size:9px; color:gold; letter-spacing:1px; }
+  .rts-speed-btns { display:flex; gap:4px; }
+  .rts-speed-btns .speed-btn { padding:4px 8px; font-size:9px; }
   .rts-retreat-btn {
     font-family:'Orbitron',sans-serif; font-size:9px; letter-spacing:2px;
     background:transparent; border:1px solid rgba(255,255,255,0.12);

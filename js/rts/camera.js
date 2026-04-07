@@ -1,7 +1,7 @@
 // ════════════════════════════════════════════════════
 //  DEEP SPACE OPS — RTS ENGINE
 // ════════════════════════════════════════════════════
-let rtsRAF=null, rtsFrame=0;
+let rtsRAF=null, rtsFrame=0, rtsSpeed=1;
 let rtsGold=0, rtsPlayerFaction='prism', rtsEnemyFaction='shadow';
 let rtsBaseHP=100, rtsEnemyBaseHP=100;
 let rtsGameOver=false;

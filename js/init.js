@@ -94,6 +94,13 @@ document.getElementById('btn-dso-play').onclick=dsoPlay;
 
 // RTS controls
 document.getElementById('btn-attack').onclick=function(e){ e.preventDefault(); rtsOrderAttack(); this.blur(); };
+document.getElementById('rts-speed-btns').onclick=function(e){
+  const btn=e.target.closest('.speed-btn');
+  if(!btn) return;
+  rtsSpeed=parseInt(btn.dataset.speed)||1;
+  this.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+};
 document.getElementById('btn-rts-menu').onclick=rtsMenuBack;
 document.getElementById('btn-rts-menu-over').onclick=rtsMenuBack;
 document.getElementById('btn-popup-close').onclick=closeBuildPopup;

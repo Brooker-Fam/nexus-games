@@ -591,7 +591,7 @@ let rtsLastTime=0, rtsAccum=0;
 function rtsLoop(ts){
   const dt = Math.min(ts - rtsLastTime, 100);
   rtsLastTime = ts;
-  rtsAccum += dt;
+  rtsAccum += dt * rtsSpeed;
   while(rtsAccum >= TARGET_MS){
     rtsTick();
     rtsAccum -= TARGET_MS;
