@@ -209,7 +209,7 @@ function trainUnit(unitType){
 
 function rtsOrderAttack(){
   let count=0;
-  for(const e of rtsSelected.length ? rtsSelected : rtsEntities){
+  for(const e of rtsEntities){
     if(e.type==='warrior'&&e.side==='player'&&e.state==='idle'){ e.state='march'; count++; }
   }
   rtsSetLog(count>0?`${count} warriors advancing!`:'No idle warriors selected.');
