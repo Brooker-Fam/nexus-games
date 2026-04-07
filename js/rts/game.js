@@ -351,40 +351,47 @@ function warriorTick(w, playerBase, enemyBase){
 }
 
 // ── PROJECTILES ──
+const PROJECTILE_TYPES = {
+  // subtype overrides (checked first)
+  tank:        { type:'shell',      color:'#ff6600', speed:9,  sound:'rtsCannonFire' },
+  wizard:      { type:'lightning',  color:'#88ffff', speed:6,  sound:'rtsLightning' },
+  necromancer: { type:'darkmagic',  color:'#440088', speed:4,  sound:'rtsDarkMagic' },
+  // elite per-faction
+  'elite.roboto': { type:'lightning',  color:'#44ffff', speed:11, sound:'rtsLightning' },
+  'elite.shadow': { type:'darkmagic',  color:'#220044', speed:4,  sound:'rtsDarkMagic' },
+  'elite.prism':  { type:'prismblast', color:'#ffffff', speed:4,  sound:'rtsMagicFire' },
+  // base warriors per-faction
+  'warrior.roboto': { type:'bullet', speed:11, sound:'rtsBullet' },
+  'warrior.shadow': { type:'magic',  speed:4,  sound:'rtsMagicFire' },
+  'warrior.prism':  { type:'magic',  speed:4,  sound:'rtsMagicFire' },
+};
+
 let rtsProjectiles=[];
 function spawnProjectile(shooter, target){
   const cfg=FACTION_CFG[shooter.faction];
-  const isElite = shooter.subtype==='elite';
-  const isWizard = shooter.subtype==='wizard';
-  const isNecro  = shooter.subtype==='necromancer';
-  const isTank   = shooter.subtype==='tank';
-
-  let ptype='magic';
-  if(isTank) ptype='shell';
-  else if(isWizard) ptype='lightning';
-  else if(isNecro) ptype='darkmagic';
-  else if(shooter.faction==='roboto') ptype=isElite?'lightning':'bullet';
-  else if(shooter.faction==='shadow') ptype=isElite?'darkmagic':'magic';
-  else ptype=isElite?'prismblast':'magic';
-
-  const color = isTank?'#ff6600' : isWizard?'#88ffff' : isNecro?'#440088' :
-    isElite?(shooter.faction==='roboto'?'#44ffff':shooter.faction==='shadow'?'#220044':'#ffffff')
-    : cfg.color;
+  const sub = shooter.subtype;
+  // Lookup: subtype first, then elite.faction, then warrior.faction
+  const pCfg = PROJECTILE_TYPES[sub]
+    || (sub==='elite' && PROJECTILE_TYPES['elite.'+shooter.faction])
+    || PROJECTILE_TYPES['warrior.'+shooter.faction]
+    || { type:'magic', speed:4, sound:'rtsMagicFire' };
 
   rtsProjectiles.push({
     x:shooter.x, y:shooter.y,
     tx:target,
-    speed: isTank?9 : (shooter.faction==='roboto'&&!isWizard) ? 11 : isWizard?6 : 4,
+    speed: pCfg.speed,
     damage:shooter.damage,
     faction:shooter.faction,
-    color, type:ptype,
+    color: pCfg.color || cfg.color,
+    type: pCfg.type,
     trail:[],
-    isElite, isWizard, isNecro, isTank,
+    isElite: sub==='elite',
+    isWizard: sub==='wizard',
+    isNecro: sub==='necromancer',
+    isTank: sub==='tank',
     side:shooter.side,
   });
-  // fire sound per type
-  const fireSnd={bullet:'rtsBullet',lightning:'rtsLightning',darkmagic:'rtsDarkMagic',magic:'rtsMagicFire',shell:'rtsCannonFire',cannonball:'rtsCannonFire',prismblast:'rtsMagicFire'};
-  sfx(fireSnd[ptype]||'rtsBullet', 80);
+  sfx(pCfg.sound||'rtsBullet', 80);
 }
 
 function updateProjectiles(){
