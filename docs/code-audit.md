@@ -123,28 +123,31 @@ Same green→orange→red logic repeated in:
 
 ## Priority Fix Order
 
-### Immediate (bugs)
-1. Fix cannonball double damage
-2. Fix TD tower targeting logic
-3. Remove duplicate `rtsOrderAttack()`
-4. Fix CSS orphaned rules
+### Immediate (bugs) — DONE
+1. ~~Fix cannonball double damage~~
+2. ~~Fix TD tower targeting logic~~
+3. ~~Remove duplicate `rtsOrderAttack()`~~
+4. ~~Fix CSS orphaned rules~~
 
-### Short-term (cleanup)
-5. Extract health bar / selection ring helpers
-6. Extract magic numbers into constants (GAME_CONFIG, AI timing)
-7. Extend FACTION_CFG to reduce ternary chains
-8. Move particle state mutation out of draw functions
-9. Pre-parse hex colors in cinematic
+### Short-term (cleanup) — DONE
+5. ~~Extract health bar / selection ring helpers~~
+6. ~~Extract magic numbers into constants (TD_CONFIG, AI_CONFIG, COMBAT)~~
+7. ~~Replace ternary chains with config lookups (PROJECTILE_TYPES, HIT_PARTICLES, UNIT_LABELS)~~
+8. ~~Move particle state mutation out of draw functions~~
+9. ~~Pre-parse hex colors in cinematic~~
+10. ~~Fix click radius mismatch (centralized CLICK_RADII)~~
+11. ~~Remove dead code (logs, rc2, rtsBuild, pointless loop)~~
+12. ~~Consolidate TD particle spawning (data-driven)~~
 
 ### Medium-term (architecture)
-10. Group globals into state objects
-11. Split `openBuildPopup()` into per-context functions
-12. Refactor worker/warrior tick into state machines
-13. Move inline event handlers to JS
-14. Add basic responsive CSS / canvas scaling
+13. Group globals into state objects
+14. Split `openBuildPopup()` into per-context functions
+15. Refactor worker/warrior tick into state machines
+16. Move inline event handlers to JS
+17. Add basic responsive CSS / canvas scaling
 
 ### Long-term (polish)
-15. Improve AI (adapt to player, defend, multi-barracks)
-16. Add accessibility (ARIA, keyboard nav)
-17. Add touch support for mobile
-18. Standardize game lifecycle for adding new games
+18. Improve AI (adapt to player, defend, multi-barracks)
+19. Add accessibility (ARIA, keyboard nav)
+20. Add touch support for mobile
+21. Standardize game lifecycle for adding new games
