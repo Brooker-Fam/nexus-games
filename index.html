@@ -1144,7 +1144,6 @@ function towerShoot(t){
   // per-type shoot sound (throttled so rapid fire doesn't stack)
   const sndMap={gun:'tdShoot',laser:'tdLaser',missile:'tdMissile',slow:'tdCryo'};
   sfx(sndMap[t.type]||'tdShoot', t.type==='gun'?80: t.type==='laser'?60: t.type==='missile'?200:150);
-  const bAngle = Math.atan2(best.y - t.y, best.x - t.x);
   state.bullets.push({
     x:t.x, y:t.y, tx:best, spd: t.type==='missile'?4:7,
     dmg:t.damage, color:t.bullet, aoe:t.aoe,
