@@ -172,6 +172,9 @@ function openBuildPopup(screenX, screenY, context){
   popup.style.left=px+'px'; popup.style.top=py+'px';
   popup.style.display='block';
   rtsBuildPopupOpen=true;
+
+  // Prevent popup clicks from bubbling to the canvas click handler
+  popup.onclick=function(ev){ ev.stopPropagation(); };
 }
 
 function closeBuildPopup(){
