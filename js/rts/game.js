@@ -350,6 +350,15 @@ function warriorTick(w, playerBase, enemyBase){
   }
 }
 
+// ── COMBAT CONSTANTS ──
+const COMBAT = {
+  tankAoeRadius: 80,
+  tankAoeDamageFactor: 0.5,
+  chainLightningRange: 200,
+  chainLightningDamageFactor: 0.6,
+  chainLightningBounces: 2,
+};
+
 // ── PROJECTILES ──
 const PROJECTILE_TYPES = {
   // subtype overrides (checked first)
@@ -411,13 +420,13 @@ function updateProjectiles(){
         // tank shell — AOE explosion
         for(const ent of rtsEntities){
           if(ent.side===p.side||ent.type==='base') continue;
-          if(Math.hypot(ent.x-p.tx.x,ent.y-p.tx.y)<80) ent.hp-=p.damage*0.5;
+          if(Math.hypot(ent.x-p.tx.x,ent.y-p.tx.y)<COMBAT.tankAoeRadius) ent.hp-=p.damage*COMBAT.tankAoeDamageFactor;
         }
         spawnHitParticles2(p.tx.x, p.tx.y);
       }
       else if(p.type==='lightning'||p.type==='darkmagic'){
         spawnLightningHit(p.tx.x,p.tx.y,p.color);
-        chainLightning(p.tx, p.damage*0.6, p.color, p.side, 2);
+        chainLightning(p.tx, p.damage*COMBAT.chainLightningDamageFactor, p.color, p.side, COMBAT.chainLightningBounces);
       } else {
         spawnMagicBurst(p.tx.x,p.tx.y,p.color);
       }
@@ -431,7 +440,7 @@ function updateProjectiles(){
 function chainLightning(origin, damage, color, shooterSide, bounces){
   if(bounces<=0) return;
   // find nearest enemy unit within 200px not the origin
-  let best=null, bestD=200;
+  let best=null, bestD=COMBAT.chainLightningRange;
   for(const e of rtsEntities){
     if(e.side===shooterSide||e===origin||e.type==='base') continue;
     const d=Math.hypot(e.x-origin.x,e.y-origin.y);
