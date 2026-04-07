@@ -34,13 +34,15 @@ function aiQueueAt(building, label, time, fn, cost){
 
 function aiBuild(type, nearX, nearY, cost){
   if(aiGold<cost) return false;
+  // Find an idle AI worker to assign
+  const worker = rtsEntities.find(e=>e.side==='enemy'&&e.type==='worker'&&e.state!=='building');
+  if(!worker) return false;
   aiGold-=cost;
   const x=nearX+(Math.random()-0.5)*160;
   const y=nearY+(Math.random()-0.5)*200;
-  if(type==='barracks') rtsEntities.push(makeBarracks('enemy',rtsEnemyFaction,x,y));
-  else if(type==='cannon') rtsEntities.push(makeCannon('enemy',rtsEnemyFaction,x,y));
-  else if(type==='structure') rtsEntities.push(makeStructure('enemy',rtsEnemyFaction,x,y));
-  else if(type==='base') rtsEntities.push(makeBase('enemy'));
+  // Assign worker to build (same flow as player)
+  worker.buildTarget = { x, y, buildType:type, ghost:null };
+  worker.state = 'building';
   return true;
 }
 
