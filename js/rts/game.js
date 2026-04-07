@@ -120,6 +120,7 @@ function rtsTick(){
   // particles
   for(let i=rtsParticles.length-1;i>=0;i--){
     const p=rtsParticles[i]; p.x+=p.vx; p.y+=p.vy; p.vx*=0.9; p.vy*=0.9; p.life--;
+    if(p.isRing) p.radius+=3;
     if(p.life<=0) rtsParticles.splice(i,1);
   }
 

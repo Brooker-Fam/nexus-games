@@ -186,7 +186,6 @@ function drawRTSParticles(rc){
     const fa=p.life/p.maxLife;
     rc.save(); rc.globalAlpha=fa*0.9;
     if(p.isRing){
-      p.radius+=3;
       rc.strokeStyle=p.color; rc.lineWidth=2;
       rc.shadowColor=p.color; rc.shadowBlur=8;
       rc.beginPath(); rc.arc(p.x,p.y,p.radius,0,Math.PI*2); rc.stroke();
