@@ -391,7 +391,6 @@ function updateProjectiles(){
       p.tx.hp-=p.damage;
       if(p.type==='bullet') spawnHitFlash(p.tx.x,p.tx.y,'#ffcc44');
       else if(p.type==='cannonball'){
-        p.tx.hp-=p.damage;
         spawnHitParticles2(p.tx.x,p.tx.y);
       }
       else if(p.type==='shell'){
