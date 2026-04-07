@@ -926,6 +926,8 @@ const SFX={
   rtsDefeat:       ()=>{ sfxTone(440,'sawtooth',0.2,0.02,0.15); setTimeout(()=>sfxTone(330,'sawtooth',0.2,0.02,0.2),150); setTimeout(()=>sfxTone(220,'sawtooth',0.25,0.02,0.5),320); },
   rtsGoldIn:       ()=>{ sfxTone(1047,'sine',0.1,0.005,0.1); sfxTone(1319,'sine',0.07,0.01,0.08); },
   rtsHammer:       ()=>{ sfxNoise(0.08,0.06,1200); sfxTone(220,'square',0.06,0.001,0.04); },
+  rtsPrismCannon:  ()=>{ sfxTone(900,'sine',0.15,0.005,0.18,1800); sfxTone(600,'sine',0.1,0.01,0.14,1200); sfxNoise(0.04,0.08,5000); },
+  rtsShadowCannon: ()=>{ sfxTone(55,'sawtooth',0.22,0.01,0.45,28); sfxNoise(0.18,0.38,280); },
 };
 
 // Throttle repeated sounds so they don't stack
@@ -3439,7 +3441,7 @@ function rtsTick(){
         deadSwordsmenPool.push({x:e.x, y:e.y, side:e.side});
         if(deadSwordsmenPool.length>12) deadSwordsmenPool.shift();
       }
-      spawnDeathParticles(e.x,e.y,e.type==='cannon'?'#886633':FACTION_CFG[e.faction].color);
+      spawnDeathParticles(e.x,e.y,FACTION_CFG[e.faction]?.color||'#886633');
       sfx('rtsUnitDie',120);
       rtsEntities.splice(i,1);
     }
@@ -3567,12 +3569,14 @@ function cannonTick(c){
   if(!target) return;
   c.aimAngle=Math.atan2(target.y-c.y,target.x-c.x);
   c.cooldown=c.rate;
-  sfx('rtsCannonFire',300);
+  const _cSnd={prism:'rtsPrismCannon',shadow:'rtsShadowCannon',roboto:'rtsCannonFire'};
+  sfx(_cSnd[c.faction]||'rtsCannonFire',300);
+  const _cCol={prism:'#00f5ff',shadow:'#cc44ff',roboto:'#ffaa00'};
   // fire a cannon projectile
   rtsProjectiles.push({
     x:c.x, y:c.y, tx:target,
     speed:8, damage:c.damage,
-    faction:c.faction, color:'#ffaa00',
+    faction:c.faction, color:_cCol[c.faction]||'#ffaa00',
     type:'cannonball', trail:[], side:c.side,
   });
 }
@@ -4374,66 +4378,12 @@ function drawRTSStructure(rc, s){
 
 // ── CANNON TURRET ──
 function drawRTSCannon(rc, c){
-  const x=c.x, y=c.y;
-  const angle=c.aimAngle||0;
+  const x=c.x, y=c.y, angle=c.aimAngle||0;
+  const faction=c.faction||'roboto';
   rc.save();
-  // ground shadow
-  rc.fillStyle='rgba(0,0,0,0.3)';
-  rc.beginPath(); rc.ellipse(x+2,y+2,22,10,0,0,Math.PI*2); rc.fill();
-  // octagonal stone base
-  rc.shadowColor='#886633'; rc.shadowBlur=8;
-  const baseGrad=rc.createRadialGradient(x-3,y-3,2,x,y,20);
-  baseGrad.addColorStop(0,'#5a4a3a'); baseGrad.addColorStop(0.6,'#3a2e22'); baseGrad.addColorStop(1,'#1a1410');
-  rc.fillStyle=baseGrad;
-  rc.beginPath();
-  for(let i=0;i<8;i++){
-    const a=(i/8)*Math.PI*2-Math.PI/8, r=20;
-    i===0?rc.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r):rc.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r);
-  }
-  rc.closePath(); rc.fill();
-  rc.strokeStyle='rgba(180,140,80,0.5)'; rc.lineWidth=1.2; rc.stroke();
-  // stone texture lines
-  rc.strokeStyle='rgba(80,60,40,0.3)'; rc.lineWidth=0.6;
-  for(let i=0;i<8;i++){
-    const a=(i/8)*Math.PI*2-Math.PI/8, r=14;
-    rc.beginPath(); rc.moveTo(x,y); rc.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r); rc.stroke();
-  }
-  // bolt holes
-  rc.fillStyle='rgba(0,0,0,0.5)';
-  for(let i=0;i<8;i++){
-    const a=(i/8)*Math.PI*2-Math.PI/8, r=16;
-    rc.beginPath(); rc.arc(x+Math.cos(a)*r,y+Math.sin(a)*r,1.5,0,Math.PI*2); rc.fill();
-  }
-  // rotating turret platform
-  rc.save(); rc.translate(x,y); rc.rotate(angle);
-  // platform disc
-  const platGrad=rc.createRadialGradient(-2,-2,1,0,0,10);
-  platGrad.addColorStop(0,'#4a3a28'); platGrad.addColorStop(1,'#1a1208');
-  rc.fillStyle=platGrad; rc.beginPath(); rc.arc(0,0,10,0,Math.PI*2); rc.fill();
-  rc.strokeStyle='rgba(180,120,50,0.5)'; rc.lineWidth=0.8; rc.stroke();
-  // cannon barrel — thick iron tube
-  const barGrad=rc.createLinearGradient(0,-5,0,5);
-  barGrad.addColorStop(0,'#4a3a28'); barGrad.addColorStop(0.5,'#2a1e10'); barGrad.addColorStop(1,'#0a0806');
-  rc.fillStyle=barGrad;
-  rc.beginPath();
-  rc.moveTo(-2,-5); rc.lineTo(24,-4); rc.lineTo(24,4); rc.lineTo(-2,5); rc.closePath();
-  rc.fill(); rc.strokeStyle='rgba(180,120,50,0.5)'; rc.lineWidth=0.8; rc.stroke();
-  // barrel rings
-  for(const rx of [4,10,16,22]){
-    rc.strokeStyle='rgba(140,100,40,0.6)'; rc.lineWidth=1.5;
-    rc.beginPath(); rc.moveTo(rx,-5); rc.lineTo(rx,5); rc.stroke();
-  }
-  // muzzle opening
-  rc.fillStyle='#050402'; rc.beginPath(); rc.ellipse(24,0,4,5,0,0,Math.PI*2); rc.fill();
-  rc.strokeStyle='rgba(120,80,30,0.5)'; rc.lineWidth=0.7; rc.stroke();
-  // firing glow if recently shot
-  if((c.cooldown||0)>c.rate*0.7){
-    const mg=rc.createRadialGradient(26,0,0,26,0,8);
-    mg.addColorStop(0,'rgba(255,180,50,0.9)'); mg.addColorStop(0.5,'rgba(255,80,0,0.4)'); mg.addColorStop(1,'transparent');
-    rc.fillStyle=mg; rc.beginPath(); rc.arc(26,0,8,0,Math.PI*2); rc.fill();
-  }
-  rc.restore();
-
+  if(faction==='prism')       _drawCannonPrism(rc,x,y,angle,c);
+  else if(faction==='shadow') _drawCannonShadow(rc,x,y,angle,c);
+  else                        _drawCannonRoboto(rc,x,y,angle,c);
   // selection ring
   if(c.selected){
     rc.strokeStyle='#00ff88'; rc.lineWidth=2; rc.shadowColor='#00ff88'; rc.shadowBlur=10;
@@ -4447,14 +4397,197 @@ function drawRTSCannon(rc, c){
     rc.fillStyle=hpF>0.5?'#00ff88':hpF>0.25?'#ffaa00':'#ff2244';
     rc.fillRect(x-bw/2,y-30,bw*hpF,bh);
   }
-  // label
-  rc.font='6px Orbitron,sans-serif'; rc.textAlign='center'; rc.fillStyle='rgba(200,160,80,0.8)'; rc.shadowBlur=0;
-  rc.fillText('CANNON',x,y+28);
+  const _cLabels={prism:'PRISM GUN',shadow:'VOID CANNON',roboto:'TURRET'};
+  const _cLabelColors={prism:'rgba(0,220,255,0.8)',shadow:'rgba(180,80,255,0.8)',roboto:'rgba(255,160,50,0.8)'};
+  rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
+  rc.fillStyle=_cLabelColors[faction]||'rgba(200,160,80,0.8)'; rc.shadowBlur=0;
+  rc.fillText(_cLabels[faction]||'CANNON',x,y+28);
   rc.restore();
-  // construction overlay
   if(c.underConstruction){
-    drawConstructionOverlay(rc,x,y,c.buildProgress/c.buildTime,'#886633',24);
+    const _cBuildCol={prism:'#00ddff',shadow:'#9922ff',roboto:'#ff8800'};
+    drawConstructionOverlay(rc,x,y,c.buildProgress/c.buildTime,_cBuildCol[faction]||'#886633',24);
   }
+}
+
+// ── Prism cannon: hexagonal crystal base + energy projector barrel ──
+function _drawCannonPrism(rc,x,y,angle,c){
+  rc.fillStyle='rgba(0,100,200,0.12)';
+  rc.beginPath(); rc.ellipse(x+2,y+2,22,10,0,0,Math.PI*2); rc.fill();
+  // hexagonal crystal base
+  rc.shadowColor='#00ddff'; rc.shadowBlur=14;
+  const bg=rc.createRadialGradient(x-3,y-3,2,x,y,20);
+  bg.addColorStop(0,'#0a2a3a'); bg.addColorStop(0.5,'#051520'); bg.addColorStop(1,'#02080e');
+  rc.fillStyle=bg;
+  rc.beginPath();
+  for(let i=0;i<6;i++){
+    const a=(i/6)*Math.PI*2-Math.PI/6, r=20;
+    i===0?rc.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r):rc.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r);
+  }
+  rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(0,220,255,0.65)'; rc.lineWidth=1.2; rc.stroke();
+  // crystal lattice lines
+  rc.strokeStyle='rgba(0,245,255,0.3)'; rc.lineWidth=0.7;
+  for(let i=0;i<6;i++){
+    const a=(i/6)*Math.PI*2-Math.PI/6;
+    rc.beginPath(); rc.moveTo(x+Math.cos(a)*8,y+Math.sin(a)*8); rc.lineTo(x+Math.cos(a)*17,y+Math.sin(a)*17); rc.stroke();
+  }
+  rc.strokeStyle='rgba(0,200,255,0.2)'; rc.lineWidth=1;
+  rc.beginPath();
+  for(let i=0;i<6;i++){
+    const a=(i/6)*Math.PI*2-Math.PI/6, r=11;
+    i===0?rc.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r):rc.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r);
+  }
+  rc.closePath(); rc.stroke();
+  // rotating energy projector
+  rc.save(); rc.translate(x,y); rc.rotate(angle);
+  const pg=rc.createRadialGradient(-2,-2,1,0,0,10);
+  pg.addColorStop(0,'#0a2840'); pg.addColorStop(1,'#020a14');
+  rc.fillStyle=pg; rc.beginPath(); rc.arc(0,0,10,0,Math.PI*2); rc.fill();
+  rc.strokeStyle='rgba(0,220,255,0.5)'; rc.lineWidth=0.8; rc.stroke();
+  // sleek energy barrel
+  rc.shadowColor='#00f5ff'; rc.shadowBlur=6;
+  const bar=rc.createLinearGradient(0,-4,0,4);
+  bar.addColorStop(0,'#0a3050'); bar.addColorStop(0.5,'#051828'); bar.addColorStop(1,'#020a14');
+  rc.fillStyle=bar;
+  rc.beginPath(); rc.moveTo(-2,-3); rc.lineTo(26,-3); rc.lineTo(28,0); rc.lineTo(26,3); rc.lineTo(-2,3); rc.closePath();
+  rc.fill(); rc.strokeStyle='rgba(0,220,255,0.6)'; rc.lineWidth=0.8; rc.stroke();
+  // glowing conduit lines
+  rc.strokeStyle='rgba(0,245,255,0.35)'; rc.lineWidth=0.6;
+  rc.beginPath(); rc.moveTo(2,-1.5); rc.lineTo(25,-1.5); rc.stroke();
+  rc.beginPath(); rc.moveTo(2,1.5);  rc.lineTo(25,1.5);  rc.stroke();
+  // crystal emitter tip
+  rc.fillStyle='#0af5ff'; rc.shadowColor='#00f5ff'; rc.shadowBlur=8;
+  rc.beginPath(); rc.moveTo(26,-4); rc.lineTo(32,0); rc.lineTo(26,4); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(0,245,255,0.8)'; rc.lineWidth=0.6; rc.stroke();
+  // firing glow
+  if((c.cooldown||0)>c.rate*0.7){
+    const mg=rc.createRadialGradient(34,0,0,34,0,10);
+    mg.addColorStop(0,'rgba(255,255,255,0.95)'); mg.addColorStop(0.3,'rgba(0,245,255,0.7)'); mg.addColorStop(1,'transparent');
+    rc.fillStyle=mg; rc.beginPath(); rc.arc(34,0,10,0,Math.PI*2); rc.fill();
+  }
+  rc.restore();
+}
+
+// ── Shadow cannon: jagged void/obsidian base + gnarled dark barrel ──
+function _drawCannonShadow(rc,x,y,angle,c){
+  rc.fillStyle='rgba(80,0,120,0.15)';
+  rc.beginPath(); rc.ellipse(x+2,y+2,22,10,0,0,Math.PI*2); rc.fill();
+  // jagged 12-point obsidian base
+  rc.shadowColor='#9922ff'; rc.shadowBlur=16;
+  const bg=rc.createRadialGradient(x-3,y-3,2,x,y,20);
+  bg.addColorStop(0,'#1a0030'); bg.addColorStop(0.6,'#0e0020'); bg.addColorStop(1,'#04000c');
+  rc.fillStyle=bg;
+  rc.beginPath();
+  for(let i=0;i<12;i++){
+    const a=(i/12)*Math.PI*2-Math.PI/12, r=i%2===0?20:14;
+    i===0?rc.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r):rc.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r);
+  }
+  rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(150,30,255,0.55)'; rc.lineWidth=1.2; rc.stroke();
+  // void rune veins
+  rc.strokeStyle='rgba(140,20,240,0.3)'; rc.lineWidth=0.7;
+  for(let i=0;i<6;i++){
+    const a=(i/6)*Math.PI*2;
+    rc.beginPath(); rc.moveTo(x,y); rc.lineTo(x+Math.cos(a)*13,y+Math.sin(a)*13); rc.stroke();
+  }
+  rc.strokeStyle='rgba(120,0,200,0.4)'; rc.lineWidth=1;
+  rc.beginPath(); rc.arc(x,y,8,0,Math.PI*2); rc.stroke();
+  // rotating void platform
+  rc.save(); rc.translate(x,y); rc.rotate(angle);
+  const pg=rc.createRadialGradient(-2,-2,1,0,0,10);
+  pg.addColorStop(0,'#280050'); pg.addColorStop(1,'#0c0020');
+  rc.fillStyle=pg; rc.beginPath(); rc.arc(0,0,10,0,Math.PI*2); rc.fill();
+  rc.strokeStyle='rgba(150,30,255,0.5)'; rc.lineWidth=0.8; rc.stroke();
+  // gnarled bone-like barrel
+  rc.shadowColor='#9922ff'; rc.shadowBlur=8;
+  const bar=rc.createLinearGradient(0,-5,0,5);
+  bar.addColorStop(0,'#280050'); bar.addColorStop(0.5,'#14002a'); bar.addColorStop(1,'#04000c');
+  rc.fillStyle=bar;
+  rc.beginPath();
+  rc.moveTo(-2,-5); rc.lineTo(8,-4); rc.lineTo(14,-5); rc.lineTo(20,-4); rc.lineTo(26,-5);
+  rc.lineTo(26,5);  rc.lineTo(20,4); rc.lineTo(14,5);  rc.lineTo(8,4);  rc.lineTo(-2,5);
+  rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(130,0,220,0.5)'; rc.lineWidth=0.8; rc.stroke();
+  // shadow veins along barrel
+  rc.strokeStyle='rgba(150,30,255,0.4)'; rc.lineWidth=0.6;
+  for(const bx of [6,12,18,24]){
+    rc.beginPath(); rc.moveTo(bx,-4.5); rc.lineTo(bx,4.5); rc.stroke();
+  }
+  // void maw
+  rc.fillStyle='#06000e'; rc.beginPath(); rc.ellipse(26,0,4,5,0,0,Math.PI*2); rc.fill();
+  rc.strokeStyle='rgba(120,0,200,0.6)'; rc.lineWidth=0.7; rc.stroke();
+  // firing glow
+  if((c.cooldown||0)>c.rate*0.7){
+    const mg=rc.createRadialGradient(26,0,0,26,0,10);
+    mg.addColorStop(0,'rgba(220,120,255,0.95)'); mg.addColorStop(0.4,'rgba(80,0,180,0.6)'); mg.addColorStop(1,'transparent');
+    rc.fillStyle=mg; rc.beginPath(); rc.arc(26,0,10,0,Math.PI*2); rc.fill();
+  }
+  rc.restore();
+}
+
+// ── Roboto cannon: industrial metal plate base + heavy mechanical barrel ──
+function _drawCannonRoboto(rc,x,y,angle,c){
+  rc.fillStyle='rgba(0,0,0,0.3)';
+  rc.beginPath(); rc.ellipse(x+2,y+2,22,10,0,0,Math.PI*2); rc.fill();
+  // chamfered metal plate base
+  rc.shadowColor='#ff8800'; rc.shadowBlur=8;
+  const bg=rc.createRadialGradient(x-3,y-3,2,x,y,20);
+  bg.addColorStop(0,'#3a2808'); bg.addColorStop(0.5,'#221604'); bg.addColorStop(1,'#100a02');
+  rc.fillStyle=bg;
+  const bs=17, cut=5;
+  rc.beginPath();
+  rc.moveTo(x-bs+cut,y-bs); rc.lineTo(x+bs-cut,y-bs);
+  rc.lineTo(x+bs,y-bs+cut); rc.lineTo(x+bs,y+bs-cut);
+  rc.lineTo(x+bs-cut,y+bs); rc.lineTo(x-bs+cut,y+bs);
+  rc.lineTo(x-bs,y+bs-cut); rc.lineTo(x-bs,y-bs+cut);
+  rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(255,140,30,0.55)'; rc.lineWidth=1.2; rc.stroke();
+  // panel lines
+  rc.strokeStyle='rgba(255,100,0,0.2)'; rc.lineWidth=0.7;
+  rc.beginPath(); rc.moveTo(x-bs+3,y-bs); rc.lineTo(x-bs+3,y+bs); rc.stroke();
+  rc.beginPath(); rc.moveTo(x+bs-3,y-bs); rc.lineTo(x+bs-3,y+bs); rc.stroke();
+  rc.beginPath(); rc.moveTo(x-bs,y-bs+3); rc.lineTo(x+bs,y-bs+3); rc.stroke();
+  rc.beginPath(); rc.moveTo(x-bs,y+bs-3); rc.lineTo(x+bs,y+bs-3); rc.stroke();
+  // rivet bolts
+  rc.fillStyle='rgba(255,120,20,0.65)';
+  for(const [bx,by] of [[-bs+5,-bs+5],[bs-5,-bs+5],[bs-5,bs-5],[-bs+5,bs-5]]){
+    rc.beginPath(); rc.arc(x+bx,y+by,2,0,Math.PI*2); rc.fill();
+  }
+  rc.strokeStyle='rgba(255,120,20,0.4)'; rc.lineWidth=1;
+  rc.beginPath(); rc.arc(x,y,10,0,Math.PI*2); rc.stroke();
+  // rotating turret
+  rc.save(); rc.translate(x,y); rc.rotate(angle);
+  const pg=rc.createRadialGradient(-2,-2,1,0,0,10);
+  pg.addColorStop(0,'#3a1e04'); pg.addColorStop(1,'#140a02');
+  rc.fillStyle=pg; rc.beginPath(); rc.arc(0,0,10,0,Math.PI*2); rc.fill();
+  rc.strokeStyle='rgba(255,140,30,0.5)'; rc.lineWidth=0.8; rc.stroke();
+  // heavy mechanical barrel
+  rc.shadowColor='#ff8800'; rc.shadowBlur=5;
+  const bar=rc.createLinearGradient(0,-5,0,5);
+  bar.addColorStop(0,'#3a1e04'); bar.addColorStop(0.5,'#200e02'); bar.addColorStop(1,'#080400');
+  rc.fillStyle=bar;
+  rc.beginPath();
+  rc.moveTo(-2,-6); rc.lineTo(22,-6); rc.lineTo(26,-4); rc.lineTo(26,4); rc.lineTo(22,6); rc.lineTo(-2,6); rc.closePath();
+  rc.fill(); rc.strokeStyle='rgba(255,120,30,0.5)'; rc.lineWidth=0.8; rc.stroke();
+  // reinforcement bands
+  for(const bx of [3,9,15,21]){
+    rc.strokeStyle='rgba(255,130,40,0.6)'; rc.lineWidth=2;
+    rc.beginPath(); rc.moveTo(bx,-5.5); rc.lineTo(bx,5.5); rc.stroke();
+  }
+  // vent slits on top
+  rc.fillStyle='rgba(0,0,0,0.55)';
+  for(const bx of [6,10,14,18]){ rc.fillRect(bx-1,-5.5,2,2); }
+  // muzzle brake
+  rc.fillStyle='#050200';
+  rc.beginPath(); rc.moveTo(24,-5); rc.lineTo(28,-4); rc.lineTo(28,4); rc.lineTo(24,5); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(200,100,20,0.5)'; rc.lineWidth=0.7; rc.stroke();
+  // firing glow
+  if((c.cooldown||0)>c.rate*0.7){
+    const mg=rc.createRadialGradient(30,0,0,30,0,9);
+    mg.addColorStop(0,'rgba(255,220,80,0.95)'); mg.addColorStop(0.4,'rgba(255,100,0,0.6)'); mg.addColorStop(1,'transparent');
+    rc.fillStyle=mg; rc.beginPath(); rc.arc(30,0,9,0,Math.PI*2); rc.fill();
+  }
+  rc.restore();
 }
 
 // ── CONSTRUCTION & QUEUE DRAW HELPERS ──
