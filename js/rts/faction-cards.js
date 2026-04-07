@@ -61,9 +61,6 @@ function renderPreviewCryo(pc){
 // ══════════════════════════════════════════
 // DEEP SPACE OPS — FACTION SELECT + REVEAL
 // ══════════════════════════════════════════
-let dsoSelectedFaction = null;
-let dsoRevealRAF = null;
-let dsoRevealFrame = 0;
 
 // ── DRAW CHARACTERS ON SMALL FACTION CARDS ──
 function drawCardCharacter(canvasEl, faction, hover){
@@ -553,7 +550,6 @@ function drawRobotoChar(c, x, y, sc){
 }
 
 // ── CARD PREVIEWS ──
-let dsoPreviewRAF=null;
 function dsoPreview(faction){
   if(dsoPreviewRAF) return;
   function loop(){

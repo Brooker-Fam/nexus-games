@@ -48,3 +48,9 @@ const FACTION_DATA={
   prism: { armada:'PRISM ARMADA',  champion:'THE WHITE WITCH', lore:'"She speaks in light. Her words become spells. Her spells become storms."', accentColor:'#00ddff' },
   roboto:{ armada:'ROBOTO ARMADA', champion:'THE GUNBOT',     lore:'"Forged in a dead star\'s core. Programmed for one purpose: total suppression."', accentColor:'#ff8800' },
 };
+
+// Shared DSO state
+let dsoSelectedFaction = null;
+let dsoRevealRAF = null;
+let dsoRevealFrame = 0;
+let dsoPreviewRAF = null;
