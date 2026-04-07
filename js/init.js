@@ -1,10 +1,4 @@
 // ── REVEAL SCREEN ──
-const FACTION_DATA={
-  shadow:{ armada:'SHADOW ARMADA', champion:'THE SWORDSMAN', lore:'"From the void between stars, he emerged. None who faced his blade lived to name him."', accentColor:'#9933ff' },
-  prism: { armada:'PRISM ARMADA',  champion:'THE WHITE WITCH', lore:'"She speaks in light. Her words become spells. Her spells become storms."', accentColor:'#00ddff' },
-  roboto:{ armada:'ROBOTO ARMADA', champion:'THE GUNBOT',     lore:'"Forged in a dead star\'s core. Programmed for one purpose: total suppression."', accentColor:'#ff8800' },
-};
-
 function dsoSelect(faction){
   dsoSelectedFaction=faction;
   dsoPreviewClear();
