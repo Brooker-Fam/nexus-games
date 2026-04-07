@@ -234,36 +234,27 @@ function moveBullets(){
   }
 }
 
+const HIT_PARTICLES = {
+  gun:       { count:8,  life:12, type:'spark',     color:'#aaeeff', minSpd:2, maxSpd:6, spread:'random' },
+  laser:     { count:6,  life:18, type:'energy',    color:'#ff0088', minSpd:2, maxSpd:4, spread:'even',
+               ring:{ life:10, color:'#ff0088', radius:2 } },
+  explosion: { count:16, life:25, type:'fire',      colors:['#ff4400','#ff8800','#ffcc00','#ffffff'], minSpd:2, maxSpd:7, spread:'random',
+               ring:{ life:15, color:'#ff8800', radius:4, type:'shockwave' } },
+  slow:      { count:8,  life:20, type:'ice',       color:'#aaddff', minSpd:1, maxSpd:3.5, spread:'random',
+               ring:{ life:12, color:'#88ccff', radius:2 } },
+};
+
 function spawnHitParticles(x, y, type){
-  if(type==='gun'){
-    // sparks — fast, short-lived, white/cyan
-    for(let i=0;i<8;i++){
-      const a=Math.random()*Math.PI*2, s=Math.random()*4+2;
-      state.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:12,maxLife:12,type:'spark',color:'#aaeeff'});
-    }
-  } else if(type==='laser'){
-    // energy burst — pink rings + dots
-    for(let i=0;i<6;i++){
-      const a=(i/6)*Math.PI*2, s=2+Math.random()*2;
-      state.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:18,maxLife:18,type:'energy',color:'#ff0088'});
-    }
-    state.particles.push({x,y,vx:0,vy:0,life:10,maxLife:10,type:'ring',color:'#ff0088',radius:2});
-  } else if(type==='explosion'){
-    // big fiery explosion for missiles
-    for(let i=0;i<16;i++){
-      const a=Math.random()*Math.PI*2, s=Math.random()*5+2;
-      const cols=['#ff4400','#ff8800','#ffcc00','#ffffff'];
-      state.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:25,maxLife:25,type:'fire',color:cols[Math.floor(Math.random()*cols.length)]});
-    }
-    // shockwave ring
-    state.particles.push({x,y,vx:0,vy:0,life:15,maxLife:15,type:'shockwave',color:'#ff8800',radius:4});
-  } else if(type==='slow'){
-    // ice shatter — blue/white fragments
-    for(let i=0;i<8;i++){
-      const a=Math.random()*Math.PI*2, s=Math.random()*2.5+1;
-      state.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:20,maxLife:20,type:'ice',color:'#aaddff'});
-    }
-    state.particles.push({x,y,vx:0,vy:0,life:12,maxLife:12,type:'ring',color:'#88ccff',radius:2});
+  const cfg = HIT_PARTICLES[type];
+  if(!cfg) return;
+  for(let i=0;i<cfg.count;i++){
+    const a = cfg.spread==='even' ? (i/cfg.count)*Math.PI*2 : Math.random()*Math.PI*2;
+    const s = Math.random()*(cfg.maxSpd-cfg.minSpd)+cfg.minSpd;
+    const color = cfg.colors ? cfg.colors[Math.floor(Math.random()*cfg.colors.length)] : cfg.color;
+    state.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:cfg.life,maxLife:cfg.life,type:cfg.type,color});
+  }
+  if(cfg.ring){
+    state.particles.push({x,y,vx:0,vy:0,life:cfg.ring.life,maxLife:cfg.ring.life,type:cfg.ring.type||'ring',color:cfg.ring.color,radius:cfg.ring.radius});
   }
 }
 
