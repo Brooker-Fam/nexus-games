@@ -14,61 +14,116 @@ const AI_CONFIG = {
 
 // ── AI LOGIC ──
 let aiGold=0, aiTimer=0;
+
+function aiCount(type, subFilter){
+  return rtsEntities.filter(e=>{
+    if(e.side!=='enemy') return false;
+    if(e.type!==type) return false;
+    return subFilter ? subFilter(e) : true;
+  }).length;
+}
+
+function aiQueueAt(building, label, time, fn, cost){
+  if(!building || building.underConstruction) return false;
+  if(building.queue && building.queue.length>=QUEUE_MAX) return false;
+  if(aiGold<cost) return false;
+  aiGold-=cost;
+  queueUnit(building, label, time, fn);
+  return true;
+}
+
+function aiBuild(type, nearX, nearY, cost){
+  if(aiGold<cost) return false;
+  aiGold-=cost;
+  const x=nearX+(Math.random()-0.5)*160;
+  const y=nearY+(Math.random()-0.5)*200;
+  if(type==='barracks') rtsEntities.push(makeBarracks('enemy',rtsEnemyFaction,x,y));
+  else if(type==='cannon') rtsEntities.push(makeCannon('enemy',rtsEnemyFaction,x,y));
+  else if(type==='structure') rtsEntities.push(makeStructure('enemy',rtsEnemyFaction,x,y));
+  else if(type==='base') rtsEntities.push(makeBase('enemy'));
+  return true;
+}
+
 function aiTick(){
   aiTimer++;
-  if(aiTimer%AI_CONFIG.decisionInterval===0){
-    const workers=rtsEntities.filter(e=>e.side==='enemy'&&e.type==='worker').length;
-    const warriors=rtsEntities.filter(e=>e.side==='enemy'&&e.type==='warrior'&&e.subtype!=='elite').length;
-    const structs=rtsEntities.filter(e=>e.side==='enemy'&&e.type==='structure').length;
-    const barracks=rtsEntities.filter(e=>e.side==='enemy'&&e.type==='structure'&&e.isBarracks).length;
-    const cannons=rtsEntities.filter(e=>e.side==='enemy'&&e.type==='cannon').length;
-    const eb=rtsEntities.find(e=>e.type==='base'&&e.side==='enemy');
-    if(!eb) return;
+  const eb=rtsEntities.find(e=>e.type==='base'&&e.side==='enemy');
+  if(!eb) return;
 
-    // build barracks first (to get warriors)
-    if(aiGold>=AI_CONFIG.barracksCost && barracks===0 && workers>=3){
-      aiGold-=AI_CONFIG.barracksCost;
-      rtsEntities.push(makeBarracks('enemy',rtsEnemyFaction,eb.x-150+(Math.random()-0.5)*80,eb.y+(Math.random()-0.5)*200));
-    }
-    // build a cannon for defense
-    else if(aiGold>=AI_CONFIG.cannonCost && cannons===0 && workers>=4){
-      aiGold-=AI_CONFIG.cannonCost;
-      rtsEntities.push(makeCannon('enemy',rtsEnemyFaction,eb.x-120+(Math.random()-0.5)*60,eb.y+(Math.random()-0.5)*160));
-    }
-    // build elite structure
-    else if(aiGold>=AI_CONFIG.structureCost && structs-barracks===0 && workers>=5){
-      aiGold-=AI_CONFIG.structureCost;
-      rtsEntities.push(makeStructure('enemy',rtsEnemyFaction,eb.x-200,eb.y+(Math.random()-0.5)*200));
-    }
-    // train elites
-    else if(aiGold>=AI_CONFIG.eliteCost && structs-barracks>0){
-      const str=rtsEntities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.underConstruction);
-      if(str && (!str.queue||str.queue.length<QUEUE_MAX)){
-        aiGold-=AI_CONFIG.eliteCost;
-        queueUnit(str,'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',rtsEnemyFaction,str.x,str.y));
-      }
-    }
-    // train warriors from barracks
-    else if(aiGold>=AI_CONFIG.warriorCost && barracks>0 && warriors<workers*AI_CONFIG.warriorToWorkerRatio){
-      const bar=rtsEntities.find(e=>e.side==='enemy'&&e.type==='structure'&&e.isBarracks&&!e.underConstruction);
-      if(bar && (!bar.queue||bar.queue.length<QUEUE_MAX)){
-        aiGold-=AI_CONFIG.warriorCost;
-        queueUnit(bar,'Warrior',BUILD_TIMES.warrior,()=>makeWarrior('enemy',rtsEnemyFaction,bar.x,bar.y));
-      }
-    }
-    // train workers
-    else if(aiGold>=AI_CONFIG.workerCost && workers<AI_CONFIG.maxWorkers){
+  // Gather intel
+  const workers   = aiCount('worker');
+  const warriors  = aiCount('warrior');
+  const barracks  = aiCount('structure', e=>e.isBarracks);
+  const eliteStructs = aiCount('structure', e=>!e.isBarracks);
+  const cannons   = aiCount('cannon');
+  const playerWarriors = rtsEntities.filter(e=>e.side==='player'&&e.type==='warrior').length;
+  const idleWarriors = rtsEntities.filter(e=>e.side==='enemy'&&e.type==='warrior'&&e.state==='idle').length;
+
+  // Detect threats near base
+  const baseThreat = rtsEntities.filter(e=>
+    e.side==='player'&&e.type==='warrior'&&Math.hypot(e.x-eb.x,e.y-eb.y)<400
+  ).length;
+
+  // === DECISIONS (every ~3 seconds, faster than before) ===
+  if(aiTimer%180===0){
+
+    // Always keep training workers (up to cap)
+    if(workers<AI_CONFIG.maxWorkers){
       const base=rtsEntities.find(e=>e.type==='base'&&e.side==='enemy');
-      if(base && (!base.queue||base.queue.length<QUEUE_MAX)){
-        aiGold-=AI_CONFIG.workerCost;
-        queueUnit(base,'Worker',BUILD_TIMES.worker,()=>makeWorker('enemy',rtsEnemyFaction));
+      aiQueueAt(base,'Worker',BUILD_TIMES.worker,()=>makeWorker('enemy',rtsEnemyFaction),AI_CONFIG.workerCost);
+    }
+
+    // Build first barracks ASAP (only need 2 workers)
+    if(barracks===0 && workers>=2){
+      aiBuild('barracks', eb.x-150, eb.y, AI_CONFIG.barracksCost);
+    }
+    // Build second barracks for faster production
+    else if(barracks===1 && workers>=6 && aiGold>=AI_CONFIG.barracksCost){
+      aiBuild('barracks', eb.x-200, eb.y+120, AI_CONFIG.barracksCost);
+    }
+
+    // Build cannons (up to 3 for defense)
+    if(cannons<3 && workers>=3 && aiGold>=AI_CONFIG.cannonCost){
+      aiBuild('cannon', eb.x-100, eb.y, AI_CONFIG.cannonCost);
+    }
+
+    // Build elite structure
+    if(eliteStructs===0 && workers>=4 && barracks>=1){
+      aiBuild('structure', eb.x-200, eb.y, AI_CONFIG.structureCost);
+    }
+  }
+
+  // === TRAIN UNITS (every ~2 seconds, aggressive) ===
+  if(aiTimer%120===0){
+    // Train warriors from ALL barracks
+    const allBarracks=rtsEntities.filter(e=>e.side==='enemy'&&e.type==='structure'&&e.isBarracks&&!e.underConstruction);
+    for(const bar of allBarracks){
+      aiQueueAt(bar,'Warrior',BUILD_TIMES.warrior,()=>makeWarrior('enemy',rtsEnemyFaction,bar.x,bar.y),AI_CONFIG.warriorCost);
+    }
+
+    // Train elites
+    const eliteStruct=rtsEntities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.underConstruction);
+    if(eliteStruct && aiGold>=AI_CONFIG.eliteCost){
+      aiQueueAt(eliteStruct,'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',rtsEnemyFaction,eliteStruct.x,eliteStruct.y),AI_CONFIG.eliteCost);
+    }
+  }
+
+  // === ATTACK DECISIONS ===
+  // Defend base when threatened
+  if(baseThreat>0 && aiTimer%60===0){
+    for(const e of rtsEntities){
+      if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle'){
+        e.state='march';
       }
     }
   }
-  // AI sends warriors every ~400 frames
+
+  // Attack when we have a decent army (5+ warriors or matching player)
   if(aiTimer%AI_CONFIG.attackInterval===0){
-    for(const e of rtsEntities){
-      if((e.type==='warrior')&&e.side==='enemy'&&e.state==='idle') e.state='march';
+    const shouldAttack = idleWarriors>=5 || (idleWarriors>=3 && idleWarriors>=playerWarriors);
+    if(shouldAttack){
+      for(const e of rtsEntities){
+        if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle') e.state='march';
+      }
     }
   }
 }
