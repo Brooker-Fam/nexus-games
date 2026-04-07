@@ -15,33 +15,29 @@ function openBuildPopup(screenX, screenY, context){
   const opts  = document.getElementById('rbp-options');
   opts.innerHTML='';
 
+  // Helper to create a popup button
+  function addOpt(icon, name, desc, cost, onclick, disabled){
+    const btn=document.createElement('button');
+    btn.className='rbp-option';
+    btn.disabled=disabled!==undefined ? disabled : rtsGold<cost;
+    btn.innerHTML=`<span class="rbp-opt-icon">${icon}</span>
+      <span class="rbp-opt-info"><span class="rbp-opt-name">${name}</span>
+      <span class="rbp-opt-desc">${desc}</span></span>
+      <span class="rbp-opt-cost">${cost}g</span>`;
+    btn.onclick=onclick;
+    opts.appendChild(btn);
+  }
+
+  const elite2FnMap = { makeWizard, makeNecromancer, makeTank };
+
   if(context==='base'){
-    // Base/Factory/Temple: workers only
     title.textContent = cfg.buildingName;
-    const workerBtn=document.createElement('button');
-    workerBtn.className='rbp-option'; workerBtn.disabled=rtsGold<5;
-    const wIcon=rtsPlayerFaction==='roboto'?'🤖':rtsPlayerFaction==='shadow'?'🥷':'🧙';
-    workerBtn.innerHTML=`<span class="rbp-opt-icon">${wIcon}</span>
-      <span class="rbp-opt-info"><span class="rbp-opt-name">${cfg.workerLabel}</span>
-      <span class="rbp-opt-desc">Gathers gold from mines</span></span>
-      <span class="rbp-opt-cost">5g</span>`;
-    workerBtn.onclick=()=>trainUnit('worker');
-    opts.appendChild(workerBtn);
+    addOpt(cfg.workerIcon, cfg.workerLabel, 'Gathers gold from mines', 5, ()=>trainUnit('worker'));
 
   } else if(context==='barracks'){
-    // Barracks/Portal/Training Field: warriors only
     const sel=rtsSelected[0]; if(!sel) return;
     title.textContent = cfg.barracksLabel;
-    const warIcon=rtsPlayerFaction==='roboto'?'🦾':rtsPlayerFaction==='shadow'?'⚔':'✨';
-    const warDesc=rtsPlayerFaction==='roboto'?'Ranged — rapid fire gun':
-                  rtsPlayerFaction==='prism'?'Ranged — magic projectiles':'Melee — fast sword charge';
-    const wBtn=document.createElement('button');
-    wBtn.className='rbp-option'; wBtn.disabled=rtsGold<cfg.warriorCost;
-    wBtn.innerHTML=`<span class="rbp-opt-icon">${warIcon}</span>
-      <span class="rbp-opt-info"><span class="rbp-opt-name">${cfg.warriorLabel}</span>
-      <span class="rbp-opt-desc">${warDesc}</span></span>
-      <span class="rbp-opt-cost">${cfg.warriorCost}g</span>`;
-    wBtn.onclick=()=>{
+    addOpt(cfg.warriorIcon, cfg.warriorLabel, cfg.warriorDesc, cfg.warriorCost, ()=>{
       if(rtsGold<cfg.warriorCost){ rtsSetLog('Not enough gold!'); return; }
       if(sel.underConstruction){ rtsSetLog('Still under construction!'); return; }
       const fn=()=>makeWarrior('player',rtsPlayerFaction,sel.x,sel.y);
@@ -49,44 +45,23 @@ function openBuildPopup(screenX, screenY, context){
       rtsGold-=cfg.warriorCost; updateRtsHUD();
       rtsSetLog(`${cfg.warriorLabel} queued (${sel.queue.length}/${QUEUE_MAX})`);
       openBuildPopup(sel.x-camX,sel.y-camY,'barracks');
-    };
-    opts.appendChild(wBtn);
+    });
 
   } else if(context==='worker'){
     title.textContent = 'WORKER ACTIONS';
-    const addOpt=(icon,name,desc,cost,onclick)=>{
-      const btn=document.createElement('button');
-      btn.className='rbp-option'; btn.disabled=rtsGold<cost;
-      btn.innerHTML=`<span class="rbp-opt-icon">${icon}</span>
-        <span class="rbp-opt-info"><span class="rbp-opt-name">${name}</span>
-        <span class="rbp-opt-desc">${desc}</span></span>
-        <span class="rbp-opt-cost">${cost}g</span>`;
-      btn.onclick=onclick; opts.appendChild(btn);
-    };
-
-    // Build Barracks/Portal/Training Field
-    const barIcon=rtsPlayerFaction==='roboto'?'🪖':rtsPlayerFaction==='prism'?'🌀':'⚔';
-    addOpt(barIcon,`Build ${cfg.barracksLabel}`,`Right-click to place — trains ${cfg.warriorLabel}s (20g)`,20,()=>{
+    addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Right-click to place — trains ${cfg.warriorLabel}s (20g)`, 20, ()=>{
       buildStructureMode='barracks'; rtsGold-=20; updateRtsHUD();
       rtsSetLog(`Right-click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
     });
-
-    // Build secondary structure (Shrine/Dark Shrine/Armory)
-    const strIcon=rtsPlayerFaction==='roboto'?'🏭':rtsPlayerFaction==='prism'?'🏛':'⚡';
-    addOpt(strIcon,`Build ${cfg.structLabel}`,`Right-click to place — trains elite units (20g)`,20,()=>{
+    addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Right-click to place — trains elite units (20g)`, 20, ()=>{
       buildStructureMode=true; rtsGold-=20; updateRtsHUD();
       rtsSetLog(`Right-click to place your ${cfg.structLabel}!`); closeBuildPopup();
     });
-
-    // Build Cannon
-    addOpt('💣','Build CANNON','Auto-attacks nearby enemies (15g)',15,()=>{
+    addOpt('💣', 'Build CANNON', 'Auto-attacks nearby enemies (15g)', 15, ()=>{
       buildStructureMode='cannon'; rtsGold-=15; updateRtsHUD();
       rtsSetLog('Right-click to place your CANNON!'); closeBuildPopup();
     });
-
-    // Build another base
-    const baseIcon=rtsPlayerFaction==='roboto'?'🏗':'🏰';
-    addOpt(baseIcon,`Build ${cfg.buildingName}`,`Right-click to place — trains more workers (25g)`,25,()=>{
+    addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Right-click to place — trains more workers (25g)`, 25, ()=>{
       buildStructureMode='base'; rtsGold-=25; updateRtsHUD();
       rtsSetLog(`Right-click to place your new ${cfg.buildingName}!`); closeBuildPopup();
     });
@@ -96,38 +71,23 @@ function openBuildPopup(screenX, screenY, context){
     if(!sel) return;
     title.textContent = cfg.structLabel;
 
-    // Build list of units for this faction's structure
-    const structUnits=[];
-    if(rtsPlayerFaction==='prism'){
-      structUnits.push({icon:'🔮',label:cfg.eliteLabel,  desc:cfg.eliteDesc,  cost:cfg.eliteCost,  fn:()=>makeElite('player',rtsPlayerFaction,sel.x,sel.y)});
-      structUnits.push({icon:'⚡',label:cfg.elite2Label, desc:cfg.elite2Desc, cost:cfg.elite2Cost, fn:()=>makeWizard('player',rtsPlayerFaction,sel.x,sel.y)});
-    } else if(rtsPlayerFaction==='shadow'){
-      structUnits.push({icon:'🌑',label:cfg.eliteLabel,  desc:cfg.eliteDesc,  cost:cfg.eliteCost,  fn:()=>makeElite('player',rtsPlayerFaction,sel.x,sel.y)});
-      structUnits.push({icon:'💀',label:cfg.elite2Label, desc:cfg.elite2Desc, cost:cfg.elite2Cost, fn:()=>makeNecromancer('player',rtsPlayerFaction,sel.x,sel.y)});
-    } else {
-      structUnits.push({icon:'⚡',label:cfg.eliteLabel,  desc:cfg.eliteDesc,  cost:cfg.eliteCost,  fn:()=>makeElite('player',rtsPlayerFaction,sel.x,sel.y)});
-      structUnits.push({icon:'🚗',label:cfg.elite2Label, desc:cfg.elite2Desc, cost:cfg.elite2Cost, fn:()=>makeTank('player',rtsPlayerFaction,sel.x,sel.y)});
-    }
+    // Elite units from config — no per-faction branching
+    const eliteUnits = [
+      { icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost,
+        fn:()=>makeElite('player',rtsPlayerFaction,sel.x,sel.y) },
+      { icon:cfg.elite2Icon, label:cfg.elite2Label, desc:cfg.elite2Desc, cost:cfg.elite2Cost,
+        fn:()=>elite2FnMap[cfg.elite2Fn]('player',rtsPlayerFaction,sel.x,sel.y) },
+    ];
 
-    for(const u of structUnits){
-      const btn=document.createElement('button');
-      btn.className='rbp-option'; btn.disabled=rtsGold<u.cost||(sel.underConstruction);
-      btn.innerHTML=`<span class="rbp-opt-icon">${u.icon}</span>
-        <span class="rbp-opt-info"><span class="rbp-opt-name">${u.label}</span>
-        <span class="rbp-opt-desc">${u.desc}</span></span>
-        <span class="rbp-opt-cost">${u.cost}g</span>`;
-      btn.onclick=(()=>{
-        const _u=u;
-        return ()=>{
-          if(rtsGold<_u.cost){ rtsSetLog('Not enough gold!'); return; }
-          if(sel.underConstruction){ rtsSetLog('Still under construction!'); return; }
-          if(!queueUnit(sel,_u.label,BUILD_TIMES.elite,_u.fn)) return;
-          rtsGold-=_u.cost; updateRtsHUD();
-          rtsSetLog(`${_u.label} queued (${sel.queue.length}/${QUEUE_MAX})`);
-          openBuildPopup(sel.x-camX,sel.y-camY,'structure');
-        };
-      })();
-      opts.appendChild(btn);
+    for(const u of eliteUnits){
+      addOpt(u.icon, u.label, u.desc, u.cost, ()=>{
+        if(rtsGold<u.cost){ rtsSetLog('Not enough gold!'); return; }
+        if(sel.underConstruction){ rtsSetLog('Still under construction!'); return; }
+        if(!queueUnit(sel,u.label,BUILD_TIMES.elite,u.fn)) return;
+        rtsGold-=u.cost; updateRtsHUD();
+        rtsSetLog(`${u.label} queued (${sel.queue.length}/${QUEUE_MAX})`);
+        openBuildPopup(sel.x-camX,sel.y-camY,'structure');
+      }, rtsGold<u.cost||sel.underConstruction);
     }
   }
 
