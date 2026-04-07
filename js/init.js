@@ -54,3 +54,46 @@ renderPreviewLaser(document.getElementById('prev-laser').getContext('2d'));
 renderPreviewMissile(document.getElementById('prev-missile').getContext('2d'));
 renderPreviewCryo(document.getElementById('prev-slow').getContext('2d'));
 raf=requestAnimationFrame(gameLoop);
+
+// ── EVENT HANDLERS (moved from inline HTML) ──
+
+// Tabs
+document.getElementById('tab-btn-td').onclick=function(){ switchTab('td', this); };
+document.getElementById('tab-btn-cs').onclick=function(){ switchTab('cs', this); };
+
+// TD controls
+document.getElementById('btn-reset').onclick=resetGame;
+document.getElementById('waveBtn').onclick=startWave;
+
+// Tower selection (event delegation)
+document.getElementById('towerGrid').onclick=function(e){
+  const btn=e.target.closest('.tower-btn');
+  if(btn && btn.dataset.type) selectTower(btn.dataset.type, btn);
+};
+
+// Speed buttons (event delegation)
+document.querySelector('.speed-btns').onclick=function(e){
+  const btn=e.target.closest('.speed-btn');
+  if(!btn) return;
+  const speeds=[1,2,3];
+  const idx=[...btn.parentElement.children].indexOf(btn);
+  if(idx>=0) setSpeed(speeds[idx], btn);
+};
+
+// Faction cards
+['shadow','prism','roboto'].forEach(faction=>{
+  const card=document.getElementById('fc-'+faction);
+  card.addEventListener('click', ()=>dsoSelect(faction));
+  card.addEventListener('mouseenter', ()=>dsoPreview(faction));
+  card.addEventListener('mouseleave', ()=>dsoPreviewClear());
+});
+
+// Reveal screen
+document.getElementById('btn-dso-back').onclick=dsoBack;
+document.getElementById('btn-dso-play').onclick=dsoPlay;
+
+// RTS controls
+document.getElementById('btn-attack').onclick=rtsOrderAttack;
+document.getElementById('btn-rts-menu').onclick=rtsMenuBack;
+document.getElementById('btn-rts-menu-over').onclick=rtsMenuBack;
+document.getElementById('btn-popup-close').onclick=closeBuildPopup;

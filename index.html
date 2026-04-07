@@ -40,8 +40,8 @@
     </div>
   </div>
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('td', this)">⬡ TOWER DEFENSE</button>
-    <button class="tab" onclick="switchTab('cs', this)">◈ DEEP SPACE OPS <span class="tab-badge">SOON</span></button>
+    <button class="tab active" id="tab-btn-td">⬡ TOWER DEFENSE</button>
+    <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS <span class="tab-badge">SOON</span></button>
   </div>
 </header>
 
@@ -67,7 +67,7 @@
         <div class="overlay" id="overlay">
           <div class="overlay-title" id="overlayTitle">GAME OVER</div>
           <div class="overlay-sub" id="overlaySub">YOU HAVE FAILED THE VOID</div>
-          <button class="overlay-btn" onclick="resetGame()">⟳ RESTART</button>
+          <button class="overlay-btn" id="btn-reset">⟳ RESTART</button>
         </div>
       </div>
 
@@ -75,22 +75,22 @@
         <div class="panel">
           <div class="panel-title">▸ DEPLOY TOWER</div>
           <div class="tower-grid" id="towerGrid">
-            <button class="tower-btn selected" data-type="gun" onclick="selectTower('gun',this)">
+            <button class="tower-btn selected" data-type="gun">
               <canvas id="prev-gun" width="44" height="44" style="display:block;margin:0 auto 3px"></canvas>
               <span class="tower-name">GUN</span>
               <span class="tower-cost">50g</span>
             </button>
-            <button class="tower-btn" data-type="laser" onclick="selectTower('laser',this)">
+            <button class="tower-btn" data-type="laser">
               <canvas id="prev-laser" width="44" height="44" style="display:block;margin:0 auto 3px"></canvas>
               <span class="tower-name">LASER</span>
               <span class="tower-cost">80g</span>
             </button>
-            <button class="tower-btn" data-type="missile" onclick="selectTower('missile',this)">
+            <button class="tower-btn" data-type="missile">
               <canvas id="prev-missile" width="44" height="44" style="display:block;margin:0 auto 3px"></canvas>
               <span class="tower-name">MISSILE</span>
               <span class="tower-cost">120g</span>
             </button>
-            <button class="tower-btn" data-type="slow" onclick="selectTower('slow',this)">
+            <button class="tower-btn" data-type="slow">
               <canvas id="prev-slow" width="44" height="44" style="display:block;margin:0 auto 3px"></canvas>
               <span class="tower-name">CRYO</span>
               <span class="tower-cost">70g</span>
@@ -103,13 +103,13 @@
 
         <div class="panel">
           <div class="panel-title">▸ WAVE CONTROL</div>
-          <button class="wave-btn" id="waveBtn" onclick="startWave()">▶ SEND WAVE</button>
+          <button class="wave-btn" id="waveBtn">▶ SEND WAVE</button>
           <div style="margin-top:10px">
             <div class="panel-title" style="margin-bottom:6px">▸ SPEED</div>
             <div class="speed-btns">
-              <button class="speed-btn active" onclick="setSpeed(1,this)">1×</button>
-              <button class="speed-btn" onclick="setSpeed(2,this)">2×</button>
-              <button class="speed-btn" onclick="setSpeed(3,this)">3×</button>
+              <button class="speed-btn active">1×</button>
+              <button class="speed-btn">2×</button>
+              <button class="speed-btn">3×</button>
             </div>
           </div>
         </div>
@@ -136,7 +136,7 @@
         <div class="faction-cards">
 
           <!-- SHADOW -->
-          <div class="faction-card" id="fc-shadow" onmouseenter="dsoPreview('shadow')" onmouseleave="dsoPreviewClear()" onclick="dsoSelect('shadow')">
+          <div class="faction-card" id="fc-shadow">
             <canvas class="fc-canvas" id="fc-canvas-shadow" width="180" height="220"></canvas>
             <div class="fc-name">SHADOW ARMADA</div>
             <div class="fc-desc">Masters of dark steel and silent death. The swordsman strikes before you see him.</div>
@@ -149,7 +149,7 @@
           </div>
 
           <!-- PRISM -->
-          <div class="faction-card" id="fc-prism" onmouseenter="dsoPreview('prism')" onmouseleave="dsoPreviewClear()" onclick="dsoSelect('prism')">
+          <div class="faction-card" id="fc-prism">
             <canvas class="fc-canvas" id="fc-canvas-prism" width="180" height="220"></canvas>
             <div class="fc-name">PRISM ARMADA</div>
             <div class="fc-desc">Wielders of radiant light. The White Witch bends reality with spectral sorcery.</div>
@@ -162,7 +162,7 @@
           </div>
 
           <!-- ROBOTO -->
-          <div class="faction-card" id="fc-roboto" onmouseenter="dsoPreview('roboto')" onmouseleave="dsoPreviewClear()" onclick="dsoSelect('roboto')">
+          <div class="faction-card" id="fc-roboto">
             <canvas class="fc-canvas" id="fc-canvas-roboto" width="180" height="220"></canvas>
             <div class="fc-name">ROBOTO ARMADA</div>
             <div class="fc-desc">Iron-clad war machines. The Gunbot never misses, never tires, never stops.</div>
@@ -189,8 +189,8 @@
         </div>
         <div class="reveal-lore" id="rv-lore">From the void between stars, he emerged.</div>
         <div class="reveal-btns">
-          <button class="rv-btn rv-back" onclick="dsoBack()">◂ CHANGE FACTION</button>
-          <button class="rv-btn rv-play" onclick="dsoPlay()">BEGIN BATTLE ▸</button>
+          <button class="rv-btn rv-back" id="btn-dso-back">◂ CHANGE FACTION</button>
+          <button class="rv-btn rv-play" id="btn-dso-play">BEGIN BATTLE ▸</button>
         </div>
       </div>
 
@@ -207,7 +207,7 @@
               <div class="rts-build-label" style="font-size:10px;color:rgba(0,245,255,0.5)">
                 Click your <span id="hud-building-name">TEMPLE</span> to build
               </div>
-              <button class="rts-build-btn rts-attack-btn" id="btn-attack" onclick="rtsOrderAttack()">
+              <button class="rts-build-btn rts-attack-btn" id="btn-attack">
                 <span class="rts-build-icon">⚡</span>
                 ATTACK!
               </button>
@@ -216,7 +216,7 @@
           <div class="rts-hud-right">
             <div class="rts-resource">ENEMY: <span id="rts-enemy-faction" style="color:#ff4444">???</span></div>
             <div class="rts-resource">BASE HP: <span id="rts-base-hp" style="color:#00ff88">100</span></div>
-            <button class="rts-retreat-btn" onclick="rtsMenuBack()">◂ MENU</button>
+            <button class="rts-retreat-btn" id="btn-rts-menu">◂ MENU</button>
           </div>
         </div>
         <div id="rts-viewport-wrap">
@@ -227,14 +227,14 @@
           <div id="rts-build-popup" style="display:none">
             <div class="rbp-title" id="rbp-title">TEMPLE</div>
             <div class="rbp-options" id="rbp-options"></div>
-            <button class="rbp-close" onclick="closeBuildPopup()">✕ CLOSE</button>
+            <button class="rbp-close" id="btn-popup-close">✕ CLOSE</button>
           </div>
         </div>
         <div class="rts-log-bar"><span id="rts-log">Click your base to build units!</span></div>
         <div id="rts-gameover-overlay" style="display:none" class="rts-over-overlay">
           <div class="rts-over-title" id="rts-over-title">VICTORY</div>
           <div class="rts-over-sub" id="rts-over-sub">The enemy base has fallen.</div>
-          <button class="overlay-btn" onclick="rtsMenuBack()">◂ BACK TO MENU</button>
+          <button class="overlay-btn" id="btn-rts-menu-over">◂ BACK TO MENU</button>
         </div>
       </div>
 
