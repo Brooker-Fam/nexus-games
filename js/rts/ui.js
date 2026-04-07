@@ -1,3 +1,6 @@
+// ── CLICK RADII ──
+const CLICK_RADII = { base:70, structure:50, cannon:36, warrior:20, worker:14 };
+
 // ── BUILD POPUP ──
 let rtsBuildPopupOpen = false;
 let buildStructureMode = false;
@@ -233,7 +236,7 @@ function rtsHandleClick(e){
   let hit=null, hitDist=Infinity;
   for(const ent of rtsEntities){
     if(ent.side!=='player') continue;
-    const r=ent.type==='base'?70:ent.type==='structure'?50:ent.type==='cannon'?36:ent.type==='warrior'?20:14;
+    const r=CLICK_RADII[ent.type]||14;
     const d=Math.hypot(wp.x-ent.x,wp.y-ent.y);
     if(d<r && d<hitDist){ hit=ent; hitDist=d; }
   }
@@ -315,7 +318,7 @@ function rtsHandleRightClick(e){
   let enemyHit=null, enemyDist=Infinity;
   for(const ent of rtsEntities){
     if(ent.side==='player') continue;
-    const r=ent.type==='base'?60:ent.type==='structure'?50:20;
+    const r=CLICK_RADII[ent.type]||20;
     const d=Math.hypot(wp.x-ent.x,wp.y-ent.y);
     if(d<r && d<enemyDist){ enemyHit=ent; enemyDist=d; }
   }
