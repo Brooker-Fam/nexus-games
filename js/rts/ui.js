@@ -30,22 +30,25 @@ function openBuildPopup(screenX, screenY, context){
 
   const elite2FnMap = { makeWizard, makeNecromancer, makeTank };
 
+  // Helper: issue train command and refresh popup
+  function trainCmd(buildingId, unitType, popupContext){
+    issueCommand({ type:'train_unit', buildingId, unitType });
+    // Refresh popup to show updated queue
+    const b=rtsEntities.find(e=>e.id===buildingId);
+    if(b) setTimeout(()=>openBuildPopup(b.x-camX,b.y-camY,popupContext),0);
+  }
+
   if(context==='base'){
     title.textContent = cfg.buildingName;
-    addOpt(cfg.workerIcon, cfg.workerLabel, 'Gathers gold from mines', 5, ()=>trainUnit('worker'));
+    const sel=rtsSelected[0];
+    addOpt(cfg.workerIcon, cfg.workerLabel, 'Gathers gold from mines', 5,
+      ()=>trainCmd(sel?sel.id:rtsBuildingSource?.id, 'worker', 'base'));
 
   } else if(context==='barracks'){
     const sel=rtsSelected[0]; if(!sel) return;
     title.textContent = cfg.barracksLabel;
-    addOpt(cfg.warriorIcon, cfg.warriorLabel, cfg.warriorDesc, cfg.warriorCost, ()=>{
-      if(rtsGold<cfg.warriorCost){ rtsSetLog('Not enough gold!'); return; }
-      if(sel.underConstruction){ rtsSetLog('Still under construction!'); return; }
-      const fn=()=>makeWarrior('player',rtsPlayerFaction,sel.x,sel.y);
-      if(!queueUnit(sel,cfg.warriorLabel,BUILD_TIMES.warrior,fn)) return;
-      rtsGold-=cfg.warriorCost; updateRtsHUD();
-      rtsSetLog(`${cfg.warriorLabel} queued (${sel.queue.length}/${QUEUE_MAX})`);
-      openBuildPopup(sel.x-camX,sel.y-camY,'barracks');
-    });
+    addOpt(cfg.warriorIcon, cfg.warriorLabel, cfg.warriorDesc, cfg.warriorCost,
+      ()=>trainCmd(sel.id, 'warrior', 'barracks'));
 
   } else if(context==='worker'){
     title.textContent = 'WORKER ACTIONS';
@@ -71,23 +74,15 @@ function openBuildPopup(screenX, screenY, context){
     if(!sel) return;
     title.textContent = cfg.structLabel;
 
-    // Elite units from config — no per-faction branching
-    const eliteUnits = [
-      { icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost,
-        fn:()=>makeElite('player',rtsPlayerFaction,sel.x,sel.y) },
-      { icon:cfg.elite2Icon, label:cfg.elite2Label, desc:cfg.elite2Desc, cost:cfg.elite2Cost,
-        fn:()=>elite2FnMap[cfg.elite2Fn]('player',rtsPlayerFaction,sel.x,sel.y) },
+    const eliteTypes = [
+      { icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost, unitType:'elite' },
+      { icon:cfg.elite2Icon, label:cfg.elite2Label, desc:cfg.elite2Desc, cost:cfg.elite2Cost, unitType:'elite2' },
     ];
 
-    for(const u of eliteUnits){
-      addOpt(u.icon, u.label, u.desc, u.cost, ()=>{
-        if(rtsGold<u.cost){ rtsSetLog('Not enough gold!'); return; }
-        if(sel.underConstruction){ rtsSetLog('Still under construction!'); return; }
-        if(!queueUnit(sel,u.label,BUILD_TIMES.elite,u.fn)) return;
-        rtsGold-=u.cost; updateRtsHUD();
-        rtsSetLog(`${u.label} queued (${sel.queue.length}/${QUEUE_MAX})`);
-        openBuildPopup(sel.x-camX,sel.y-camY,'structure');
-      }, rtsGold<u.cost||sel.underConstruction);
+    for(const u of eliteTypes){
+      addOpt(u.icon, u.label, u.desc, u.cost,
+        ()=>trainCmd(sel.id, u.unitType, 'structure'),
+        rtsGold<u.cost||sel.underConstruction);
     }
   }
 
@@ -146,33 +141,8 @@ function closeBuildPopup(){
   rtsBuildingSource = null;
 }
 
-function trainUnit(unitType){
-  const cost = unitType==='worker'?5:10;
-  if(rtsGold<cost){ rtsSetLog('Not enough gold!'); return; }
-  const building = rtsBuildingSource;
-  if(!building){ rtsSetLog('No building selected!'); return; }
-  if(building.underConstruction){ rtsSetLog('Building still under construction!'); return; }
-  const cfg = FACTION_CFG[rtsPlayerFaction];
-  const spawnX=building.x, spawnY=building.y;
-  const label = unitType==='worker'?cfg.workerLabel:cfg.warriorLabel;
-  const time  = unitType==='worker'?BUILD_TIMES.worker:BUILD_TIMES.warrior;
-  const fn    = unitType==='worker'
-    ? ()=>makeWorker('player',rtsPlayerFaction,spawnX,spawnY)
-    : ()=>makeWarrior('player',rtsPlayerFaction,spawnX,spawnY);
-  if(!queueUnit(building, label, time, fn)) return;
-  rtsGold-=cost;
-  rtsSetLog(`${label} queued (${building.queue.length}/${QUEUE_MAX})`);
-  updateRtsHUD();
-  // keep popup open so player can queue more
-  openBuildPopup(building.x-camX, building.y-camY, building.isBarracks?'barracks':'base');
-}
-
 function rtsOrderAttack(){
-  let count=0;
-  for(const e of rtsEntities){
-    if(e.type==='warrior'&&e.side==='player'&&e.state==='idle'){ e.state='march'; count++; }
-  }
-  rtsSetLog(count>0?`${count} warriors advancing!`:'No idle warriors selected.');
+  issueCommand({ type:'attack_all' });
 }
 
 // Convert screen coords → world coords
@@ -247,26 +217,18 @@ function rtsHandleRightClick(e){
   // structure/base placement mode
   if(buildStructureMode){
     const worker=rtsSelected.find(s=>s.type==='worker'&&s.side==='player');
-    const dispatchWorker=(buildTarget)=>{
-      if(worker){ worker.buildTarget=buildTarget; worker.state='building'; }
-      else {
-        const nearest=rtsEntities.filter(en=>en.type==='worker'&&en.side==='player'&&en.state!=='building')
-          .sort((a,b)=>Math.hypot(a.x-wp.x,a.y-wp.y)-Math.hypot(b.x-wp.x,b.y-wp.y))[0];
-        if(nearest){ nearest.buildTarget=buildTarget; nearest.state='building'; }
-      }
-    };
+    const workerId = worker ? worker.id
+      : (rtsEntities.filter(en=>en.type==='worker'&&en.side==='player'&&en.state!=='building')
+          .sort((a,b)=>Math.hypot(a.x-wp.x,a.y-wp.y)-Math.hypot(b.x-wp.x,b.y-wp.y))[0]||{}).id;
+
     if(buildStructureMode==='base'){
-      const nb={id:Math.random(),type:'base',side:'player',x:wp.x,y:wp.y,hp:100,maxHp:100,w:60,h:80,selected:false};
+      // Base placement is instant (no construction)
+      const nb={id:nextId(),type:'base',side:'player',x:wp.x,y:wp.y,hp:100,maxHp:100,w:60,h:80,selected:false,queue:[],trainTimer:0};
       rtsEntities.push(nb);
       rtsSetLog(`New ${FACTION_CFG[rtsPlayerFaction].buildingName} placed!`);
-    } else if(buildStructureMode==='cannon'){
-      // store what to build in the worker's buildTarget
-      dispatchWorker({x:wp.x,y:wp.y,buildType:'cannon'});
-    } else if(buildStructureMode==='barracks'){
-      dispatchWorker({x:wp.x,y:wp.y,buildType:'barracks'});
-    } else {
-      // standard structure
-      dispatchWorker({x:wp.x,y:wp.y,buildType:'structure'});
+    } else if(workerId){
+      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, buildType:
+        buildStructureMode==='cannon'?'cannon':buildStructureMode==='barracks'?'barracks':'structure' });
     }
     buildStructureMode=false;
     rtsParticles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#ffdd00',size:0,isRing:true,radius:4});
@@ -284,21 +246,14 @@ function rtsHandleRightClick(e){
     if(d<r && d<enemyDist){ enemyHit=ent; enemyDist=d; }
   }
 
-  let moved=0, attacked=0;
-  for(const sel of rtsSelected){
-    if(sel.side!=='player') continue;
-    if(enemyHit&&(sel.type==='warrior')){
-      sel.forcedTarget=enemyHit; sel.moveTarget=null; sel.state='march'; attacked++;
-    } else {
-      const spread=rtsSelected.indexOf(sel);
-      sel.moveTarget={x:wp.x+(spread%3-1)*35, y:wp.y+Math.floor(spread/3)*35};
-      sel.forcedTarget=null;
-      sel.state=sel.type==='warrior'?'march':'moving';
-      moved++;
-    }
+  const selectedIds=rtsSelected.filter(s=>s.side==='player').map(s=>s.id);
+  if(enemyHit){
+    issueCommand({ type:'attack_target', unitIds:selectedIds, targetId:enemyHit.id });
+    rtsSetLog(`Attack order issued!`);
+  } else {
+    issueCommand({ type:'move_units', unitIds:selectedIds, x:wp.x, y:wp.y });
+    rtsSetLog(`Move order issued!`);
   }
-  if(attacked>0) rtsSetLog(`Attack order issued to ${attacked} unit${attacked>1?'s':''}!`);
-  else if(moved>0) rtsSetLog(`Move order issued to ${moved} unit${moved>1?'s':''}!`);
   rtsParticles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,
     color:enemyHit?'#ff4444':'#00ff88',size:0,isRing:true,radius:4});
 }

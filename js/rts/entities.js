@@ -1,9 +1,11 @@
 // ── ENTITY TYPES ──
 // type: 'base','worker','warrior'
 // side: 'player','enemy'
+let _nextEntityId = 1;
+function nextId(){ return _nextEntityId++; }
 function makeBase(side){
   const x = side==='player' ? PLAYER_BASE_X : ENEMY_BASE_X;
-  return { id:Math.random(), type:'base', side, x, y:BASE_Y,
+  return { id:nextId(), type:'base', side, x, y:BASE_Y,
     hp:100, maxHp:100, w:60, h:80,
     queue:[], trainTimer:0,
   };
@@ -13,7 +15,7 @@ function makeWorker(side, faction, nearX, nearY){
   const by = nearY !== undefined ? nearY : BASE_Y;
   const spread = (Math.random()-0.5)*160;
   const offsetX = side==='player' ? 80 : -80;
-  return { id:Math.random(), type:'worker', side, faction,
+  return { id:nextId(), type:'worker', side, faction,
     x: bx+offsetX, y: by+spread,
     hp:20, maxHp:20, speed:0.65,
     state:'idle',
@@ -28,7 +30,7 @@ function makeWarrior(side, faction, nearX, nearY){
   const fireRate = faction==='roboto' ? 14 : faction==='prism' ? 55 : 45;
   const hp = faction==='roboto' ? 12 : 40;
   const offsetX = side==='player' ? 80 : -80;
-  return { id:Math.random(), type:'warrior', side, faction,
+  return { id:nextId(), type:'warrior', side, faction,
     x: bx+offsetX, y: by+(Math.random()-0.5)*200,
     hp, maxHp:hp, speed: faction==='shadow' ? 2.2 : 0.7,
     state:'idle',
@@ -61,7 +63,7 @@ function makeStructure(side, faction, x, y, overrideType){
   const cfg=FACTION_CFG[faction];
   const structType = overrideType || (faction==='roboto'?'armory': faction==='prism'?'shrine':'darkgen');
   return {
-    id:Math.random(), type:'structure', side, faction,
+    id:nextId(), type:'structure', side, faction,
     x, y, hp:80, maxHp:80,
     structType,
     selected:false, frame:0,
@@ -77,7 +79,7 @@ function makeBarracks(side, faction, x, y){
   const typeMap={roboto:'barracks', prism:'portal', shadow:'trainingfield'};
   const cfg=FACTION_CFG[faction];
   return {
-    id:Math.random(), type:'structure', side, faction,
+    id:nextId(), type:'structure', side, faction,
     x, y, hp:80, maxHp:80,
     structType: typeMap[faction]||'barracks',
     selected:false, frame:0,
@@ -90,7 +92,7 @@ function makeBarracks(side, faction, x, y){
 
 function makeCannon(side, faction, x, y){
   return {
-    id:Math.random(), type:'cannon', side, faction,
+    id:nextId(), type:'cannon', side, faction,
     x, y, hp:60, maxHp:60,
     range:280, damage:20, cooldown:0, rate:80,
     aimAngle:0,
@@ -107,7 +109,7 @@ function makeElite(side, faction, nearX, nearY){
   // speeds match faction standard (shadow elite is dark warrior — not swordsman, so standard speed)
   const speed = faction==='prism'?0.7 : faction==='roboto'?0.7 : 0.75;
   return {
-    id:Math.random(), type:'warrior', subtype:'elite', side, faction,
+    id:nextId(), type:'warrior', subtype:'elite', side, faction,
     x: nearX+(isPlayer?50:-50), y: nearY+spread,
     hp:70, maxHp:70,
     speed,
@@ -124,7 +126,7 @@ function makeElite(side, faction, nearX, nearY){
 function makeWizard(side, faction, nearX, nearY){
   const isPlayer=side==='player';
   return {
-    id:Math.random(), type:'warrior', subtype:'wizard', side, faction,
+    id:nextId(), type:'warrior', subtype:'wizard', side, faction,
     x: nearX+(isPlayer?60:-60), y: nearY+(Math.random()-0.5)*120,
     hp:50, maxHp:50, speed:0.7,
     state:'idle', target:null, attackTimer:0,
@@ -136,7 +138,7 @@ const deadSwordsmenPool=[];
 function makeNecromancer(side, faction, nearX, nearY){
   const isPlayer=side==='player';
   return {
-    id:Math.random(), type:'warrior', subtype:'necromancer', side, faction,
+    id:nextId(), type:'warrior', subtype:'necromancer', side, faction,
     x: nearX+(isPlayer?60:-60), y: nearY+(Math.random()-0.5)*120,
     hp:45, maxHp:45, speed:0.75,
     state:'idle', target:null, attackTimer:0,
@@ -148,7 +150,7 @@ function makeNecromancer(side, faction, nearX, nearY){
 function makeTank(side, faction, nearX, nearY){
   const isPlayer=side==='player';
   return {
-    id:Math.random(), type:'warrior', subtype:'tank', side, faction,
+    id:nextId(), type:'warrior', subtype:'tank', side, faction,
     x: nearX+(isPlayer?70:-70), y: nearY+(Math.random()-0.5)*120,
     hp:200, maxHp:200, speed:0.7,
     state:'idle', target:null, attackTimer:0,
@@ -182,8 +184,10 @@ function startRTS(playerFaction){
   rtsPlayerFaction=playerFaction;
   const factions=['prism','shadow','roboto'].filter(f=>f!==playerFaction);
   rtsEnemyFaction = factions[Math.floor(Math.random()*factions.length)];
+  _nextEntityId=1;
   rtsGold=0; rtsBaseHP=100; rtsEnemyBaseHP=100;
   rtsGameOver=false; rtsFrame=0; rtsParticles=[]; rtsProjectiles=[];
+  rtsCommandQueue.length=0;
   rtsSelected=[]; rtsBuildPopupOpen=false; buildStructureMode=false;
   aiGold=0; aiTimer=0; deadSwordsmenPool.length=0;
   closeBuildPopup&&closeBuildPopup(); rtsEntities=[];

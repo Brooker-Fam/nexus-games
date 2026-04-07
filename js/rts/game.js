@@ -134,6 +134,7 @@ function aiTick(){
 function rtsTick(){
   if(rtsGameOver) return;
   rtsFrame++;
+  processCommands();
   tickCamera();
   aiTick();
 
