@@ -47,7 +47,7 @@ function mpWire(c){
     console.log('[MP] Received:', msg.t, msg);
     if(msg.t==='faction') { mpRemoteFaction=msg.f; mpCheckStart(); }
     else if(msg.t==='cmd') { if(mpIsHost) executeRemoteCommand(msg.c); }
-    else if(msg.t==='state') mpApplyState(msg);
+    else if(msg.t==='s') mpApplyState(msg);
     else if(msg.t==='go')  mpStartGame(msg);
   });
   c.on('close',()=>{ console.log('[MP] Connection CLOSED'); mpConnected=false; rtsSetLog('Opponent disconnected.'); });
@@ -142,75 +142,54 @@ function executeRemoteCommand(cmd){
 }
 
 // ── HOST STATE SYNC ──
+// Compact format: arrays instead of objects to reduce JSON size
+const _E_FIELDS=['id','type','side','faction','x','y','hp','maxHp','state','subtype',
+  'ranged','aimAngle','frame','underConstruction','buildProgress','buildTime',
+  'goldCarry','attackTimer','hammerSwing','isBarracks'];
+
 function mpSendState(){
-  const ents = rtsEntities.map(e=>({
-    id:e.id, type:e.type, side:e.side, faction:e.faction,
-    x:Math.round(e.x), y:Math.round(e.y),
-    hp:Math.round(e.hp), maxHp:e.maxHp,
-    state:e.state, subtype:e.subtype,
-    selected:e.selected, ranged:e.ranged,
-    aimAngle:e.aimAngle, frame:e.frame,
-    underConstruction:e.underConstruction,
-    buildProgress:e.buildProgress, buildTime:e.buildTime,
-    queue:e.queue?e.queue.map(q=>({label:q.label,time:q.time})):[], trainTimer:e.trainTimer||0,
-    goldCarry:e.goldCarry,
-    attackTimer:e.attackTimer,
-    hammerSwing:e.hammerSwing,
-    isBarracks:e.isBarracks,
-  }));
-  const projs = rtsProjectiles.map(p=>({
-    x:Math.round(p.x), y:Math.round(p.y),
-    color:p.color, type:p.type, side:p.side,
-    trail:p.trail.slice(-4),
-  }));
-  mpSend({t:'state',
-    ents, projs,
-    gold:rtsGold, aiGold,
-    baseHP:rtsBaseHP, enemyBaseHP:rtsEnemyBaseHP,
-    frame:rtsFrame, gameOver:rtsGameOver,
+  const ents=rtsEntities.map(e=>{
+    const a=_E_FIELDS.map(f=> f==='x'||f==='y'||f==='hp' ? Math.round(e[f]||0) : e[f]);
+    // Append queue info only if present
+    if(e.queue&&e.queue.length) a.push(e.queue.map(q=>q.label), e.trainTimer||0);
+    return a;
   });
+  const projs=rtsProjectiles.map(p=>[Math.round(p.x),Math.round(p.y),p.color,p.type,p.side]);
+  mpSend({t:'s', e:ents, p:projs, g:Math.round(rtsGold), a:Math.round(aiGold),
+    bh:rtsBaseHP, eh:rtsEnemyBaseHP, f:rtsFrame, go:rtsGameOver?1:0});
 }
 
 function mpApplyState(msg){
-  // Update entities from host snapshot
-  rtsGold=msg.gold; aiGold=msg.aiGold;
-  rtsBaseHP=msg.baseHP; rtsEnemyBaseHP=msg.enemyBaseHP;
-  rtsFrame=msg.frame; rtsGameOver=msg.gameOver;
+  rtsGold=msg.g; aiGold=msg.a;
+  rtsBaseHP=msg.bh; rtsEnemyBaseHP=msg.eh;
+  rtsFrame=msg.f; rtsGameOver=!!msg.go;
 
-  // Sync entities: update existing, add new, remove dead
-  const hostIds=new Set(msg.ents.map(e=>e.id));
-  // Remove entities not in host state
+  // Decode compact entities
+  const hostIds=new Set();
+  for(const a of msg.e){
+    const id=a[0]; hostIds.add(id);
+    let local=rtsEntities.find(e=>e.id===id);
+    if(!local){ local={id}; rtsEntities.push(local); }
+    for(let i=0;i<_E_FIELDS.length;i++) local[_E_FIELDS[i]]=a[i];
+    // Queue data if present (appended after standard fields)
+    if(a.length>_E_FIELDS.length){
+      local.queue=(a[_E_FIELDS.length]||[]).map(l=>({label:l,time:0}));
+      local.trainTimer=a[_E_FIELDS.length+1]||0;
+    } else {
+      if(!local.queue) local.queue=[];
+    }
+  }
+  // Remove dead entities
   for(let i=rtsEntities.length-1;i>=0;i--){
     if(!hostIds.has(rtsEntities[i].id)) rtsEntities.splice(i,1);
   }
-  // Update or add
-  for(const he of msg.ents){
-    let local=rtsEntities.find(e=>e.id===he.id);
-    if(!local){
-      local={id:he.id}; rtsEntities.push(local);
-    }
-    local.type=he.type; local.side=he.side; local.faction=he.faction;
-    local.x=he.x; local.y=he.y;
-    local.hp=he.hp; local.maxHp=he.maxHp;
-    local.state=he.state; local.subtype=he.subtype;
-    local.ranged=he.ranged;
-    local.aimAngle=he.aimAngle; local.frame=he.frame;
-    local.underConstruction=he.underConstruction;
-    local.buildProgress=he.buildProgress; local.buildTime=he.buildTime;
-    local.goldCarry=he.goldCarry;
-    local.attackTimer=he.attackTimer;
-    local.hammerSwing=he.hammerSwing;
-    local.isBarracks=he.isBarracks;
-    local.queue=he.queue||[]; local.trainTimer=he.trainTimer||0;
-  }
-  // Sync projectiles
-  rtsProjectiles=msg.projs.map(p=>({...p,trail:p.trail||[]}));
+  // Decode projectiles
+  rtsProjectiles=msg.p.map(a=>({x:a[0],y:a[1],color:a[2],type:a[3],side:a[4],trail:[]}));
 
   updateRtsHUD();
   if(rtsGameOver){
-    // Determine win/lose from guest perspective
-    const myBaseHP = mySide()==='player' ? rtsBaseHP : rtsEnemyBaseHP;
-    endRTS(myBaseHP > 0);
+    const myBaseHP=mySide()==='player'?rtsBaseHP:rtsEnemyBaseHP;
+    endRTS(myBaseHP>0);
   }
 }
 
