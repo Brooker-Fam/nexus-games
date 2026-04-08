@@ -149,8 +149,11 @@ function rtsOrderAttack(){
 function screenToWorld(sx, sy){ return { x: sx+camX, y: sy+camY }; }
 // Get canvas-relative mouse position
 function canvasPos(e){
-  const rect=document.getElementById('rts-canvas').getBoundingClientRect();
-  return { x:e.clientX-rect.left, y:e.clientY-rect.top };
+  const c=document.getElementById('rts-canvas');
+  const rect=c.getBoundingClientRect();
+  // Scale from display size to canvas resolution
+  const scaleX=c.width/rect.width, scaleY=c.height/rect.height;
+  return { x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY };
 }
 
 function rtsHandleClick(e){

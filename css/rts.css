@@ -196,7 +196,7 @@
   #dso-game { position:relative; user-select:none; }
   #rts-viewport-wrap {
     position:relative;
-    width:1200px; height:580px;
+    width:100%; max-width:1200px; height:580px;
     overflow:hidden;
     border:1px solid rgba(0,245,255,0.2);
     box-shadow:0 0 30px rgba(0,245,255,0.06);
@@ -206,9 +206,8 @@
   #rts-viewport-wrap:active { cursor:grabbing; }
   #rts-canvas {
     display:block;
+    width:100%; height:100%;
     position:absolute; top:0; left:0;
-    /* canvas draws at its width/height pixel dimensions */
-    image-rendering:pixelated;
   }
   #rts-minimap {
     position:absolute; bottom:10px; right:10px;
@@ -303,4 +302,30 @@
     border-color:#ff4444; color:#ffaaaa;
     background:rgba(255,40,40,0.15);
     box-shadow:0 0 16px rgba(255,60,60,0.3);
+  }
+
+  /* ── RTS RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .dso-title { font-size: 24px; letter-spacing: 4px; }
+    .dso-pre { font-size: 9px; letter-spacing: 4px; }
+    .faction-cards { gap: 12px; }
+    .faction-card { width: 180px; }
+    .rts-hud { flex-wrap: wrap; padding: 6px 10px; }
+    .rts-hud-left, .rts-hud-right { min-width: 120px; }
+    .rts-build-panel { flex-wrap: wrap; gap: 6px; }
+    #rts-viewport-wrap { height: 50vw; min-height: 300px; max-height: 580px; }
+    #rv-canvas { width: 100%; height: auto; }
+    .reveal-champion { font-size: 24px; letter-spacing: 4px; }
+    .mp-code { font-size: 18px; letter-spacing: 4px; }
+  }
+  @media (max-width: 600px) {
+    .dso-title { font-size: 18px; letter-spacing: 2px; }
+    .faction-cards { flex-direction: column; align-items: center; }
+    .faction-card { width: 90%; max-width: 280px; }
+    .rts-hud-mid { width: 100%; justify-content: center; }
+    .rts-build-btn { padding: 5px 10px; font-size: 8px; }
+    .reveal-btns { flex-direction: column; gap: 10px; }
+    .mp-buttons { flex-direction: column; gap: 10px; }
+    .mp-join-row { justify-content: center; }
+    #rts-viewport-wrap { height: 60vw; min-height: 250px; }
   }

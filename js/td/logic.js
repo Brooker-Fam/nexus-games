@@ -98,7 +98,8 @@ function isPathCell(gx,gy){
 canvas.addEventListener('click', e=>{
   if(state.gameOver) return;
   const r = canvas.getBoundingClientRect();
-  const mx = e.clientX-r.left, my = e.clientY-r.top;
+  const scaleX = canvas.width/r.width, scaleY = canvas.height/r.height;
+  const mx = (e.clientX-r.left)*scaleX, my = (e.clientY-r.top)*scaleY;
   const gx = Math.floor(mx/CELL), gy = Math.floor(my/CELL);
   if(isPathCell(gx,gy)){ addLog('Cannot place on path!','bad'); return; }
   const ttype = state.selectedTower;

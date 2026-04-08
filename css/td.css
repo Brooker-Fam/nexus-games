@@ -42,6 +42,8 @@
   /* CANVAS */
   #tdCanvas {
     display: block;
+    width: 100%;
+    height: auto;
     border: 1px solid var(--panel-border);
     box-shadow: 0 0 30px rgba(0,245,255,0.1), inset 0 0 60px rgba(0,0,0,0.5);
     background: #020810;
@@ -188,3 +190,21 @@
   .rts-enemy-color { color: #ff4444; }
   .rts-hp-color { color: #00ff88; }
   .rts-build-hint { font-size:10px; color:rgba(0,245,255,0.5); }
+
+  /* ── TD RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .game-area { grid-template-columns: 1fr; }
+    .sidebar { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+    .sidebar .panel { flex: 1; min-width: 180px; }
+    .game-header { flex-direction: column; gap: 10px; }
+    .game-stats { justify-content: center; }
+  }
+  @media (max-width: 600px) {
+    .game-stats { gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .stat-box { min-width: 60px; padding: 6px 10px; }
+    .stat-val { font-size: 14px; }
+    .game-title { font-size: 16px; letter-spacing: 2px; }
+    .tower-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .sidebar { flex-direction: column; }
+    .sidebar .panel { min-width: unset; }
+  }
