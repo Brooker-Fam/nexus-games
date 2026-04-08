@@ -593,11 +593,25 @@ let rtsLastTime=0, rtsAccum=0;
 function rtsLoop(ts){
   const dt = Math.min(ts - rtsLastTime, 100);
   rtsLastTime = ts;
+
+  if(window._mpMultiplayer && !mpIsHost){
+    // Guest: don't tick, just render host's state
+    rtsDraw();
+    rtsRAF=requestAnimationFrame(rtsLoop);
+    return;
+  }
+
   rtsAccum += dt * rtsSpeed;
   while(rtsAccum >= TARGET_MS){
     rtsTick();
     rtsAccum -= TARGET_MS;
   }
+
+  // Host in multiplayer: send state to guest periodically
+  if(window._mpMultiplayer && mpIsHost && rtsFrame%3===0){
+    mpSendState();
+  }
+
   rtsDraw();
   rtsRAF=requestAnimationFrame(rtsLoop);
 }

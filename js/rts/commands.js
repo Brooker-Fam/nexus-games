@@ -5,11 +5,16 @@
 const rtsCommandQueue = [];
 
 function issueCommand(cmd){
-  cmd.side = 'player';
   cmd.tick = rtsFrame;
-  rtsCommandQueue.push(cmd);
-  // In multiplayer, send to remote player
-  if(mpConnected) mpSendCommand(cmd);
+  if(window._mpMultiplayer && mpConnected){
+    // Multiplayer: send to host. Host executes, guest gets state back.
+    mpSendCommand(cmd);
+    // Host also executes locally
+    if(mpIsHost) rtsCommandQueue.push(cmd);
+  } else {
+    // Singleplayer: execute locally
+    rtsCommandQueue.push(cmd);
+  }
 }
 
 function processCommands(){

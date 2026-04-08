@@ -45,7 +45,8 @@ function mpWire(c){
   c.on('data',msg=>{
     console.log('[MP] Received:', msg.t, msg);
     if(msg.t==='faction') { mpRemoteFaction=msg.f; mpCheckStart(); }
-    else if(msg.t==='cmd') executeRemoteCommand(msg.c);
+    else if(msg.t==='cmd') { if(mpIsHost) executeRemoteCommand(msg.c); }
+    else if(msg.t==='state') mpApplyState(msg);
     else if(msg.t==='go')  mpStartGame(msg);
   });
   c.on('close',()=>{ console.log('[MP] Connection CLOSED'); mpConnected=false; rtsSetLog('Opponent disconnected.'); });
@@ -120,6 +121,78 @@ function executeRemoteCommand(cmd){
     });
   } else if(cmd.type==='attack_all'){
     rtsEntities.forEach(e=>{ if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle') e.state='march'; });
+  }
+}
+
+// ── HOST STATE SYNC ──
+function mpSendState(){
+  const ents = rtsEntities.map(e=>({
+    id:e.id, type:e.type, side:e.side, faction:e.faction,
+    x:Math.round(e.x), y:Math.round(e.y),
+    hp:Math.round(e.hp), maxHp:e.maxHp,
+    state:e.state, subtype:e.subtype,
+    selected:e.selected, ranged:e.ranged,
+    aimAngle:e.aimAngle, frame:e.frame,
+    underConstruction:e.underConstruction,
+    buildProgress:e.buildProgress, buildTime:e.buildTime,
+    queue:e.queue?e.queue.length:0,
+    goldCarry:e.goldCarry,
+    attackTimer:e.attackTimer,
+    hammerSwing:e.hammerSwing,
+    isBarracks:e.isBarracks,
+  }));
+  const projs = rtsProjectiles.map(p=>({
+    x:Math.round(p.x), y:Math.round(p.y),
+    color:p.color, type:p.type, side:p.side,
+    trail:p.trail.slice(-4),
+  }));
+  mpSend({t:'state',
+    ents, projs,
+    gold:rtsGold, aiGold,
+    baseHP:rtsBaseHP, enemyBaseHP:rtsEnemyBaseHP,
+    frame:rtsFrame, gameOver:rtsGameOver,
+  });
+}
+
+function mpApplyState(msg){
+  // Update entities from host snapshot
+  rtsGold=msg.gold; aiGold=msg.aiGold;
+  rtsBaseHP=msg.baseHP; rtsEnemyBaseHP=msg.enemyBaseHP;
+  rtsFrame=msg.frame; rtsGameOver=msg.gameOver;
+
+  // Sync entities: update existing, add new, remove dead
+  const hostIds=new Set(msg.ents.map(e=>e.id));
+  // Remove entities not in host state
+  for(let i=rtsEntities.length-1;i>=0;i--){
+    if(!hostIds.has(rtsEntities[i].id)) rtsEntities.splice(i,1);
+  }
+  // Update or add
+  for(const he of msg.ents){
+    let local=rtsEntities.find(e=>e.id===he.id);
+    if(!local){
+      local={id:he.id}; rtsEntities.push(local);
+    }
+    local.type=he.type; local.side=he.side; local.faction=he.faction;
+    local.x=he.x; local.y=he.y;
+    local.hp=he.hp; local.maxHp=he.maxHp;
+    local.state=he.state; local.subtype=he.subtype;
+    local.ranged=he.ranged;
+    local.aimAngle=he.aimAngle; local.frame=he.frame;
+    local.underConstruction=he.underConstruction;
+    local.buildProgress=he.buildProgress; local.buildTime=he.buildTime;
+    local.goldCarry=he.goldCarry;
+    local.attackTimer=he.attackTimer;
+    local.hammerSwing=he.hammerSwing;
+    local.isBarracks=he.isBarracks;
+  }
+  // Sync projectiles
+  rtsProjectiles=msg.projs.map(p=>({...p,trail:p.trail||[]}));
+
+  updateRtsHUD();
+  if(rtsGameOver){
+    // Determine win/lose from guest perspective
+    const myBaseHP = mySide()==='player' ? rtsBaseHP : rtsEnemyBaseHP;
+    endRTS(myBaseHP > 0);
   }
 }
 
