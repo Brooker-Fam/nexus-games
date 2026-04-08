@@ -120,7 +120,7 @@ function recordGameResult(playerWon, gameFrames){
   return { before, after: d.rating, streak: d.streak, gamesPlayed: d.gamesPlayed, rd: d.rd };
 }
 
-// ── DIFFICULTY QUERIES ──
+// ── DIFFICULTY QUERIES & CURVES ──
 
 function getDifficultyNorm(){
   const d = loadDifficultyData();
@@ -131,9 +131,26 @@ function getDifficultyLevel(){
   return Math.max(1, Math.min(10, Math.round(getDifficultyNorm() * 9) + 1));
 }
 
+// Linear interpolation
 function _diffLerp(easy, hard){
   const t = getDifficultyNorm();
   return Math.round(easy + (hard - easy) * t);
+}
+
+// Exponential curve — most change happens at higher difficulty
+// Good for: reaction speed, attack frequency (hard AI feels sharply faster)
+function _diffExp(easy, hard){
+  const t = getDifficultyNorm();
+  const curve = t * t; // quadratic
+  return Math.round(easy + (hard - easy) * curve);
+}
+
+// S-curve — slow change at extremes, fast in the middle
+// Good for: micro quality, focus-fire (moderate difficulty feels distinct)
+function _diffSCurve(easy, hard){
+  const t = getDifficultyNorm();
+  const curve = t * t * (3 - 2 * t); // smoothstep
+  return easy + (hard - easy) * curve;
 }
 
 // ── APPLY TO AI ──
@@ -146,13 +163,32 @@ function applyDifficultyToAI(){
 
   const t = getDifficultyNorm();
 
-  AI_CONFIG.buildInterval     = _diffLerp(360, 120);
-  AI_CONFIG.trainInterval     = _diffLerp(200, 80);
-  AI_CONFIG.attackInterval    = _diffLerp(600, 240);
+  // Decision cadence — exponential: hard AI reacts sharply faster
+  AI_CONFIG.buildInterval     = _diffExp(360, 120);
+  AI_CONFIG.trainInterval     = _diffExp(200, 80);
+  AI_CONFIG.attackInterval    = _diffExp(600, 240);
+
+  // Economy
   AI_CONFIG.maxWorkers        = _diffLerp(8, 18);
+  AI_CONFIG.resourceBonus     = +(0.85 + t * 0.30).toFixed(2);
+
+  // Attack thresholds
   AI_CONFIG.attackMinWarriors = _diffLerp(7, 3);
   AI_CONFIG.attackMatchMin    = _diffLerp(5, 2);
-  AI_CONFIG.resourceBonus     = +(0.85 + t * 0.30).toFixed(2);
+
+  // Build order quality — easy AI delays expansion, hard AI rushes
+  AI_CONFIG.barracksWorkerReq   = _diffLerp(4, 2);   // workers needed for 1st barracks
+  AI_CONFIG.barracks2WorkerReq  = _diffLerp(9, 5);   // workers needed for 2nd barracks
+  AI_CONFIG.eliteWorkerReq      = _diffLerp(7, 3);   // workers needed for elite structure
+  AI_CONFIG.maxCannons          = _diffLerp(2, 4);    // defensive cannon cap
+
+  // Tactical micro — S-curve: kicks in meaningfully at mid difficulty
+  AI_CONFIG.focusFireChance  = +_diffSCurve(0, 0.8).toFixed(2);  // target low-HP enemies
+  AI_CONFIG.kiteChance       = +_diffSCurve(0, 0.6).toFixed(2);  // ranged retreat from melee
+
+  // Mistakes — easy AI sometimes skips decisions
+  AI_CONFIG.mistakeChance      = +(0.25 * (1 - t)).toFixed(2);   // 25% at easy → 0% at hard
+  AI_CONFIG.attackPartialChance= +(0.4 * (1 - t)).toFixed(2);    // chance to only send some warriors
 }
 
 // ── HUD HELPERS ──

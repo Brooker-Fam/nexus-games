@@ -1,13 +1,25 @@
 // ── AI CONFIG ──
 // Base values — overwritten by applyDifficultyToAI() at game start.
 const AI_CONFIG = {
-  buildInterval: 180,        // ticks between build decisions (scaled by difficulty)
-  trainInterval: 120,        // ticks between train decisions (scaled by difficulty)
-  attackInterval: 400,       // ticks between attack waves (scaled by difficulty)
+  buildInterval: 180,        // ticks between build decisions
+  trainInterval: 120,        // ticks between train decisions
+  attackInterval: 400,       // ticks between attack waves
   maxWorkers: 14,
   attackMinWarriors: 5,      // min idle warriors to launch attack
   attackMatchMin: 3,         // min warriors for "outnumber player" attack
   resourceBonus: 1.0,        // gold multiplier for AI workers
+  // build order quality
+  barracksWorkerReq: 2,      // workers needed before 1st barracks
+  barracks2WorkerReq: 6,     // workers needed before 2nd barracks
+  eliteWorkerReq: 4,         // workers needed before elite structure
+  maxCannons: 3,             // defensive cannon cap
+  // tactical micro
+  focusFireChance: 0,        // chance to target lowest-HP enemy (0 in MP)
+  kiteChance: 0,             // chance for ranged AI to retreat from melee (0 in MP)
+  // mistakes & coordination
+  mistakeChance: 0,          // chance to skip a decision cycle
+  attackPartialChance: 0,    // chance to only send some warriors
+  // costs
   barracksCost: 20,
   cannonCost: 15,
   structureCost: 20,
@@ -74,33 +86,42 @@ function aiTick(){
   // === BUILD DECISIONS (cadence set by difficulty) ===
   if(S.aiTimer%AI_CONFIG.buildInterval===0){
 
+    // Mistake: easy AI sometimes skips build decisions entirely
+    if(Math.random() >= AI_CONFIG.mistakeChance){
+
     // Always keep training workers (up to cap)
     if(workers<AI_CONFIG.maxWorkers){
       aiQueueAt(eb,'Worker',BUILD_TIMES.worker,()=>makeWorker('enemy',S.enemyFaction),AI_CONFIG.workerCost);
     }
 
-    // Build first barracks ASAP (only need 2 workers)
-    if(barracks===0 && workers>=2){
+    // Build first barracks (worker threshold set by difficulty)
+    if(barracks===0 && workers>=AI_CONFIG.barracksWorkerReq){
       aiBuild('barracks', eb.x-150, eb.y, AI_CONFIG.barracksCost);
     }
     // Build second barracks for faster production
-    else if(barracks===1 && workers>=6 && S.gold.enemy>=AI_CONFIG.barracksCost){
+    else if(barracks===1 && workers>=AI_CONFIG.barracks2WorkerReq && S.gold.enemy>=AI_CONFIG.barracksCost){
       aiBuild('barracks', eb.x-200, eb.y+120, AI_CONFIG.barracksCost);
     }
 
-    // Build cannons (up to 3 for defense)
-    if(cannons<3 && workers>=3 && S.gold.enemy>=AI_CONFIG.cannonCost){
+    // Build cannons (cap set by difficulty)
+    if(cannons<AI_CONFIG.maxCannons && workers>=3 && S.gold.enemy>=AI_CONFIG.cannonCost){
       aiBuild('cannon', eb.x-100, eb.y, AI_CONFIG.cannonCost);
     }
 
-    // Build elite structure
-    if(eliteStructs===0 && workers>=4 && barracks>=1){
+    // Build elite structure (worker threshold set by difficulty)
+    if(eliteStructs===0 && workers>=AI_CONFIG.eliteWorkerReq && barracks>=1){
       aiBuild('structure', eb.x-200, eb.y, AI_CONFIG.structureCost);
     }
+
+    } // end mistake check
   }
 
   // === TRAIN UNITS (cadence set by difficulty) ===
   if(S.aiTimer%AI_CONFIG.trainInterval===0){
+
+    // Mistake: easy AI sometimes skips training
+    if(Math.random() >= AI_CONFIG.mistakeChance){
+
     // Train warriors from ALL barracks
     const allBarracks=S.entities.filter(e=>e.side==='enemy'&&e.type==='structure'&&e.isBarracks&&!e.underConstruction);
     for(const bar of allBarracks){
@@ -112,6 +133,8 @@ function aiTick(){
     if(eliteStruct && S.gold.enemy>=AI_CONFIG.eliteCost){
       aiQueueAt(eliteStruct,'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),AI_CONFIG.eliteCost);
     }
+
+    } // end mistake check
   }
 
   } // end !_mpMultiplayer
@@ -130,8 +153,16 @@ function aiTick(){
   if(S.aiTimer%AI_CONFIG.attackInterval===0){
     const shouldAttack = idleWarriors>=AI_CONFIG.attackMinWarriors || (idleWarriors>=AI_CONFIG.attackMatchMin && idleWarriors>=playerWarriors);
     if(shouldAttack){
+      // Partial attack: easy AI sometimes only sends a portion of warriors
+      const sendAll = Math.random() >= AI_CONFIG.attackPartialChance;
+      let sent = 0;
       for(const e of S.entities){
-        if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle') e.state='march';
+        if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle'){
+          if(sendAll || sent < Math.ceil(idleWarriors * 0.5)){
+            e.state='march';
+            sent++;
+          }
+        }
       }
     }
   }
@@ -375,6 +406,21 @@ function warriorFindTarget(w, enemyBase2){
       return { target:w.forcedTarget, dist:Math.hypot(w.forcedTarget.x-w.x, w.forcedTarget.y-w.y) };
     }
   }
+
+  // AI focus-fire: target lowest-HP enemy in engagement range
+  if(w.side==='enemy' && AI_CONFIG.focusFireChance>0 && Math.random()<AI_CONFIG.focusFireChance){
+    let weakest=null, weakestHP=Infinity;
+    const scanRange = (w.range||50) * 2;
+    for(const e of S.entities){
+      if(e.side===w.side||e.type==='base') continue;
+      const d=Math.hypot(e.x-w.x,e.y-w.y);
+      if(d<scanRange && e.hp<weakestHP){ weakestHP=e.hp; weakest=e; }
+    }
+    if(weakest){
+      return { target:weakest, dist:Math.hypot(weakest.x-w.x, weakest.y-w.y) };
+    }
+  }
+
   // Auto-target nearest enemy
   let nearest=null, nearestDist=Infinity;
   for(const e of S.entities){
@@ -395,6 +441,23 @@ function warriorMarchToward(w, target, spreadMod, spreadScale){
 }
 
 function warriorRangedAttack(w, target, targetDist){
+  // AI kiting: ranged units retreat from nearby melee threats
+  if(w.side==='enemy' && AI_CONFIG.kiteChance>0 && targetDist<=w.range){
+    for(const e of S.entities){
+      if(e.side===w.side||e.type==='base'||e.ranged) continue;
+      const d=Math.hypot(e.x-w.x,e.y-w.y);
+      if(d<100 && Math.random()<AI_CONFIG.kiteChance*0.08){
+        // Retreat away from melee threat while still shooting
+        const dx=w.x-e.x, dy=w.y-e.y, dist=Math.hypot(dx,dy)||1;
+        w.x+=dx/dist*w.speed; w.y+=dy/dist*w.speed;
+        // Still fire if ready
+        w.attackTimer++;
+        if(w.attackTimer>=(w.fireRate||50)){ w.attackTimer=0; spawnProjectile(w, target); }
+        return;
+      }
+    }
+  }
+
   if(targetDist<=w.range){
     w.state='attack';
     w.attackTimer++;
