@@ -607,7 +607,7 @@ function rtsLoop(ts){
     rtsAccum -= TARGET_MS;
   }
 
-  if(window._mpMultiplayer && mpIsHost && rtsFrame%6===0) mpSendState();
+  if(window._mpMultiplayer && mpIsHost && rtsFrame%2===0) mpSendState();
 
   rtsDraw();
   rtsRAF=requestAnimationFrame(rtsLoop);
@@ -620,7 +620,7 @@ document.addEventListener('visibilitychange',()=>{
     _rtsInterval=setInterval(()=>{
       rtsAccum+=TARGET_MS*rtsSpeed;
       while(rtsAccum>=TARGET_MS){ rtsTick(); rtsAccum-=TARGET_MS; }
-      if(rtsFrame%6===0) mpSendState();
+      if(rtsFrame%2===0) mpSendState();
     }, 16);
   } else {
     clearInterval(_rtsInterval); _rtsInterval=null;

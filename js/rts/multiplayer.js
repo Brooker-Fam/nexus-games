@@ -84,6 +84,7 @@ function mpStartGame(msg){
   rtsPlayerFaction=msg.hf;
   rtsEnemyFaction=msg.gf;
   startRTS(msg.hf);
+  _rebuildEntMap();
   // Guest: fix HUD to show their own faction, start camera at their base
   if(!mpIsHost){
     const myCfg=FACTION_CFG[msg.gf];
@@ -116,6 +117,7 @@ function executeRemoteCommand(cmd){
     const labels={worker:cfg.workerLabel,warrior:cfg.warriorLabel,elite:cfg.eliteLabel,elite2:cfg.elite2Label};
     if(!fns[cmd.unitType]||!queueUnit(b,labels[cmd.unitType],times[cmd.unitType],fns[cmd.unitType])) return;
     aiGold-=costs[cmd.unitType];
+    console.log('[REMOTE CMD] train_unit cost=',costs[cmd.unitType],'aiGold=',aiGold,'rtsGold=',rtsGold);
   } else if(cmd.type==='build_structure'){
     const w=rtsEntities.find(e=>e.id===cmd.workerId);
     if(cmd.cost) aiGold-=cmd.cost;
@@ -209,10 +211,14 @@ function mpSendState(){
     full:doFull?1:undefined});
 }
 
+// Fast entity index for guest
+let _entMap=new Map();
+function _rebuildEntMap(){ _entMap.clear(); for(const e of rtsEntities) _entMap.set(e.id,e); }
+
 function _applyEntityArray(a){
   const id=a[0];
-  let local=rtsEntities.find(e=>e.id===id);
-  if(!local){ local={id}; rtsEntities.push(local); }
+  let local=_entMap.get(id);
+  if(!local){ local={id}; rtsEntities.push(local); _entMap.set(id,local); }
   for(let i=0;i<_E_FIELDS.length;i++) local[_E_FIELDS[i]]=a[i];
   if(a.length>_E_FIELDS.length){
     local.queue=(a[_E_FIELDS.length]||[]).map(q=>Array.isArray(q)?{label:q[0],time:q[1]}:{label:q,time:0});
@@ -226,19 +232,16 @@ function mpApplyState(msg){
   rtsFrame=msg.f; rtsGameOver=!!msg.go;
 
   if(msg.full){
-    // Full sync — replace all entities
     const hostIds=new Set();
     for(const a of msg.e){ _applyEntityArray(a); hostIds.add(a[0]); }
     for(let i=rtsEntities.length-1;i>=0;i--){
-      if(!hostIds.has(rtsEntities[i].id)) rtsEntities.splice(i,1);
+      if(!hostIds.has(rtsEntities[i].id)){ _entMap.delete(rtsEntities[i].id); rtsEntities.splice(i,1); }
     }
   } else {
-    // Delta — update only changed entities
     for(const a of msg.e) _applyEntityArray(a);
-    // Remove explicitly deleted
     if(msg.r) for(const id of msg.r){
       const i=rtsEntities.findIndex(e=>e.id===id);
-      if(i>=0) rtsEntities.splice(i,1);
+      if(i>=0){ _entMap.delete(id); rtsEntities.splice(i,1); }
     }
   }
 

@@ -58,6 +58,7 @@ function executeCommand(cmd){
 
       if(!queueUnit(building, label, time, fn)) break;
       spendGold(cost);
+      console.log('[CMD] train_unit side=',side,'cost=',cost,'rtsGold=',rtsGold,'aiGold=',aiGold);
       updateRtsHUD();
       rtsSetLog(`${label} queued (${building.queue.length}/${QUEUE_MAX})`);
       break;
