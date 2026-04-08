@@ -187,8 +187,16 @@ function rtsTick(){
   tickPendingChains();
 
   // check base HP
-  if(playerBase.hp<=0){ S.baseHP=0; endRTS(false); return; }
-  if(enemyBase.hp<=0){ S.enemyBaseHP=0; endRTS(true); return; }
+  if(playerBase.hp<=0){
+    S.baseHP=0;
+    console.log('[GAME OVER] player base destroyed. frame=',S.frame,'hp=',playerBase.hp);
+    endRTS(mySide()==='player' ? false : true); return;
+  }
+  if(enemyBase.hp<=0){
+    S.enemyBaseHP=0;
+    console.log('[GAME OVER] enemy base destroyed. frame=',S.frame,'hp=',enemyBase.hp);
+    endRTS(mySide()==='player' ? true : false); return;
+  }
   S.baseHP=Math.floor(playerBase.hp);
   S.enemyBaseHP=Math.floor(enemyBase.hp);
 
