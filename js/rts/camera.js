@@ -40,7 +40,7 @@ function resetRtsState(){
 }
 
 // ── CAMERA ──
-let camDragging=false, camDragStartX=0, camDragStartY=0, camDragCamX=0, camDragCamY=0;
+let camDragging=false, camDragActive=false, camDragStartX=0, camDragStartY=0, camDragCamX=0, camDragCamY=0;
 const CAM_SPEED=14;
 const keysHeld={};
 
@@ -79,12 +79,13 @@ function setupCameraControls(){
   wrap.addEventListener('mousedown', e=>{
     if(e.button !== 0) return;
     camDragging=false; // reset
+    camDragActive=true;
     camDragStartX=e.clientX; camDragStartY=e.clientY;
     camDragCamX=S.camX; camDragCamY=S.camY;
   });
   window.addEventListener('mousemove', e=>{
     const moved=Math.hypot(e.clientX-camDragStartX, e.clientY-camDragStartY);
-    if(moved>6 && (e.buttons&1)){
+    if(camDragActive && moved>6 && (e.buttons&1)){
       camDragging=true;
       const c2=document.getElementById('rts-canvas');
       const r2=c2?c2.getBoundingClientRect():{width:VW,height:VH};
@@ -107,7 +108,7 @@ function setupCameraControls(){
     const wrap2=document.getElementById('rts-viewport-wrap');
     if(wrap2) wrap2.style.cursor=S.buildStructureMode?'crosshair':camDragging?'grabbing':'grab';
   });
-  window.addEventListener('mouseup', ()=>{ setTimeout(()=>camDragging=false, 50); });
+  window.addEventListener('mouseup', ()=>{ camDragActive=false; setTimeout(()=>camDragging=false, 50); });
 
   // Touch drag
   wrap.addEventListener('touchstart', e=>{
