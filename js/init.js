@@ -116,22 +116,16 @@ document.getElementById('btn-dso-play').onclick=dsoPlay;
 // Multiplayer buttons
 document.getElementById('btn-mp-host').onclick=async function(){
   const status=document.getElementById('mp-status');
-  status.className='mp-status'; status.textContent='Creating game...';
+  status.className='mp-status'; status.textContent='Creating...';
   try {
-    const peerId = await mpInit();
-    mpIsHost = true;
-    mpPeer.on('connection', conn=>{
-      mpConn = conn;
-      setupConnection(conn);
-      status.className='mp-status';
-      status.innerHTML='<div class="mp-faction-pick">Opponent connected! Both pick your faction.</div>';
-    });
+    const code = await mpHost();
+    mpOnConnect=()=>{ status.className='mp-status'; status.innerHTML='Connected! Both pick a faction.'; };
     status.className='mp-status waiting';
-    status.innerHTML=`Share this code: <span class="mp-code" title="Click to copy">${peerId}</span><br>Waiting for opponent...`;
+    status.innerHTML=`Code: <span class="mp-code" title="Click to copy">${code}</span> — waiting for opponent...`;
     status.querySelector('.mp-code').onclick=function(){
-      navigator.clipboard.writeText(peerId);
-      this.textContent=peerId + ' (copied!)';
-      setTimeout(()=>{ this.textContent=peerId; }, 1500);
+      navigator.clipboard.writeText(code);
+      this.textContent=code+' ✓';
+      setTimeout(()=>{ this.textContent=code; },1500);
     };
   } catch(e){
     status.className='mp-status error'; status.textContent='Failed: '+e.message;
@@ -140,15 +134,15 @@ document.getElementById('btn-mp-host').onclick=async function(){
 
 document.getElementById('btn-mp-join').onclick=async function(){
   const status=document.getElementById('mp-status');
-  const code=document.getElementById('mp-join-input').value.trim();
-  if(!code){ status.className='mp-status error'; status.textContent='Enter a code first.'; return; }
-  status.className='mp-status'; status.textContent='Connecting...';
+  const code=document.getElementById('mp-join-input').value.trim().toUpperCase();
+  if(!code){ status.className='mp-status error'; status.textContent='Enter a code.'; return; }
+  status.textContent='Connecting...';
   try {
     await mpJoin(code);
     status.className='mp-status';
-    status.innerHTML='<div class="mp-faction-pick">Connected! Both pick your faction.</div>';
+    status.innerHTML='Connected! Both pick a faction.';
   } catch(e){
-    status.className='mp-status error'; status.textContent='Failed to connect: '+e.message;
+    status.className='mp-status error'; status.textContent='Failed: '+e.message;
   }
 };
 
