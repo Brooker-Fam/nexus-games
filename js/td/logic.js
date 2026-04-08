@@ -98,7 +98,8 @@ function isPathCell(gx,gy){
 canvas.addEventListener('click', e=>{
   if(state.gameOver) return;
   const r = canvas.getBoundingClientRect();
-  const mx = e.clientX-r.left, my = e.clientY-r.top;
+  const scaleX = canvas.width/r.width, scaleY = canvas.height/r.height;
+  const mx = (e.clientX-r.left)*scaleX, my = (e.clientY-r.top)*scaleY;
   const gx = Math.floor(mx/CELL), gy = Math.floor(my/CELL);
   if(isPathCell(gx,gy)){ addLog('Cannot place on path!','bad'); return; }
   const ttype = state.selectedTower;
@@ -343,3 +344,22 @@ function resetGame(){
   tdAccum=0;
   raf=requestAnimationFrame(gameLoop);
 }
+
+// ── GAME LIFECYCLE ──
+registerGame('td', {
+  init(){
+    renderPreviewGun(document.getElementById('prev-gun').getContext('2d'));
+    renderPreviewLaser(document.getElementById('prev-laser').getContext('2d'));
+    renderPreviewMissile(document.getElementById('prev-missile').getContext('2d'));
+    renderPreviewCryo(document.getElementById('prev-slow').getContext('2d'));
+    addLog('Game initialized. Place towers and send waves!','info');
+    updateHUD();
+    lastTime=performance.now();
+    tdAccum=0;
+    if(!raf) raf=requestAnimationFrame(gameLoop);
+  },
+  cleanup(){
+    cancelAnimationFrame(raf);
+    raf=null;
+  },
+});

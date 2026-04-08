@@ -47,6 +47,7 @@ function aiBuild(type, nearX, nearY, cost){
 }
 
 function aiTick(){
+  if(window._mpMultiplayer) return; // AI disabled for entire multiplayer session
   aiTimer++;
   const eb=rtsEntities.find(e=>e.type==='base'&&e.side==='enemy');
   if(!eb) return;
@@ -589,15 +590,41 @@ function endRTS(playerWon){
 //  RTS DRAW ENGINE
 // ══════════════════
 let rtsLastTime=0, rtsAccum=0;
+let _rtsInterval=null;
 function rtsLoop(ts){
   const dt = Math.min(ts - rtsLastTime, 100);
   rtsLastTime = ts;
+
+  if(window._mpMultiplayer && !mpIsHost){
+    rtsDraw();
+    rtsRAF=requestAnimationFrame(rtsLoop);
+    return;
+  }
+
   rtsAccum += dt * rtsSpeed;
   while(rtsAccum >= TARGET_MS){
     rtsTick();
     rtsAccum -= TARGET_MS;
   }
+
+  if(window._mpMultiplayer && mpIsHost && rtsFrame%6===0) mpSendState();
+
   rtsDraw();
   rtsRAF=requestAnimationFrame(rtsLoop);
 }
+
+// Keep host ticking when tab is backgrounded (RAF throttles to ~1fps)
+document.addEventListener('visibilitychange',()=>{
+  if(!window._mpMultiplayer || !mpIsHost) return;
+  if(document.hidden){
+    _rtsInterval=setInterval(()=>{
+      rtsAccum+=TARGET_MS*rtsSpeed;
+      while(rtsAccum>=TARGET_MS){ rtsTick(); rtsAccum-=TARGET_MS; }
+      if(rtsFrame%6===0) mpSendState();
+    }, 16);
+  } else {
+    clearInterval(_rtsInterval); _rtsInterval=null;
+    rtsLastTime=performance.now(); rtsAccum=0;
+  }
+});
 

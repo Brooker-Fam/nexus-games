@@ -180,10 +180,13 @@ function makeGoldNodes(){
   }
 }
 
-function startRTS(playerFaction){
+function startRTS(playerFaction, enemyFaction){
   rtsPlayerFaction=playerFaction;
-  const factions=['prism','shadow','roboto'].filter(f=>f!==playerFaction);
-  rtsEnemyFaction = factions[Math.floor(Math.random()*factions.length)];
+  if(enemyFaction) rtsEnemyFaction=enemyFaction;
+  else if(!window._mpMultiplayer){
+    const factions=['prism','shadow','roboto'].filter(f=>f!==playerFaction);
+    rtsEnemyFaction = factions[Math.floor(Math.random()*factions.length)];
+  }
   _nextEntityId=1;
   rtsGold=0; rtsBaseHP=100; rtsEnemyBaseHP=100;
   rtsGameOver=false; rtsFrame=0; rtsParticles=[]; rtsProjectiles=[];

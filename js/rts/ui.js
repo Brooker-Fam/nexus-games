@@ -4,12 +4,13 @@ const CLICK_RADII = { base:70, structure:50, cannon:36, warrior:20, worker:14 };
 // ── BUILD POPUP ──
 let rtsBuildPopupOpen = false;
 let buildStructureMode = false;
+let _buildModeCost = 0;
 let rtsBuildingSource = null; // the building entity that opened the popup
 
 function openBuildPopup(screenX, screenY, context){
   // remember which entity spawned this popup so units spawn there
   rtsBuildingSource = rtsSelected[0] || null;
-  const cfg = FACTION_CFG[rtsPlayerFaction];
+  const cfg = FACTION_CFG[myFaction()];
   const popup = document.getElementById('rts-build-popup');
   const title = document.getElementById('rbp-title');
   const opts  = document.getElementById('rbp-options');
@@ -19,7 +20,7 @@ function openBuildPopup(screenX, screenY, context){
   function addOpt(icon, name, desc, cost, onclick, disabled){
     const btn=document.createElement('button');
     btn.className='rbp-option';
-    btn.disabled=disabled!==undefined ? disabled : rtsGold<cost;
+    btn.disabled=disabled!==undefined ? disabled : myGold()<cost;
     btn.innerHTML=`<span class="rbp-opt-icon">${icon}</span>
       <span class="rbp-opt-info"><span class="rbp-opt-name">${name}</span>
       <span class="rbp-opt-desc">${desc}</span></span>
@@ -33,9 +34,11 @@ function openBuildPopup(screenX, screenY, context){
   // Helper: issue train command and refresh popup
   function trainCmd(buildingId, unitType, popupContext){
     issueCommand({ type:'train_unit', buildingId, unitType });
-    // Refresh popup to show updated queue
+    rtsSetLog(`${unitType} queued!`);
+    sfx('rtsQueueUnit');
+    // Refresh popup after short delay to let state sync update
     const b=rtsEntities.find(e=>e.id===buildingId);
-    if(b) setTimeout(()=>openBuildPopup(b.x-camX,b.y-camY,popupContext),0);
+    if(b) setTimeout(()=>openBuildPopup(b.x-camX,b.y-camY,popupContext), window._mpMultiplayer && !mpIsHost ? 200 : 0);
   }
 
   if(context==='base'){
@@ -53,19 +56,19 @@ function openBuildPopup(screenX, screenY, context){
   } else if(context==='worker'){
     title.textContent = 'WORKER ACTIONS';
     addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Right-click to place — trains ${cfg.warriorLabel}s (20g)`, 20, ()=>{
-      buildStructureMode='barracks'; rtsGold-=20; updateRtsHUD();
+      buildStructureMode='barracks'; _buildModeCost=20; spendGold(20); updateRtsHUD();
       rtsSetLog(`Right-click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
     });
     addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Right-click to place — trains elite units (20g)`, 20, ()=>{
-      buildStructureMode=true; rtsGold-=20; updateRtsHUD();
+      buildStructureMode=true; _buildModeCost=20; spendGold(20); updateRtsHUD();
       rtsSetLog(`Right-click to place your ${cfg.structLabel}!`); closeBuildPopup();
     });
     addOpt('💣', 'Build CANNON', 'Auto-attacks nearby enemies (15g)', 15, ()=>{
-      buildStructureMode='cannon'; rtsGold-=15; updateRtsHUD();
+      buildStructureMode='cannon'; _buildModeCost=15; spendGold(15); updateRtsHUD();
       rtsSetLog('Right-click to place your CANNON!'); closeBuildPopup();
     });
     addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Right-click to place — trains more workers (25g)`, 25, ()=>{
-      buildStructureMode='base'; rtsGold-=25; updateRtsHUD();
+      buildStructureMode='base'; _buildModeCost=25; spendGold(25); updateRtsHUD();
       rtsSetLog(`Right-click to place your new ${cfg.buildingName}!`); closeBuildPopup();
     });
 
@@ -82,7 +85,7 @@ function openBuildPopup(screenX, screenY, context){
     for(const u of eliteTypes){
       addOpt(u.icon, u.label, u.desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'structure'),
-        rtsGold<u.cost||sel.underConstruction);
+        myGold()<u.cost||sel.underConstruction);
     }
   }
 
@@ -107,7 +110,7 @@ function openBuildPopup(screenX, screenY, context){
         row.style.cssText='font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:6px;margin-bottom:2px;';
         if(i===0){
           // show progress bar for item being trained
-          const pct=Math.floor(((src.trainTimer||0)/item.time)*100);
+          const pct=item.time>0 ? Math.floor(((src.trainTimer||0)/item.time)*100) : 0;
           row.innerHTML=`<span style="color:var(--neon-cyan)">▶</span><span>${item.label}</span>
             <div style="flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
               <div style="width:${pct}%;height:100%;background:var(--neon-cyan);transition:width 0.3s;"></div>
@@ -149,8 +152,11 @@ function rtsOrderAttack(){
 function screenToWorld(sx, sy){ return { x: sx+camX, y: sy+camY }; }
 // Get canvas-relative mouse position
 function canvasPos(e){
-  const rect=document.getElementById('rts-canvas').getBoundingClientRect();
-  return { x:e.clientX-rect.left, y:e.clientY-rect.top };
+  const c=document.getElementById('rts-canvas');
+  const rect=c.getBoundingClientRect();
+  // Scale from display size to canvas resolution
+  const scaleX=c.width/rect.width, scaleY=c.height/rect.height;
+  return { x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY };
 }
 
 function rtsHandleClick(e){
@@ -165,7 +171,7 @@ function rtsHandleClick(e){
 
   let hit=null, hitDist=Infinity;
   for(const ent of rtsEntities){
-    if(ent.side!=='player') continue;
+    if(ent.side!==mySide()) continue;
     const r=CLICK_RADII[ent.type]||14;
     const d=Math.hypot(wp.x-ent.x,wp.y-ent.y);
     if(d<r && d<hitDist){ hit=ent; hitDist=d; }
@@ -216,18 +222,21 @@ function rtsHandleRightClick(e){
 
   // structure/base placement mode
   if(buildStructureMode){
-    const worker=rtsSelected.find(s=>s.type==='worker'&&s.side==='player');
+    const side=mySide();
+    const worker=rtsSelected.find(s=>s.type==='worker'&&s.side===side);
     const workerId = worker ? worker.id
-      : (rtsEntities.filter(en=>en.type==='worker'&&en.side==='player'&&en.state!=='building')
+      : (rtsEntities.filter(en=>en.type==='worker'&&en.side===side&&en.state!=='building')
           .sort((a,b)=>Math.hypot(a.x-wp.x,a.y-wp.y)-Math.hypot(b.x-wp.x,b.y-wp.y))[0]||{}).id;
 
+    if(!workerId){
+      rtsSetLog('No available worker to build!');
+      buildStructureMode=false;
+      return;
+    }
     if(buildStructureMode==='base'){
-      // Base placement is instant (no construction)
-      const nb={id:nextId(),type:'base',side:'player',x:wp.x,y:wp.y,hp:100,maxHp:100,w:60,h:80,selected:false,queue:[],trainTimer:0};
-      rtsEntities.push(nb);
-      rtsSetLog(`New ${FACTION_CFG[rtsPlayerFaction].buildingName} placed!`);
-    } else if(workerId){
-      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, buildType:
+      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:'base' });
+    } else {
+      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:
         buildStructureMode==='cannon'?'cannon':buildStructureMode==='barracks'?'barracks':'structure' });
     }
     buildStructureMode=false;
@@ -240,13 +249,13 @@ function rtsHandleRightClick(e){
   // check enemy hit
   let enemyHit=null, enemyDist=Infinity;
   for(const ent of rtsEntities){
-    if(ent.side==='player') continue;
+    if(ent.side===mySide()) continue;
     const r=CLICK_RADII[ent.type]||20;
     const d=Math.hypot(wp.x-ent.x,wp.y-ent.y);
     if(d<r && d<enemyDist){ enemyHit=ent; enemyDist=d; }
   }
 
-  const selectedIds=rtsSelected.filter(s=>s.side==='player').map(s=>s.id);
+  const selectedIds=rtsSelected.filter(s=>s.side===mySide()).map(s=>s.id);
   if(enemyHit){
     issueCommand({ type:'attack_target', unitIds:selectedIds, targetId:enemyHit.id });
     rtsSetLog(`Attack order issued!`);
@@ -260,8 +269,8 @@ function rtsHandleRightClick(e){
 
 function rtsSetLog(msg){ document.getElementById('rts-log').textContent=msg; }
 function updateRtsHUD(){
-  document.getElementById('rts-gold').textContent=Math.floor(rtsGold);
-  const units=rtsEntities.filter(e=>e.side==='player'&&e.type!=='base').length;
+  document.getElementById('rts-gold').textContent=Math.floor(myGold());
+  const units=rtsEntities.filter(e=>e.side===mySide()&&e.type!=='base').length;
   document.getElementById('rts-units').textContent=units;
   document.getElementById('rts-base-hp').textContent=rtsBaseHP;
   // refresh popup options if open so gold costs update

@@ -65,15 +65,19 @@ function setupCameraControls(){
     const moved=Math.hypot(e.clientX-camDragStartX, e.clientY-camDragStartY);
     if(moved>6 && (e.buttons&1)){
       camDragging=true;
-      camX = camDragCamX - (e.clientX - camDragStartX);
-      camY = camDragCamY - (e.clientY - camDragStartY);
+      const c2=document.getElementById('rts-canvas');
+      const r2=c2?c2.getBoundingClientRect():{width:VW,height:VH};
+      const sx=c2?c2.width/r2.width:1, sy2=c2?c2.height/r2.height:1;
+      camX = camDragCamX - (e.clientX - camDragStartX)*sx;
+      camY = camDragCamY - (e.clientY - camDragStartY)*sy2;
       clampCam();
     }
     // track mouse in world coords for placement preview
     const canvas2=document.getElementById('rts-canvas');
     if(canvas2){
       const rect=canvas2.getBoundingClientRect();
-      const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+      const scX=canvas2.width/rect.width, scY=canvas2.height/rect.height;
+      const sx=(e.clientX-rect.left)*scX, sy=(e.clientY-rect.top)*scY;
       if(sx>=0&&sy>=0&&sx<=VW&&sy<=VH){
         rtsMouseWorld={x:sx+camX, y:sy+camY};
       }

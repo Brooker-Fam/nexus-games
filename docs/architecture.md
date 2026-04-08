@@ -36,10 +36,7 @@ Deployed to Vercel as static files (~255KB total, ~90KB gzipped).
 ## Hosting
 
 Vercel static is the right fit. The entire site is smaller than a single hero image.
-No server-side logic needed until multiplayer (Phase 2).
-
-**When to reconsider**: If multiplayer lands, the WebSocket server (PartyKit) runs
-separately. The static frontend stays on Vercel either way.
+Multiplayer uses PeerJS WebRTC (peer-to-peer), so no server-side logic is needed.
 
 **Alternatives evaluated**:
 - Cloudflare Pages — comparable, but no reason to migrate
@@ -74,6 +71,7 @@ js/
     draw-helpers.js            — Shared drawing (health bars, selection rings)
     ui.js                      — Build popup, click handling, HUD
     game.js                    — AI, tick loop, combat, projectiles
+    multiplayer.js             — PeerJS WebRTC — host/guest, state sync
     rendering.js               — Draw orchestration, minimap, background
     structures.js              — Base, temple, faction structures, cannons
     workers.js                 — Worker drawing per faction
@@ -112,6 +110,14 @@ docs/
 - Decision loop on fixed interval (~4s ticks)
 - Counts own units, evaluates threats, builds/attacks accordingly
 - Uses same command queue as player (important for multiplayer parity)
+- Disabled automatically during multiplayer sessions
+
+### Multiplayer (RTS)
+- PeerJS WebRTC — peer-to-peer, no dedicated server
+- Host-authoritative model: host runs simulation, guest receives state sync
+- Delta compression on state sync at ~10fps
+- Short 4-char room codes for joining
+- Guest input sent as commands to host
 
 ## Known Technical Debt
 
@@ -143,23 +149,13 @@ docs/
 
 ## Roadmap
 
-### Phase 1: Game lifecycle and polish
-- [ ] Standardize lifecycle: each game exports `init()` / `cleanup()`
-- [ ] Tab switching calls `cleanup()` on old game, `init()` on new
+### Next up: Cleanup and hardening
 - [ ] Group RTS globals into `rtsState` object (enables clean teardown)
 - [ ] Cache entity lookups (player/enemy base refs)
 - [ ] Fix chain lightning to use tick-based timing
-- [ ] Basic responsive CSS + canvas scaling for mobile viewports
 
-### Phase 2: Multiplayer
-- [ ] Add PartyKit for WebSocket rooms
-- [ ] Broadcast command queue between players
-- [ ] Replace AI with second player's command stream
-- [ ] Lobby / matchmaking UI
-- [ ] Deterministic tick sync (command queue already supports this)
-
-### Phase 3: Platform
-- [ ] Add more games (standardized lifecycle makes this plug-and-play)
+### Future
 - [ ] Add touch support for mobile play
+- [ ] Add more games (lifecycle system makes this plug-and-play)
 - [ ] Consider bundler if file count exceeds ~30
 - [ ] Leaderboards / persistence (would need a backend or edge DB)

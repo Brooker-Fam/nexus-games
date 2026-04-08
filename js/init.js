@@ -33,8 +33,10 @@ function dsoPlay(){
 }
 function rtsMenuBack(){
   cancelAnimationFrame(rtsRAF); rtsRAF=null;
+  mpDisconnect();
   document.getElementById('dso-game').style.display='none';
   document.getElementById('dso-select').style.display='block';
+  document.getElementById('mp-status').textContent='';
   initFactionCards();
 }
 
@@ -46,14 +48,26 @@ function initFactionCards(){
     if(el) drawCardCharacter(el,faction,false);
   }
 }
-initFactionCards();
-addLog('Game initialized. Place towers and send waves!','info');
-updateHUD();
-renderPreviewGun(document.getElementById('prev-gun').getContext('2d'));
-renderPreviewLaser(document.getElementById('prev-laser').getContext('2d'));
-renderPreviewMissile(document.getElementById('prev-missile').getContext('2d'));
-renderPreviewCryo(document.getElementById('prev-slow').getContext('2d'));
-raf=requestAnimationFrame(gameLoop);
+
+// Register Deep Space Ops lifecycle
+registerGame('cs', {
+  init(){
+    initFactionCards();
+    document.getElementById('dso-select').style.display='';
+    document.getElementById('dso-reveal').style.display='none';
+    document.getElementById('dso-game').style.display='none';
+  },
+  cleanup(){
+    if(window._mpMultiplayer) return; // don't stop during multiplayer
+    if(rtsRAF){ cancelAnimationFrame(rtsRAF); rtsRAF=null; }
+    if(dsoRevealRAF){ cancelAnimationFrame(dsoRevealRAF); dsoRevealRAF=null; }
+    if(dsoPreviewRAF){ cancelAnimationFrame(dsoPreviewRAF); dsoPreviewRAF=null; }
+    closeBuildPopup();
+  },
+});
+
+// Start TD game on load
+activateGame('td');
 
 // ── EVENT HANDLERS (moved from inline HTML) ──
 
@@ -80,10 +94,18 @@ document.querySelector('.speed-btns').onclick=function(e){
   if(idx>=0) setSpeed(speeds[idx], btn);
 };
 
-// Faction cards
+// Faction cards — in multiplayer mode, pick faction; in singleplayer, start game
 ['shadow','prism','roboto'].forEach(faction=>{
   const card=document.getElementById('fc-'+faction);
-  card.addEventListener('click', ()=>dsoSelect(faction));
+  card.addEventListener('click', ()=>{
+    if(mpConnected){
+      mpPickFaction(faction);
+      document.getElementById('mp-status').innerHTML=
+        `<div class="mp-faction-pick">You chose ${FACTION_DATA[faction].armada}. Waiting for opponent...</div>`;
+    } else {
+      dsoSelect(faction);
+    }
+  });
   card.addEventListener('mouseenter', ()=>dsoPreview(faction));
   card.addEventListener('mouseleave', ()=>dsoPreviewClear());
 });
@@ -91,6 +113,39 @@ document.querySelector('.speed-btns').onclick=function(e){
 // Reveal screen
 document.getElementById('btn-dso-back').onclick=dsoBack;
 document.getElementById('btn-dso-play').onclick=dsoPlay;
+
+// Multiplayer buttons
+document.getElementById('btn-mp-host').onclick=async function(){
+  const status=document.getElementById('mp-status');
+  status.className='mp-status'; status.textContent='Creating...';
+  try {
+    const code = await mpHost();
+    mpOnConnect=()=>{ status.className='mp-status'; status.innerHTML='Connected! Both pick a faction.'; };
+    status.className='mp-status waiting';
+    status.innerHTML=`Code: <span class="mp-code" title="Click to copy">${code}</span> — waiting for opponent...`;
+    status.querySelector('.mp-code').onclick=function(){
+      navigator.clipboard.writeText(code);
+      this.textContent=code+' ✓';
+      setTimeout(()=>{ this.textContent=code; },1500);
+    };
+  } catch(e){
+    status.className='mp-status error'; status.textContent='Failed: '+e.message;
+  }
+};
+
+document.getElementById('btn-mp-join').onclick=async function(){
+  const status=document.getElementById('mp-status');
+  const code=document.getElementById('mp-join-input').value.trim().toUpperCase();
+  if(!code){ status.className='mp-status error'; status.textContent='Enter a code.'; return; }
+  status.textContent='Connecting...';
+  try {
+    await mpJoin(code);
+    status.className='mp-status';
+    status.innerHTML='Connected! Both pick a faction.';
+  } catch(e){
+    status.className='mp-status error'; status.textContent='Failed: '+e.message;
+  }
+};
 
 // RTS controls
 document.getElementById('btn-attack').onclick=function(e){ e.preventDefault(); rtsOrderAttack(); this.blur(); };
