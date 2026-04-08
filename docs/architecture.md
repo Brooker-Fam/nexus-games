@@ -1,5 +1,21 @@
 # Nexus Games — Architecture
 
+## How to use this doc
+
+This doc has two kinds of content:
+
+**Evergreen reference** — keep accurate as the codebase evolves:
+- Overview, Tech Stack, Hosting, File Structure, Design Principles, Architecture Patterns
+
+**Tracking sections** — ephemeral, clean up as work gets done:
+- **Technical Debt** — delete rows when fixed, don't check them off
+- **Roadmap** — delete items when shipped; collapse a phase once it's empty
+
+If a tracking item becomes stale or irrelevant, just remove it.
+The goal is a short, current document — not a changelog.
+
+---
+
 ## Overview
 
 Two-game static site: **Void Fortress** (tower defense) and **Deep Space Ops** (RTS).
