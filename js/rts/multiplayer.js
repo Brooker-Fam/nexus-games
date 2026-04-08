@@ -156,7 +156,7 @@ let _fullSyncCounter=0;
 
 function _encodeEntity(e){
   const a=_E_FIELDS.map(f=> f==='x'||f==='y'||f==='hp' ? Math.round(e[f]||0) : e[f]);
-  if(e.queue&&e.queue.length) a.push(e.queue.map(q=>q.label), e.trainTimer||0);
+  if(e.queue&&e.queue.length) a.push(e.queue.map(q=>[q.label,q.time||0]), e.trainTimer||0);
   return a;
 }
 
@@ -213,7 +213,7 @@ function _applyEntityArray(a){
   if(!local){ local={id}; rtsEntities.push(local); }
   for(let i=0;i<_E_FIELDS.length;i++) local[_E_FIELDS[i]]=a[i];
   if(a.length>_E_FIELDS.length){
-    local.queue=(a[_E_FIELDS.length]||[]).map(l=>({label:l,time:0}));
+    local.queue=(a[_E_FIELDS.length]||[]).map(q=>Array.isArray(q)?{label:q[0],time:q[1]}:{label:q,time:0});
     local.trainTimer=a[_E_FIELDS.length+1]||0;
   } else if(!local.queue){ local.queue=[]; }
 }

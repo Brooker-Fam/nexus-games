@@ -108,7 +108,7 @@ function openBuildPopup(screenX, screenY, context){
         row.style.cssText='font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:6px;margin-bottom:2px;';
         if(i===0){
           // show progress bar for item being trained
-          const pct=Math.floor(((src.trainTimer||0)/item.time)*100);
+          const pct=item.time>0 ? Math.floor(((src.trainTimer||0)/item.time)*100) : 0;
           row.innerHTML=`<span style="color:var(--neon-cyan)">▶</span><span>${item.label}</span>
             <div style="flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
               <div style="width:${pct}%;height:100%;background:var(--neon-cyan);transition:width 0.3s;"></div>
