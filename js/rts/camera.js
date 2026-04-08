@@ -6,6 +6,7 @@ let rtsGold=0, rtsPlayerFaction='prism', rtsEnemyFaction='shadow';
 let rtsBaseHP=100, rtsEnemyBaseHP=100;
 let rtsGameOver=false;
 let rtsEntities=[];   // all units + bases
+let rtsPlayerBase=null, rtsEnemyBase=null; // cached refs — set in startRTS()
 let rtsParticles=[];
 let rtsGoldNodes=[];  // gold mines in center
 let rtsLog='';

@@ -126,8 +126,6 @@ docs/
 | Issue | Where | Impact |
 |-------|-------|--------|
 | Global state sprawl | `camera.js`, `game.js`, `ui.js` | Hard to init/teardown games cleanly; risk of stale state between sessions |
-| Base lookup every tick | `game.js:142-143` | `.find()` runs 60x/sec for values that never change; cache at game start |
-| Chain lightning uses `setTimeout` | `game.js` | Desyncs from game tick under load; should be tick-based |
 | All scripts load upfront | `index.html` | Both games load even when only one is played (~130KB wasted) |
 
 ### Can wait
@@ -151,8 +149,6 @@ docs/
 
 ### Next up: Cleanup and hardening
 - [ ] Group RTS globals into `rtsState` object (enables clean teardown)
-- [ ] Cache entity lookups (player/enemy base refs)
-- [ ] Fix chain lightning to use tick-based timing
 
 ### Future
 - [ ] Add touch support for mobile play

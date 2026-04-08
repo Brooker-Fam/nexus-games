@@ -49,7 +49,7 @@ function aiBuild(type, nearX, nearY, cost){
 function aiTick(){
   if(window._mpMultiplayer) return; // AI disabled for entire multiplayer session
   aiTimer++;
-  const eb=rtsEntities.find(e=>e.type==='base'&&e.side==='enemy');
+  const eb=rtsEnemyBase;
   if(!eb) return;
 
   // Gather intel
@@ -71,8 +71,7 @@ function aiTick(){
 
     // Always keep training workers (up to cap)
     if(workers<AI_CONFIG.maxWorkers){
-      const base=rtsEntities.find(e=>e.type==='base'&&e.side==='enemy');
-      aiQueueAt(base,'Worker',BUILD_TIMES.worker,()=>makeWorker('enemy',rtsEnemyFaction),AI_CONFIG.workerCost);
+      aiQueueAt(eb,'Worker',BUILD_TIMES.worker,()=>makeWorker('enemy',rtsEnemyFaction),AI_CONFIG.workerCost);
     }
 
     // Build first barracks ASAP (only need 2 workers)
@@ -139,9 +138,8 @@ function rtsTick(){
   tickCamera();
   aiTick();
 
-  // gold passive trickle per worker mining
-  const playerBase = rtsEntities.find(e=>e.type==='base'&&e.side==='player');
-  const enemyBase  = rtsEntities.find(e=>e.type==='base'&&e.side==='enemy');
+  const playerBase = rtsPlayerBase;
+  const enemyBase  = rtsEnemyBase;
   if(!playerBase||!enemyBase) return;
 
   for(const e of rtsEntities){
@@ -183,6 +181,7 @@ function rtsTick(){
   }
 
   updateProjectiles();
+  tickPendingChains();
 
   // check base HP
   if(playerBase.hp<=0){ rtsBaseHP=0; endRTS(false); return; }
@@ -509,9 +508,13 @@ function updateProjectiles(){
   }
 }
 
+// Pending chain lightning bounces — processed in rtsTick instead of setTimeout
+const _pendingChains=[];
+const CHAIN_BOUNCE_DELAY=4; // ticks between bounces (~67ms at 60fps)
+
 function chainLightning(origin, damage, color, shooterSide, bounces){
   if(bounces<=0) return;
-  // find nearest enemy unit within 200px not the origin
+  // find nearest enemy unit within range, not the origin
   let best=null, bestD=COMBAT.chainLightningRange;
   for(const e of rtsEntities){
     if(e.side===shooterSide||e===origin||e.type==='base') continue;
@@ -533,7 +536,20 @@ function chainLightning(origin, damage, color, shooterSide, bounces){
     });
   }
   spawnLightningHit(best.x,best.y,color);
-  setTimeout(()=>chainLightning(best,damage*0.6,color,shooterSide,bounces-1),60);
+  // queue next bounce instead of setTimeout
+  if(bounces-1>0){
+    _pendingChains.push({ origin:best, damage:damage*0.6, color, shooterSide, bounces:bounces-1, delay:CHAIN_BOUNCE_DELAY });
+  }
+}
+
+function tickPendingChains(){
+  for(let i=_pendingChains.length-1;i>=0;i--){
+    const c=_pendingChains[i];
+    if(--c.delay<=0){
+      _pendingChains.splice(i,1);
+      chainLightning(c.origin, c.damage, c.color, c.shooterSide, c.bounces);
+    }
+  }
 }
 
 function spawnLightningHit(x,y,color){

@@ -191,13 +191,16 @@ function startRTS(playerFaction, enemyFaction){
   rtsGold=0; rtsBaseHP=100; rtsEnemyBaseHP=100;
   rtsGameOver=false; rtsFrame=0; rtsParticles=[]; rtsProjectiles=[];
   rtsCommandQueue.length=0;
+  _pendingChains.length=0;
   rtsSelected=[]; rtsBuildPopupOpen=false; buildStructureMode=false;
   aiGold=0; aiTimer=0; deadSwordsmenPool.length=0;
   closeBuildPopup&&closeBuildPopup(); rtsEntities=[];
 
   // build bases
-  rtsEntities.push(makeBase('player'));
-  rtsEntities.push(makeBase('enemy'));
+  rtsPlayerBase=makeBase('player');
+  rtsEnemyBase=makeBase('enemy');
+  rtsEntities.push(rtsPlayerBase);
+  rtsEntities.push(rtsEnemyBase);
 
   // 5 starting workers each side
   for(let i=0;i<5;i++){
