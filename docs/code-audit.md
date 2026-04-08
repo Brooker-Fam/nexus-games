@@ -139,15 +139,21 @@ Same green→orange→red logic repeated in:
 11. ~~Remove dead code (logs, rc2, rtsBuild, pointless loop)~~
 12. ~~Consolidate TD particle spawning (data-driven)~~
 
-### Medium-term (architecture) — MOSTLY DONE
+### Medium-term (architecture) — DONE
 13. ~~Refactor `openBuildPopup()` — config-driven, shared addOpt(), no per-faction branching~~
 14. ~~Move all 20 inline event handlers from HTML to JS (event delegation)~~
-15. ~~Overhaul AI — faster decisions, multi-barracks, base defense, smarter attacks~~
-16. ~~Fix AI buildings never completing (assign workers to construct)~~
-17. ~~Fix ATTACK button (sends all warriors, not just selected)~~
-18. Group globals into state objects
-19. Refactor worker/warrior tick into state machines
-20. Add basic responsive CSS / canvas scaling
+15. ~~Fix AI buildings never completing (assign workers to construct)~~
+16. ~~Refactor worker/warrior tick into state handler functions~~
+17. ~~Add RTS command system (multiplayer Phase 1)~~
+18. ~~Add RTS speed controls (1x/2x/3x)~~
+19. ~~Move 13 inline styles to CSS classes~~
+20. ~~Centralize cannon config in FACTION_CFG~~
+21. ~~Entity IDs use incrementing counter (deterministic)~~
+
+### Remaining
+22. Standardize game lifecycle (init/cleanup per game)
+23. Add basic responsive CSS / canvas scaling
+24. Group globals into state objects
 
 ### Long-term (polish)
 21. Add accessibility (ARIA, keyboard nav)
