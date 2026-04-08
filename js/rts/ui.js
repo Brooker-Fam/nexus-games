@@ -52,21 +52,21 @@ function openBuildPopup(screenX, screenY, context){
 
   } else if(context==='worker'){
     title.textContent = 'WORKER ACTIONS';
-    addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Right-click to place — trains ${cfg.warriorLabel}s (20g)`, 20, ()=>{
+    addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Click to place — trains ${cfg.warriorLabel}s (20g)`, 20, ()=>{
       S.buildStructureMode='barracks'; _buildModeCost=20;
-      rtsSetLog(`Right-click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
+      rtsSetLog(`Click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
     });
-    addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Right-click to place — trains elite units (20g)`, 20, ()=>{
+    addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Click to place — trains elite units (20g)`, 20, ()=>{
       S.buildStructureMode=true; _buildModeCost=20;
-      rtsSetLog(`Right-click to place your ${cfg.structLabel}!`); closeBuildPopup();
+      rtsSetLog(`Click to place your ${cfg.structLabel}!`); closeBuildPopup();
     });
     addOpt('💣', 'Build CANNON', 'Auto-attacks nearby enemies (15g)', 15, ()=>{
       S.buildStructureMode='cannon'; _buildModeCost=15;
-      rtsSetLog('Right-click to place your CANNON!'); closeBuildPopup();
+      rtsSetLog('Click to place your CANNON!'); closeBuildPopup();
     });
-    addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Right-click to place — trains more workers (25g)`, 25, ()=>{
+    addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Click to place — trains more workers (25g)`, 25, ()=>{
       S.buildStructureMode='base'; _buildModeCost=25;
-      rtsSetLog(`Right-click to place your new ${cfg.buildingName}!`); closeBuildPopup();
+      rtsSetLog(`Click to place your new ${cfg.buildingName}!`); closeBuildPopup();
     });
 
   } else if(context==='structure'){
@@ -163,6 +163,30 @@ function rtsHandleClick(e){
   if(e.target.closest && e.target.closest('#rts-build-popup')) return;
   if(S.buildPopupOpen){ closeBuildPopup(); }
 
+  // structure/base placement mode (left-click to place)
+  if(S.buildStructureMode){
+    const side=mySide();
+    const worker=S.selected.find(s=>s.type==='worker'&&s.side===side);
+    const workerId = worker ? worker.id
+      : (S.entities.filter(en=>en.type==='worker'&&en.side===side&&en.state!=='building')
+          .sort((a,b)=>{const d=Math.hypot(a.x-wp.x,a.y-wp.y)-Math.hypot(b.x-wp.x,b.y-wp.y);return d!==0?d:a.id-b.id;})[0]||{}).id;
+
+    if(!workerId){
+      rtsSetLog('No available worker to build!');
+      S.buildStructureMode=false;
+      return;
+    }
+    if(S.buildStructureMode==='base'){
+      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:'base' });
+    } else {
+      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:
+        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':'structure' });
+    }
+    S.buildStructureMode=false;
+    S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#ffdd00',size:0,isRing:true,radius:4});
+    return;
+  }
+
   for(const ent of S.entities) ent.selected=false;
   S.selected=[];
 
@@ -202,11 +226,11 @@ function rtsHandleClick(e){
       rtsSetLog(`CANNON${pct} — HP: ${Math.floor(hit.hp)}/${hit.maxHp}  Range: ${hit.range}`);
     } else if(hit.type==='worker'){
       openBuildPopup(sx,sy,'worker');
-      rtsSetLog(`${cfg.workerLabel} selected — build or right-click to move.`);
+      rtsSetLog(`${cfg.workerLabel} selected — build or click to move.`);
     } else if(hit.type==='warrior'){
       const UNIT_LABELS={elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label'};
       const lbl=cfg[UNIT_LABELS[hit.subtype]]||cfg.warriorLabel;
-      rtsSetLog(`${lbl} selected — right-click to move or attack.`);
+      rtsSetLog(`${lbl} selected — click to move or attack.`);
     }
   }
 }
@@ -216,30 +240,6 @@ function rtsHandleRightClick(e){
   if(S.gameOver) return;
   const sp=canvasPos(e);
   const wp=screenToWorld(sp.x,sp.y);
-
-  // structure/base placement mode
-  if(S.buildStructureMode){
-    const side=mySide();
-    const worker=S.selected.find(s=>s.type==='worker'&&s.side===side);
-    const workerId = worker ? worker.id
-      : (S.entities.filter(en=>en.type==='worker'&&en.side===side&&en.state!=='building')
-          .sort((a,b)=>{const d=Math.hypot(a.x-wp.x,a.y-wp.y)-Math.hypot(b.x-wp.x,b.y-wp.y);return d!==0?d:a.id-b.id;})[0]||{}).id;
-
-    if(!workerId){
-      rtsSetLog('No available worker to build!');
-      S.buildStructureMode=false;
-      return;
-    }
-    if(S.buildStructureMode==='base'){
-      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:'base' });
-    } else {
-      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:
-        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':'structure' });
-    }
-    S.buildStructureMode=false;
-    S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#ffdd00',size:0,isRing:true,radius:4});
-    return;
-  }
 
   if(S.selected.length===0) return;
 

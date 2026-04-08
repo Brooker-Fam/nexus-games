@@ -23,7 +23,7 @@ function rtsDraw(){
     rc.beginPath(); rc.moveTo(S.mouseWorld.x-14,S.mouseWorld.y); rc.lineTo(S.mouseWorld.x+14,S.mouseWorld.y); rc.stroke();
     rc.beginPath(); rc.moveTo(S.mouseWorld.x,S.mouseWorld.y-14); rc.lineTo(S.mouseWorld.x,S.mouseWorld.y+14); rc.stroke();
     rc.font='8px Orbitron,sans-serif'; rc.textAlign='center'; rc.fillStyle='rgba(255,220,80,0.8)'; rc.shadowBlur=0;
-    rc.fillText('RIGHT-CLICK TO PLACE', S.mouseWorld.x, S.mouseWorld.y-48);
+    rc.fillText('CLICK TO PLACE', S.mouseWorld.x, S.mouseWorld.y-48);
     rc.restore();
   }
 
