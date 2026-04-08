@@ -617,7 +617,7 @@ function endRTS(playerWon){
   else { title.textContent='DEFEAT'; title.className='rts-over-title lose'; sub.textContent='Your base has fallen.'; }
 
   // Record result and show rating change
-  const result = recordGameResult(playerWon);
+  const result = recordGameResult(playerWon, S.frame);
   showRatingChange(result);
 }
 

@@ -156,6 +156,34 @@
   .rts-cost { font-size:9px; color:gold; letter-spacing:1px; }
   .rts-speed-btns { display:flex; gap:4px; }
   .rts-speed-btns .speed-btn { padding:4px 8px; font-size:9px; }
+  /* ── PLAYER STATS ── */
+  .dso-stats {
+    max-width:740px; margin:28px auto 0; padding:16px 20px 12px;
+    background:rgba(2,10,22,0.85);
+    border:1px solid rgba(0,245,255,0.15);
+    clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
+  }
+  .dso-stats-title {
+    font-family:'Orbitron',sans-serif; font-size:9px; letter-spacing:4px;
+    color:rgba(0,245,255,0.45); margin-bottom:10px; text-align:center;
+  }
+  .dso-stats-row {
+    display:flex; justify-content:center; gap:18px; flex-wrap:wrap; margin-bottom:10px;
+  }
+  .dso-stat-box { text-align:center; min-width:70px; }
+  .dso-stat-label {
+    font-family:'Orbitron',sans-serif; font-size:7px; letter-spacing:2px;
+    color:var(--text-dim); margin-bottom:3px;
+  }
+  .dso-stat-val {
+    font-family:'Orbitron',sans-serif; font-size:16px; font-weight:700;
+    color:var(--text-bright); letter-spacing:1px;
+  }
+  .dso-stat-val.cyan { color:var(--neon-cyan); }
+  #dso-rating-graph {
+    display:block; width:100%; max-width:700px; height:120px; margin:0 auto;
+    border:1px solid rgba(0,245,255,0.08);
+  }
   /* ── MULTIPLAYER ── */
   .mp-controls { text-align:center; margin-top:30px; }
   .mp-divider {

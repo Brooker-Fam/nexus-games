@@ -47,6 +47,7 @@ function initFactionCards(){
     const el=document.getElementById('fc-canvas-'+faction);
     if(el) drawCardCharacter(el,faction,false);
   }
+  if(typeof refreshDifficultyStats==='function') refreshDifficultyStats();
 }
 
 // Register Deep Space Ops lifecycle
