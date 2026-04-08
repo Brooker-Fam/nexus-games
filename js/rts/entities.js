@@ -159,53 +159,54 @@ function makeTank(side, faction, nearX, nearY){
   };
 }
 function makeGoldNodes(){
-  rtsGoldNodes=[];
+  S.goldNodes=[];
   const MY=BASE_Y;
   // === Player-side cluster ===
   for(const [dx,dy] of [[200,-160],[200,0],[200,160],[350,-80],[350,80]]){
-    rtsGoldNodes.push({ x:PLAYER_BASE_X+dx, y:MY+dy, gold:999, maxGold:999, owner:'player' });
+    S.goldNodes.push({ x:PLAYER_BASE_X+dx, y:MY+dy, gold:999, maxGold:999, owner:'player' });
   }
   // === Enemy-side cluster ===
   for(const [dx,dy] of [[-200,-160],[-200,0],[-200,160],[-350,-80],[-350,80]]){
-    rtsGoldNodes.push({ x:ENEMY_BASE_X+dx, y:MY+dy, gold:999, maxGold:999, owner:'enemy' });
+    S.goldNodes.push({ x:ENEMY_BASE_X+dx, y:MY+dy, gold:999, maxGold:999, owner:'enemy' });
   }
   // === Center contested ===
   for(const [dx,dy] of [[0,-260],[0,-130],[0,0],[0,130],[0,260],[-200,-200],[-200,200],[200,-200],[200,200]]){
-    rtsGoldNodes.push({ x:RW/2+dx, y:MY+dy, gold:999, maxGold:999, owner:'neutral' });
+    S.goldNodes.push({ x:RW/2+dx, y:MY+dy, gold:999, maxGold:999, owner:'neutral' });
   }
   // === Quarter-map nodes (between base and center) ===
   const q1=RW*0.27, q2=RW*0.73;
   for(const [qx,dy] of [[q1,-300],[q1,0],[q1,300],[q2,-300],[q2,0],[q2,300]]){
-    rtsGoldNodes.push({ x:qx, y:MY+dy, gold:999, maxGold:999, owner:'neutral' });
+    S.goldNodes.push({ x:qx, y:MY+dy, gold:999, maxGold:999, owner:'neutral' });
   }
 }
 
 function startRTS(playerFaction, enemyFaction){
-  rtsPlayerFaction=playerFaction;
-  if(enemyFaction) rtsEnemyFaction=enemyFaction;
-  else if(!window._mpMultiplayer){
+  // pick enemy faction before reset
+  let eFaction = enemyFaction;
+  if(!eFaction && !window._mpMultiplayer){
     const factions=['prism','shadow','roboto'].filter(f=>f!==playerFaction);
-    rtsEnemyFaction = factions[Math.floor(Math.random()*factions.length)];
+    eFaction = factions[Math.floor(Math.random()*factions.length)];
   }
+
+  resetRtsState();
+  S.playerFaction=playerFaction;
+  if(eFaction) S.enemyFaction=eFaction;
   _nextEntityId=1;
-  rtsGold.player=0; rtsGold.enemy=0; rtsBaseHP=100; rtsEnemyBaseHP=100;
-  rtsGameOver=false; rtsFrame=0; rtsParticles=[]; rtsProjectiles=[];
   rtsCommandQueue.length=0;
   _pendingChains.length=0;
-  rtsSelected=[]; rtsBuildPopupOpen=false; buildStructureMode=false;
-  aiTimer=0; deadSwordsmenPool.length=0;
-  closeBuildPopup&&closeBuildPopup(); rtsEntities=[];
+  deadSwordsmenPool.length=0;
+  closeBuildPopup&&closeBuildPopup();
 
   // build bases
-  rtsPlayerBase=makeBase('player');
-  rtsEnemyBase=makeBase('enemy');
-  rtsEntities.push(rtsPlayerBase);
-  rtsEntities.push(rtsEnemyBase);
+  S.playerBase=makeBase('player');
+  S.enemyBase=makeBase('enemy');
+  S.entities.push(S.playerBase);
+  S.entities.push(S.enemyBase);
 
   // 5 starting workers each side
   for(let i=0;i<5;i++){
-    rtsEntities.push(makeWorker('player', playerFaction));
-    rtsEntities.push(makeWorker('enemy', rtsEnemyFaction));
+    S.entities.push(makeWorker('player', playerFaction));
+    S.entities.push(makeWorker('enemy', S.enemyFaction));
   }
 
   makeGoldNodes();
@@ -216,12 +217,12 @@ function startRTS(playerFaction, enemyFaction){
   document.getElementById('rts-faction-badge').textContent=playerFaction.toUpperCase()+' ARMADA';
   document.getElementById('rts-faction-badge').style.color=pCfg.color;
   document.getElementById('hud-building-name').textContent=pCfg.buildingName;
-  document.getElementById('rts-enemy-faction').textContent=rtsEnemyFaction.toUpperCase();
-  document.getElementById('rts-enemy-faction').style.color=FACTION_CFG[rtsEnemyFaction].color;
+  document.getElementById('rts-enemy-faction').textContent=S.enemyFaction.toUpperCase();
+  document.getElementById('rts-enemy-faction').style.color=FACTION_CFG[S.enemyFaction].color;
   rtsSetLog('Click your '+pCfg.buildingName+' to train units!');
 
-  if(rtsRAF) cancelAnimationFrame(rtsRAF);
+  if(S.raf) cancelAnimationFrame(S.raf);
   rtsLastTime=performance.now(); rtsAccum=0;
-  rtsRAF=requestAnimationFrame(rtsLoop);
+  S.raf=requestAnimationFrame(rtsLoop);
 }
 

@@ -1,13 +1,13 @@
 function drawRTSBase(rc, base){
-  const cfg=FACTION_CFG[base.side==='player'?rtsPlayerFaction:rtsEnemyFaction];
+  const cfg=FACTION_CFG[base.side==='player'?S.playerFaction:S.enemyFaction];
   const x=base.x, y=base.y;
   rc.save();
   rc.shadowColor=cfg.color; rc.shadowBlur=24;
 
   // popup-open highlight on player base
-  if(rtsBuildPopupOpen && base.side==='player'){
+  if(S.buildPopupOpen && base.side==='player'){
     rc.save();
-    const pulse=0.4+Math.sin(rtsFrame*0.15)*0.4;
+    const pulse=0.4+Math.sin(S.frame*0.15)*0.4;
     rc.strokeStyle=`rgba(0,255,136,${pulse})`;
     rc.lineWidth=4; rc.shadowColor='#00ff88'; rc.shadowBlur=20;
     rc.beginPath(); rc.arc(x,y,70,0,Math.PI*2); rc.stroke();
@@ -22,9 +22,9 @@ function drawRTSBase(rc, base){
     rc.restore();
   }
 
-  if(base.side==='player'?rtsPlayerFaction==='roboto':rtsEnemyFaction==='roboto'){
+  if(base.side==='player'?S.playerFaction==='roboto':S.enemyFaction==='roboto'){
     drawRTSFactory(rc,x,y,cfg);
-  } else if(base.side==='player'?rtsPlayerFaction==='shadow':rtsEnemyFaction==='shadow'){
+  } else if(base.side==='player'?S.playerFaction==='shadow':S.enemyFaction==='shadow'){
     drawRTSTemple(rc,x,y,cfg,'shadow');
   } else {
     drawRTSTemple(rc,x,y,cfg,'prism');
@@ -92,7 +92,7 @@ function drawRTSFactory(rc,x,y,cfg){
     rc.fillStyle='#1a1a20'; rc.fillRect(cx-4,y-60,8,24);
     rc.strokeStyle=cfg.color; rc.lineWidth=0.8; rc.strokeRect(cx-4,y-60,8,24);
     // smoke puff
-    rc.fillStyle=`rgba(255,140,0,${0.15+Math.sin(rtsFrame*0.05+cx)*0.1})`;
+    rc.fillStyle=`rgba(255,140,0,${0.15+Math.sin(S.frame*0.05+cx)*0.1})`;
     rc.beginPath(); rc.arc(cx,y-64,6,0,Math.PI*2); rc.fill();
   }
   // power core
@@ -105,7 +105,7 @@ function drawRTSFactory(rc,x,y,cfg){
 }
 
 function drawRTSStructure(rc, s){
-  const cfg=FACTION_CFG[s.side==='player'?rtsPlayerFaction:rtsEnemyFaction];
+  const cfg=FACTION_CFG[s.side==='player'?S.playerFaction:S.enemyFaction];
   const x=s.x, y=s.y;
   rc.save();
   rc.shadowColor=cfg.color; rc.shadowBlur=16;
@@ -565,7 +565,7 @@ function _drawCannonRoboto(rc,x,y,angle,c){
 function drawConstructionOverlay(rc, x, y, progress, color, halfH){
   // semi-transparent overlay with scaffolding
   rc.save();
-  rc.globalAlpha=0.45+Math.sin(rtsFrame*0.15)*0.1;
+  rc.globalAlpha=0.45+Math.sin(S.frame*0.15)*0.1;
   rc.fillStyle='rgba(0,0,0,0.55)';
   rc.fillRect(x-32,y-halfH,64,halfH+20);
   rc.globalAlpha=1;

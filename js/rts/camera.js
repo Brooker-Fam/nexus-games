@@ -1,16 +1,6 @@
 // ════════════════════════════════════════════════════
 //  DEEP SPACE OPS — RTS ENGINE
 // ════════════════════════════════════════════════════
-let rtsRAF=null, rtsFrame=0, rtsSpeed=1;
-const rtsGold={player:0, enemy:0};
-let rtsPlayerFaction='prism', rtsEnemyFaction='shadow';
-let rtsBaseHP=100, rtsEnemyBaseHP=100;
-let rtsGameOver=false;
-let rtsEntities=[];   // all units + bases
-let rtsPlayerBase=null, rtsEnemyBase=null; // cached refs — set in startRTS()
-let rtsParticles=[];
-let rtsGoldNodes=[];  // gold mines in center
-let rtsLog='';
 
 // World map size
 const RW=4000, RH=1400;
@@ -18,23 +8,52 @@ const RW=4000, RH=1400;
 const VW=1200, VH=580;
 const PLAYER_BASE_X=160, ENEMY_BASE_X=RW-160, BASE_Y=RH/2;
 
+// ── CENTRALIZED RTS STATE ──
+// All mutable game state in one object. resetRtsState() restores defaults.
+const S = {
+  // game flow
+  raf: null, frame: 0, speed: 1, gameOver: false, log: '',
+  // resources & factions
+  gold: {player:0, enemy:0},
+  playerFaction: 'prism', enemyFaction: 'shadow',
+  // base HP
+  baseHP: 100, enemyBaseHP: 100,
+  // entities
+  entities: [], playerBase: null, enemyBase: null,
+  particles: [], goldNodes: [], projectiles: [],
+  // selection / UI
+  selected: [], buildPopupOpen: false, buildStructureMode: false, buildingSource: null,
+  // AI
+  aiTimer: 0,
+  // camera
+  camX: 0, camY: RH/2 - VH/2, mouseWorld: null,
+};
+
+function resetRtsState(){
+  S.raf=null; S.frame=0; S.speed=1; S.gameOver=false; S.log='';
+  S.gold={player:0, enemy:0}; S.baseHP=100; S.enemyBaseHP=100;
+  S.entities=[]; S.playerBase=null; S.enemyBase=null;
+  S.particles=[]; S.goldNodes=[]; S.projectiles=[];
+  S.selected=[]; S.buildPopupOpen=false; S.buildStructureMode=false; S.buildingSource=null;
+  S.aiTimer=0;
+  S.camX=0; S.camY=RH/2-VH/2; S.mouseWorld=null;
+}
+
 // ── CAMERA ──
-let camX=0, camY=RH/2-VH/2;
 let camDragging=false, camDragStartX=0, camDragStartY=0, camDragCamX=0, camDragCamY=0;
 const CAM_SPEED=14;
 const keysHeld={};
-let rtsMouseWorld=null; // tracks mouse position in world coords
 
 function clampCam(){
-  camX=Math.max(0,Math.min(RW-VW,camX));
-  camY=Math.max(0,Math.min(RH-VH,camY));
+  S.camX=Math.max(0,Math.min(RW-VW,S.camX));
+  S.camY=Math.max(0,Math.min(RH-VH,S.camY));
 }
 
 let cameraControlsInitialized = false;
 
 function initCamera(playerFaction){
-  camX = PLAYER_BASE_X - VW * 0.3;
-  camY = RH/2 - VH/2;
+  S.camX = PLAYER_BASE_X - VW * 0.3;
+  S.camY = RH/2 - VH/2;
   clampCam();
   if(!cameraControlsInitialized){
     cameraControlsInitialized = true;
@@ -61,7 +80,7 @@ function setupCameraControls(){
     if(e.button !== 0) return;
     camDragging=false; // reset
     camDragStartX=e.clientX; camDragStartY=e.clientY;
-    camDragCamX=camX; camDragCamY=camY;
+    camDragCamX=S.camX; camDragCamY=S.camY;
   });
   window.addEventListener('mousemove', e=>{
     const moved=Math.hypot(e.clientX-camDragStartX, e.clientY-camDragStartY);
@@ -70,8 +89,8 @@ function setupCameraControls(){
       const c2=document.getElementById('rts-canvas');
       const r2=c2?c2.getBoundingClientRect():{width:VW,height:VH};
       const sx=c2?c2.width/r2.width:1, sy2=c2?c2.height/r2.height:1;
-      camX = camDragCamX - (e.clientX - camDragStartX)*sx;
-      camY = camDragCamY - (e.clientY - camDragStartY)*sy2;
+      S.camX = camDragCamX - (e.clientX - camDragStartX)*sx;
+      S.camY = camDragCamY - (e.clientY - camDragStartY)*sy2;
       clampCam();
     }
     // track mouse in world coords for placement preview
@@ -81,12 +100,12 @@ function setupCameraControls(){
       const scX=canvas2.width/rect.width, scY=canvas2.height/rect.height;
       const sx=(e.clientX-rect.left)*scX, sy=(e.clientY-rect.top)*scY;
       if(sx>=0&&sy>=0&&sx<=VW&&sy<=VH){
-        rtsMouseWorld={x:sx+camX, y:sy+camY};
+        S.mouseWorld={x:sx+S.camX, y:sy+S.camY};
       }
     }
     // update cursor style
     const wrap2=document.getElementById('rts-viewport-wrap');
-    if(wrap2) wrap2.style.cursor=buildStructureMode?'crosshair':camDragging?'grabbing':'grab';
+    if(wrap2) wrap2.style.cursor=S.buildStructureMode?'crosshair':camDragging?'grabbing':'grab';
   });
   window.addEventListener('mouseup', ()=>{ setTimeout(()=>camDragging=false, 50); });
 
@@ -95,13 +114,13 @@ function setupCameraControls(){
     const t=e.touches[0];
     camDragging=true;
     camDragStartX=t.clientX; camDragStartY=t.clientY;
-    camDragCamX=camX; camDragCamY=camY;
+    camDragCamX=S.camX; camDragCamY=S.camY;
   },{passive:true});
   wrap.addEventListener('touchmove', e=>{
     if(!camDragging) return;
     const t=e.touches[0];
-    camX = camDragCamX - (t.clientX - camDragStartX);
-    camY = camDragCamY - (t.clientY - camDragStartY);
+    S.camX = camDragCamX - (t.clientX - camDragStartX);
+    S.camY = camDragCamY - (t.clientY - camDragStartY);
     clampCam();
   },{passive:true});
   wrap.addEventListener('touchend', ()=>{ camDragging=false; });
@@ -111,8 +130,8 @@ function setupCameraControls(){
     const game = document.getElementById('dso-game');
     if(!game || game.style.display==='none') return;
     e.preventDefault();
-    if(e.deltaX) camX += e.deltaX;
-    if(e.deltaY) camY += e.deltaY * 0.5;
+    if(e.deltaX) S.camX += e.deltaX;
+    if(e.deltaY) S.camY += e.deltaY * 0.5;
     clampCam();
   },{passive:false});
 
@@ -129,10 +148,10 @@ function setupCameraControls(){
 }
 
 function tickCamera(){
-  if(keysHeld['ArrowLeft']||keysHeld['a']||keysHeld['A']) camX-=CAM_SPEED;
-  if(keysHeld['ArrowRight']||keysHeld['d']||keysHeld['D']) camX+=CAM_SPEED;
-  if(keysHeld['ArrowUp']||keysHeld['w']||keysHeld['W']) camY-=CAM_SPEED;
-  if(keysHeld['ArrowDown']||keysHeld['s']||keysHeld['S']) camY+=CAM_SPEED;
+  if(keysHeld['ArrowLeft']||keysHeld['a']||keysHeld['A']) S.camX-=CAM_SPEED;
+  if(keysHeld['ArrowRight']||keysHeld['d']||keysHeld['D']) S.camX+=CAM_SPEED;
+  if(keysHeld['ArrowUp']||keysHeld['w']||keysHeld['W']) S.camY-=CAM_SPEED;
+  if(keysHeld['ArrowDown']||keysHeld['s']||keysHeld['S']) S.camY+=CAM_SPEED;
   clampCam();
 }
 

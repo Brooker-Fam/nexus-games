@@ -5,8 +5,8 @@ let mpOnConnect=null;
 
 // Side helpers — used everywhere for multiplayer-aware logic
 function mySide(){ return (window._mpMultiplayer && !mpIsHost) ? 'enemy' : 'player'; }
-function myFaction(){ return mySide()==='player' ? rtsPlayerFaction : rtsEnemyFaction; }
-function myGold(){ return rtsGold[mySide()]; }
+function myFaction(){ return mySide()==='player' ? S.playerFaction : S.enemyFaction; }
+function myGold(){ return S.gold[mySide()]; }
 
 // Unambiguous room codes
 const MP_PREFIX='nexus-dso-';
@@ -80,8 +80,8 @@ function mpStartGame(msg){
   document.getElementById('dso-game').style.display='block';
   document.getElementById('rts-gameover-overlay').style.display='none';
   // Both clients init identically
-  rtsPlayerFaction=msg.hf;
-  rtsEnemyFaction=msg.gf;
+  S.playerFaction=msg.hf;
+  S.enemyFaction=msg.gf;
   startRTS(msg.hf);
   _rebuildEntMap();
   // Guest: fix HUD for their faction, start camera at their base
@@ -93,7 +93,7 @@ function mpStartGame(msg){
     document.getElementById('rts-enemy-faction').textContent=msg.hf.toUpperCase();
     document.getElementById('rts-enemy-faction').style.color=FACTION_CFG[msg.hf].color;
     rtsSetLog('Click your '+myCfg.buildingName+' to train units!');
-    camX=ENEMY_BASE_X-VW/2; clampCam();
+    S.camX=ENEMY_BASE_X-VW/2; clampCam();
   }
 }
 
@@ -115,18 +115,18 @@ function _encodeEntity(e){
 function mpSendState(){
   _fullSyncCounter++;
   const doFull=(_fullSyncCounter%30===0);
-  const curIds=new Set(rtsEntities.map(e=>e.id));
+  const curIds=new Set(S.entities.map(e=>e.id));
   const removed=[];
   for(const id of _lastIds){ if(!curIds.has(id)) removed.push(id); }
 
   let ents;
   if(doFull){
-    ents=rtsEntities.map(e=>_encodeEntity(e));
+    ents=S.entities.map(e=>_encodeEntity(e));
     _lastSnap={};
-    for(const e of rtsEntities) _lastSnap[e.id]=_encodeEntity(e);
+    for(const e of S.entities) _lastSnap[e.id]=_encodeEntity(e);
   } else {
     ents=[];
-    for(const e of rtsEntities){
+    for(const e of S.entities){
       const enc=_encodeEntity(e);
       const prev=_lastSnap[e.id];
       if(!prev){ ents.push(enc); }
@@ -145,21 +145,21 @@ function mpSendState(){
   _lastIds=curIds;
   for(const id of removed) delete _lastSnap[id];
 
-  const projs=rtsProjectiles.map(p=>[Math.round(p.x),Math.round(p.y),p.color,p.type,p.side]);
+  const projs=S.projectiles.map(p=>[Math.round(p.x),Math.round(p.y),p.color,p.type,p.side]);
   mpSend({t:'s', e:ents, p:projs, r:removed.length?removed:undefined,
-    g:{p:Math.round(rtsGold.player),e:Math.round(rtsGold.enemy)},
-    bh:rtsBaseHP, eh:rtsEnemyBaseHP, f:rtsFrame, go:rtsGameOver?1:0,
+    g:{p:Math.round(S.gold.player),e:Math.round(S.gold.enemy)},
+    bh:S.baseHP, eh:S.enemyBaseHP, f:S.frame, go:S.gameOver?1:0,
     full:doFull?1:undefined});
 }
 
 // ── GUEST STATE RECEIVER ──
 let _entMap=new Map();
-function _rebuildEntMap(){ _entMap.clear(); for(const e of rtsEntities) _entMap.set(e.id,e); }
+function _rebuildEntMap(){ _entMap.clear(); for(const e of S.entities) _entMap.set(e.id,e); }
 
 function _applyEntityArray(a){
   const id=a[0];
   let local=_entMap.get(id);
-  if(!local){ local={id}; rtsEntities.push(local); _entMap.set(id,local); }
+  if(!local){ local={id}; S.entities.push(local); _entMap.set(id,local); }
   for(let i=0;i<_E_FIELDS.length;i++) local[_E_FIELDS[i]]=a[i];
   if(a.length>_E_FIELDS.length){
     local.queue=(a[_E_FIELDS.length]||[]).map(q=>Array.isArray(q)?{label:q[0],time:q[1]}:{label:q,time:0});
@@ -168,28 +168,28 @@ function _applyEntityArray(a){
 }
 
 function mpApplyState(msg){
-  rtsGold.player=msg.g.p; rtsGold.enemy=msg.g.e;
-  rtsBaseHP=msg.bh; rtsEnemyBaseHP=msg.eh;
-  rtsFrame=msg.f; rtsGameOver=!!msg.go;
+  S.gold.player=msg.g.p; S.gold.enemy=msg.g.e;
+  S.baseHP=msg.bh; S.enemyBaseHP=msg.eh;
+  S.frame=msg.f; S.gameOver=!!msg.go;
 
   if(msg.full){
     const hostIds=new Set();
     for(const a of msg.e){ _applyEntityArray(a); hostIds.add(a[0]); }
-    for(let i=rtsEntities.length-1;i>=0;i--){
-      if(!hostIds.has(rtsEntities[i].id)){ _entMap.delete(rtsEntities[i].id); rtsEntities.splice(i,1); }
+    for(let i=S.entities.length-1;i>=0;i--){
+      if(!hostIds.has(S.entities[i].id)){ _entMap.delete(S.entities[i].id); S.entities.splice(i,1); }
     }
   } else {
     for(const a of msg.e) _applyEntityArray(a);
     if(msg.r) for(const id of msg.r){
-      const i=rtsEntities.findIndex(e=>e.id===id);
-      if(i>=0){ _entMap.delete(id); rtsEntities.splice(i,1); }
+      const i=S.entities.findIndex(e=>e.id===id);
+      if(i>=0){ _entMap.delete(id); S.entities.splice(i,1); }
     }
   }
 
-  rtsProjectiles=msg.p.map(a=>({x:a[0],y:a[1],color:a[2],type:a[3],side:a[4],trail:[]}));
+  S.projectiles=msg.p.map(a=>({x:a[0],y:a[1],color:a[2],type:a[3],side:a[4],trail:[]}));
   updateRtsHUD();
-  if(rtsGameOver){
-    const myBaseHP=mySide()==='player'?rtsBaseHP:rtsEnemyBaseHP;
+  if(S.gameOver){
+    const myBaseHP=mySide()==='player'?S.baseHP:S.enemyBaseHP;
     endRTS(myBaseHP>0);
   }
 }

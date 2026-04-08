@@ -98,7 +98,7 @@ docs/
 
 ### State Management
 - **TD**: Single `state` object in `td/logic.js` (gold, lives, towers, enemies, etc.)
-- **RTS**: 20+ globals across files (`rtsEntities`, `rtsGold`, `camX`, `aiGold`, etc.)
+- **RTS**: Centralized `S` object in `camera.js` — game flow, entities, resources, AI, camera, UI state. `resetRtsState()` restores all defaults for clean init/teardown.
 - **Command queue** (`commands.js`): All player mutations flow through `issueCommand()` / `processCommands()`. Commands carry `type`, `side`, `tick` — ready for network broadcast.
 
 ### Rendering Pipeline
@@ -125,7 +125,6 @@ docs/
 
 | Issue | Where | Impact |
 |-------|-------|--------|
-| Global state sprawl | `camera.js`, `game.js`, `ui.js` | Hard to init/teardown games cleanly; risk of stale state between sessions |
 | All scripts load upfront | `index.html` | Both games load even when only one is played (~130KB wasted) |
 
 ### Can wait
@@ -146,9 +145,6 @@ docs/
 - Accessibility — limited applicability for Canvas games; keyboard nav for menus is the practical ceiling
 
 ## Roadmap
-
-### Next up: Cleanup and hardening
-- [ ] Group RTS globals into `rtsState` object (enables clean teardown)
 
 ### Future
 - [ ] Add touch support for mobile play

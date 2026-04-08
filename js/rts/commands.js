@@ -5,7 +5,7 @@
 const rtsCommandQueue = [];
 
 function issueCommand(cmd){
-  cmd.tick = rtsFrame;
+  cmd.tick = S.frame;
   cmd.side = mySide();
   if(window._mpMultiplayer && mpConnected && !mpIsHost){
     // Guest: send to host only, don't execute locally
@@ -24,19 +24,19 @@ function processCommands(){
 
 function executeCommand(cmd){
   const side = cmd.side || 'player';
-  const faction = side==='player' ? rtsPlayerFaction : rtsEnemyFaction;
+  const faction = side==='player' ? S.playerFaction : S.enemyFaction;
   const cfg = FACTION_CFG[faction];
   const elite2FnMap = { makeWizard, makeNecromancer, makeTank };
 
   switch(cmd.type){
 
     case 'train_unit': {
-      const building = rtsEntities.find(e=>e.id===cmd.buildingId);
+      const building = S.entities.find(e=>e.id===cmd.buildingId);
       if(!building || building.underConstruction) break;
       if(building.side !== side) break; // can't train from enemy building
       const costMap = { worker:5, warrior:cfg.warriorCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost };
       const cost = costMap[cmd.unitType] || 0;
-      if(rtsGold[side] < cost) break;
+      if(S.gold[side] < cost) break;
 
       const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite };
       const time = timeMap[cmd.unitType] || BUILD_TIMES.worker;
@@ -56,19 +56,19 @@ function executeCommand(cmd){
         : cfg.elite2Label;
 
       if(!queueUnit(building, label, time, fn)) break;
-      rtsGold[side] -= cost;
+      S.gold[side] -= cost;
       updateRtsHUD();
       rtsSetLog(`${label} queued (${building.queue.length}/${QUEUE_MAX})`);
       break;
     }
 
     case 'build_structure': {
-      if(cmd.cost) rtsGold[side] -= cmd.cost;
+      if(cmd.cost) S.gold[side] -= cmd.cost;
       if(cmd.buildType==='base'){
         const nb={id:nextId(),type:'base',side,x:cmd.x,y:cmd.y,hp:100,maxHp:100,w:60,h:80,selected:false,queue:[],trainTimer:0};
-        rtsEntities.push(nb);
+        S.entities.push(nb);
       } else {
-        const worker = rtsEntities.find(e=>e.id===cmd.workerId);
+        const worker = S.entities.find(e=>e.id===cmd.workerId);
         if(!worker) break;
         worker.buildTarget = { x:cmd.x, y:cmd.y, buildType:cmd.buildType, ghost:null };
         worker.state = 'building';
@@ -78,7 +78,7 @@ function executeCommand(cmd){
 
     case 'move_units': {
       for(const id of cmd.unitIds){
-        const unit = rtsEntities.find(e=>e.id===id);
+        const unit = S.entities.find(e=>e.id===id);
         if(!unit || unit.side!==side) continue;
         const idx = cmd.unitIds.indexOf(id);
         const spread = idx * 20 - (cmd.unitIds.length * 10);
@@ -91,9 +91,9 @@ function executeCommand(cmd){
 
     case 'attack_target': {
       for(const id of cmd.unitIds){
-        const unit = rtsEntities.find(e=>e.id===id);
+        const unit = S.entities.find(e=>e.id===id);
         if(!unit || unit.side!==side || unit.type!=='warrior') continue;
-        const target = rtsEntities.find(e=>e.id===cmd.targetId);
+        const target = S.entities.find(e=>e.id===cmd.targetId);
         if(!target) continue;
         unit.forcedTarget = target;
         unit.moveTarget = null;
@@ -104,7 +104,7 @@ function executeCommand(cmd){
 
     case 'attack_all': {
       let count = 0;
-      for(const e of rtsEntities){
+      for(const e of S.entities){
         if(e.type==='warrior' && e.side===side && e.state==='idle'){
           e.state = 'march';
           count++;
