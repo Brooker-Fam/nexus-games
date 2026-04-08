@@ -13,10 +13,9 @@ const AI_CONFIG = {
 };
 
 // ── AI LOGIC ──
-let aiTimer=0;
 
 function aiCount(type, subFilter){
-  return rtsEntities.filter(e=>{
+  return S.entities.filter(e=>{
     if(e.side!=='enemy') return false;
     if(e.type!==type) return false;
     return subFilter ? subFilter(e) : true;
@@ -26,18 +25,18 @@ function aiCount(type, subFilter){
 function aiQueueAt(building, label, time, fn, cost){
   if(!building || building.underConstruction) return false;
   if(building.queue && building.queue.length>=QUEUE_MAX) return false;
-  if(rtsGold.enemy<cost) return false;
-  rtsGold.enemy-=cost;
+  if(S.gold.enemy<cost) return false;
+  S.gold.enemy-=cost;
   queueUnit(building, label, time, fn);
   return true;
 }
 
 function aiBuild(type, nearX, nearY, cost){
-  if(rtsGold.enemy<cost) return false;
+  if(S.gold.enemy<cost) return false;
   // Find an idle AI worker to assign
-  const worker = rtsEntities.find(e=>e.side==='enemy'&&e.type==='worker'&&e.state!=='building');
+  const worker = S.entities.find(e=>e.side==='enemy'&&e.type==='worker'&&e.state!=='building');
   if(!worker) return false;
-  rtsGold.enemy-=cost;
+  S.gold.enemy-=cost;
   const x=nearX+(Math.random()-0.5)*160;
   const y=nearY+(Math.random()-0.5)*200;
   // Assign worker to build (same flow as player)
@@ -47,8 +46,8 @@ function aiBuild(type, nearX, nearY, cost){
 }
 
 function aiTick(){
-  aiTimer++;
-  const eb=rtsEnemyBase;
+  S.aiTimer++;
+  const eb=S.enemyBase;
   if(!eb) return;
 
   // Gather intel
@@ -57,11 +56,11 @@ function aiTick(){
   const barracks  = aiCount('structure', e=>e.isBarracks);
   const eliteStructs = aiCount('structure', e=>!e.isBarracks);
   const cannons   = aiCount('cannon');
-  const playerWarriors = rtsEntities.filter(e=>e.side==='player'&&e.type==='warrior').length;
-  const idleWarriors = rtsEntities.filter(e=>e.side==='enemy'&&e.type==='warrior'&&e.state==='idle').length;
+  const playerWarriors = S.entities.filter(e=>e.side==='player'&&e.type==='warrior').length;
+  const idleWarriors = S.entities.filter(e=>e.side==='enemy'&&e.type==='warrior'&&e.state==='idle').length;
 
   // Detect threats near base
-  const baseThreat = rtsEntities.filter(e=>
+  const baseThreat = S.entities.filter(e=>
     e.side==='player'&&e.type==='warrior'&&Math.hypot(e.x-eb.x,e.y-eb.y)<400
   ).length;
 
@@ -69,11 +68,11 @@ function aiTick(){
   if(!window._mpMultiplayer){
 
   // === DECISIONS (every ~3 seconds, faster than before) ===
-  if(aiTimer%180===0){
+  if(S.aiTimer%180===0){
 
     // Always keep training workers (up to cap)
     if(workers<AI_CONFIG.maxWorkers){
-      aiQueueAt(eb,'Worker',BUILD_TIMES.worker,()=>makeWorker('enemy',rtsEnemyFaction),AI_CONFIG.workerCost);
+      aiQueueAt(eb,'Worker',BUILD_TIMES.worker,()=>makeWorker('enemy',S.enemyFaction),AI_CONFIG.workerCost);
     }
 
     // Build first barracks ASAP (only need 2 workers)
@@ -81,12 +80,12 @@ function aiTick(){
       aiBuild('barracks', eb.x-150, eb.y, AI_CONFIG.barracksCost);
     }
     // Build second barracks for faster production
-    else if(barracks===1 && workers>=6 && rtsGold.enemy>=AI_CONFIG.barracksCost){
+    else if(barracks===1 && workers>=6 && S.gold.enemy>=AI_CONFIG.barracksCost){
       aiBuild('barracks', eb.x-200, eb.y+120, AI_CONFIG.barracksCost);
     }
 
     // Build cannons (up to 3 for defense)
-    if(cannons<3 && workers>=3 && rtsGold.enemy>=AI_CONFIG.cannonCost){
+    if(cannons<3 && workers>=3 && S.gold.enemy>=AI_CONFIG.cannonCost){
       aiBuild('cannon', eb.x-100, eb.y, AI_CONFIG.cannonCost);
     }
 
@@ -97,17 +96,17 @@ function aiTick(){
   }
 
   // === TRAIN UNITS (every ~2 seconds, aggressive) ===
-  if(aiTimer%120===0){
+  if(S.aiTimer%120===0){
     // Train warriors from ALL barracks
-    const allBarracks=rtsEntities.filter(e=>e.side==='enemy'&&e.type==='structure'&&e.isBarracks&&!e.underConstruction);
+    const allBarracks=S.entities.filter(e=>e.side==='enemy'&&e.type==='structure'&&e.isBarracks&&!e.underConstruction);
     for(const bar of allBarracks){
-      aiQueueAt(bar,'Warrior',BUILD_TIMES.warrior,()=>makeWarrior('enemy',rtsEnemyFaction,bar.x,bar.y),AI_CONFIG.warriorCost);
+      aiQueueAt(bar,'Warrior',BUILD_TIMES.warrior,()=>makeWarrior('enemy',S.enemyFaction,bar.x,bar.y),AI_CONFIG.warriorCost);
     }
 
     // Train elites
-    const eliteStruct=rtsEntities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.underConstruction);
-    if(eliteStruct && rtsGold.enemy>=AI_CONFIG.eliteCost){
-      aiQueueAt(eliteStruct,'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',rtsEnemyFaction,eliteStruct.x,eliteStruct.y),AI_CONFIG.eliteCost);
+    const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.underConstruction);
+    if(eliteStruct && S.gold.enemy>=AI_CONFIG.eliteCost){
+      aiQueueAt(eliteStruct,'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),AI_CONFIG.eliteCost);
     }
   }
 
@@ -115,8 +114,8 @@ function aiTick(){
 
   // === ATTACK DECISIONS (always run, including multiplayer) ===
   // Defend base when threatened
-  if(baseThreat>0 && aiTimer%60===0){
-    for(const e of rtsEntities){
+  if(baseThreat>0 && S.aiTimer%60===0){
+    for(const e of S.entities){
       if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle'){
         e.state='march';
       }
@@ -124,10 +123,10 @@ function aiTick(){
   }
 
   // Attack when we have a decent army (5+ warriors or matching player)
-  if(aiTimer%AI_CONFIG.attackInterval===0){
+  if(S.aiTimer%AI_CONFIG.attackInterval===0){
     const shouldAttack = idleWarriors>=5 || (idleWarriors>=3 && idleWarriors>=playerWarriors);
     if(shouldAttack){
-      for(const e of rtsEntities){
+      for(const e of S.entities){
         if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle') e.state='march';
       }
     }
@@ -136,17 +135,17 @@ function aiTick(){
 
 // ── TICK ──
 function rtsTick(){
-  if(rtsGameOver) return;
-  rtsFrame++;
+  if(S.gameOver) return;
+  S.frame++;
   processCommands();
   tickCamera();
   aiTick();
 
-  const playerBase = rtsPlayerBase;
-  const enemyBase  = rtsEnemyBase;
+  const playerBase = S.playerBase;
+  const enemyBase  = S.enemyBase;
   if(!playerBase||!enemyBase) return;
 
-  for(const e of rtsEntities){
+  for(const e of S.entities){
     e.frame=(e.frame||0)+1;
     if(e.type==='worker') workerTick(e, playerBase, enemyBase);
     if(e.type==='warrior') warriorTick(e, playerBase, enemyBase);
@@ -163,7 +162,7 @@ function rtsTick(){
         const revived=makeWarrior(e.side, e.faction, pos.x-80, pos.y);
         revived.state='march';
         revived.x=pos.x; revived.y=pos.y;
-        rtsEntities.push(revived);
+        S.entities.push(revived);
         spawnMagicBurst(pos.x, pos.y, '#9922ff');
         if(e.side==='player') rtsSetLog('Necromancer raised a Swordsman from the dead!');
       }
@@ -171,8 +170,8 @@ function rtsTick(){
   }
 
   // remove dead units — record fallen swordsmen for necromancer
-  for(let i=rtsEntities.length-1;i>=0;i--){
-    const e=rtsEntities[i];
+  for(let i=S.entities.length-1;i>=0;i--){
+    const e=S.entities[i];
     if(e.type!=='base' && e.hp<=0){
       if(e.type==='warrior' && e.faction==='shadow' && !e.subtype){
         deadSwordsmenPool.push({x:e.x, y:e.y, side:e.side});
@@ -180,7 +179,7 @@ function rtsTick(){
       }
       spawnDeathParticles(e.x,e.y,FACTION_CFG[e.faction]?.color||'#886633');
       sfx('rtsUnitDie',120);
-      rtsEntities.splice(i,1);
+      S.entities.splice(i,1);
     }
   }
 
@@ -188,16 +187,16 @@ function rtsTick(){
   tickPendingChains();
 
   // check base HP
-  if(playerBase.hp<=0){ rtsBaseHP=0; endRTS(false); return; }
-  if(enemyBase.hp<=0){ rtsEnemyBaseHP=0; endRTS(true); return; }
-  rtsBaseHP=Math.floor(playerBase.hp);
-  rtsEnemyBaseHP=Math.floor(enemyBase.hp);
+  if(playerBase.hp<=0){ S.baseHP=0; endRTS(false); return; }
+  if(enemyBase.hp<=0){ S.enemyBaseHP=0; endRTS(true); return; }
+  S.baseHP=Math.floor(playerBase.hp);
+  S.enemyBaseHP=Math.floor(enemyBase.hp);
 
   // particles
-  for(let i=rtsParticles.length-1;i>=0;i--){
-    const p=rtsParticles[i]; p.x+=p.vx; p.y+=p.vy; p.vx*=0.9; p.vy*=0.9; p.life--;
+  for(let i=S.particles.length-1;i>=0;i--){
+    const p=S.particles[i]; p.x+=p.vx; p.y+=p.vy; p.vx*=0.9; p.vy*=0.9; p.life--;
     if(p.isRing) p.radius+=3;
-    if(p.life<=0) rtsParticles.splice(i,1);
+    if(p.life<=0) S.particles.splice(i,1);
   }
 
   updateRtsHUD();
@@ -224,7 +223,7 @@ function workerBuild(w){
     if(!w.buildTarget.ghost){
       const makers={cannon:makeCannon, barracks:makeBarracks, base:makeBase};
       const ghost=(makers[bt]||makeStructure)(w.side, w.faction, w.buildTarget.x, w.buildTarget.y);
-      rtsEntities.push(ghost);
+      S.entities.push(ghost);
       w.buildTarget.ghost=ghost;
     }
     const ghost=w.buildTarget.ghost;
@@ -248,7 +247,7 @@ function workerBuild(w){
 
 function workerFindGold(w){
   let best=null, bestScore=Infinity;
-  for(const node of rtsGoldNodes){
+  for(const node of S.goldNodes){
     if(node.gold<=0) continue;
     const d=Math.hypot(node.x-w.x, node.y-w.y);
     const penalty=GOLD_NODE_PENALTIES[node.owner]||(node.owner===w.side?0:400);
@@ -275,14 +274,14 @@ function workerMine(w){
 
 function workerReturn(w, myBase){
   let nearestBase=null, nearestDist=Infinity;
-  for(const ent of rtsEntities){
+  for(const ent of S.entities){
     if(ent.type!=='base'||ent.side!==w.side) continue;
     const d=Math.hypot(ent.x-w.x,ent.y-w.y);
     if(d<nearestDist){ nearestDist=d; nearestBase=ent; }
   }
   const dropoff=nearestBase||myBase;
   if(moveToward(w, dropoff.x, dropoff.y, MINE_DROPOFF_DIST)){
-    rtsGold[w.side]+=w.goldCarry;
+    S.gold[w.side]+=w.goldCarry;
     w.goldCarry=0; w.state='idle';
   }
 }
@@ -309,7 +308,7 @@ function cannonTick(c){
   // find nearest enemy within range
   let target=null, bestDist=c.range;
   const enemySide=c.side==='player'?'enemy':'player';
-  for(const e of rtsEntities){
+  for(const e of S.entities){
     if(e.side!==enemySide) continue;
     const d=Math.hypot(e.x-c.x,e.y-c.y);
     if(d<bestDist){ bestDist=d; target=e; }
@@ -319,7 +318,7 @@ function cannonTick(c){
   c.cooldown=c.rate;
   const cCfg=FACTION_CFG[c.faction];
   sfx(cCfg.cannonSound||'rtsCannonFire',300);
-  rtsProjectiles.push({
+  S.projectiles.push({
     x:c.x, y:c.y, tx:target,
     speed:8, damage:c.damage,
     faction:c.faction, color:cCfg.cannonColor||'#ffaa00',
@@ -338,7 +337,7 @@ function buildingTick(b){
     b.queue.shift();
     // spawn the unit
     const u=item.fn();
-    rtsEntities.push(u);
+    S.entities.push(u);
     if(b.side==='player') rtsSetLog(`${item.label} ready!`);
   }
 }
@@ -356,7 +355,7 @@ const MELEE_ATTACK_TICKS = 45;
 function warriorFindTarget(w, enemyBase2){
   // Forced target (right-click)
   if(w.forcedTarget){
-    if(w.forcedTarget.hp<=0||!rtsEntities.includes(w.forcedTarget)){
+    if(w.forcedTarget.hp<=0||!S.entities.includes(w.forcedTarget)){
       w.forcedTarget=null;
     } else {
       return { target:w.forcedTarget, dist:Math.hypot(w.forcedTarget.x-w.x, w.forcedTarget.y-w.y) };
@@ -364,7 +363,7 @@ function warriorFindTarget(w, enemyBase2){
   }
   // Auto-target nearest enemy
   let nearest=null, nearestDist=Infinity;
-  for(const e of rtsEntities){
+  for(const e of S.entities){
     if(e.side===w.side||e.type==='base') continue;
     const d=Math.hypot(e.x-w.x,e.y-w.y);
     if(d<nearestDist){ nearestDist=d; nearest=e; }
@@ -449,7 +448,6 @@ const PROJECTILE_TYPES = {
   'warrior.prism':  { type:'magic',  speed:4,  sound:'rtsMagicFire' },
 };
 
-let rtsProjectiles=[];
 function spawnProjectile(shooter, target){
   const cfg=FACTION_CFG[shooter.faction];
   const sub = shooter.subtype;
@@ -459,7 +457,7 @@ function spawnProjectile(shooter, target){
     || PROJECTILE_TYPES['warrior.'+shooter.faction]
     || { type:'magic', speed:4, sound:'rtsMagicFire' };
 
-  rtsProjectiles.push({
+  S.projectiles.push({
     x:shooter.x, y:shooter.y,
     tx:target,
     speed: pCfg.speed,
@@ -478,11 +476,11 @@ function spawnProjectile(shooter, target){
 }
 
 function updateProjectiles(){
-  for(let i=rtsProjectiles.length-1;i>=0;i--){
-    const p=rtsProjectiles[i];
+  for(let i=S.projectiles.length-1;i>=0;i--){
+    const p=S.projectiles[i];
     p.trail.push({x:p.x,y:p.y});
     if(p.trail.length>8) p.trail.shift();
-    if(!p.tx||p.tx.hp<=0){ rtsProjectiles.splice(i,1); continue; }
+    if(!p.tx||p.tx.hp<=0){ S.projectiles.splice(i,1); continue; }
     const dx=p.tx.x-p.x, dy=p.tx.y-p.y, d=Math.hypot(dx,dy);
     if(d<p.speed+4){
       p.tx.hp-=p.damage;
@@ -492,7 +490,7 @@ function updateProjectiles(){
       }
       else if(p.type==='shell'){
         // tank shell — AOE explosion
-        for(const ent of rtsEntities){
+        for(const ent of S.entities){
           if(ent.side===p.side||ent.type==='base') continue;
           if(Math.hypot(ent.x-p.tx.x,ent.y-p.tx.y)<COMBAT.tankAoeRadius) ent.hp-=p.damage*COMBAT.tankAoeDamageFactor;
         }
@@ -504,7 +502,7 @@ function updateProjectiles(){
       } else {
         spawnMagicBurst(p.tx.x,p.tx.y,p.color);
       }
-      rtsProjectiles.splice(i,1);
+      S.projectiles.splice(i,1);
     } else {
       p.x+=dx/d*p.speed; p.y+=dy/d*p.speed;
     }
@@ -519,7 +517,7 @@ function chainLightning(origin, damage, color, shooterSide, bounces){
   if(bounces<=0) return;
   // find nearest enemy unit within range, not the origin
   let best=null, bestD=COMBAT.chainLightningRange;
-  for(const e of rtsEntities){
+  for(const e of S.entities){
     if(e.side===shooterSide||e===origin||e.type==='base') continue;
     const d=Math.hypot(e.x-origin.x,e.y-origin.y);
     if(d<bestD){ bestD=d; best=e; }
@@ -532,7 +530,7 @@ function chainLightning(origin, damage, color, shooterSide, bounces){
     const t2=s/steps;
     const jx=(Math.random()-0.5)*20*(1-t2);
     const jy=(Math.random()-0.5)*20*(1-t2);
-    rtsParticles.push({
+    S.particles.push({
       x:origin.x+(best.x-origin.x)*t2+jx,
       y:origin.y+(best.y-origin.y)*t2+jy,
       vx:0,vy:0,life:12,maxLife:12,color,size:3,
@@ -558,17 +556,17 @@ function tickPendingChains(){
 function spawnLightningHit(x,y,color){
   for(let i=0;i<6;i++){
     const a=Math.random()*Math.PI*2, s=Math.random()*4+2;
-    rtsParticles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:16,maxLife:16,color,size:2+Math.random()*2});
+    S.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:16,maxLife:16,color,size:2+Math.random()*2});
   }
-  rtsParticles.push({x,y,vx:0,vy:0,life:10,maxLife:10,color,size:0,isRing:true,radius:3});
+  S.particles.push({x,y,vx:0,vy:0,life:10,maxLife:10,color,size:0,isRing:true,radius:3});
 }
 
 function spawnMagicBurst(x,y,color){
   for(let i=0;i<8;i++){
     const a=(i/8)*Math.PI*2;
-    rtsParticles.push({x,y,vx:Math.cos(a)*2,vy:Math.sin(a)*2,life:22,maxLife:22,color,size:3});
+    S.particles.push({x,y,vx:Math.cos(a)*2,vy:Math.sin(a)*2,life:22,maxLife:22,color,size:3});
   }
-  rtsParticles.push({x,y,vx:0,vy:0,life:12,maxLife:12,color,size:0,isRing:true,radius:2});
+  S.particles.push({x,y,vx:0,vy:0,life:12,maxLife:12,color,size:0,isRing:true,radius:2});
 }
 
 function spawnHitParticles2(x,y){
@@ -576,27 +574,27 @@ function spawnHitParticles2(x,y){
   for(let i=0;i<18;i++){
     const a=Math.random()*Math.PI*2, s=Math.random()*6+3;
     const cols=['#ff4400','#ff8800','#ffcc00','#ffffff','#ff2200'];
-    rtsParticles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:30,maxLife:30,color:cols[Math.floor(Math.random()*cols.length)],size:4+Math.random()*4});
+    S.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:30,maxLife:30,color:cols[Math.floor(Math.random()*cols.length)],size:4+Math.random()*4});
   }
-  rtsParticles.push({x,y,vx:0,vy:0,life:18,maxLife:18,color:'#ff8800',size:0,isRing:true,radius:4});
-  rtsParticles.push({x,y,vx:0,vy:0,life:12,maxLife:12,color:'#ffcc44',size:0,isRing:true,radius:6});
+  S.particles.push({x,y,vx:0,vy:0,life:18,maxLife:18,color:'#ff8800',size:0,isRing:true,radius:4});
+  S.particles.push({x,y,vx:0,vy:0,life:12,maxLife:12,color:'#ffcc44',size:0,isRing:true,radius:6});
 }
 
 function spawnHitFlash(x,y,color){
   for(let i=0;i<5;i++){
     const a=Math.random()*Math.PI*2, s=Math.random()*2+1;
-    rtsParticles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:18,maxLife:18,color,size:2+Math.random()*2});
+    S.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:18,maxLife:18,color,size:2+Math.random()*2});
   }
 }
 function spawnDeathParticles(x,y,color){
   for(let i=0;i<10;i++){
     const a=Math.random()*Math.PI*2, s=Math.random()*3+1;
-    rtsParticles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:30,maxLife:30,color,size:3+Math.random()*3});
+    S.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:30,maxLife:30,color,size:3+Math.random()*3});
   }
 }
 
 function endRTS(playerWon){
-  rtsGameOver=true;
+  S.gameOver=true;
   const ov=document.getElementById('rts-gameover-overlay');
   const title=document.getElementById('rts-over-title');
   const sub=document.getElementById('rts-over-sub');
@@ -616,20 +614,20 @@ function rtsLoop(ts){
 
   if(window._mpMultiplayer && !mpIsHost){
     rtsDraw();
-    rtsRAF=requestAnimationFrame(rtsLoop);
+    S.raf=requestAnimationFrame(rtsLoop);
     return;
   }
 
-  rtsAccum += dt * rtsSpeed;
+  rtsAccum += dt * S.speed;
   while(rtsAccum >= TARGET_MS){
     rtsTick();
     rtsAccum -= TARGET_MS;
   }
 
-  if(window._mpMultiplayer && mpIsHost && rtsFrame%2===0) mpSendState();
+  if(window._mpMultiplayer && mpIsHost && S.frame%2===0) mpSendState();
 
   rtsDraw();
-  rtsRAF=requestAnimationFrame(rtsLoop);
+  S.raf=requestAnimationFrame(rtsLoop);
 }
 
 // Keep host ticking when tab is backgrounded (RAF throttles to ~1fps)
@@ -637,9 +635,9 @@ document.addEventListener('visibilitychange',()=>{
   if(!window._mpMultiplayer || !mpIsHost) return;
   if(document.hidden){
     _rtsInterval=setInterval(()=>{
-      rtsAccum+=TARGET_MS*rtsSpeed;
+      rtsAccum+=TARGET_MS*S.speed;
       while(rtsAccum>=TARGET_MS){ rtsTick(); rtsAccum-=TARGET_MS; }
-      if(rtsFrame%2===0) mpSendState();
+      if(S.frame%2===0) mpSendState();
     }, 16);
   } else {
     clearInterval(_rtsInterval); _rtsInterval=null;

@@ -281,7 +281,7 @@ function drawWarriorRoboto(rc,cfg,w){
 }
 
 function drawRTSProjectiles(rc){
-  for(const p of rtsProjectiles){
+  for(const p of S.projectiles){
     rc.save();
     if(p.type==='cannonball'){
       // iron ball with smoke trail
@@ -354,7 +354,7 @@ function drawRTSProjectiles(rc){
       rc.fillStyle=lg; rc.beginPath(); rc.arc(p.x,p.y,11,0,Math.PI*2); rc.fill();
       // arc spikes
       for(let i=0;i<4;i++){
-        const a=(i/4)*Math.PI*2+rtsFrame*0.3;
+        const a=(i/4)*Math.PI*2+S.frame*0.3;
         rc.strokeStyle='rgba(180,240,255,0.6)'; rc.lineWidth=1;
         rc.beginPath(); rc.moveTo(p.x,p.y); rc.lineTo(p.x+Math.cos(a)*16+(Math.random()-0.5)*6,p.y+Math.sin(a)*16+(Math.random()-0.5)*6); rc.stroke();
       }
@@ -369,7 +369,7 @@ function drawRTSProjectiles(rc){
       const dg=rc.createRadialGradient(p.x,p.y,0,p.x,p.y,12);
       dg.addColorStop(0,'#ffffff'); dg.addColorStop(0.3,'#cc44ff'); dg.addColorStop(0.7,'#220044'); dg.addColorStop(1,'transparent');
       rc.fillStyle=dg; rc.beginPath(); rc.arc(p.x,p.y,12,0,Math.PI*2); rc.fill();
-      const oa=rtsFrame*0.25;
+      const oa=S.frame*0.25;
       rc.fillStyle='#cc44ff'; rc.beginPath(); rc.arc(p.x+Math.cos(oa)*9,p.y+Math.sin(oa)*9,3,0,Math.PI*2); rc.fill();
     } else if(p.type==='prismblast'){
       for(let i=1;i<p.trail.length;i++){
@@ -384,7 +384,7 @@ function drawRTSProjectiles(rc){
       rc.fillStyle=pg; rc.beginPath(); rc.arc(p.x,p.y,12,0,Math.PI*2); rc.fill();
       // prism rainbow ring
       for(let ri=0;ri<6;ri++){
-        const ra=(ri/6)*Math.PI*2+rtsFrame*0.1;
+        const ra=(ri/6)*Math.PI*2+S.frame*0.1;
         const cols=['#ff88aa','#ffff44','#44ff88','#44aaff','#bb44ff','#ff8844'];
         rc.strokeStyle=cols[ri]; rc.lineWidth=0.8; rc.globalAlpha=0.6;
         rc.beginPath(); rc.arc(p.x,p.y,14,ra,ra+0.8); rc.stroke();
@@ -402,7 +402,7 @@ function drawRTSProjectiles(rc){
       const mg=rc.createRadialGradient(p.x,p.y,0,p.x,p.y,9);
       mg.addColorStop(0,'#ffffff'); mg.addColorStop(0.4,p.color); mg.addColorStop(1,'transparent');
       rc.fillStyle=mg; rc.beginPath(); rc.arc(p.x,p.y,9,0,Math.PI*2); rc.fill();
-      const a=rtsFrame*0.18;
+      const a=S.frame*0.18;
       rc.fillStyle='rgba(255,255,255,0.9)';
       rc.beginPath(); rc.arc(p.x+Math.cos(a)*6,p.y+Math.sin(a)*4,2,0,Math.PI*2); rc.fill();
     }

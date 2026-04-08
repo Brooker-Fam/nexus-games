@@ -4,36 +4,36 @@ function rtsDraw(){
 
   // apply camera transform
   rc.save();
-  rc.translate(-camX, -camY);
+  rc.translate(-S.camX, -S.camY);
 
   drawRTSBackground(rc);
   drawGoldNodes(rc);
 
   // structure placement preview ring follows mouse
-  if(buildStructureMode && rtsMouseWorld){
+  if(S.buildStructureMode && S.mouseWorld){
     rc.save();
-    const pulse=0.3+Math.sin(rtsFrame*0.2)*0.3;
+    const pulse=0.3+Math.sin(S.frame*0.2)*0.3;
     rc.strokeStyle=`rgba(255,220,0,${0.5+pulse})`;
     rc.lineWidth=2; rc.setLineDash([8,6]);
     rc.shadowColor='#ffdd00'; rc.shadowBlur=16;
-    rc.beginPath(); rc.arc(rtsMouseWorld.x, rtsMouseWorld.y, 40, 0, Math.PI*2); rc.stroke();
+    rc.beginPath(); rc.arc(S.mouseWorld.x, S.mouseWorld.y, 40, 0, Math.PI*2); rc.stroke();
     rc.setLineDash([]);
     // cross
     rc.strokeStyle=`rgba(255,220,0,0.7)`; rc.lineWidth=1.5; rc.shadowBlur=8;
-    rc.beginPath(); rc.moveTo(rtsMouseWorld.x-14,rtsMouseWorld.y); rc.lineTo(rtsMouseWorld.x+14,rtsMouseWorld.y); rc.stroke();
-    rc.beginPath(); rc.moveTo(rtsMouseWorld.x,rtsMouseWorld.y-14); rc.lineTo(rtsMouseWorld.x,rtsMouseWorld.y+14); rc.stroke();
+    rc.beginPath(); rc.moveTo(S.mouseWorld.x-14,S.mouseWorld.y); rc.lineTo(S.mouseWorld.x+14,S.mouseWorld.y); rc.stroke();
+    rc.beginPath(); rc.moveTo(S.mouseWorld.x,S.mouseWorld.y-14); rc.lineTo(S.mouseWorld.x,S.mouseWorld.y+14); rc.stroke();
     rc.font='8px Orbitron,sans-serif'; rc.textAlign='center'; rc.fillStyle='rgba(255,220,80,0.8)'; rc.shadowBlur=0;
-    rc.fillText('RIGHT-CLICK TO PLACE', rtsMouseWorld.x, rtsMouseWorld.y-48);
+    rc.fillText('RIGHT-CLICK TO PLACE', S.mouseWorld.x, S.mouseWorld.y-48);
     rc.restore();
   }
 
   drawRTSParticles(rc);
-  for(const e of rtsEntities){
+  for(const e of S.entities){
     if(e.type==='base') drawRTSBase(rc,e);
     if(e.type==='structure') drawRTSStructure(rc,e);
     if(e.type==='cannon') drawRTSCannon(rc,e);
   }
-  for(const e of rtsEntities){
+  for(const e of S.entities){
     if(e.type==='worker') drawRTSWorker(rc,e);
     if(e.type==='warrior') drawRTSWarrior(rc,e);
   }
@@ -62,15 +62,15 @@ function drawMinimap(){
   for(let y2=0;y2<MH;y2+=MH/7){mc.beginPath();mc.moveTo(0,y2);mc.lineTo(MW,y2);mc.stroke();}
 
   // gold nodes
-  for(const n of rtsGoldNodes){
+  for(const n of S.goldNodes){
     mc.fillStyle='rgba(255,220,50,0.6)';
     mc.beginPath(); mc.arc(n.x*scaleX, n.y*scaleY, 2, 0, Math.PI*2); mc.fill();
   }
 
   // entities
-  for(const e of rtsEntities){
+  for(const e of S.entities){
     const mx=e.x*scaleX, my=e.y*scaleY;
-    const pCfg=FACTION_CFG[e.side==='player'?rtsPlayerFaction:rtsEnemyFaction];
+    const pCfg=FACTION_CFG[e.side==='player'?S.playerFaction:S.enemyFaction];
     if(e.type==='base'){
       mc.fillStyle=pCfg.color; mc.fillRect(mx-3,my-4,6,8);
     } else if(e.type==='structure'){
@@ -90,14 +90,14 @@ function drawMinimap(){
   }
 
   // projectiles
-  for(const p of rtsProjectiles){
+  for(const p of S.projectiles){
     mc.fillStyle=p.type==='bullet'?'rgba(255,220,80,0.8)':'rgba(0,220,255,0.8)';
     mc.beginPath(); mc.arc(p.x*scaleX,p.y*scaleY,1,0,Math.PI*2); mc.fill();
   }
 
   // viewport rect
   mc.strokeStyle='rgba(0,245,255,0.6)'; mc.lineWidth=1.5;
-  mc.strokeRect(camX*scaleX, camY*scaleY, VW*scaleX, VH*scaleY);
+  mc.strokeRect(S.camX*scaleX, S.camY*scaleY, VW*scaleX, VH*scaleY);
 
   // border
   mc.strokeStyle='rgba(0,245,255,0.3)'; mc.lineWidth=1;
@@ -111,10 +111,10 @@ function drawRTSBackground(rc){
   rc.fillStyle=bg; rc.fillRect(0,0,RW,RH);
 
   // grid — only draw visible portion for perf
-  const gx0=Math.floor(camX/60)*60, gy0=Math.floor(camY/60)*60;
+  const gx0=Math.floor(S.camX/60)*60, gy0=Math.floor(S.camY/60)*60;
   rc.strokeStyle='rgba(0,200,255,0.035)'; rc.lineWidth=1;
-  for(let x2=gx0;x2<camX+VW+60;x2+=60){rc.beginPath();rc.moveTo(x2,camY);rc.lineTo(x2,camY+VH);rc.stroke();}
-  for(let y2=gy0;y2<camY+VH+60;y2+=60){rc.beginPath();rc.moveTo(camX,y2);rc.lineTo(camX+VW,y2);rc.stroke();}
+  for(let x2=gx0;x2<S.camX+VW+60;x2+=60){rc.beginPath();rc.moveTo(x2,S.camY);rc.lineTo(x2,S.camY+VH);rc.stroke();}
+  for(let y2=gy0;y2<S.camY+VH+60;y2+=60){rc.beginPath();rc.moveTo(S.camX,y2);rc.lineTo(S.camX+VW,y2);rc.stroke();}
 
   // center divider line
   rc.strokeStyle='rgba(255,255,255,0.04)'; rc.lineWidth=2; rc.setLineDash([10,16]);
@@ -122,7 +122,7 @@ function drawRTSBackground(rc){
   rc.setLineDash([]);
 
   // territory glows
-  const pCfg=FACTION_CFG[rtsPlayerFaction], eCfg=FACTION_CFG[rtsEnemyFaction];
+  const pCfg=FACTION_CFG[S.playerFaction], eCfg=FACTION_CFG[S.enemyFaction];
   const pg=rc.createLinearGradient(0,0,RW*0.35,0);
   pg.addColorStop(0,hexAlpha(pCfg.color,0.07)); pg.addColorStop(1,'transparent');
   rc.fillStyle=pg; rc.fillRect(0,0,RW*0.35,RH);
@@ -141,7 +141,7 @@ function hexAlpha(hex,a){
 }
 
 function drawGoldNodes(rc){
-  for(const node of rtsGoldNodes){
+  for(const node of S.goldNodes){
     rc.save();
     rc.shadowColor='#ffdd00'; rc.shadowBlur=18;
     // pile of gold
@@ -165,9 +165,9 @@ function drawGoldNodes(rc){
 }
 
 function drawRTSBaseHP(rc){
-  const bases=rtsEntities.filter(e=>e.type==='base');
+  const bases=S.entities.filter(e=>e.type==='base');
   for(const base of bases){
-    const cfg=FACTION_CFG[base.side==='player'?rtsPlayerFaction:rtsEnemyFaction];
+    const cfg=FACTION_CFG[base.side==='player'?S.playerFaction:S.enemyFaction];
     const bw=60, bh=6;
     drawHealthBar(rc, base.x, base.y-80, bw, bh, base.hp, base.maxHp);
     rc.strokeStyle='rgba(255,255,255,0.1)'; rc.lineWidth=0.5; rc.strokeRect(base.x-bw/2,base.y-80,bw,bh);
@@ -179,7 +179,7 @@ function drawRTSBaseHP(rc){
 }
 
 function drawRTSParticles(rc){
-  for(const p of rtsParticles){
+  for(const p of S.particles){
     const fa=p.life/p.maxLife;
     rc.save(); rc.globalAlpha=fa*0.9;
     if(p.isRing){

@@ -32,7 +32,7 @@ function dsoPlay(){
   startRTS(dsoSelectedFaction);
 }
 function rtsMenuBack(){
-  cancelAnimationFrame(rtsRAF); rtsRAF=null;
+  cancelAnimationFrame(S.raf); S.raf=null;
   mpDisconnect();
   document.getElementById('dso-game').style.display='none';
   document.getElementById('dso-select').style.display='block';
@@ -59,7 +59,7 @@ registerGame('cs', {
   },
   cleanup(){
     if(window._mpMultiplayer) return; // don't stop during multiplayer
-    if(rtsRAF){ cancelAnimationFrame(rtsRAF); rtsRAF=null; }
+    if(S.raf){ cancelAnimationFrame(S.raf); S.raf=null; }
     if(dsoRevealRAF){ cancelAnimationFrame(dsoRevealRAF); dsoRevealRAF=null; }
     if(dsoPreviewRAF){ cancelAnimationFrame(dsoPreviewRAF); dsoPreviewRAF=null; }
     closeBuildPopup();
@@ -152,7 +152,7 @@ document.getElementById('btn-attack').onclick=function(e){ e.preventDefault(); r
 document.getElementById('rts-speed-btns').onclick=function(e){
   const btn=e.target.closest('.speed-btn');
   if(!btn) return;
-  rtsSpeed=parseInt(btn.dataset.speed)||1;
+  S.speed=parseInt(btn.dataset.speed)||1;
   this.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 };
