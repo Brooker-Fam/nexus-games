@@ -47,7 +47,6 @@ function aiBuild(type, nearX, nearY, cost){
 }
 
 function aiTick(){
-  if(window._mpMultiplayer) return; // AI disabled for entire multiplayer session
   aiTimer++;
   const eb=rtsEnemyBase;
   if(!eb) return;
@@ -65,6 +64,9 @@ function aiTick(){
   const baseThreat = rtsEntities.filter(e=>
     e.side==='player'&&e.type==='warrior'&&Math.hypot(e.x-eb.x,e.y-eb.y)<400
   ).length;
+
+  // In multiplayer, skip economy/building AI (guest player handles that manually)
+  if(!window._mpMultiplayer){
 
   // === DECISIONS (every ~3 seconds, faster than before) ===
   if(aiTimer%180===0){
@@ -109,7 +111,9 @@ function aiTick(){
     }
   }
 
-  // === ATTACK DECISIONS ===
+  } // end !_mpMultiplayer
+
+  // === ATTACK DECISIONS (always run, including multiplayer) ===
   // Defend base when threatened
   if(baseThreat>0 && aiTimer%60===0){
     for(const e of rtsEntities){
