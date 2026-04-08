@@ -8,6 +8,8 @@ function issueCommand(cmd){
   cmd.side = 'player';
   cmd.tick = rtsFrame;
   rtsCommandQueue.push(cmd);
+  // In multiplayer, send to remote player
+  if(mpConnected) mpSendCommand(cmd);
 }
 
 function processCommands(){

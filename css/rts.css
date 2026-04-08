@@ -156,6 +156,37 @@
   .rts-cost { font-size:9px; color:gold; letter-spacing:1px; }
   .rts-speed-btns { display:flex; gap:4px; }
   .rts-speed-btns .speed-btn { padding:4px 8px; font-size:9px; }
+  /* ── MULTIPLAYER ── */
+  .mp-controls { text-align:center; margin-top:30px; }
+  .mp-divider {
+    font-family:'Orbitron',sans-serif; font-size:10px; letter-spacing:4px;
+    color:var(--text-dim); margin-bottom:16px;
+  }
+  .mp-buttons { display:flex; gap:12px; justify-content:center; align-items:center; flex-wrap:wrap; }
+  .mp-join-row { display:flex; gap:8px; align-items:center; }
+  .mp-input {
+    background:rgba(0,20,40,0.8); border:1px solid rgba(0,245,255,0.3);
+    color:var(--neon-cyan); font-family:'Orbitron',sans-serif; font-size:12px;
+    letter-spacing:3px; padding:10px 14px; width:180px; text-align:center;
+    clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+  }
+  .mp-input::placeholder { color:var(--text-dim); letter-spacing:2px; font-size:10px; }
+  .mp-input:focus { outline:none; border-color:var(--neon-cyan); box-shadow:0 0 15px rgba(0,245,255,0.2); }
+  .mp-status {
+    margin-top:12px; font-size:12px; letter-spacing:2px; color:var(--neon-cyan); min-height:20px;
+  }
+  .mp-status.error { color:var(--neon-pink); }
+  .mp-status.waiting { color:var(--neon-green); animation:pulse 2s ease-in-out infinite; }
+  .mp-code {
+    font-family:'Orbitron',sans-serif; font-size:24px; letter-spacing:6px;
+    color:var(--neon-green); cursor:pointer;
+  }
+  .mp-code:hover { text-shadow:0 0 15px rgba(0,255,136,0.5); }
+  .mp-faction-pick {
+    font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:3px;
+    color:var(--neon-cyan); margin-top:8px;
+  }
+
   .rts-retreat-btn {
     font-family:'Orbitron',sans-serif; font-size:9px; letter-spacing:2px;
     background:transparent; border:1px solid rgba(255,255,255,0.12);
