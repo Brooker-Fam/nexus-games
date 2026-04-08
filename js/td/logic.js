@@ -343,3 +343,22 @@ function resetGame(){
   tdAccum=0;
   raf=requestAnimationFrame(gameLoop);
 }
+
+// ── GAME LIFECYCLE ──
+registerGame('td', {
+  init(){
+    renderPreviewGun(document.getElementById('prev-gun').getContext('2d'));
+    renderPreviewLaser(document.getElementById('prev-laser').getContext('2d'));
+    renderPreviewMissile(document.getElementById('prev-missile').getContext('2d'));
+    renderPreviewCryo(document.getElementById('prev-slow').getContext('2d'));
+    addLog('Game initialized. Place towers and send waves!','info');
+    updateHUD();
+    lastTime=performance.now();
+    tdAccum=0;
+    if(!raf) raf=requestAnimationFrame(gameLoop);
+  },
+  cleanup(){
+    cancelAnimationFrame(raf);
+    raf=null;
+  },
+});

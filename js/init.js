@@ -46,14 +46,25 @@ function initFactionCards(){
     if(el) drawCardCharacter(el,faction,false);
   }
 }
-initFactionCards();
-addLog('Game initialized. Place towers and send waves!','info');
-updateHUD();
-renderPreviewGun(document.getElementById('prev-gun').getContext('2d'));
-renderPreviewLaser(document.getElementById('prev-laser').getContext('2d'));
-renderPreviewMissile(document.getElementById('prev-missile').getContext('2d'));
-renderPreviewCryo(document.getElementById('prev-slow').getContext('2d'));
-raf=requestAnimationFrame(gameLoop);
+
+// Register Deep Space Ops lifecycle
+registerGame('cs', {
+  init(){
+    initFactionCards();
+    document.getElementById('dso-select').style.display='';
+    document.getElementById('dso-reveal').style.display='none';
+    document.getElementById('dso-game').style.display='none';
+  },
+  cleanup(){
+    if(rtsRAF){ cancelAnimationFrame(rtsRAF); rtsRAF=null; }
+    if(dsoRevealRAF){ cancelAnimationFrame(dsoRevealRAF); dsoRevealRAF=null; }
+    if(dsoPreviewRAF){ cancelAnimationFrame(dsoPreviewRAF); dsoPreviewRAF=null; }
+    closeBuildPopup();
+  },
+});
+
+// Start TD game on load
+activateGame('td');
 
 // ── EVENT HANDLERS (moved from inline HTML) ──
 
