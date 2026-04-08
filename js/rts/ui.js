@@ -56,19 +56,19 @@ function openBuildPopup(screenX, screenY, context){
   } else if(context==='worker'){
     title.textContent = 'WORKER ACTIONS';
     addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Right-click to place — trains ${cfg.warriorLabel}s (20g)`, 20, ()=>{
-      buildStructureMode='barracks'; _buildModeCost=20; spendGold(20); updateRtsHUD();
+      buildStructureMode='barracks'; _buildModeCost=20;
       rtsSetLog(`Right-click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
     });
     addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Right-click to place — trains elite units (20g)`, 20, ()=>{
-      buildStructureMode=true; _buildModeCost=20; spendGold(20); updateRtsHUD();
+      buildStructureMode=true; _buildModeCost=20;
       rtsSetLog(`Right-click to place your ${cfg.structLabel}!`); closeBuildPopup();
     });
     addOpt('💣', 'Build CANNON', 'Auto-attacks nearby enemies (15g)', 15, ()=>{
-      buildStructureMode='cannon'; _buildModeCost=15; spendGold(15); updateRtsHUD();
+      buildStructureMode='cannon'; _buildModeCost=15;
       rtsSetLog('Right-click to place your CANNON!'); closeBuildPopup();
     });
     addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Right-click to place — trains more workers (25g)`, 25, ()=>{
-      buildStructureMode='base'; _buildModeCost=25; spendGold(25); updateRtsHUD();
+      buildStructureMode='base'; _buildModeCost=25;
       rtsSetLog(`Right-click to place your new ${cfg.buildingName}!`); closeBuildPopup();
     });
 
