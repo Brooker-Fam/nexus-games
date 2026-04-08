@@ -9,7 +9,7 @@ let rtsBuildingSource = null; // the building entity that opened the popup
 function openBuildPopup(screenX, screenY, context){
   // remember which entity spawned this popup so units spawn there
   rtsBuildingSource = rtsSelected[0] || null;
-  const cfg = FACTION_CFG[rtsPlayerFaction];
+  const cfg = FACTION_CFG[myFaction()];
   const popup = document.getElementById('rts-build-popup');
   const title = document.getElementById('rbp-title');
   const opts  = document.getElementById('rbp-options');
@@ -19,7 +19,7 @@ function openBuildPopup(screenX, screenY, context){
   function addOpt(icon, name, desc, cost, onclick, disabled){
     const btn=document.createElement('button');
     btn.className='rbp-option';
-    btn.disabled=disabled!==undefined ? disabled : rtsGold<cost;
+    btn.disabled=disabled!==undefined ? disabled : myGold()<cost;
     btn.innerHTML=`<span class="rbp-opt-icon">${icon}</span>
       <span class="rbp-opt-info"><span class="rbp-opt-name">${name}</span>
       <span class="rbp-opt-desc">${desc}</span></span>
@@ -53,19 +53,19 @@ function openBuildPopup(screenX, screenY, context){
   } else if(context==='worker'){
     title.textContent = 'WORKER ACTIONS';
     addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Right-click to place — trains ${cfg.warriorLabel}s (20g)`, 20, ()=>{
-      buildStructureMode='barracks'; rtsGold-=20; updateRtsHUD();
+      buildStructureMode='barracks'; spendGold(20); updateRtsHUD();
       rtsSetLog(`Right-click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
     });
     addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Right-click to place — trains elite units (20g)`, 20, ()=>{
-      buildStructureMode=true; rtsGold-=20; updateRtsHUD();
+      buildStructureMode=true; spendGold(20); updateRtsHUD();
       rtsSetLog(`Right-click to place your ${cfg.structLabel}!`); closeBuildPopup();
     });
     addOpt('💣', 'Build CANNON', 'Auto-attacks nearby enemies (15g)', 15, ()=>{
-      buildStructureMode='cannon'; rtsGold-=15; updateRtsHUD();
+      buildStructureMode='cannon'; spendGold(15); updateRtsHUD();
       rtsSetLog('Right-click to place your CANNON!'); closeBuildPopup();
     });
     addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Right-click to place — trains more workers (25g)`, 25, ()=>{
-      buildStructureMode='base'; rtsGold-=25; updateRtsHUD();
+      buildStructureMode='base'; spendGold(25); updateRtsHUD();
       rtsSetLog(`Right-click to place your new ${cfg.buildingName}!`); closeBuildPopup();
     });
 
@@ -82,7 +82,7 @@ function openBuildPopup(screenX, screenY, context){
     for(const u of eliteTypes){
       addOpt(u.icon, u.label, u.desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'structure'),
-        rtsGold<u.cost||sel.underConstruction);
+        myGold()<u.cost||sel.underConstruction);
     }
   }
 

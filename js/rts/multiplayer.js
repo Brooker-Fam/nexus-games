@@ -4,7 +4,8 @@ let mpLocalFaction=null, mpRemoteFaction=null;
 let mpOnConnect=null; // callback when guest connects to host
 
 // Returns which side this client controls ('player' for host/singleplayer, 'enemy' for guest)
-function mySide(){ return (mpConnected && !mpIsHost) ? 'enemy' : 'player'; }
+function mySide(){ return (window._mpMultiplayer && !mpIsHost) ? 'enemy' : 'player'; }
+function myFaction(){ return mySide()==='player' ? rtsPlayerFaction : rtsEnemyFaction; }
 function enemySide(){ return mySide()==='player' ? 'enemy' : 'player'; }
 function myGold(){ return mySide()==='player' ? rtsGold : aiGold; }
 function spendGold(amount){ if(mySide()==='player') rtsGold-=amount; else aiGold-=amount; }
@@ -81,8 +82,18 @@ function mpStartGame(msg){
   rtsPlayerFaction=msg.hf;
   rtsEnemyFaction=msg.gf;
   startRTS(msg.hf);
-  // Guest starts camera at enemy base
-  if(!mpIsHost){ camX=ENEMY_BASE_X-VW/2; clampCam(); }
+  // Guest: fix HUD to show their own faction, start camera at their base
+  if(!mpIsHost){
+    const myCfg=FACTION_CFG[msg.gf];
+    const enemyCfg=FACTION_CFG[msg.hf];
+    document.getElementById('rts-faction-badge').textContent=msg.gf.toUpperCase()+' ARMADA';
+    document.getElementById('rts-faction-badge').style.color=myCfg.color;
+    document.getElementById('hud-building-name').textContent=myCfg.buildingName;
+    document.getElementById('rts-enemy-faction').textContent=msg.hf.toUpperCase();
+    document.getElementById('rts-enemy-faction').style.color=enemyCfg.color;
+    rtsSetLog('Click your '+myCfg.buildingName+' to train units!');
+    camX=ENEMY_BASE_X-VW/2; clampCam();
+  }
 }
 
 function executeRemoteCommand(cmd){
