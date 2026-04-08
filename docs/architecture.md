@@ -66,7 +66,7 @@ js/
     factions.js                — FACTION_CFG, FACTION_DATA, faction state
     commands.js                — Command queue (decouples input from simulation)
     faction-cards.js           — Character art + selection screen
-    camera.js                  — Camera state, world/screen transforms, input
+    camera.js                  — S state object, camera, world/screen transforms, input
     entities.js                — Entity factories, startRTS()
     draw-helpers.js            — Shared drawing (health bars, selection rings)
     ui.js                      — Build popup, click handling, HUD
@@ -81,6 +81,7 @@ js/
 
 docs/
   architecture.md              — This file
+  multiplayer-redesign.md      — Multiplayer architecture notes
 ```
 
 **Guideline**: Each file stays under ~600 lines with a single responsibility.
@@ -110,7 +111,6 @@ docs/
 - Decision loop on fixed interval (~4s ticks)
 - Counts own units, evaluates threats, builds/attacks accordingly
 - Uses same command queue as player (important for multiplayer parity)
-- Disabled automatically during multiplayer sessions
 
 ### Multiplayer (RTS)
 - PeerJS WebRTC — peer-to-peer, no dedicated server
