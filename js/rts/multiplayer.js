@@ -135,7 +135,7 @@ function mpSendState(){
     aimAngle:e.aimAngle, frame:e.frame,
     underConstruction:e.underConstruction,
     buildProgress:e.buildProgress, buildTime:e.buildTime,
-    queue:e.queue?e.queue.length:0,
+    queue:e.queue?e.queue.map(q=>({label:q.label,time:q.time})):[], trainTimer:e.trainTimer||0,
     goldCarry:e.goldCarry,
     attackTimer:e.attackTimer,
     hammerSwing:e.hammerSwing,
@@ -184,6 +184,7 @@ function mpApplyState(msg){
     local.attackTimer=he.attackTimer;
     local.hammerSwing=he.hammerSwing;
     local.isBarracks=he.isBarracks;
+    local.queue=he.queue||[]; local.trainTimer=he.trainTimer||0;
   }
   // Sync projectiles
   rtsProjectiles=msg.projs.map(p=>({...p,trail:p.trail||[]}));
