@@ -11,7 +11,9 @@ function myGold(){ return mySide()==='player' ? rtsGold : aiGold; }
 function spendGold(amount){ if(mySide()==='player') rtsGold-=amount; else aiGold-=amount; }
 const MP_PREFIX='nexus-dso-';
 
-function mpCode(){ return Math.random().toString(36).slice(2,6).toUpperCase(); }
+// Unambiguous characters only — no 0/O, 1/I/L, 5/S, 2/Z, 8/B
+const _MP_CHARS='3479ACDEFGHJKMNPQRTUVWXY';
+function mpCode(){ let c=''; for(let i=0;i<4;i++) c+=_MP_CHARS[Math.floor(Math.random()*_MP_CHARS.length)]; return c; }
 
 function mpCreatePeer(id){
   if(mpPeer) mpPeer.destroy();
