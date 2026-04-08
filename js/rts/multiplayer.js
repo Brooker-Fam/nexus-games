@@ -48,7 +48,8 @@ function mpWire(c){
     else if(msg.t==='cmd') executeRemoteCommand(msg.c);
     else if(msg.t==='go')  mpStartGame(msg);
   });
-  c.on('close',()=>{ mpConnected=false; rtsSetLog('Opponent disconnected.'); });
+  c.on('close',()=>{ console.log('[MP] Connection CLOSED'); mpConnected=false; rtsSetLog('Opponent disconnected.'); });
+  c.on('error',err=>{ console.log('[MP] Connection ERROR:', err); });
 }
 
 function mpSend(msg){ if(mpConn&&mpConn.open) mpConn.send(msg); }
