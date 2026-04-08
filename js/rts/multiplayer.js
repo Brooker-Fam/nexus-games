@@ -116,7 +116,13 @@ function executeRemoteCommand(cmd){
     aiGold-=costs[cmd.unitType];
   } else if(cmd.type==='build_structure'){
     const w=rtsEntities.find(e=>e.id===cmd.workerId);
-    if(w){ w.buildTarget={x:cmd.x,y:cmd.y,buildType:cmd.buildType,ghost:null}; w.state='building'; }
+    if(cmd.cost) aiGold-=cmd.cost;
+    if(cmd.buildType==='base'){
+      const nb={id:nextId(),type:'base',side:'enemy',x:cmd.x,y:cmd.y,hp:100,maxHp:100,w:60,h:80,selected:false,queue:[],trainTimer:0};
+      rtsEntities.push(nb);
+    } else if(w){
+      w.buildTarget={x:cmd.x,y:cmd.y,buildType:cmd.buildType,ghost:null}; w.state='building';
+    }
   } else if(cmd.type==='move_units'){
     cmd.unitIds.forEach((id,i)=>{
       const u=rtsEntities.find(e=>e.id===id&&e.side==='enemy');

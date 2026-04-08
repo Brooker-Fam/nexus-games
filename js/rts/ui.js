@@ -4,6 +4,7 @@ const CLICK_RADII = { base:70, structure:50, cannon:36, warrior:20, worker:14 };
 // ── BUILD POPUP ──
 let rtsBuildPopupOpen = false;
 let buildStructureMode = false;
+let _buildModeCost = 0;
 let rtsBuildingSource = null; // the building entity that opened the popup
 
 function openBuildPopup(screenX, screenY, context){
@@ -53,19 +54,19 @@ function openBuildPopup(screenX, screenY, context){
   } else if(context==='worker'){
     title.textContent = 'WORKER ACTIONS';
     addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Right-click to place — trains ${cfg.warriorLabel}s (20g)`, 20, ()=>{
-      buildStructureMode='barracks'; spendGold(20); updateRtsHUD();
+      buildStructureMode='barracks'; _buildModeCost=20; spendGold(20); updateRtsHUD();
       rtsSetLog(`Right-click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
     });
     addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Right-click to place — trains elite units (20g)`, 20, ()=>{
-      buildStructureMode=true; spendGold(20); updateRtsHUD();
+      buildStructureMode=true; _buildModeCost=20; spendGold(20); updateRtsHUD();
       rtsSetLog(`Right-click to place your ${cfg.structLabel}!`); closeBuildPopup();
     });
     addOpt('💣', 'Build CANNON', 'Auto-attacks nearby enemies (15g)', 15, ()=>{
-      buildStructureMode='cannon'; spendGold(15); updateRtsHUD();
+      buildStructureMode='cannon'; _buildModeCost=15; spendGold(15); updateRtsHUD();
       rtsSetLog('Right-click to place your CANNON!'); closeBuildPopup();
     });
     addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Right-click to place — trains more workers (25g)`, 25, ()=>{
-      buildStructureMode='base'; spendGold(25); updateRtsHUD();
+      buildStructureMode='base'; _buildModeCost=25; spendGold(25); updateRtsHUD();
       rtsSetLog(`Right-click to place your new ${cfg.buildingName}!`); closeBuildPopup();
     });
 
@@ -226,11 +227,9 @@ function rtsHandleRightClick(e){
           .sort((a,b)=>Math.hypot(a.x-wp.x,a.y-wp.y)-Math.hypot(b.x-wp.x,b.y-wp.y))[0]||{}).id;
 
     if(buildStructureMode==='base'){
-      const nb={id:nextId(),type:'base',side,x:wp.x,y:wp.y,hp:100,maxHp:100,w:60,h:80,selected:false,queue:[],trainTimer:0};
-      rtsEntities.push(nb);
-      rtsSetLog(`New ${FACTION_CFG[rtsPlayerFaction].buildingName} placed!`);
+      issueCommand({ type:'build_structure', workerId:workerId||0, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:'base' });
     } else if(workerId){
-      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, buildType:
+      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:
         buildStructureMode==='cannon'?'cannon':buildStructureMode==='barracks'?'barracks':'structure' });
     }
     buildStructureMode=false;
