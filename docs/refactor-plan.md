@@ -66,10 +66,10 @@ js/init.js                     — Bootstrap, screen navigation, event handlers 
 
 ## Next Steps
 
-### Standardize game lifecycle
-- [ ] Each game exports: init(), cleanup()
-- [ ] Tab switching calls cleanup() on old game, init() on new
-- [ ] Adding a game = add folder + register in init.js
+### Standardize game lifecycle — DONE
+- [x] Each game registers init() and cleanup() via registerGame()
+- [x] Tab switching calls cleanup() on old game, init() on new
+- [x] Adding a game = register + add HTML tab
 
 ### Responsive design
 - [ ] Add media queries for mobile/tablet
