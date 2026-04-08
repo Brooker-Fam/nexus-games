@@ -34,9 +34,11 @@ function openBuildPopup(screenX, screenY, context){
   // Helper: issue train command and refresh popup
   function trainCmd(buildingId, unitType, popupContext){
     issueCommand({ type:'train_unit', buildingId, unitType });
-    // Refresh popup to show updated queue
+    rtsSetLog(`${unitType} queued!`);
+    sfx('rtsQueueUnit');
+    // Refresh popup after short delay to let state sync update
     const b=rtsEntities.find(e=>e.id===buildingId);
-    if(b) setTimeout(()=>openBuildPopup(b.x-camX,b.y-camY,popupContext),0);
+    if(b) setTimeout(()=>openBuildPopup(b.x-camX,b.y-camY,popupContext), window._mpMultiplayer && !mpIsHost ? 200 : 0);
   }
 
   if(context==='base'){
@@ -226,9 +228,14 @@ function rtsHandleRightClick(e){
       : (rtsEntities.filter(en=>en.type==='worker'&&en.side===side&&en.state!=='building')
           .sort((a,b)=>Math.hypot(a.x-wp.x,a.y-wp.y)-Math.hypot(b.x-wp.x,b.y-wp.y))[0]||{}).id;
 
+    if(!workerId){
+      rtsSetLog('No available worker to build!');
+      buildStructureMode=false;
+      return;
+    }
     if(buildStructureMode==='base'){
-      issueCommand({ type:'build_structure', workerId:workerId||0, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:'base' });
-    } else if(workerId){
+      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:'base' });
+    } else {
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:
         buildStructureMode==='cannon'?'cannon':buildStructureMode==='barracks'?'barracks':'structure' });
     }
