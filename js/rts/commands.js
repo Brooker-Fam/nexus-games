@@ -6,12 +6,12 @@ const rtsCommandQueue = [];
 
 function issueCommand(cmd){
   cmd.tick = S.frame;
-  cmd.side = mySide();
-  if(window._mpMultiplayer && mpConnected && !mpIsHost){
-    // Guest: send to host only, don't execute locally
-    mpSendCommand(cmd);
+  if(window._mpMultiplayer && mpConnected){
+    // Lockstep: buffer command for future turn (both clients)
+    lsBufferCommand(cmd);
   } else {
-    // Host or singleplayer: execute locally
+    // Singleplayer: execute immediately
+    cmd.side = 'player';
     rtsCommandQueue.push(cmd);
   }
 }

@@ -13,7 +13,7 @@ function makeBase(side){
 function makeWorker(side, faction, nearX, nearY){
   const bx = nearX !== undefined ? nearX : (side==='player'? PLAYER_BASE_X : ENEMY_BASE_X);
   const by = nearY !== undefined ? nearY : BASE_Y;
-  const spread = (Math.random()-0.5)*160;
+  const spread = (rtsRand()-0.5)*160;
   const offsetX = side==='player' ? 80 : -80;
   return { id:nextId(), type:'worker', side, faction,
     x: bx+offsetX, y: by+spread,
@@ -31,7 +31,7 @@ function makeWarrior(side, faction, nearX, nearY){
   const hp = faction==='roboto' ? 12 : 40;
   const offsetX = side==='player' ? 80 : -80;
   return { id:nextId(), type:'warrior', side, faction,
-    x: bx+offsetX, y: by+(Math.random()-0.5)*200,
+    x: bx+offsetX, y: by+(rtsRand()-0.5)*200,
     hp, maxHp:hp, speed: faction==='shadow' ? 2.2 : 0.7,
     state:'idle',
     target:null, attackTimer:0,
@@ -104,7 +104,7 @@ function makeCannon(side, faction, x, y){
 
 // ── ELITE WARRIORS ──
 function makeElite(side, faction, nearX, nearY){
-  const spread=(Math.random()-0.5)*100;
+  const spread=(rtsRand()-0.5)*100;
   const isPlayer=side==='player';
   // speeds match faction standard (shadow elite is dark warrior — not swordsman, so standard speed)
   const speed = faction==='prism'?0.7 : faction==='roboto'?0.7 : 0.75;
@@ -127,7 +127,7 @@ function makeWizard(side, faction, nearX, nearY){
   const isPlayer=side==='player';
   return {
     id:nextId(), type:'warrior', subtype:'wizard', side, faction,
-    x: nearX+(isPlayer?60:-60), y: nearY+(Math.random()-0.5)*120,
+    x: nearX+(isPlayer?60:-60), y: nearY+(rtsRand()-0.5)*120,
     hp:50, maxHp:50, speed:0.7,
     state:'idle', target:null, attackTimer:0,
     damage:10, range:260, ranged:true, fireRate:50,
@@ -139,7 +139,7 @@ function makeNecromancer(side, faction, nearX, nearY){
   const isPlayer=side==='player';
   return {
     id:nextId(), type:'warrior', subtype:'necromancer', side, faction,
-    x: nearX+(isPlayer?60:-60), y: nearY+(Math.random()-0.5)*120,
+    x: nearX+(isPlayer?60:-60), y: nearY+(rtsRand()-0.5)*120,
     hp:45, maxHp:45, speed:0.75,
     state:'idle', target:null, attackTimer:0,
     damage:6, range:200, ranged:true, fireRate:70,
@@ -151,7 +151,7 @@ function makeTank(side, faction, nearX, nearY){
   const isPlayer=side==='player';
   return {
     id:nextId(), type:'warrior', subtype:'tank', side, faction,
-    x: nearX+(isPlayer?70:-70), y: nearY+(Math.random()-0.5)*120,
+    x: nearX+(isPlayer?70:-70), y: nearY+(rtsRand()-0.5)*120,
     hp:200, maxHp:200, speed:0.7,
     state:'idle', target:null, attackTimer:0,
     damage:40, range:600, ranged:true, fireRate:100,
@@ -185,13 +185,14 @@ function startRTS(playerFaction, enemyFaction){
   let eFaction = enemyFaction;
   if(!eFaction && !window._mpMultiplayer){
     const factions=['prism','shadow','roboto'].filter(f=>f!==playerFaction);
-    eFaction = factions[Math.floor(Math.random()*factions.length)];
+    eFaction = factions[Math.floor(rtsRand()*factions.length)];
   }
 
   resetRtsState();
   S.playerFaction=playerFaction;
   if(eFaction) S.enemyFaction=eFaction;
   _nextEntityId=1;
+  rtsRandSeed(42);
   rtsCommandQueue.length=0;
   _pendingChains.length=0;
   deadSwordsmenPool.length=0;

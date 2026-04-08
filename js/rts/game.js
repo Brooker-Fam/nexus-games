@@ -37,8 +37,8 @@ function aiBuild(type, nearX, nearY, cost){
   const worker = S.entities.find(e=>e.side==='enemy'&&e.type==='worker'&&e.state!=='building');
   if(!worker) return false;
   S.gold.enemy-=cost;
-  const x=nearX+(Math.random()-0.5)*160;
-  const y=nearY+(Math.random()-0.5)*200;
+  const x=nearX+(rtsRand()-0.5)*160;
+  const y=nearY+(rtsRand()-0.5)*200;
   // Assign worker to build (same flow as player)
   worker.buildTarget = { x, y, buildType:type, ghost:null };
   worker.state = 'building';
@@ -607,41 +607,32 @@ function endRTS(playerWon){
 //  RTS DRAW ENGINE
 // ══════════════════
 let rtsLastTime=0, rtsAccum=0;
-let _rtsInterval=null;
 function rtsLoop(ts){
   const dt = Math.min(ts - rtsLastTime, 100);
   rtsLastTime = ts;
 
-  if(window._mpMultiplayer && !mpIsHost){
-    rtsDraw();
-    S.raf=requestAnimationFrame(rtsLoop);
-    return;
+  if(window._mpMultiplayer){
+    // Lockstep: both clients run simulation, advance only when commands ready
+    rtsAccum += dt * S.speed;
+    while(rtsAccum >= TARGET_MS){
+      if(!lsCanAdvance()){ rtsAccum=TARGET_MS; break; }
+      lsTick();
+      rtsTick();
+      rtsAccum -= TARGET_MS;
+    }
+  } else {
+    // Singleplayer
+    rtsAccum += dt * S.speed;
+    while(rtsAccum >= TARGET_MS){
+      rtsTick();
+      rtsAccum -= TARGET_MS;
+    }
   }
-
-  rtsAccum += dt * S.speed;
-  while(rtsAccum >= TARGET_MS){
-    rtsTick();
-    rtsAccum -= TARGET_MS;
-  }
-
-  if(window._mpMultiplayer && mpIsHost && S.frame%2===0) mpSendState();
 
   rtsDraw();
   S.raf=requestAnimationFrame(rtsLoop);
 }
 
-// Keep host ticking when tab is backgrounded (RAF throttles to ~1fps)
-document.addEventListener('visibilitychange',()=>{
-  if(!window._mpMultiplayer || !mpIsHost) return;
-  if(document.hidden){
-    _rtsInterval=setInterval(()=>{
-      rtsAccum+=TARGET_MS*S.speed;
-      while(rtsAccum>=TARGET_MS){ rtsTick(); rtsAccum-=TARGET_MS; }
-      if(S.frame%2===0) mpSendState();
-    }, 16);
-  } else {
-    clearInterval(_rtsInterval); _rtsInterval=null;
-    rtsLastTime=performance.now(); rtsAccum=0;
-  }
-});
+// Note: lockstep multiplayer doesn't need background tab workaround.
+// If a tab goes to background, the game pauses for both players (by design).
 

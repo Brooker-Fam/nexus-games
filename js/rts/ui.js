@@ -223,7 +223,7 @@ function rtsHandleRightClick(e){
     const worker=S.selected.find(s=>s.type==='worker'&&s.side===side);
     const workerId = worker ? worker.id
       : (S.entities.filter(en=>en.type==='worker'&&en.side===side&&en.state!=='building')
-          .sort((a,b)=>Math.hypot(a.x-wp.x,a.y-wp.y)-Math.hypot(b.x-wp.x,b.y-wp.y))[0]||{}).id;
+          .sort((a,b)=>{const d=Math.hypot(a.x-wp.x,a.y-wp.y)-Math.hypot(b.x-wp.x,b.y-wp.y);return d!==0?d:a.id-b.id;})[0]||{}).id;
 
     if(!workerId){
       rtsSetLog('No available worker to build!');
