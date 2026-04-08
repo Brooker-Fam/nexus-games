@@ -141,22 +141,81 @@ function executeRemoteCommand(cmd){
   }
 }
 
-// ── HOST STATE SYNC ──
-// Compact format: arrays instead of objects to reduce JSON size
+// ── HOST STATE SYNC (delta compression) ──
+// Only send entities that changed since last sync, plus removed IDs
 const _E_FIELDS=['id','type','side','faction','x','y','hp','maxHp','state','subtype',
   'ranged','aimAngle','frame','underConstruction','buildProgress','buildTime',
   'goldCarry','attackTimer','hammerSwing','isBarracks'];
+// Fields that change frequently — only these are checked for deltas
+const _E_DELTA=['x','y','hp','state','frame','underConstruction','buildProgress',
+  'goldCarry','attackTimer','hammerSwing','aimAngle'];
+
+let _lastSnap={}; // id -> last sent array
+let _lastIds=new Set();
+let _fullSyncCounter=0;
+
+function _encodeEntity(e){
+  const a=_E_FIELDS.map(f=> f==='x'||f==='y'||f==='hp' ? Math.round(e[f]||0) : e[f]);
+  if(e.queue&&e.queue.length) a.push(e.queue.map(q=>q.label), e.trainTimer||0);
+  return a;
+}
 
 function mpSendState(){
-  const ents=rtsEntities.map(e=>{
-    const a=_E_FIELDS.map(f=> f==='x'||f==='y'||f==='hp' ? Math.round(e[f]||0) : e[f]);
-    // Append queue info only if present
-    if(e.queue&&e.queue.length) a.push(e.queue.map(q=>q.label), e.trainTimer||0);
-    return a;
-  });
+  _fullSyncCounter++;
+  const doFull=(_fullSyncCounter%30===0); // full sync every 30 sends (~3s)
+
+  const curIds=new Set(rtsEntities.map(e=>e.id));
+  // Find removed entities
+  const removed=[];
+  for(const id of _lastIds){ if(!curIds.has(id)) removed.push(id); }
+
+  let ents;
+  if(doFull){
+    // Full sync — send everything
+    ents=rtsEntities.map(e=>_encodeEntity(e));
+    _lastSnap={};
+    for(const e of rtsEntities) _lastSnap[e.id]=_encodeEntity(e);
+  } else {
+    // Delta — only changed entities
+    ents=[];
+    for(const e of rtsEntities){
+      const enc=_encodeEntity(e);
+      const prev=_lastSnap[e.id];
+      if(!prev){
+        ents.push(enc); // new entity
+      } else {
+        let changed=false;
+        for(const f of _E_DELTA){
+          const i=_E_FIELDS.indexOf(f);
+          if(i>=0 && enc[i]!==prev[i]){ changed=true; break; }
+        }
+        // Also check queue length change
+        if(enc.length!==prev.length) changed=true;
+        if(changed) ents.push(enc);
+      }
+      _lastSnap[e.id]=enc;
+    }
+  }
+  _lastIds=curIds;
+  // Clean up removed from snap
+  for(const id of removed) delete _lastSnap[id];
+
   const projs=rtsProjectiles.map(p=>[Math.round(p.x),Math.round(p.y),p.color,p.type,p.side]);
-  mpSend({t:'s', e:ents, p:projs, g:Math.round(rtsGold), a:Math.round(aiGold),
-    bh:rtsBaseHP, eh:rtsEnemyBaseHP, f:rtsFrame, go:rtsGameOver?1:0});
+  mpSend({t:'s', e:ents, p:projs, r:removed.length?removed:undefined,
+    g:Math.round(rtsGold), a:Math.round(aiGold),
+    bh:rtsBaseHP, eh:rtsEnemyBaseHP, f:rtsFrame, go:rtsGameOver?1:0,
+    full:doFull?1:undefined});
+}
+
+function _applyEntityArray(a){
+  const id=a[0];
+  let local=rtsEntities.find(e=>e.id===id);
+  if(!local){ local={id}; rtsEntities.push(local); }
+  for(let i=0;i<_E_FIELDS.length;i++) local[_E_FIELDS[i]]=a[i];
+  if(a.length>_E_FIELDS.length){
+    local.queue=(a[_E_FIELDS.length]||[]).map(l=>({label:l,time:0}));
+    local.trainTimer=a[_E_FIELDS.length+1]||0;
+  } else if(!local.queue){ local.queue=[]; }
 }
 
 function mpApplyState(msg){
@@ -164,28 +223,24 @@ function mpApplyState(msg){
   rtsBaseHP=msg.bh; rtsEnemyBaseHP=msg.eh;
   rtsFrame=msg.f; rtsGameOver=!!msg.go;
 
-  // Decode compact entities
-  const hostIds=new Set();
-  for(const a of msg.e){
-    const id=a[0]; hostIds.add(id);
-    let local=rtsEntities.find(e=>e.id===id);
-    if(!local){ local={id}; rtsEntities.push(local); }
-    for(let i=0;i<_E_FIELDS.length;i++) local[_E_FIELDS[i]]=a[i];
-    // Queue data if present (appended after standard fields)
-    if(a.length>_E_FIELDS.length){
-      local.queue=(a[_E_FIELDS.length]||[]).map(l=>({label:l,time:0}));
-      local.trainTimer=a[_E_FIELDS.length+1]||0;
-    } else {
-      if(!local.queue) local.queue=[];
+  if(msg.full){
+    // Full sync — replace all entities
+    const hostIds=new Set();
+    for(const a of msg.e){ _applyEntityArray(a); hostIds.add(a[0]); }
+    for(let i=rtsEntities.length-1;i>=0;i--){
+      if(!hostIds.has(rtsEntities[i].id)) rtsEntities.splice(i,1);
+    }
+  } else {
+    // Delta — update only changed entities
+    for(const a of msg.e) _applyEntityArray(a);
+    // Remove explicitly deleted
+    if(msg.r) for(const id of msg.r){
+      const i=rtsEntities.findIndex(e=>e.id===id);
+      if(i>=0) rtsEntities.splice(i,1);
     }
   }
-  // Remove dead entities
-  for(let i=rtsEntities.length-1;i>=0;i--){
-    if(!hostIds.has(rtsEntities[i].id)) rtsEntities.splice(i,1);
-  }
-  // Decode projectiles
-  rtsProjectiles=msg.p.map(a=>({x:a[0],y:a[1],color:a[2],type:a[3],side:a[4],trail:[]}));
 
+  rtsProjectiles=msg.p.map(a=>({x:a[0],y:a[1],color:a[2],type:a[3],side:a[4],trail:[]}));
   updateRtsHUD();
   if(rtsGameOver){
     const myBaseHP=mySide()==='player'?rtsBaseHP:rtsEnemyBaseHP;
