@@ -58,6 +58,7 @@ registerGame('cs', {
     document.getElementById('dso-game').style.display='none';
   },
   cleanup(){
+    if(window._mpMultiplayer) return; // don't stop during multiplayer
     if(rtsRAF){ cancelAnimationFrame(rtsRAF); rtsRAF=null; }
     if(dsoRevealRAF){ cancelAnimationFrame(dsoRevealRAF); dsoRevealRAF=null; }
     if(dsoPreviewRAF){ cancelAnimationFrame(dsoPreviewRAF); dsoPreviewRAF=null; }

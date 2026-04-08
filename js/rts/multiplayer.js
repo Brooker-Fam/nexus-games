@@ -2,6 +2,12 @@
 let mpPeer=null, mpConn=null, mpIsHost=false, mpConnected=false;
 let mpLocalFaction=null, mpRemoteFaction=null;
 let mpOnConnect=null; // callback when guest connects to host
+
+// Returns which side this client controls ('player' for host/singleplayer, 'enemy' for guest)
+function mySide(){ return (mpConnected && !mpIsHost) ? 'enemy' : 'player'; }
+function enemySide(){ return mySide()==='player' ? 'enemy' : 'player'; }
+function myGold(){ return mySide()==='player' ? rtsGold : aiGold; }
+function spendGold(amount){ if(mySide()==='player') rtsGold-=amount; else aiGold-=amount; }
 const MP_PREFIX='nexus-dso-';
 
 function mpCode(){ return Math.random().toString(36).slice(2,6).toUpperCase(); }
@@ -61,14 +67,17 @@ function mpCheckStart(){
 }
 
 function mpStartGame(msg){
-  rtsPlayerFaction=mpIsHost?msg.hf:msg.gf;
-  rtsEnemyFaction=mpIsHost?msg.gf:msg.hf;
   window._mpMultiplayer=true;
   document.getElementById('dso-select').style.display='none';
   document.getElementById('dso-reveal').style.display='none';
   document.getElementById('dso-game').style.display='block';
   document.getElementById('rts-gameover-overlay').style.display='none';
-  startRTS(rtsPlayerFaction);
+  // BOTH clients init identically: host faction = 'player' side, guest faction = 'enemy' side
+  rtsPlayerFaction=msg.hf;
+  rtsEnemyFaction=msg.gf;
+  startRTS(msg.hf);
+  // Guest starts camera at enemy base
+  if(!mpIsHost){ camX=ENEMY_BASE_X-VW/2; clampCam(); }
 }
 
 function executeRemoteCommand(cmd){

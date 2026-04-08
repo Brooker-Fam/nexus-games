@@ -20,7 +20,9 @@ function processCommands(){
 }
 
 function executeCommand(cmd){
-  const cfg = FACTION_CFG[rtsPlayerFaction];
+  const side = mySide();
+  const faction = side==='player' ? rtsPlayerFaction : rtsEnemyFaction;
+  const cfg = FACTION_CFG[faction];
 
   switch(cmd.type){
 
@@ -29,21 +31,18 @@ function executeCommand(cmd){
       if(!building || building.underConstruction) break;
       const costMap = { worker:5, warrior:cfg.warriorCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost };
       const cost = costMap[cmd.unitType] || 0;
-      if(rtsGold < cost) break;
+      if(myGold() < cost) break;
 
       const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite };
       const time = timeMap[cmd.unitType] || BUILD_TIMES.worker;
 
-      const fnMap = {
-        worker:  ()=>makeWorker('player', rtsPlayerFaction, building.x, building.y),
-        warrior: ()=>makeWarrior('player', rtsPlayerFaction, building.x, building.y),
-        elite:   ()=>makeElite('player', rtsPlayerFaction, building.x, building.y),
-      };
-      // elite2 varies by faction
       const elite2FnMap = { makeWizard, makeNecromancer, makeTank };
-      if(cmd.unitType==='elite2'){
-        fnMap.elite2 = ()=>elite2FnMap[cfg.elite2Fn]('player', rtsPlayerFaction, building.x, building.y);
-      }
+      const fnMap = {
+        worker:  ()=>makeWorker(side, faction, building.x, building.y),
+        warrior: ()=>makeWarrior(side, faction, building.x, building.y),
+        elite:   ()=>makeElite(side, faction, building.x, building.y),
+        elite2:  ()=>elite2FnMap[cfg.elite2Fn](side, faction, building.x, building.y),
+      };
 
       const fn = fnMap[cmd.unitType];
       if(!fn) break;
@@ -53,7 +52,7 @@ function executeCommand(cmd){
         : cfg.elite2Label;
 
       if(!queueUnit(building, label, time, fn)) break;
-      rtsGold -= cost;
+      spendGold(cost);
       updateRtsHUD();
       rtsSetLog(`${label} queued (${building.queue.length}/${QUEUE_MAX})`);
       break;
@@ -70,7 +69,7 @@ function executeCommand(cmd){
     case 'move_units': {
       for(const id of cmd.unitIds){
         const unit = rtsEntities.find(e=>e.id===id);
-        if(!unit || unit.side!=='player') continue;
+        if(!unit || unit.side!==side) continue;
         const idx = cmd.unitIds.indexOf(id);
         const spread = idx * 20 - (cmd.unitIds.length * 10);
         unit.moveTarget = { x:cmd.x + spread, y:cmd.y };
@@ -83,7 +82,7 @@ function executeCommand(cmd){
     case 'attack_target': {
       for(const id of cmd.unitIds){
         const unit = rtsEntities.find(e=>e.id===id);
-        if(!unit || unit.side!=='player' || unit.type!=='warrior') continue;
+        if(!unit || unit.side!==side || unit.type!=='warrior') continue;
         const target = rtsEntities.find(e=>e.id===cmd.targetId);
         if(!target) continue;
         unit.forcedTarget = target;
@@ -96,7 +95,7 @@ function executeCommand(cmd){
     case 'attack_all': {
       let count = 0;
       for(const e of rtsEntities){
-        if(e.type==='warrior' && e.side==='player' && e.state==='idle'){
+        if(e.type==='warrior' && e.side===side && e.state==='idle'){
           e.state = 'march';
           count++;
         }

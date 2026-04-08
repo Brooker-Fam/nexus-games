@@ -165,7 +165,7 @@ function rtsHandleClick(e){
 
   let hit=null, hitDist=Infinity;
   for(const ent of rtsEntities){
-    if(ent.side!=='player') continue;
+    if(ent.side!==mySide()) continue;
     const r=CLICK_RADII[ent.type]||14;
     const d=Math.hypot(wp.x-ent.x,wp.y-ent.y);
     if(d<r && d<hitDist){ hit=ent; hitDist=d; }
@@ -216,14 +216,14 @@ function rtsHandleRightClick(e){
 
   // structure/base placement mode
   if(buildStructureMode){
-    const worker=rtsSelected.find(s=>s.type==='worker'&&s.side==='player');
+    const side=mySide();
+    const worker=rtsSelected.find(s=>s.type==='worker'&&s.side===side);
     const workerId = worker ? worker.id
-      : (rtsEntities.filter(en=>en.type==='worker'&&en.side==='player'&&en.state!=='building')
+      : (rtsEntities.filter(en=>en.type==='worker'&&en.side===side&&en.state!=='building')
           .sort((a,b)=>Math.hypot(a.x-wp.x,a.y-wp.y)-Math.hypot(b.x-wp.x,b.y-wp.y))[0]||{}).id;
 
     if(buildStructureMode==='base'){
-      // Base placement is instant (no construction)
-      const nb={id:nextId(),type:'base',side:'player',x:wp.x,y:wp.y,hp:100,maxHp:100,w:60,h:80,selected:false,queue:[],trainTimer:0};
+      const nb={id:nextId(),type:'base',side,x:wp.x,y:wp.y,hp:100,maxHp:100,w:60,h:80,selected:false,queue:[],trainTimer:0};
       rtsEntities.push(nb);
       rtsSetLog(`New ${FACTION_CFG[rtsPlayerFaction].buildingName} placed!`);
     } else if(workerId){
@@ -240,13 +240,13 @@ function rtsHandleRightClick(e){
   // check enemy hit
   let enemyHit=null, enemyDist=Infinity;
   for(const ent of rtsEntities){
-    if(ent.side==='player') continue;
+    if(ent.side===mySide()) continue;
     const r=CLICK_RADII[ent.type]||20;
     const d=Math.hypot(wp.x-ent.x,wp.y-ent.y);
     if(d<r && d<enemyDist){ enemyHit=ent; enemyDist=d; }
   }
 
-  const selectedIds=rtsSelected.filter(s=>s.side==='player').map(s=>s.id);
+  const selectedIds=rtsSelected.filter(s=>s.side===mySide()).map(s=>s.id);
   if(enemyHit){
     issueCommand({ type:'attack_target', unitIds:selectedIds, targetId:enemyHit.id });
     rtsSetLog(`Attack order issued!`);
@@ -260,8 +260,8 @@ function rtsHandleRightClick(e){
 
 function rtsSetLog(msg){ document.getElementById('rts-log').textContent=msg; }
 function updateRtsHUD(){
-  document.getElementById('rts-gold').textContent=Math.floor(rtsGold);
-  const units=rtsEntities.filter(e=>e.side==='player'&&e.type!=='base').length;
+  document.getElementById('rts-gold').textContent=Math.floor(myGold());
+  const units=rtsEntities.filter(e=>e.side===mySide()&&e.type!=='base').length;
   document.getElementById('rts-units').textContent=units;
   document.getElementById('rts-base-hp').textContent=rtsBaseHP;
   // refresh popup options if open so gold costs update
