@@ -313,7 +313,7 @@
     .rts-hud { flex-wrap: wrap; padding: 6px 10px; }
     .rts-hud-left, .rts-hud-right { min-width: 120px; }
     .rts-build-panel { flex-wrap: wrap; gap: 6px; }
-    #rts-viewport-wrap { height: 50vw; min-height: 300px; max-height: 580px; }
+    #rts-viewport-wrap { height: 50vw; min-height: 300px; max-height: min(580px, 70vh); }
     #rv-canvas { width: 100%; height: auto; }
     .reveal-champion { font-size: 24px; letter-spacing: 4px; }
     .mp-code { font-size: 18px; letter-spacing: 4px; }
@@ -327,5 +327,16 @@
     .reveal-btns { flex-direction: column; gap: 10px; }
     .mp-buttons { flex-direction: column; gap: 10px; }
     .mp-join-row { justify-content: center; }
-    #rts-viewport-wrap { height: 60vw; min-height: 250px; }
+    #rts-viewport-wrap { height: 60vw; min-height: 250px; max-height: 70vh; }
+  }
+  /* Landscape mobile: constrain to viewport height */
+  @media (max-height: 500px) and (orientation: landscape) {
+    #rts-viewport-wrap { height: 62vh; min-height: unset; max-height: unset; }
+    .rts-hud { padding: 4px 10px; gap: 6px; }
+    .rts-faction-badge { font-size: 8px; padding: 2px 8px; }
+    .rts-resource { font-size: 10px; }
+    .rts-log-bar { padding: 3px 10px; font-size: 10px; min-height: 18px; }
+    #rts-minimap { transform: scale(0.7); transform-origin: bottom right; }
+    .rts-build-btn { padding: 4px 8px; font-size: 7px; }
+    .rts-build-icon { font-size: 13px; }
   }

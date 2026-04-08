@@ -208,3 +208,22 @@
     .sidebar { flex-direction: column; }
     .sidebar .panel { min-width: unset; }
   }
+  /* Landscape mobile: side-by-side layout, constrain canvas to viewport height */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .game-area { grid-template-columns: 1fr 200px; }
+    #tdCanvas { max-height: 60vh; width: auto; max-width: 100%; }
+    .game-header { flex-direction: row; margin-bottom: 8px; }
+    .game-header .game-title { font-size: 14px; }
+    .stat-box { padding: 4px 10px; }
+    .stat-val { font-size: 14px; }
+    .stat-label { font-size: 8px; }
+    .sidebar { flex-direction: column; gap: 6px; max-height: 60vh; overflow-y: auto; }
+    .sidebar .panel { padding: 8px 10px; }
+    .panel-title { font-size: 9px; margin-bottom: 6px; padding-bottom: 4px; }
+    .tower-grid { grid-template-columns: 1fr 1fr; gap: 4px; }
+    .tower-btn { padding: 6px 4px; }
+    .tower-icon { font-size: 16px; }
+    .tower-name { font-size: 7px; }
+    .wave-btn { padding: 8px; font-size: 9px; }
+    .log-box { height: 60px; }
+  }
