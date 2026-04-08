@@ -41,7 +41,9 @@ async function mpJoin(code){
 
 function mpWire(c){
   mpConnected=true;
+  console.log('[MP] Connected! isHost=', mpIsHost);
   c.on('data',msg=>{
+    console.log('[MP] Received:', msg.t, msg);
     if(msg.t==='faction') { mpRemoteFaction=msg.f; mpCheckStart(); }
     else if(msg.t==='cmd') executeRemoteCommand(msg.c);
     else if(msg.t==='go')  mpStartGame(msg);
@@ -67,6 +69,7 @@ function mpCheckStart(){
 }
 
 function mpStartGame(msg){
+  console.log('[MP] Starting game! isHost=', mpIsHost, 'hostFaction=', msg.hf, 'guestFaction=', msg.gf);
   window._mpMultiplayer=true;
   document.getElementById('dso-select').style.display='none';
   document.getElementById('dso-reveal').style.display='none';

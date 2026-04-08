@@ -47,7 +47,7 @@ function aiBuild(type, nearX, nearY, cost){
 }
 
 function aiTick(){
-  if(window._mpMultiplayer) return; // AI disabled in multiplayer
+  if(window._mpMultiplayer || mpConnected) return; // AI disabled in multiplayer
   aiTimer++;
   const eb=rtsEntities.find(e=>e.type==='base'&&e.side==='enemy');
   if(!eb) return;
