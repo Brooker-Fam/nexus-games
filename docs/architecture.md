@@ -1,0 +1,149 @@
+# Nexus Games — Architecture
+
+## Overview
+
+Two-game static site: **Void Fortress** (tower defense) and **Deep Space Ops** (RTS).
+Vanilla JavaScript + Canvas 2D. No frameworks, no npm, no build step.
+Deployed to Vercel as static files (~255KB total, ~90KB gzipped).
+
+## Tech Stack
+
+| Layer | Choice | Rationale |
+|-------|--------|-----------|
+| Language | Vanilla JS (ES2020+) | No build step, instant deploys, zero dependencies |
+| Rendering | Canvas 2D API | Procedural graphics — all visuals drawn at runtime, no image assets |
+| Audio | Web Audio API | Procedural synthesis — 28+ SFX generated in-browser, no audio files |
+| Fonts | Google Fonts CDN | Orbitron + Rajdhani, loaded conditionally (skipped on `file://`) |
+| Hosting | Vercel static | Free tier, global edge CDN, <50ms TTFB, no compute costs |
+| VCS | Git + GitHub | No CI/CD configured yet |
+
+## Hosting
+
+Vercel static is the right fit. The entire site is smaller than a single hero image.
+No server-side logic needed until multiplayer (Phase 2).
+
+**When to reconsider**: If multiplayer lands, the WebSocket server (PartyKit) runs
+separately. The static frontend stays on Vercel either way.
+
+**Alternatives evaluated**:
+- Cloudflare Pages — comparable, but no reason to migrate
+- S3 + CloudFront — more config overhead for no benefit at this scale
+- Adding a bundler (Vite/esbuild) — saves ~70KB via minification, not worth the complexity yet; revisit at ~30 files or when real asset files appear
+
+## File Structure
+
+```
+index.html                     — Single-page markup (278 lines)
+
+css/
+  base.css                     — Variables, reset, layout, header, tabs
+  td.css                       — Tower defense styles
+  rts.css                      — Deep Space Ops styles
+
+js/
+  init.js                      — Bootstrap, event delegation, game lifecycle
+  shared/
+    audio.js                   — Web Audio synth engine + SFX definitions
+    ui.js                      — Background particles, tab switching
+  td/
+    logic.js                   — State, config, enemies, towers, game loop
+    towers.js                  — Tower drawing (gun, laser, missile, cryo)
+    rendering.js               — Background, path, enemies, bullets, particles
+  rts/
+    factions.js                — FACTION_CFG, FACTION_DATA, faction state
+    commands.js                — Command queue (decouples input from simulation)
+    faction-cards.js           — Character art + selection screen
+    camera.js                  — Camera state, world/screen transforms, input
+    entities.js                — Entity factories, startRTS()
+    draw-helpers.js            — Shared drawing (health bars, selection rings)
+    ui.js                      — Build popup, click handling, HUD
+    game.js                    — AI, tick loop, combat, projectiles
+    rendering.js               — Draw orchestration, minimap, background
+    structures.js              — Base, temple, faction structures, cannons
+    workers.js                 — Worker drawing per faction
+    warriors.js                — Warrior + basic projectile drawing
+    elites.js                  — Elite unit variants per faction
+    cinematic.js               — Faction reveal animation
+
+docs/
+  architecture.md              — This file
+```
+
+**Guideline**: Each file stays under ~600 lines with a single responsibility.
+
+## Design Principles
+
+- No build tools. No frameworks. Vanilla JS + Canvas.
+- Small files > clever abstractions.
+- Config-driven: faction behavior defined in `FACTION_CFG`, not scattered conditionals.
+- Command pattern: player actions go through a command queue (multiplayer-ready).
+- Procedural everything: zero static assets, all graphics/audio generated at runtime.
+- Deploy and test after every push.
+
+## Architecture Patterns
+
+### State Management
+- **TD**: Single `state` object in `td/logic.js` (gold, lives, towers, enemies, etc.)
+- **RTS**: 20+ globals across files (`rtsEntities`, `rtsGold`, `camX`, `aiGold`, etc.)
+- **Command queue** (`commands.js`): All player mutations flow through `issueCommand()` / `processCommands()`. Commands carry `type`, `side`, `tick` — ready for network broadcast.
+
+### Rendering Pipeline
+- **TD**: `drawBg()` → `drawPath()` → `drawTowers()` → `drawEnemies()` → `drawBullets()` → `drawParticles()`
+- **RTS**: Clear → camera transform → terrain → gold nodes → structures → cannons → workers → warriors → projectiles → particles → restore → minimap → HUD
+- Both use `requestAnimationFrame` with fixed-timestep accumulators (16.67ms per tick).
+
+### AI System (RTS)
+- Decision loop on fixed interval (~4s ticks)
+- Counts own units, evaluates threats, builds/attacks accordingly
+- Uses same command queue as player (important for multiplayer parity)
+
+## Known Technical Debt
+
+### Should fix soon
+
+| Issue | Where | Impact |
+|-------|-------|--------|
+| Global state sprawl | `camera.js`, `game.js`, `ui.js` | Hard to init/teardown games cleanly; risk of stale state between sessions |
+| Base lookup every tick | `game.js:142-143` | `.find()` runs 60x/sec for values that never change; cache at game start |
+| Chain lightning uses `setTimeout` | `game.js` | Desyncs from game tick under load; should be tick-based |
+| All scripts load upfront | `index.html` | Both games load even when only one is played (~130KB wasted) |
+
+### Can wait
+
+| Issue | Where | Impact |
+|-------|-------|--------|
+| `Array.shift()` for trails | `td/logic.js` | O(n) per call; circular buffer would be better at scale |
+| No minification | deployment | ~70KB savings; negligible until traffic matters |
+| No linting | project-wide | Fine at current size; add ESLint when team grows or codebase hits ~8K LOC |
+| No tests | project-wide | Command system especially would benefit from unit tests |
+| O(n) entity targeting | `td/logic.js`, `game.js` | Fine under ~100 entities; spatial hash needed beyond that |
+
+### Not worth fixing
+
+- No TypeScript — codebase is small enough that vanilla JS is fine
+- No framework — Canvas games don't benefit from DOM frameworks
+- No asset pipeline — there are no assets to optimize
+- Accessibility — limited applicability for Canvas games; keyboard nav for menus is the practical ceiling
+
+## Roadmap
+
+### Phase 1: Game lifecycle and polish
+- [ ] Standardize lifecycle: each game exports `init()` / `cleanup()`
+- [ ] Tab switching calls `cleanup()` on old game, `init()` on new
+- [ ] Group RTS globals into `rtsState` object (enables clean teardown)
+- [ ] Cache entity lookups (player/enemy base refs)
+- [ ] Fix chain lightning to use tick-based timing
+- [ ] Basic responsive CSS + canvas scaling for mobile viewports
+
+### Phase 2: Multiplayer
+- [ ] Add PartyKit for WebSocket rooms
+- [ ] Broadcast command queue between players
+- [ ] Replace AI with second player's command stream
+- [ ] Lobby / matchmaking UI
+- [ ] Deterministic tick sync (command queue already supports this)
+
+### Phase 3: Platform
+- [ ] Add more games (standardized lifecycle makes this plug-and-play)
+- [ ] Add touch support for mobile play
+- [ ] Consider bundler if file count exceeds ~30
+- [ ] Leaderboards / persistence (would need a backend or edge DB)
