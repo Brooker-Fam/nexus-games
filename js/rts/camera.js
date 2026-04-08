@@ -2,7 +2,8 @@
 //  DEEP SPACE OPS — RTS ENGINE
 // ════════════════════════════════════════════════════
 let rtsRAF=null, rtsFrame=0, rtsSpeed=1;
-let rtsGold=0, rtsPlayerFaction='prism', rtsEnemyFaction='shadow';
+const rtsGold={player:0, enemy:0};
+let rtsPlayerFaction='prism', rtsEnemyFaction='shadow';
 let rtsBaseHP=100, rtsEnemyBaseHP=100;
 let rtsGameOver=false;
 let rtsEntities=[];   // all units + bases

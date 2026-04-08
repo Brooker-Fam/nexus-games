@@ -188,12 +188,12 @@ function startRTS(playerFaction, enemyFaction){
     rtsEnemyFaction = factions[Math.floor(Math.random()*factions.length)];
   }
   _nextEntityId=1;
-  rtsGold=0; rtsBaseHP=100; rtsEnemyBaseHP=100;
+  rtsGold.player=0; rtsGold.enemy=0; rtsBaseHP=100; rtsEnemyBaseHP=100;
   rtsGameOver=false; rtsFrame=0; rtsParticles=[]; rtsProjectiles=[];
   rtsCommandQueue.length=0;
   _pendingChains.length=0;
   rtsSelected=[]; rtsBuildPopupOpen=false; buildStructureMode=false;
-  aiGold=0; aiTimer=0; deadSwordsmenPool.length=0;
+  aiTimer=0; deadSwordsmenPool.length=0;
   closeBuildPopup&&closeBuildPopup(); rtsEntities=[];
 
   // build bases

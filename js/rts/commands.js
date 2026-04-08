@@ -1,47 +1,46 @@
 // ── RTS COMMAND SYSTEM ──
-// All player actions that mutate game state go through commands.
-// This decouples input from simulation — required for multiplayer.
+// All player actions go through commands. Each command carries cmd.side.
+// Host executes locally. Guest sends to host. One unified executor.
 
 const rtsCommandQueue = [];
 
 function issueCommand(cmd){
   cmd.tick = rtsFrame;
-  if(window._mpMultiplayer && mpConnected){
-    // Multiplayer: send to host. Host executes, guest gets state back.
+  cmd.side = mySide();
+  if(window._mpMultiplayer && mpConnected && !mpIsHost){
+    // Guest: send to host only, don't execute locally
     mpSendCommand(cmd);
-    // Host also executes locally
-    if(mpIsHost) rtsCommandQueue.push(cmd);
   } else {
-    // Singleplayer: execute locally
+    // Host or singleplayer: execute locally
     rtsCommandQueue.push(cmd);
   }
 }
 
 function processCommands(){
   while(rtsCommandQueue.length > 0){
-    const cmd = rtsCommandQueue.shift();
-    executeCommand(cmd);
+    executeCommand(rtsCommandQueue.shift());
   }
 }
 
 function executeCommand(cmd){
-  const side = mySide();
+  const side = cmd.side || 'player';
   const faction = side==='player' ? rtsPlayerFaction : rtsEnemyFaction;
   const cfg = FACTION_CFG[faction];
+  const elite2FnMap = { makeWizard, makeNecromancer, makeTank };
 
   switch(cmd.type){
 
     case 'train_unit': {
       const building = rtsEntities.find(e=>e.id===cmd.buildingId);
       if(!building || building.underConstruction) break;
+      if(building.side !== side) break; // can't train from enemy building
       const costMap = { worker:5, warrior:cfg.warriorCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost };
       const cost = costMap[cmd.unitType] || 0;
-      if(myGold() < cost) break;
+      if(rtsGold[side] < cost) break;
 
       const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite };
       const time = timeMap[cmd.unitType] || BUILD_TIMES.worker;
 
-      const elite2FnMap = { makeWizard, makeNecromancer, makeTank };
       const fnMap = {
         worker:  ()=>makeWorker(side, faction, building.x, building.y),
         warrior: ()=>makeWarrior(side, faction, building.x, building.y),
@@ -57,15 +56,14 @@ function executeCommand(cmd){
         : cfg.elite2Label;
 
       if(!queueUnit(building, label, time, fn)) break;
-      spendGold(cost);
-      console.log('[CMD] train_unit side=',side,'cost=',cost,'rtsGold=',rtsGold,'aiGold=',aiGold);
+      rtsGold[side] -= cost;
       updateRtsHUD();
       rtsSetLog(`${label} queued (${building.queue.length}/${QUEUE_MAX})`);
       break;
     }
 
     case 'build_structure': {
-      if(cmd.cost) spendGold(cmd.cost);
+      if(cmd.cost) rtsGold[side] -= cmd.cost;
       if(cmd.buildType==='base'){
         const nb={id:nextId(),type:'base',side,x:cmd.x,y:cmd.y,hp:100,maxHp:100,w:60,h:80,selected:false,queue:[],trainTimer:0};
         rtsEntities.push(nb);

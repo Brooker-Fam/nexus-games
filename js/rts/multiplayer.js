@@ -1,17 +1,15 @@
 // ── RTS MULTIPLAYER (PeerJS WebRTC) ──
 let mpPeer=null, mpConn=null, mpIsHost=false, mpConnected=false;
 let mpLocalFaction=null, mpRemoteFaction=null;
-let mpOnConnect=null; // callback when guest connects to host
+let mpOnConnect=null;
 
-// Returns which side this client controls ('player' for host/singleplayer, 'enemy' for guest)
+// Side helpers — used everywhere for multiplayer-aware logic
 function mySide(){ return (window._mpMultiplayer && !mpIsHost) ? 'enemy' : 'player'; }
 function myFaction(){ return mySide()==='player' ? rtsPlayerFaction : rtsEnemyFaction; }
-function enemySide(){ return mySide()==='player' ? 'enemy' : 'player'; }
-function myGold(){ return mySide()==='player' ? rtsGold : aiGold; }
-function spendGold(amount){ if(mySide()==='player') rtsGold-=amount; else aiGold-=amount; }
-const MP_PREFIX='nexus-dso-';
+function myGold(){ return rtsGold[mySide()]; }
 
-// Unambiguous characters only — no 0/O, 1/I/L, 5/S, 2/Z, 8/B
+// Unambiguous room codes
+const MP_PREFIX='nexus-dso-';
 const _MP_CHARS='3479ACDEFGHJKMNPQRTUVWXY';
 function mpCode(){ let c=''; for(let i=0;i<4;i++) c+=_MP_CHARS[Math.floor(Math.random()*_MP_CHARS.length)]; return c; }
 
@@ -44,16 +42,18 @@ async function mpJoin(code){
 
 function mpWire(c){
   mpConnected=true;
-  console.log('[MP] Connected! isHost=', mpIsHost);
   c.on('data',msg=>{
-    console.log('[MP] Received:', msg.t, msg);
     if(msg.t==='faction') { mpRemoteFaction=msg.f; mpCheckStart(); }
-    else if(msg.t==='cmd') { if(mpIsHost) executeRemoteCommand(msg.c); }
+    else if(msg.t==='cmd' && mpIsHost){
+      // Host receives guest command — stamp side and queue for execution
+      msg.c.side = 'enemy';
+      rtsCommandQueue.push(msg.c);
+    }
     else if(msg.t==='s') mpApplyState(msg);
-    else if(msg.t==='go')  mpStartGame(msg);
+    else if(msg.t==='go') mpStartGame(msg);
   });
-  c.on('close',()=>{ console.log('[MP] Connection CLOSED'); mpConnected=false; rtsSetLog('Opponent disconnected.'); });
-  c.on('error',err=>{ console.log('[MP] Connection ERROR:', err); });
+  c.on('close',()=>{ mpConnected=false; rtsSetLog('Opponent disconnected.'); });
+  c.on('error',err=>{ console.log('[MP] Error:', err); });
 }
 
 function mpSend(msg){ if(mpConn&&mpConn.open) mpConn.send(msg); }
@@ -74,89 +74,37 @@ function mpCheckStart(){
 }
 
 function mpStartGame(msg){
-  console.log('[MP] Starting game! isHost=', mpIsHost, 'hostFaction=', msg.hf, 'guestFaction=', msg.gf);
   window._mpMultiplayer=true;
   document.getElementById('dso-select').style.display='none';
   document.getElementById('dso-reveal').style.display='none';
   document.getElementById('dso-game').style.display='block';
   document.getElementById('rts-gameover-overlay').style.display='none';
-  // BOTH clients init identically: host faction = 'player' side, guest faction = 'enemy' side
+  // Both clients init identically
   rtsPlayerFaction=msg.hf;
   rtsEnemyFaction=msg.gf;
   startRTS(msg.hf);
   _rebuildEntMap();
-  // Guest: fix HUD to show their own faction, start camera at their base
+  // Guest: fix HUD for their faction, start camera at their base
   if(!mpIsHost){
     const myCfg=FACTION_CFG[msg.gf];
-    const enemyCfg=FACTION_CFG[msg.hf];
     document.getElementById('rts-faction-badge').textContent=msg.gf.toUpperCase()+' ARMADA';
     document.getElementById('rts-faction-badge').style.color=myCfg.color;
     document.getElementById('hud-building-name').textContent=myCfg.buildingName;
     document.getElementById('rts-enemy-faction').textContent=msg.hf.toUpperCase();
-    document.getElementById('rts-enemy-faction').style.color=enemyCfg.color;
+    document.getElementById('rts-enemy-faction').style.color=FACTION_CFG[msg.hf].color;
     rtsSetLog('Click your '+myCfg.buildingName+' to train units!');
     camX=ENEMY_BASE_X-VW/2; clampCam();
   }
 }
 
-function executeRemoteCommand(cmd){
-  const cfg=FACTION_CFG[rtsEnemyFaction];
-  const elite2FnMap={makeWizard,makeNecromancer,makeTank};
-  if(cmd.type==='train_unit'){
-    const b=rtsEntities.find(e=>e.id===cmd.buildingId);
-    if(!b||b.underConstruction) return;
-    const costs={worker:5,warrior:cfg.warriorCost,elite:cfg.eliteCost,elite2:cfg.elite2Cost};
-    if(aiGold<(costs[cmd.unitType]||0)) return;
-    const fns={
-      worker:()=>makeWorker('enemy',rtsEnemyFaction,b.x,b.y),
-      warrior:()=>makeWarrior('enemy',rtsEnemyFaction,b.x,b.y),
-      elite:()=>makeElite('enemy',rtsEnemyFaction,b.x,b.y),
-      elite2:()=>elite2FnMap[cfg.elite2Fn]('enemy',rtsEnemyFaction,b.x,b.y),
-    };
-    const times={worker:BUILD_TIMES.worker,warrior:BUILD_TIMES.warrior,elite:BUILD_TIMES.elite,elite2:BUILD_TIMES.elite};
-    const labels={worker:cfg.workerLabel,warrior:cfg.warriorLabel,elite:cfg.eliteLabel,elite2:cfg.elite2Label};
-    if(!fns[cmd.unitType]||!queueUnit(b,labels[cmd.unitType],times[cmd.unitType],fns[cmd.unitType])) return;
-    aiGold-=costs[cmd.unitType];
-    console.log('[REMOTE CMD] train_unit cost=',costs[cmd.unitType],'aiGold=',aiGold,'rtsGold=',rtsGold);
-  } else if(cmd.type==='build_structure'){
-    const w=rtsEntities.find(e=>e.id===cmd.workerId);
-    if(cmd.cost) aiGold-=cmd.cost;
-    if(cmd.buildType==='base'){
-      const nb={id:nextId(),type:'base',side:'enemy',x:cmd.x,y:cmd.y,hp:100,maxHp:100,w:60,h:80,selected:false,queue:[],trainTimer:0};
-      rtsEntities.push(nb);
-    } else if(w){
-      w.buildTarget={x:cmd.x,y:cmd.y,buildType:cmd.buildType,ghost:null}; w.state='building';
-    }
-  } else if(cmd.type==='move_units'){
-    cmd.unitIds.forEach((id,i)=>{
-      const u=rtsEntities.find(e=>e.id===id&&e.side==='enemy');
-      if(!u) return;
-      u.moveTarget={x:cmd.x+i*20-(cmd.unitIds.length*10),y:cmd.y};
-      u.forcedTarget=null; u.state=u.type==='warrior'?'march':'moving';
-    });
-  } else if(cmd.type==='attack_target'){
-    const tgt=rtsEntities.find(e=>e.id===cmd.targetId);
-    cmd.unitIds.forEach(id=>{
-      const u=rtsEntities.find(e=>e.id===id&&e.side==='enemy'&&e.type==='warrior');
-      if(u&&tgt){ u.forcedTarget=tgt; u.moveTarget=null; u.state='march'; }
-    });
-  } else if(cmd.type==='attack_all'){
-    rtsEntities.forEach(e=>{ if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle') e.state='march'; });
-  }
-}
-
 // ── HOST STATE SYNC (delta compression) ──
-// Only send entities that changed since last sync, plus removed IDs
 const _E_FIELDS=['id','type','side','faction','x','y','hp','maxHp','state','subtype',
   'ranged','aimAngle','frame','underConstruction','buildProgress','buildTime',
   'goldCarry','attackTimer','hammerSwing','isBarracks'];
-// Fields that change frequently — only these are checked for deltas
 const _E_DELTA=['x','y','hp','state','frame','underConstruction','buildProgress',
   'goldCarry','attackTimer','hammerSwing','aimAngle'];
 
-let _lastSnap={}; // id -> last sent array
-let _lastIds=new Set();
-let _fullSyncCounter=0;
+let _lastSnap={}, _lastIds=new Set(), _fullSyncCounter=0;
 
 function _encodeEntity(e){
   const a=_E_FIELDS.map(f=> f==='x'||f==='y'||f==='hp' ? Math.round(e[f]||0) : e[f]);
@@ -166,34 +114,28 @@ function _encodeEntity(e){
 
 function mpSendState(){
   _fullSyncCounter++;
-  const doFull=(_fullSyncCounter%30===0); // full sync every 30 sends (~3s)
-
+  const doFull=(_fullSyncCounter%30===0);
   const curIds=new Set(rtsEntities.map(e=>e.id));
-  // Find removed entities
   const removed=[];
   for(const id of _lastIds){ if(!curIds.has(id)) removed.push(id); }
 
   let ents;
   if(doFull){
-    // Full sync — send everything
     ents=rtsEntities.map(e=>_encodeEntity(e));
     _lastSnap={};
     for(const e of rtsEntities) _lastSnap[e.id]=_encodeEntity(e);
   } else {
-    // Delta — only changed entities
     ents=[];
     for(const e of rtsEntities){
       const enc=_encodeEntity(e);
       const prev=_lastSnap[e.id];
-      if(!prev){
-        ents.push(enc); // new entity
-      } else {
+      if(!prev){ ents.push(enc); }
+      else {
         let changed=false;
         for(const f of _E_DELTA){
           const i=_E_FIELDS.indexOf(f);
           if(i>=0 && enc[i]!==prev[i]){ changed=true; break; }
         }
-        // Also check queue length change
         if(enc.length!==prev.length) changed=true;
         if(changed) ents.push(enc);
       }
@@ -201,17 +143,16 @@ function mpSendState(){
     }
   }
   _lastIds=curIds;
-  // Clean up removed from snap
   for(const id of removed) delete _lastSnap[id];
 
   const projs=rtsProjectiles.map(p=>[Math.round(p.x),Math.round(p.y),p.color,p.type,p.side]);
   mpSend({t:'s', e:ents, p:projs, r:removed.length?removed:undefined,
-    g:Math.round(rtsGold), a:Math.round(aiGold),
+    g:{p:Math.round(rtsGold.player),e:Math.round(rtsGold.enemy)},
     bh:rtsBaseHP, eh:rtsEnemyBaseHP, f:rtsFrame, go:rtsGameOver?1:0,
     full:doFull?1:undefined});
 }
 
-// Fast entity index for guest
+// ── GUEST STATE RECEIVER ──
 let _entMap=new Map();
 function _rebuildEntMap(){ _entMap.clear(); for(const e of rtsEntities) _entMap.set(e.id,e); }
 
@@ -227,7 +168,7 @@ function _applyEntityArray(a){
 }
 
 function mpApplyState(msg){
-  rtsGold=msg.g; aiGold=msg.a;
+  rtsGold.player=msg.g.p; rtsGold.enemy=msg.g.e;
   rtsBaseHP=msg.bh; rtsEnemyBaseHP=msg.eh;
   rtsFrame=msg.f; rtsGameOver=!!msg.go;
 

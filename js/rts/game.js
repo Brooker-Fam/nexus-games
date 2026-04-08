@@ -13,7 +13,7 @@ const AI_CONFIG = {
 };
 
 // ── AI LOGIC ──
-let aiGold=0, aiTimer=0;
+let aiTimer=0;
 
 function aiCount(type, subFilter){
   return rtsEntities.filter(e=>{
@@ -26,18 +26,18 @@ function aiCount(type, subFilter){
 function aiQueueAt(building, label, time, fn, cost){
   if(!building || building.underConstruction) return false;
   if(building.queue && building.queue.length>=QUEUE_MAX) return false;
-  if(aiGold<cost) return false;
-  aiGold-=cost;
+  if(rtsGold.enemy<cost) return false;
+  rtsGold.enemy-=cost;
   queueUnit(building, label, time, fn);
   return true;
 }
 
 function aiBuild(type, nearX, nearY, cost){
-  if(aiGold<cost) return false;
+  if(rtsGold.enemy<cost) return false;
   // Find an idle AI worker to assign
   const worker = rtsEntities.find(e=>e.side==='enemy'&&e.type==='worker'&&e.state!=='building');
   if(!worker) return false;
-  aiGold-=cost;
+  rtsGold.enemy-=cost;
   const x=nearX+(Math.random()-0.5)*160;
   const y=nearY+(Math.random()-0.5)*200;
   // Assign worker to build (same flow as player)
@@ -79,12 +79,12 @@ function aiTick(){
       aiBuild('barracks', eb.x-150, eb.y, AI_CONFIG.barracksCost);
     }
     // Build second barracks for faster production
-    else if(barracks===1 && workers>=6 && aiGold>=AI_CONFIG.barracksCost){
+    else if(barracks===1 && workers>=6 && rtsGold.enemy>=AI_CONFIG.barracksCost){
       aiBuild('barracks', eb.x-200, eb.y+120, AI_CONFIG.barracksCost);
     }
 
     // Build cannons (up to 3 for defense)
-    if(cannons<3 && workers>=3 && aiGold>=AI_CONFIG.cannonCost){
+    if(cannons<3 && workers>=3 && rtsGold.enemy>=AI_CONFIG.cannonCost){
       aiBuild('cannon', eb.x-100, eb.y, AI_CONFIG.cannonCost);
     }
 
@@ -104,7 +104,7 @@ function aiTick(){
 
     // Train elites
     const eliteStruct=rtsEntities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.underConstruction);
-    if(eliteStruct && aiGold>=AI_CONFIG.eliteCost){
+    if(eliteStruct && rtsGold.enemy>=AI_CONFIG.eliteCost){
       aiQueueAt(eliteStruct,'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',rtsEnemyFaction,eliteStruct.x,eliteStruct.y),AI_CONFIG.eliteCost);
     }
   }
@@ -278,8 +278,7 @@ function workerReturn(w, myBase){
   }
   const dropoff=nearestBase||myBase;
   if(moveToward(w, dropoff.x, dropoff.y, MINE_DROPOFF_DIST)){
-    if(w.side==='player') rtsGold+=w.goldCarry;
-    else aiGold+=w.goldCarry;
+    rtsGold[w.side]+=w.goldCarry;
     w.goldCarry=0; w.state='idle';
   }
 }

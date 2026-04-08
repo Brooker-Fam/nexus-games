@@ -278,7 +278,7 @@ function updateRtsHUD(){
     const opts=document.getElementById('rbp-options');
     if(opts) opts.querySelectorAll('.rbp-option').forEach(btn=>{
       const cost=parseInt(btn.querySelector('.rbp-opt-cost').textContent);
-      btn.disabled = rtsGold < cost;
+      btn.disabled = myGold() < cost;
     });
   }
 }
