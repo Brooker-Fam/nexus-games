@@ -211,6 +211,8 @@ function startRTS(playerFaction, enemyFaction){
   }
 
   makeGoldNodes();
+  applyDifficultyToAI();
+  updateDifficultyHUD();
   initCamera(playerFaction);
 
   // update HUD labels

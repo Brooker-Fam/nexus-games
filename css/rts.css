@@ -240,6 +240,12 @@
   }
   .rts-over-title.win  { color:var(--neon-green); text-shadow:0 0 40px rgba(0,255,136,0.5); }
   .rts-over-title.lose { color:var(--neon-pink);  text-shadow:0 0 40px rgba(255,0,136,0.5); }
+  .rts-over-rating {
+    font-family:'Orbitron',sans-serif; font-size:12px; letter-spacing:3px;
+    color:var(--text-dim); margin-top:-6px;
+  }
+  .rts-diff-val { color:var(--neon-cyan); font-weight:700; }
+  .rts-diff-max { color:var(--text-dim); font-size:10px; opacity:0.6; }
   /* ── BUILD POPUP ── */
   #rts-build-popup {
     position:absolute;

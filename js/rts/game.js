@@ -1,9 +1,13 @@
 // ── AI CONFIG ──
+// Base values — overwritten by applyDifficultyToAI() at game start.
 const AI_CONFIG = {
-  decisionInterval: 240,    // ticks between build decisions (~4s at 60fps)
-  attackInterval: 400,       // ticks between attack waves (~6.7s)
+  buildInterval: 180,        // ticks between build decisions (scaled by difficulty)
+  trainInterval: 120,        // ticks between train decisions (scaled by difficulty)
+  attackInterval: 400,       // ticks between attack waves (scaled by difficulty)
   maxWorkers: 14,
-  warriorToWorkerRatio: 0.8,
+  attackMinWarriors: 5,      // min idle warriors to launch attack
+  attackMatchMin: 3,         // min warriors for "outnumber player" attack
+  resourceBonus: 1.0,        // gold multiplier for AI workers
   barracksCost: 20,
   cannonCost: 15,
   structureCost: 20,
@@ -67,8 +71,8 @@ function aiTick(){
   // In multiplayer, skip economy/building AI (guest player handles that manually)
   if(!window._mpMultiplayer){
 
-  // === DECISIONS (every ~3 seconds, faster than before) ===
-  if(S.aiTimer%180===0){
+  // === BUILD DECISIONS (cadence set by difficulty) ===
+  if(S.aiTimer%AI_CONFIG.buildInterval===0){
 
     // Always keep training workers (up to cap)
     if(workers<AI_CONFIG.maxWorkers){
@@ -95,8 +99,8 @@ function aiTick(){
     }
   }
 
-  // === TRAIN UNITS (every ~2 seconds, aggressive) ===
-  if(S.aiTimer%120===0){
+  // === TRAIN UNITS (cadence set by difficulty) ===
+  if(S.aiTimer%AI_CONFIG.trainInterval===0){
     // Train warriors from ALL barracks
     const allBarracks=S.entities.filter(e=>e.side==='enemy'&&e.type==='structure'&&e.isBarracks&&!e.underConstruction);
     for(const bar of allBarracks){
@@ -122,9 +126,9 @@ function aiTick(){
     }
   }
 
-  // Attack when we have a decent army (5+ warriors or matching player)
+  // Attack when we have a decent army (thresholds set by difficulty)
   if(S.aiTimer%AI_CONFIG.attackInterval===0){
-    const shouldAttack = idleWarriors>=5 || (idleWarriors>=3 && idleWarriors>=playerWarriors);
+    const shouldAttack = idleWarriors>=AI_CONFIG.attackMinWarriors || (idleWarriors>=AI_CONFIG.attackMatchMin && idleWarriors>=playerWarriors);
     if(shouldAttack){
       for(const e of S.entities){
         if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle') e.state='march';
@@ -289,7 +293,9 @@ function workerReturn(w, myBase){
   }
   const dropoff=nearestBase||myBase;
   if(moveToward(w, dropoff.x, dropoff.y, MINE_DROPOFF_DIST)){
-    S.gold[w.side]+=w.goldCarry;
+    let gold = w.goldCarry;
+    if(w.side==='enemy' && !window._mpMultiplayer) gold = Math.round(gold * AI_CONFIG.resourceBonus);
+    S.gold[w.side]+=gold;
     w.goldCarry=0; w.state='idle';
   }
 }
@@ -609,6 +615,10 @@ function endRTS(playerWon){
   ov.style.display='flex';
   if(playerWon){ title.textContent='VICTORY'; title.className='rts-over-title win'; sub.textContent='The enemy base has been destroyed.'; }
   else { title.textContent='DEFEAT'; title.className='rts-over-title lose'; sub.textContent='Your base has fallen.'; }
+
+  // Record result and show rating change
+  const result = recordGameResult(playerWon);
+  showRatingChange(result);
 }
 
 // ══════════════════

@@ -214,6 +214,7 @@
             <div class="rts-faction-badge" id="rts-faction-badge">PRISM ARMADA</div>
             <div class="rts-resource"><span class="rts-res-icon">◈</span> GOLD: <span id="rts-gold">0</span></div>
             <div class="rts-resource"><span class="rts-res-icon">⚔</span> UNITS: <span id="rts-units">0</span></div>
+            <div class="rts-resource rts-diff-row"><span class="rts-res-icon">⚙</span> AI LEVEL: <span id="rts-difficulty" class="rts-diff-val">5</span><span class="rts-diff-max">/10</span></div>
           </div>
           <div class="rts-hud-mid">
             <div class="rts-build-panel">
@@ -252,6 +253,7 @@
         <div id="rts-gameover-overlay" style="display:none" class="rts-over-overlay">
           <div class="rts-over-title" id="rts-over-title">VICTORY</div>
           <div class="rts-over-sub" id="rts-over-sub">The enemy base has fallen.</div>
+          <div class="rts-over-rating" id="rts-over-rating" style="display:none"></div>
           <button class="overlay-btn" id="btn-rts-menu-over">◂ BACK TO MENU</button>
         </div>
       </div>
@@ -281,6 +283,7 @@
 <script src="js/rts/commands.js"></script>
 <script src="js/rts/entities.js"></script>
 <script src="js/rts/ui.js"></script>
+<script src="js/rts/difficulty.js"></script>
 <script src="js/rts/game.js"></script>
 <script src="js/rts/draw-helpers.js"></script>
 <script src="js/rts/rendering.js"></script>
