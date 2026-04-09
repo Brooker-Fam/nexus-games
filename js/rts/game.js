@@ -207,7 +207,9 @@ function rtsTick(){
   // remove dead units — record fallen swordsmen for necromancer
   for(let i=S.entities.length-1;i>=0;i--){
     const e=S.entities[i];
-    if(e.type!=='base' && e.hp<=0){
+    // Skip primary bases (handled by game-over check below)
+    if(e===playerBase || e===enemyBase) continue;
+    if(e.hp<=0){
       if(e.type==='warrior' && e.faction==='shadow' && !e.subtype){
         deadSwordsmenPool.push({x:e.x, y:e.y, side:e.side});
         if(deadSwordsmenPool.length>12) deadSwordsmenPool.shift();
@@ -280,7 +282,7 @@ function workerBuild(w){
       ghost.hp=ghost.maxHp;
       sfx('rtsBuildDone');
       if(w.side==='player'){
-        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:FACTION_CFG[w.faction].structLabel;
+        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:FACTION_CFG[w.faction].structLabel;
         rtsSetLog(`${lbl} complete!`);
       }
       w.state='idle'; w.buildTarget=null; w.hammerSwing=0; w.buildTimer=0;
@@ -412,7 +414,9 @@ function warriorFindTarget(w, enemyBase2){
     let weakest=null, weakestHP=Infinity;
     const scanRange = (w.range||50) * 2;
     for(const e of S.entities){
-      if(e.side===w.side||e.type==='base') continue;
+      if(e.side===w.side) continue;
+      // skip primary bases (handled as fallback)
+      if(e===S.playerBase||e===S.enemyBase) continue;
       const d=Math.hypot(e.x-w.x,e.y-w.y);
       if(d<scanRange && e.hp<weakestHP){ weakestHP=e.hp; weakest=e; }
     }
@@ -421,10 +425,12 @@ function warriorFindTarget(w, enemyBase2){
     }
   }
 
-  // Auto-target nearest enemy
+  // Auto-target nearest enemy (including non-primary bases)
   let nearest=null, nearestDist=Infinity;
   for(const e of S.entities){
-    if(e.side===w.side||e.type==='base') continue;
+    if(e.side===w.side) continue;
+    // skip primary bases (handled as fallback)
+    if(e===S.playerBase||e===S.enemyBase) continue;
     const d=Math.hypot(e.x-w.x,e.y-w.y);
     if(d<nearestDist){ nearestDist=d; nearest=e; }
   }
@@ -483,8 +489,21 @@ function warriorMeleeAttack(w, target, targetDist){
 }
 
 function warriorTick(w, playerBase, enemyBase){
-  if(w.state==='idle') return;
   const enemyBase2=w.side==='player'?enemyBase:playerBase;
+
+  // Auto-aggro: idle warriors engage nearby enemies
+  if(w.state==='idle'){
+    const AGGRO_RANGE = Math.max(w.range || 50, 150);
+    for(const e of S.entities){
+      if(e.side===w.side) continue;
+      if(e===S.playerBase||e===S.enemyBase) continue;
+      if(Math.hypot(e.x-w.x, e.y-w.y) <= AGGRO_RANGE){
+        w.state='march';
+        break;
+      }
+    }
+    if(w.state==='idle') return;
+  }
 
   if(w.moveTarget){
     if(moveToward(w, w.moveTarget.x, w.moveTarget.y, 8)){

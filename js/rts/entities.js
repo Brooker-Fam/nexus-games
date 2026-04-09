@@ -3,11 +3,14 @@
 // side: 'player','enemy'
 let _nextEntityId = 1;
 function nextId(){ return _nextEntityId++; }
-function makeBase(side){
-  const x = side==='player' ? PLAYER_BASE_X : ENEMY_BASE_X;
-  return { id:nextId(), type:'base', side, x, y:BASE_Y,
-    hp:150, maxHp:150, w:60, h:80,
+function makeBase(side, faction, x, y){
+  const bx = x !== undefined ? x : (side==='player' ? PLAYER_BASE_X : ENEMY_BASE_X);
+  const by = y !== undefined ? y : BASE_Y;
+  const placed = x !== undefined; // true when built by worker (not starting base)
+  return { id:nextId(), type:'base', side, x:bx, y:by,
+    hp: placed ? 1 : 150, maxHp:150, w:60, h:80,
     queue:[], trainTimer:0,
+    ...(placed ? { underConstruction:true, buildProgress:0, buildTime:BUILD_TIMES.structure } : {}),
   };
 }
 function makeWorker(side, faction, nearX, nearY){

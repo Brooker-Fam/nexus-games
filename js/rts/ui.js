@@ -203,8 +203,13 @@ function rtsHandleClick(e){
     const cfg=FACTION_CFG[S.playerFaction];
     const sx=hit.x-S.camX, sy=hit.y-S.camY;
     if(hit.type==='base'){
-      openBuildPopup(sx,sy,'base');
-      rtsSetLog(`${cfg.buildingName} — train workers here.`);
+      if(hit.underConstruction){
+        const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
+        rtsSetLog(`${cfg.buildingName} — under construction ${pct}%`);
+      } else {
+        openBuildPopup(sx,sy,'base');
+        rtsSetLog(`${cfg.buildingName} — train workers here.`);
+      }
     } else if(hit.type==='structure' && hit.isBarracks){
       if(hit.underConstruction){
         const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
