@@ -64,15 +64,10 @@ function executeCommand(cmd){
 
     case 'build_structure': {
       if(cmd.cost) S.gold[side] -= cmd.cost;
-      if(cmd.buildType==='base'){
-        const nb={id:nextId(),type:'base',side,x:cmd.x,y:cmd.y,hp:150,maxHp:150,w:60,h:80,selected:false,queue:[],trainTimer:0};
-        S.entities.push(nb);
-      } else {
-        const worker = S.entities.find(e=>e.id===cmd.workerId);
-        if(!worker) break;
-        worker.buildTarget = { x:cmd.x, y:cmd.y, buildType:cmd.buildType, ghost:null };
-        worker.state = 'building';
-      }
+      const worker = S.entities.find(e=>e.id===cmd.workerId);
+      if(!worker) break;
+      worker.buildTarget = { x:cmd.x, y:cmd.y, buildType:cmd.buildType, ghost:null };
+      worker.state = 'building';
       break;
     }
 

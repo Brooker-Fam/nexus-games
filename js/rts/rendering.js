@@ -171,8 +171,12 @@ function drawRTSBaseHP(rc){
     const bw=60, bh=6;
     drawHealthBar(rc, base.x, base.y-80, bw, bh, base.hp, base.maxHp);
     rc.strokeStyle='rgba(255,255,255,0.1)'; rc.lineWidth=0.5; rc.strokeRect(base.x-bw/2,base.y-80,bw,bh);
+    // construction overlay for bases being built
+    if(base.underConstruction){
+      drawConstructionOverlay(rc,base.x,base.y,base.buildProgress/base.buildTime,cfg.color,60);
+    }
     // queue bar above HP bar
-    if(base.queue && base.queue.length>0){
+    else if(base.queue && base.queue.length>0){
       drawQueueBar(rc,base.x,base.y-90,bw,base.trainTimer,base.queue[0].time,base.queue.length);
     }
   }
