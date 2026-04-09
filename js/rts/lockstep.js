@@ -37,8 +37,11 @@ function lsReceiveTurn(turnNum, cmds){
 
 function lsCanAdvance(){
   if(!window._mpMultiplayer) return true;
-  // Check the NEXT turn that will be executed at the upcoming boundary.
-  // lsTurn was already executed; lsTurn+1 is what we need data for.
+  // Only block right before the turn boundary (tick 5 of 6).
+  // During ticks 0-4, let the game run freely — no blocking.
+  // This prevents the stutter of freezing for an entire turn.
+  if(lsTickInTurn < TURN_LENGTH - 1) return true;
+  // About to hit the boundary — ensure next turn's data is ready
   const nextExecTurn = lsTurn + 1;
   const td = lsTurnData[nextExecTurn];
   if(!td) return true;
