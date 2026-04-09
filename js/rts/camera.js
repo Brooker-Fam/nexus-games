@@ -17,7 +17,7 @@ const S = {
   gold: {player:0, enemy:0},
   playerFaction: 'prism', enemyFaction: 'shadow',
   // base HP
-  baseHP: 100, enemyBaseHP: 100,
+  baseHP: 150, enemyBaseHP: 150,
   // entities
   entities: [], playerBase: null, enemyBase: null,
   particles: [], goldNodes: [], projectiles: [],
@@ -31,7 +31,7 @@ const S = {
 
 function resetRtsState(){
   S.raf=null; S.frame=0; S.speed=1; S.gameOver=false; S.log='';
-  S.gold={player:0, enemy:0}; S.baseHP=100; S.enemyBaseHP=100;
+  S.gold={player:0, enemy:0}; S.baseHP=150; S.enemyBaseHP=150;
   S.entities=[]; S.playerBase=null; S.enemyBase=null;
   S.particles=[]; S.goldNodes=[]; S.projectiles=[];
   S.selected=[]; S.buildPopupOpen=false; S.buildStructureMode=false; S.buildingSource=null;

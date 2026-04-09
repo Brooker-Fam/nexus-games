@@ -41,7 +41,7 @@ function openBuildPopup(screenX, screenY, context){
   if(context==='base'){
     title.textContent = cfg.buildingName;
     const sel=S.selected[0];
-    addOpt(cfg.workerIcon, cfg.workerLabel, 'Gathers gold from mines', 5,
+    addOpt(cfg.workerIcon, cfg.workerLabel, 'Gathers gold from mines', 8,
       ()=>trainCmd(sel?sel.id:S.buildingSource?.id, 'worker', 'base'));
 
   } else if(context==='barracks'){
@@ -52,16 +52,16 @@ function openBuildPopup(screenX, screenY, context){
 
   } else if(context==='worker'){
     title.textContent = 'WORKER ACTIONS';
-    addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Click to place — trains ${cfg.warriorLabel}s (20g)`, 20, ()=>{
-      S.buildStructureMode='barracks'; _buildModeCost=20;
+    addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Click to place — trains ${cfg.warriorLabel}s (25g)`, 25, ()=>{
+      S.buildStructureMode='barracks'; _buildModeCost=25;
       rtsSetLog(`Click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
     });
-    addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Click to place — trains elite units (20g)`, 20, ()=>{
-      S.buildStructureMode=true; _buildModeCost=20;
+    addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Click to place — trains elite units (25g)`, 25, ()=>{
+      S.buildStructureMode=true; _buildModeCost=25;
       rtsSetLog(`Click to place your ${cfg.structLabel}!`); closeBuildPopup();
     });
-    addOpt('💣', 'Build CANNON', 'Auto-attacks nearby enemies (15g)', 15, ()=>{
-      S.buildStructureMode='cannon'; _buildModeCost=15;
+    addOpt('💣', 'Build CANNON', 'Auto-attacks nearby enemies (22g)', 22, ()=>{
+      S.buildStructureMode='cannon'; _buildModeCost=22;
       rtsSetLog('Click to place your CANNON!'); closeBuildPopup();
     });
     addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Click to place — trains more workers (25g)`, 25, ()=>{

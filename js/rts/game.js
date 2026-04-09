@@ -20,12 +20,12 @@ const AI_CONFIG = {
   mistakeChance: 0,          // chance to skip a decision cycle
   attackPartialChance: 0,    // chance to only send some warriors
   // costs
-  barracksCost: 20,
-  cannonCost: 15,
-  structureCost: 20,
-  eliteCost: 18,
+  barracksCost: 25,
+  cannonCost: 22,
+  structureCost: 25,
+  eliteCost: 25,
   warriorCost: 10,
-  workerCost: 5,
+  workerCost: 8,
 };
 
 // ── AI LOGIC ──
@@ -246,7 +246,7 @@ function rtsTick(){
 }
 
 // ── WORKER STATE HANDLERS ──
-const MINE_TICKS = 60;
+const MINE_TICKS = 90;
 const MINE_DROPOFF_DIST = 55;
 const BUILD_ARRIVE_DIST = 20;
 const MOVE_ARRIVE_DIST = 10;

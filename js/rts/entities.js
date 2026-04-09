@@ -6,7 +6,7 @@ function nextId(){ return _nextEntityId++; }
 function makeBase(side){
   const x = side==='player' ? PLAYER_BASE_X : ENEMY_BASE_X;
   return { id:nextId(), type:'base', side, x, y:BASE_Y,
-    hp:100, maxHp:100, w:60, h:80,
+    hp:150, maxHp:150, w:60, h:80,
     queue:[], trainTimer:0,
   };
 }
@@ -27,15 +27,15 @@ function makeWarrior(side, faction, nearX, nearY){
   const bx = nearX !== undefined ? nearX : (side==='player'? PLAYER_BASE_X+120 : ENEMY_BASE_X-120);
   const by = nearY !== undefined ? nearY : BASE_Y;
   const isRanged = faction==='prism'||faction==='roboto';
-  const fireRate = faction==='roboto' ? 14 : faction==='prism' ? 55 : 45;
-  const hp = faction==='roboto' ? 12 : 40;
+  const fireRate = faction==='roboto' ? 14 : faction==='prism' ? 55 : 38;
+  const hp = faction==='roboto' ? 20 : 40;
   const offsetX = side==='player' ? 80 : -80;
   return { id:nextId(), type:'warrior', side, faction,
     x: bx+offsetX, y: by+(rtsRand()-0.5)*200,
     hp, maxHp:hp, speed: faction==='shadow' ? 2.2 : 0.7,
     state:'idle',
     target:null, attackTimer:0,
-    damage: faction==='roboto' ? 5 : isRanged ? 12 : 10,
+    damage: faction==='roboto' ? 5 : isRanged ? 12 : 14,
     range: isRanged?220:50,
     ranged: isRanged,
     fireRate,
@@ -48,13 +48,13 @@ function makeWarrior(side, faction, nearX, nearY){
 
 // ── BUILD TIMES (ticks at 60/s) ──
 const BUILD_TIMES={
-  structure: 300,  // 5s to construct a building
-  barracks:  300,
-  cannon:    240,  // 4s
+  structure: 360,  // 6s to construct a building
+  barracks:  360,
+  cannon:    300,  // 5s
   worker:    180,  // 3s train time
-  warrior:   240,  // 4s
-  elite:     360,  // 6s
-  elite2:    400,
+  warrior:   300,  // 5s
+  elite:     420,  // 7s
+  elite2:    480,  // 8s
 };
 const QUEUE_MAX = 5; // max units queued per building
 
@@ -94,7 +94,7 @@ function makeCannon(side, faction, x, y){
   return {
     id:nextId(), type:'cannon', side, faction,
     x, y, hp:60, maxHp:60,
-    range:280, damage:20, cooldown:0, rate:80,
+    range:280, damage:25, cooldown:0, rate:90,
     aimAngle:0,
     selected:false, frame:0,
     label:'CANNON',
@@ -111,11 +111,11 @@ function makeElite(side, faction, nearX, nearY){
   return {
     id:nextId(), type:'warrior', subtype:'elite', side, faction,
     x: nearX+(isPlayer?50:-50), y: nearY+spread,
-    hp:70, maxHp:70,
+    hp:90, maxHp:90,
     speed,
     state:'idle',
     target:null, attackTimer:0,
-    damage: faction==='roboto'?8:18,
+    damage: faction==='roboto'?10:22,
     range:240,
     ranged:true,
     fireRate: faction==='roboto'?20:60,
@@ -140,10 +140,10 @@ function makeNecromancer(side, faction, nearX, nearY){
   return {
     id:nextId(), type:'warrior', subtype:'necromancer', side, faction,
     x: nearX+(isPlayer?60:-60), y: nearY+(rtsRand()-0.5)*120,
-    hp:45, maxHp:45, speed:0.75,
+    hp:55, maxHp:55, speed:0.75,
     state:'idle', target:null, attackTimer:0,
-    damage:6, range:200, ranged:true, fireRate:70,
-    reviveTimer:0, reviveCooldown:300,
+    damage:10, range:200, ranged:true, fireRate:55,
+    reviveTimer:0, reviveCooldown:180,
     frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };
 }
@@ -152,7 +152,7 @@ function makeTank(side, faction, nearX, nearY){
   return {
     id:nextId(), type:'warrior', subtype:'tank', side, faction,
     x: nearX+(isPlayer?70:-70), y: nearY+(rtsRand()-0.5)*120,
-    hp:200, maxHp:200, speed:0.7,
+    hp:220, maxHp:220, speed:0.7,
     state:'idle', target:null, attackTimer:0,
     damage:40, range:600, ranged:true, fireRate:100,
     frame:0, selected:false, forcedTarget:null, moveTarget:null,
@@ -163,20 +163,20 @@ function makeGoldNodes(){
   const MY=BASE_Y;
   // === Player-side cluster ===
   for(const [dx,dy] of [[200,-160],[200,0],[200,160],[350,-80],[350,80]]){
-    S.goldNodes.push({ x:PLAYER_BASE_X+dx, y:MY+dy, gold:999, maxGold:999, owner:'player' });
+    S.goldNodes.push({ x:PLAYER_BASE_X+dx, y:MY+dy, gold:150, maxGold:150, owner:'player' });
   }
   // === Enemy-side cluster ===
   for(const [dx,dy] of [[-200,-160],[-200,0],[-200,160],[-350,-80],[-350,80]]){
-    S.goldNodes.push({ x:ENEMY_BASE_X+dx, y:MY+dy, gold:999, maxGold:999, owner:'enemy' });
+    S.goldNodes.push({ x:ENEMY_BASE_X+dx, y:MY+dy, gold:150, maxGold:150, owner:'enemy' });
   }
   // === Center contested ===
   for(const [dx,dy] of [[0,-260],[0,-130],[0,0],[0,130],[0,260],[-200,-200],[-200,200],[200,-200],[200,200]]){
-    S.goldNodes.push({ x:RW/2+dx, y:MY+dy, gold:999, maxGold:999, owner:'neutral' });
+    S.goldNodes.push({ x:RW/2+dx, y:MY+dy, gold:150, maxGold:150, owner:'neutral' });
   }
   // === Quarter-map nodes (between base and center) ===
   const q1=RW*0.27, q2=RW*0.73;
   for(const [qx,dy] of [[q1,-300],[q1,0],[q1,300],[q2,-300],[q2,0],[q2,300]]){
-    S.goldNodes.push({ x:qx, y:MY+dy, gold:999, maxGold:999, owner:'neutral' });
+    S.goldNodes.push({ x:qx, y:MY+dy, gold:150, maxGold:150, owner:'neutral' });
   }
 }
 
@@ -204,8 +204,8 @@ function startRTS(playerFaction, enemyFaction){
   S.entities.push(S.playerBase);
   S.entities.push(S.enemyBase);
 
-  // 5 starting workers each side
-  for(let i=0;i<5;i++){
+  // 3 starting workers each side
+  for(let i=0;i<3;i++){
     S.entities.push(makeWorker('player', playerFaction));
     S.entities.push(makeWorker('enemy', S.enemyFaction));
   }

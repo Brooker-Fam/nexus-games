@@ -34,11 +34,11 @@ function executeCommand(cmd){
       const building = S.entities.find(e=>e.id===cmd.buildingId);
       if(!building || building.underConstruction) break;
       if(building.side !== side) break; // can't train from enemy building
-      const costMap = { worker:5, warrior:cfg.warriorCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost };
+      const costMap = { worker:8, warrior:cfg.warriorCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost };
       const cost = costMap[cmd.unitType] || 0;
       if(S.gold[side] < cost) break;
 
-      const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite };
+      const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite2 };
       const time = timeMap[cmd.unitType] || BUILD_TIMES.worker;
 
       const fnMap = {
@@ -65,7 +65,7 @@ function executeCommand(cmd){
     case 'build_structure': {
       if(cmd.cost) S.gold[side] -= cmd.cost;
       if(cmd.buildType==='base'){
-        const nb={id:nextId(),type:'base',side,x:cmd.x,y:cmd.y,hp:100,maxHp:100,w:60,h:80,selected:false,queue:[],trainTimer:0};
+        const nb={id:nextId(),type:'base',side,x:cmd.x,y:cmd.y,hp:150,maxHp:150,w:60,h:80,selected:false,queue:[],trainTimer:0};
         S.entities.push(nb);
       } else {
         const worker = S.entities.find(e=>e.id===cmd.workerId);
