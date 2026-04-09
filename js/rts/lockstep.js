@@ -74,7 +74,6 @@ function lsTick(){
     lsTurn++;
     lsTickInTurn = 0;
     lsExecuteTurn();
-    // Check every 10 turns (~1s) for faster desync detection
-    if(lsTurn % 10 === 0) mpSend({ t:'chk', n:lsTurn, h:lsChecksum() });
+    if(lsTurn % 60 === 0) mpSend({ t:'chk', n:lsTurn, h:lsChecksum() });
   }
 }
