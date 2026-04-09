@@ -153,6 +153,7 @@ document.getElementById('btn-attack').onclick=function(e){ e.preventDefault(); r
 document.getElementById('rts-speed-btns').onclick=function(e){
   const btn=e.target.closest('.speed-btn');
   if(!btn) return;
+  if(window._mpMultiplayer) return; // speed locked to 1x in multiplayer
   S.speed=parseInt(btn.dataset.speed)||1;
   this.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
