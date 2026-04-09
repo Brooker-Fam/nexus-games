@@ -1,5 +1,6 @@
 // ── AI CONFIG ──
 // Base values — overwritten by applyDifficultyToAI() at game start.
+// _AI_DEFAULTS stores the original values so multiplayer can reset them.
 const AI_CONFIG = {
   buildInterval: 180,        // ticks between build decisions
   trainInterval: 120,        // ticks between train decisions
@@ -27,6 +28,8 @@ const AI_CONFIG = {
   warriorCost: 10,
   workerCost: 5,
 };
+const _AI_DEFAULTS = Object.assign({}, AI_CONFIG);
+function resetAIConfig(){ Object.assign(AI_CONFIG, _AI_DEFAULTS); }
 
 // ── AI LOGIC ──
 
@@ -715,7 +718,7 @@ function rtsLoop(ts){
     // Lockstep: both clients run simulation, advance only when commands ready
     rtsAccum += dt * S.speed;
     while(rtsAccum >= TARGET_MS){
-      if(!lsCanAdvance()){ rtsAccum=TARGET_MS; break; }
+      if(!lsCanAdvance()) break;
       lsTick();
       rtsTick();
       rtsAccum -= TARGET_MS;
