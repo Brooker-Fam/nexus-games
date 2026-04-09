@@ -1,7 +1,7 @@
 // ── RTS MULTIPLAYER (PeerJS WebRTC) ──
 // Version hash — both clients must match or desync is guaranteed.
 // Bump this whenever game logic, costs, stats, or balance changes.
-const MP_VERSION = 'v7-keepalive';
+const MP_VERSION = 'v8-lockstep-fix';
 
 let mpPeer=null, mpConn=null, mpIsHost=false, mpConnected=false;
 let mpLocalFaction=null, mpRemoteFaction=null;

@@ -157,7 +157,7 @@ function _diffSCurve(easy, hard){
 // ── APPLY TO AI ──
 
 function applyDifficultyToAI(){
-  if(window._mpMultiplayer) return;
+  if(window._mpMultiplayer){ resetAIConfig(); return; }
 
   const d = loadDifficultyData();
   _aiRatingAtStart = d.rating;

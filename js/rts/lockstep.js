@@ -35,7 +35,10 @@ function lsReceiveTurn(turnNum, cmds){
 
 function lsCanAdvance(){
   if(!window._mpMultiplayer) return true;
-  const td = lsTurnData[lsTurn];
+  // Check the NEXT turn that will be executed at the upcoming boundary.
+  // lsTurn was already executed; lsTurn+1 is what we need data for.
+  const nextExecTurn = lsTurn + 1;
+  const td = lsTurnData[nextExecTurn];
   if(!td) return true;
   return td.localReady && td.remoteReady;
 }
@@ -43,14 +46,19 @@ function lsCanAdvance(){
 function lsExecuteTurn(){
   const td = lsTurnData[lsTurn];
   if(!td) return;
+  // Both clients must process commands in the same order (player first).
+  // Host has local=player, remote=enemy; Guest has local=enemy, remote=player.
+  const allCmds = [];
   for(const cmd of td.local){
     cmd.side = mpIsHost ? 'player' : 'enemy';
-    rtsCommandQueue.push(cmd);
+    allCmds.push(cmd);
   }
   for(const cmd of td.remote){
     cmd.side = mpIsHost ? 'enemy' : 'player';
-    rtsCommandQueue.push(cmd);
+    allCmds.push(cmd);
   }
+  allCmds.sort((a, b) => (a.side === 'player' ? 0 : 1) - (b.side === 'player' ? 0 : 1));
+  for(const cmd of allCmds) rtsCommandQueue.push(cmd);
   delete lsTurnData[lsTurn - 4];
 }
 
