@@ -153,8 +153,8 @@ function aiTick(){
   if(S.aiTimer%AI_CONFIG.attackInterval===0){
     const shouldAttack = idleWarriors>=AI_CONFIG.attackMinWarriors || (idleWarriors>=AI_CONFIG.attackMatchMin && idleWarriors>=playerWarriors);
     if(shouldAttack){
-      // Partial attack: easy AI sometimes only sends a portion of warriors
-      const sendAll = Math.random() >= AI_CONFIG.attackPartialChance;
+      // Partial attack: easy AI sometimes only sends a portion (singleplayer only)
+      const sendAll = window._mpMultiplayer || Math.random() >= AI_CONFIG.attackPartialChance;
       let sent = 0;
       for(const e of S.entities){
         if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle'){
@@ -407,8 +407,8 @@ function warriorFindTarget(w, enemyBase2){
     }
   }
 
-  // AI focus-fire: target lowest-HP enemy in engagement range
-  if(w.side==='enemy' && AI_CONFIG.focusFireChance>0 && Math.random()<AI_CONFIG.focusFireChance){
+  // AI focus-fire: target lowest-HP enemy in engagement range (singleplayer only)
+  if(!window._mpMultiplayer && w.side==='enemy' && AI_CONFIG.focusFireChance>0 && Math.random()<AI_CONFIG.focusFireChance){
     let weakest=null, weakestHP=Infinity;
     const scanRange = (w.range||50) * 2;
     for(const e of S.entities){
@@ -441,8 +441,8 @@ function warriorMarchToward(w, target, spreadMod, spreadScale){
 }
 
 function warriorRangedAttack(w, target, targetDist){
-  // AI kiting: ranged units retreat from nearby melee threats
-  if(w.side==='enemy' && AI_CONFIG.kiteChance>0 && targetDist<=w.range){
+  // AI kiting: ranged units retreat from nearby melee threats (singleplayer only)
+  if(!window._mpMultiplayer && w.side==='enemy' && AI_CONFIG.kiteChance>0 && targetDist<=w.range){
     for(const e of S.entities){
       if(e.side===w.side||e.type==='base'||e.ranged) continue;
       const d=Math.hypot(e.x-w.x,e.y-w.y);
