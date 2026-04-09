@@ -6,10 +6,12 @@ const INPUT_DELAY = 2;  // turns of input delay (~200ms)
 
 let lsTurn = 0, lsTickInTurn = 0;
 const lsTurnData = {};
+const _lsChecksums = {}; // stored checksums keyed by turn number
 
 function lsInit(){
   lsTurn = 0; lsTickInTurn = 0;
   for(const k in lsTurnData) delete lsTurnData[k];
+  for(const k in _lsChecksums) delete _lsChecksums[k];
 }
 
 function _ensureTurn(t){
@@ -62,7 +64,7 @@ function lsExecuteTurn(){
   delete lsTurnData[lsTurn - 4];
 }
 
-// Checksum for desync detection (log-only)
+// Checksum for desync detection
 function lsChecksum(){
   let h = 0;
   for(const e of S.entities){
@@ -75,18 +77,14 @@ function lsChecksum(){
   return h;
 }
 
-// Detailed state snapshot for desync diagnosis
-function lsDiagnostic(){
-  return {
-    f: S.frame,
-    n: S.entities.length,
-    gp: S.gold.player|0,
-    ge: S.gold.enemy|0,
-    seed: _rtsSeed,
-    nid: _nextEntityId,
-    ai: S.aiTimer,
-    ents: S.entities.slice(0,10).map(e=>e.id+':'+e.type[0]+'('+(e.x|0)+','+(e.y|0)+')hp'+e.hp+'s='+e.state),
-  };
+// Compare a remote checksum against our STORED checksum for the same turn
+function lsCompareChecksum(turnNum, remoteHash){
+  const localHash = _lsChecksums[turnNum];
+  if(localHash === undefined) return; // haven't reached that turn yet
+  if(localHash !== remoteHash){
+    console.warn('[DESYNC] Turn', turnNum, 'local=', localHash, 'remote=', remoteHash);
+  }
+  delete _lsChecksums[turnNum]; // clean up
 }
 
 function lsTick(){
@@ -96,6 +94,13 @@ function lsTick(){
     lsTurn++;
     lsTickInTurn = 0;
     lsExecuteTurn();
-    if(lsTurn % 10 === 0) mpSend({ t:'chk', n:lsTurn, h:lsChecksum(), d:lsDiagnostic() });
+    // Compute and store checksum at this exact simulation point,
+    // then send it. The receiver compares against their stored value
+    // for the same turn — not a live recomputation.
+    if(lsTurn % 60 === 0){
+      const h = lsChecksum();
+      _lsChecksums[lsTurn] = h;
+      mpSend({ t:'chk', n:lsTurn, h:h });
+    }
   }
 }

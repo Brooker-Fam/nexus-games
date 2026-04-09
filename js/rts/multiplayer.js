@@ -63,13 +63,7 @@ function mpWire(c){
     }
     else if(msg.t==='turn') lsReceiveTurn(msg.n, msg.cmds);
     else if(msg.t==='chk'){
-      const local=lsChecksum();
-      if(local!==msg.h){
-        const ld=lsDiagnostic();
-        console.warn('[DESYNC] Turn',msg.n,'local=',local,'remote=',msg.h,
-          '\n  LOCAL:',JSON.stringify(ld),
-          '\n  REMOTE:',JSON.stringify(msg.d));
-      }
+      lsCompareChecksum(msg.n, msg.h);
     }
     else if(msg.t==='go') mpStartGame(msg);
   });
