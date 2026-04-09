@@ -34,7 +34,7 @@ function executeCommand(cmd){
       const building = S.entities.find(e=>e.id===cmd.buildingId);
       if(!building || building.underConstruction) break;
       if(building.side !== side) break; // can't train from enemy building
-      const costMap = { worker:8, warrior:cfg.warriorCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost };
+      const costMap = { worker:cfg.workerCost, warrior:cfg.warriorCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost };
       const cost = costMap[cmd.unitType] || 0;
       if(S.gold[side] < cost) break;
 
