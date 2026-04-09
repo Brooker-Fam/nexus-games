@@ -31,7 +31,10 @@ const AI_CONFIG = {
 const _AI_DEFAULTS = Object.assign({}, AI_CONFIG);
 function resetAIConfig(){ Object.assign(AI_CONFIG, _AI_DEFAULTS); }
 
-// ── AI LOGIC ──
+// Deterministic distance — _dist is "implementation-approximated" per spec,
+// so Safari/JSC and Chrome/V8 can return different last-bit results.
+// Math.sqrt is IEEE 754 correctly-rounded, so dx*dx+dy*dy → sqrt is portable.
+function _dist(dx,dy){ return Math.sqrt(dx*dx+dy*dy); }
 
 function aiCount(type, subFilter){
   return S.entities.filter(e=>{
@@ -80,7 +83,7 @@ function aiTick(){
 
   // Detect threats near base
   const baseThreat = S.entities.filter(e=>
-    e.side==='player'&&e.type==='warrior'&&Math.hypot(e.x-eb.x,e.y-eb.y)<400
+    e.side==='player'&&e.type==='warrior'&&_dist(e.x-eb.x,e.y-eb.y)<400
   ).length;
 
   // In multiplayer, skip economy/building AI (guest player handles that manually)
@@ -259,7 +262,7 @@ const MINE_ARRIVE_DIST = 8;
 const GOLD_NODE_PENALTIES = { neutral:200, player:0, enemy:400 };
 
 function moveToward(unit, tx, ty, arrivedDist){
-  const dx=tx-unit.x, dy=ty-unit.y, d=Math.hypot(dx,dy);
+  const dx=tx-unit.x, dy=ty-unit.y, d=_dist(dx,dy);
   if(d<arrivedDist) return true;
   unit.x+=dx/d*unit.speed; unit.y+=dy/d*unit.speed;
   return false;
@@ -297,7 +300,7 @@ function workerFindGold(w){
   let best=null, bestScore=Infinity;
   for(const node of S.goldNodes){
     if(node.gold<=0) continue;
-    const d=Math.hypot(node.x-w.x, node.y-w.y);
+    const d=_dist(node.x-w.x, node.y-w.y);
     const penalty=GOLD_NODE_PENALTIES[node.owner]||(node.owner===w.side?0:400);
     const score=d+penalty;
     if(score<bestScore){ bestScore=score; best=node; }
@@ -324,7 +327,7 @@ function workerReturn(w, myBase){
   let nearestBase=null, nearestDist=Infinity;
   for(const ent of S.entities){
     if(ent.type!=='base'||ent.side!==w.side) continue;
-    const d=Math.hypot(ent.x-w.x,ent.y-w.y);
+    const d=_dist(ent.x-w.x,ent.y-w.y);
     if(d<nearestDist){ nearestDist=d; nearestBase=ent; }
   }
   const dropoff=nearestBase||myBase;
@@ -360,7 +363,7 @@ function cannonTick(c){
   const enemySide=c.side==='player'?'enemy':'player';
   for(const e of S.entities){
     if(e.side!==enemySide) continue;
-    const d=Math.hypot(e.x-c.x,e.y-c.y);
+    const d=_dist(e.x-c.x,e.y-c.y);
     if(d<bestDist){ bestDist=d; target=e; }
   }
   if(!target) return;
@@ -408,7 +411,7 @@ function warriorFindTarget(w, enemyBase2){
     if(w.forcedTarget.hp<=0||!S.entities.includes(w.forcedTarget)){
       w.forcedTarget=null;
     } else {
-      return { target:w.forcedTarget, dist:Math.hypot(w.forcedTarget.x-w.x, w.forcedTarget.y-w.y) };
+      return { target:w.forcedTarget, dist:_dist(w.forcedTarget.x-w.x, w.forcedTarget.y-w.y) };
     }
   }
 
@@ -420,11 +423,11 @@ function warriorFindTarget(w, enemyBase2){
       if(e.side===w.side) continue;
       // skip primary bases (handled as fallback)
       if(e===S.playerBase||e===S.enemyBase) continue;
-      const d=Math.hypot(e.x-w.x,e.y-w.y);
+      const d=_dist(e.x-w.x,e.y-w.y);
       if(d<scanRange && e.hp<weakestHP){ weakestHP=e.hp; weakest=e; }
     }
     if(weakest){
-      return { target:weakest, dist:Math.hypot(weakest.x-w.x, weakest.y-w.y) };
+      return { target:weakest, dist:_dist(weakest.x-w.x, weakest.y-w.y) };
     }
   }
 
@@ -434,17 +437,17 @@ function warriorFindTarget(w, enemyBase2){
     if(e.side===w.side) continue;
     // skip primary bases (handled as fallback)
     if(e===S.playerBase||e===S.enemyBase) continue;
-    const d=Math.hypot(e.x-w.x,e.y-w.y);
+    const d=_dist(e.x-w.x,e.y-w.y);
     if(d<nearestDist){ nearestDist=d; nearest=e; }
   }
   const target=nearest||enemyBase2;
-  const dist=nearest?nearestDist:Math.hypot(enemyBase2.x-w.x,enemyBase2.y-w.y);
+  const dist=nearest?nearestDist:_dist(enemyBase2.x-w.x,enemyBase2.y-w.y);
   return { target, dist };
 }
 
 function warriorMarchToward(w, target, spreadMod, spreadScale){
   w.state='march';
-  const dx=target.x-w.x, dy=target.y-w.y, d=Math.hypot(dx,dy)||1;
+  const dx=target.x-w.x, dy=target.y-w.y, d=_dist(dx,dy)||1;
   const spread=(w.id%spreadMod)*spreadScale-(spreadMod*spreadScale/2);
   w.x+=dx/d*w.speed; w.y+=(dy+spread*0.05)/d*w.speed;
 }
@@ -454,10 +457,10 @@ function warriorRangedAttack(w, target, targetDist){
   if(!window._mpMultiplayer && w.side==='enemy' && AI_CONFIG.kiteChance>0 && targetDist<=w.range){
     for(const e of S.entities){
       if(e.side===w.side||e.type==='base'||e.ranged) continue;
-      const d=Math.hypot(e.x-w.x,e.y-w.y);
+      const d=_dist(e.x-w.x,e.y-w.y);
       if(d<100 && Math.random()<AI_CONFIG.kiteChance*0.08){
         // Retreat away from melee threat while still shooting
-        const dx=w.x-e.x, dy=w.y-e.y, dist=Math.hypot(dx,dy)||1;
+        const dx=w.x-e.x, dy=w.y-e.y, dist=_dist(dx,dy)||1;
         w.x+=dx/dist*w.speed; w.y+=dy/dist*w.speed;
         // Still fire if ready
         w.attackTimer++;
@@ -500,7 +503,7 @@ function warriorTick(w, playerBase, enemyBase){
     for(const e of S.entities){
       if(e.side===w.side) continue;
       if(e===S.playerBase||e===S.enemyBase) continue;
-      if(Math.hypot(e.x-w.x, e.y-w.y) <= AGGRO_RANGE){
+      if(_dist(e.x-w.x, e.y-w.y) <= AGGRO_RANGE){
         w.state='march';
         break;
       }
@@ -580,7 +583,7 @@ function updateProjectiles(){
     p.trail.push({x:p.x,y:p.y});
     if(p.trail.length>8) p.trail.shift();
     if(!p.tx||p.tx.hp<=0){ S.projectiles.splice(i,1); continue; }
-    const dx=p.tx.x-p.x, dy=p.tx.y-p.y, d=Math.hypot(dx,dy);
+    const dx=p.tx.x-p.x, dy=p.tx.y-p.y, d=_dist(dx,dy);
     if(d<p.speed+4){
       p.tx.hp-=p.damage;
       if(p.type==='bullet') spawnHitFlash(p.tx.x,p.tx.y,'#ffcc44');
@@ -591,7 +594,7 @@ function updateProjectiles(){
         // tank shell — AOE explosion
         for(const ent of S.entities){
           if(ent.side===p.side||ent.type==='base') continue;
-          if(Math.hypot(ent.x-p.tx.x,ent.y-p.tx.y)<COMBAT.tankAoeRadius) ent.hp-=p.damage*COMBAT.tankAoeDamageFactor;
+          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<COMBAT.tankAoeRadius) ent.hp-=p.damage*COMBAT.tankAoeDamageFactor;
         }
         spawnHitParticles2(p.tx.x, p.tx.y);
       }
@@ -618,7 +621,7 @@ function chainLightning(origin, damage, color, shooterSide, bounces){
   let best=null, bestD=COMBAT.chainLightningRange;
   for(const e of S.entities){
     if(e.side===shooterSide||e===origin||e.type==='base') continue;
-    const d=Math.hypot(e.x-origin.x,e.y-origin.y);
+    const d=_dist(e.x-origin.x,e.y-origin.y);
     if(d<bestD){ bestD=d; best=e; }
   }
   if(!best) return;
