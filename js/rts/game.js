@@ -20,12 +20,12 @@ const AI_CONFIG = {
   mistakeChance: 0,          // chance to skip a decision cycle
   attackPartialChance: 0,    // chance to only send some warriors
   // costs
-  barracksCost: 25,
-  cannonCost: 22,
-  structureCost: 25,
-  eliteCost: 25,
+  barracksCost: 20,
+  cannonCost: 15,
+  structureCost: 30,
+  eliteCost: 30,
   warriorCost: 10,
-  workerCost: 8,
+  workerCost: 5,
 };
 
 // ── AI LOGIC ──
