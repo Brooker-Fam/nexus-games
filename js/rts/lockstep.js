@@ -75,6 +75,20 @@ function lsChecksum(){
   return h;
 }
 
+// Detailed state snapshot for desync diagnosis
+function lsDiagnostic(){
+  return {
+    f: S.frame,
+    n: S.entities.length,
+    gp: S.gold.player|0,
+    ge: S.gold.enemy|0,
+    seed: _rtsSeed,
+    nid: _nextEntityId,
+    ai: S.aiTimer,
+    ents: S.entities.slice(0,10).map(e=>e.id+':'+e.type[0]+'('+(e.x|0)+','+(e.y|0)+')hp'+e.hp+'s='+e.state),
+  };
+}
+
 function lsTick(){
   lsTickInTurn++;
   if(lsTickInTurn >= TURN_LENGTH){
@@ -82,6 +96,6 @@ function lsTick(){
     lsTurn++;
     lsTickInTurn = 0;
     lsExecuteTurn();
-    if(lsTurn % 60 === 0) mpSend({ t:'chk', n:lsTurn, h:lsChecksum() });
+    if(lsTurn % 10 === 0) mpSend({ t:'chk', n:lsTurn, h:lsChecksum(), d:lsDiagnostic() });
   }
 }
