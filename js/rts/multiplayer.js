@@ -66,9 +66,6 @@ function mpWire(c){
       const local=lsChecksum();
       if(local!==msg.h) console.warn('[DESYNC] Turn',msg.n,'local=',local,'remote=',msg.h);
     }
-    else if(msg.t==='diag'){
-      console.log('[REMOTE DIAG] Turn',msg.n, JSON.stringify(msg.d));
-    }
     else if(msg.t==='go') mpStartGame(msg);
   });
   c.on('close',()=>{ mpConnected=false; rtsSetLog('Opponent disconnected.'); });
