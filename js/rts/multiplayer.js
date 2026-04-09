@@ -47,8 +47,10 @@ function mpWire(c){
     else if(msg.t==='turn') lsReceiveTurn(msg.n, msg.cmds);
     else if(msg.t==='chk'){
       const local=lsChecksum();
-      if(local!==msg.h) console.warn('[DESYNC] Turn',msg.n,'local=',local,'remote=',msg.h);
+      if(local!==msg.h) lsHandleDesync(msg.n, local, msg.h);
+      else lsDesyncCount = 0; // reset on match
     }
+    else if(msg.t==='sync') lsApplyStateCorrection(msg.state);
     else if(msg.t==='go') mpStartGame(msg);
   });
   c.on('close',()=>{ mpConnected=false; rtsSetLog('Opponent disconnected.'); });
