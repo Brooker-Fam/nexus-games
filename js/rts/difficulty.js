@@ -52,10 +52,9 @@ function saveDifficultyData(d){
 // ── RATING ALGORITHM ──
 
 function recordGameResult(playerWon, gameFrames){
-  if(window._mpMultiplayer) return null;
-
   const d = loadDifficultyData();
   const before = d.rating;
+  const isMP = !!window._mpMultiplayer;
 
   // Inactivity: if 7+ days since last game, increase RD (re-calibrate faster)
   if(d.lastTs){
@@ -76,8 +75,9 @@ function recordGameResult(playerWon, gameFrames){
   d.lastTs = Date.now();
 
   // ELO-like expected score
-  // AI was calibrated to the player's level, so aiRating ≈ playerRating → expected ≈ 0.5
-  const aiRating = _aiRatingAtStart;
+  // Singleplayer: AI was calibrated to player's level → expected ≈ 0.5
+  // Multiplayer: assume opponent is equal skill → use player's own rating
+  const aiRating = isMP ? d.rating : _aiRatingAtStart;
   const expected = 1 / (1 + Math.pow(10, (aiRating - d.rating) / 400));
   const actual = playerWon ? 1.0 : 0.0;
 
@@ -113,11 +113,12 @@ function recordGameResult(playerWon, gameFrames){
     rb: before,
     ra: d.rating,
     f: gameFrames || 0,
+    mp: isMP ? 1 : 0,
   });
   while(d.history.length > DIFF_HISTORY_MAX) d.history.shift();
 
   saveDifficultyData(d);
-  return { before, after: d.rating, streak: d.streak, gamesPlayed: d.gamesPlayed, rd: d.rd };
+  return { before, after: d.rating, streak: d.streak, gamesPlayed: d.gamesPlayed, rd: d.rd, isMP };
 }
 
 // ── DIFFICULTY QUERIES & CURVES ──
@@ -210,9 +211,10 @@ function showRatingChange(result){
     ? ` · ${absStreak} ${result.streak > 0 ? 'WIN' : 'LOSS'} STREAK`
     : '';
   const rdText = result.rd > 100 ? ' · CALIBRATING' : '';
+  const modeText = result.isMP ? ' · PVP' : '';
   el.innerHTML = `<span style="color:${color}">RATING ${sign}${delta}</span>`
     + ` · AI LEVEL ${level}/10`
-    + `<span style="color:var(--text-dim)">${streakText}${rdText}</span>`;
+    + `<span style="color:var(--text-dim)">${streakText}${rdText}${modeText}</span>`;
   el.style.display = 'block';
 }
 
@@ -358,14 +360,22 @@ function drawRatingGraph(){
   ctx.lineJoin = 'round';
   ctx.stroke();
 
-  // Dots — wins green, losses red
+  // Dots — wins green, losses red; MP games get a ring outline
   for(let i = 0; i < points.length; i++){
     const x = xOf(i), y = yOf(points[i].ra);
     const isWin = points[i].w;
+    const isMP = points[i].mp;
     ctx.beginPath();
-    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.arc(x, y, isMP ? 4 : 3, 0, Math.PI * 2);
     ctx.fillStyle = isWin ? '#44ff88' : '#ff4466';
     ctx.fill();
+    if(isMP){
+      ctx.beginPath();
+      ctx.arc(x, y, 6, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ffcc00';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
   }
 
   // Current rating dot (larger, glowing)
