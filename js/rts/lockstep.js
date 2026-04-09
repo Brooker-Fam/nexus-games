@@ -74,6 +74,19 @@ function lsTick(){
     lsTurn++;
     lsTickInTurn = 0;
     lsExecuteTurn();
+    // Early diagnostic: check at turns 2, 5, 10 to find when desync starts
+    if(lsTurn <= 10 && (lsTurn===2||lsTurn===5||lsTurn===10)){
+      const diag = {
+        frame: S.frame,
+        entities: S.entities.length,
+        goldP: S.gold.player|0,
+        goldE: S.gold.enemy|0,
+        hash: lsChecksum(),
+        positions: S.entities.slice(0,8).map(e=>({id:e.id,x:e.x.toFixed(4),y:e.y.toFixed(4),hp:e.hp,st:e.state})),
+      };
+      mpSend({ t:'diag', n:lsTurn, d:diag });
+      console.log('[DIAG] Turn',lsTurn, JSON.stringify(diag));
+    }
     if(lsTurn % 60 === 0) mpSend({ t:'chk', n:lsTurn, h:lsChecksum() });
   }
 }
