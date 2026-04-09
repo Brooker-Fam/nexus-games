@@ -54,7 +54,7 @@ function lsExecuteTurn(){
   delete lsTurnData[lsTurn - 4];
 }
 
-// Checksum for desync detection (log-only, no correction)
+// Checksum for desync detection (log-only)
 function lsChecksum(){
   let h = 0;
   for(const e of S.entities){
@@ -64,8 +64,6 @@ function lsChecksum(){
     h = (h*31 + e.id) | 0;
   }
   h = (h*31 + (S.gold.player|0) + (S.gold.enemy|0)) | 0;
-  h = (h*31 + S.entities.length) | 0;
-  h = (h*31 + S.frame) | 0;
   return h;
 }
 
