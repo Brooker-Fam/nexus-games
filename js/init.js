@@ -57,7 +57,6 @@ registerGame('cs', {
     document.getElementById('dso-select').style.display='';
     document.getElementById('dso-reveal').style.display='none';
     document.getElementById('dso-game').style.display='none';
-    document.getElementById('main-header').style.display='';
   },
   cleanup(){
     if(window._mpMultiplayer) return; // don't stop during multiplayer
@@ -68,20 +67,14 @@ registerGame('cs', {
   },
 });
 
-// Register Hub lifecycle
-registerGame('hub', {
-  init(){
-    document.getElementById('main-header').style.display='none';
-    startCityAnimation();
-  },
-  cleanup(){
-    stopCityAnimation();
-    document.getElementById('main-header').style.display='';
-  },
-});
+// Start TD game on load
+activateGame('td');
 
-// Start on hub
-activateGame('hub');
+// ── EVENT HANDLERS (moved from inline HTML) ──
+
+// Tabs
+document.getElementById('tab-btn-td').onclick=function(){ switchTab('td', this); };
+document.getElementById('tab-btn-cs').onclick=function(){ switchTab('cs', this); };
 
 // TD controls
 document.getElementById('btn-reset').onclick=resetGame;

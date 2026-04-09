@@ -14,7 +14,6 @@
   }
 </script>
 <link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/hub.css">
 <link rel="stylesheet" href="css/td.css">
 <link rel="stylesheet" href="css/rts.css">
 </head>
@@ -28,8 +27,8 @@
   <div id="particles"></div>
 </div>
 
-<!-- HEADER (hidden on hub, shown in-game) -->
-<header id="main-header" style="display:none">
+<!-- HEADER -->
+<header>
   <div class="header-top">
     <div>
       <div class="logo">NEXUS GAMES</div>
@@ -40,61 +39,16 @@
       <span class="status-text">ONLINE</span>
     </div>
   </div>
-  <div style="padding:8px 0 10px">
-    <button class="back-btn" id="hub-back-btn" onclick="goToHub()">◂ ALL GAMES</button>
+  <div class="tabs">
+    <button class="tab active" id="tab-btn-td">⬡ TOWER DEFENSE</button>
+    <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS <span class="tab-badge">SOON</span></button>
   </div>
 </header>
 
 <!-- MAIN -->
 <main>
-  <!-- HUB / GAME SELECT -->
-  <div id="tab-hub" class="tab-content">
-    <canvas id="city-canvas"></canvas>
-    <div class="hub-content">
-      <div class="hub-logo-wrap">
-        <div class="hub-logo">NEXUS GAMES</div>
-        <div class="hub-tagline">ARCADE · STRATEGY · BEYOND</div>
-      </div>
-      <div class="hub-faction-label" id="hub-faction-label">PRISM ARMADA</div>
-      <div class="hub-cards">
-
-        <div class="hub-card" id="hub-card-td">
-          <div class="hub-card-corner tl"></div>
-          <div class="hub-card-corner br"></div>
-          <span class="hub-card-icon">⬡</span>
-          <div class="hub-card-title">VOID FORTRESS</div>
-          <div class="hub-card-type">Tower Defense</div>
-          <div class="hub-card-desc">Build and upgrade towers to defend against endless waves of alien invaders. How long can you hold the line?</div>
-          <div class="hub-card-tags">
-            <span class="hub-card-tag">WAVES</span>
-            <span class="hub-card-tag">TOWERS</span>
-            <span class="hub-card-tag">STRATEGY</span>
-          </div>
-          <button class="hub-card-play" onclick="launchGame('td')">▶ PLAY NOW</button>
-        </div>
-
-        <div class="hub-card" id="hub-card-cs">
-          <div class="hub-card-corner tl"></div>
-          <div class="hub-card-corner br"></div>
-          <div class="hub-card-badge">NEW</div>
-          <span class="hub-card-icon">◈</span>
-          <div class="hub-card-title">DEEP SPACE OPS</div>
-          <div class="hub-card-type">Real-Time Strategy</div>
-          <div class="hub-card-desc">Choose your armada, build your forces, and crush the enemy base. Three factions — one battlefield.</div>
-          <div class="hub-card-tags">
-            <span class="hub-card-tag">FACTIONS</span>
-            <span class="hub-card-tag">RTS</span>
-            <span class="hub-card-tag">MULTIPLAYER</span>
-          </div>
-          <button class="hub-card-play" onclick="launchGame('cs')">▶ CHOOSE FACTION</button>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
   <!-- TOWER DEFENSE -->
-  <div id="tab-td" class="tab-content">
+  <div id="tab-td" class="tab-content active">
     <div class="game-header">
       <div>
         <div class="game-title">VOID <span>FORTRESS</span></div>
@@ -326,7 +280,6 @@
 <script src="js/shared/audio.js"></script>
 <script src="js/shared/game-registry.js"></script>
 <script src="js/shared/ui.js"></script>
-<script src="js/hub.js"></script>
 
 <!-- Tower Defense -->
 <script src="js/td/logic.js"></script>

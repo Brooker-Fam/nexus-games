@@ -348,7 +348,6 @@ function resetGame(){
 // ── GAME LIFECYCLE ──
 registerGame('td', {
   init(){
-    document.getElementById('main-header').style.display='';
     renderPreviewGun(document.getElementById('prev-gun').getContext('2d'));
     renderPreviewLaser(document.getElementById('prev-laser').getContext('2d'));
     renderPreviewMissile(document.getElementById('prev-missile').getContext('2d'));
