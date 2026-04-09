@@ -237,6 +237,22 @@ function rtsTick(){
   S.baseHP=Math.floor(playerBase.hp);
   S.enemyBaseHP=Math.floor(enemyBase.hp);
 
+  // Cross-browser determinism: snap entity positions to fixed precision.
+  // Safari/JSC and Chrome/V8 compute Math.hypot/division with slightly
+  // different last-bit rounding. Without snapping, sub-pixel drift
+  // accumulates and causes lockstep desync within seconds.
+  if(window._mpMultiplayer){
+    for(const e of S.entities){
+      e.x = ((e.x * 128 + 0.5) | 0) / 128;
+      e.y = ((e.y * 128 + 0.5) | 0) / 128;
+    }
+    // Also snap projectile positions
+    for(const p of S.projectiles){
+      p.x = ((p.x * 128 + 0.5) | 0) / 128;
+      p.y = ((p.y * 128 + 0.5) | 0) / 128;
+    }
+  }
+
   // particles
   for(let i=S.particles.length-1;i>=0;i--){
     const p=S.particles[i]; p.x+=p.vx; p.y+=p.vy; p.vx*=0.9; p.vy*=0.9; p.life--;
