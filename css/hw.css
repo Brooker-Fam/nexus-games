@@ -1,0 +1,280 @@
+/* ══════════════════════════════════════════════
+   HOMESTEAD WARS — CSS
+   Farm-themed RTS styling
+   ══════════════════════════════════════════════ */
+
+/* ── VARIABLES ── */
+#hw-wrapper {
+  --hw-gold: #DAA520;
+  --hw-brown: #8B5A2B;
+  --hw-dark: #1a0f08;
+  --hw-text: #FFF8DC;
+  --hw-text-dim: rgba(255,248,220,0.5);
+  --hw-border: #8B6914;
+  --hw-green: #44cc44;
+}
+
+/* ── FACTION SELECT ── */
+#hw-wrapper { max-width: 980px; margin: 0 auto; padding: 0 10px; }
+
+.hw-title-wrap { text-align: center; margin: 20px 0 24px; }
+.hw-pre { font-family: Rajdhani, sans-serif; font-size: 13px; letter-spacing: 6px; color: var(--hw-text-dim); }
+.hw-title {
+  font-family: Orbitron, sans-serif; font-size: 36px; font-weight: 900;
+  color: var(--hw-gold);
+  text-shadow: 0 0 30px rgba(218,165,32,0.4), 0 0 60px rgba(218,165,32,0.15);
+  margin: 4px 0;
+}
+.hw-sub { font-family: Rajdhani, sans-serif; font-size: 14px; color: var(--hw-text-dim); letter-spacing: 1px; }
+
+.hw-faction-cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+.hw-faction-card {
+  background: linear-gradient(135deg, rgba(40,25,15,0.95), rgba(20,12,6,0.98));
+  border: 1px solid var(--hw-border);
+  border-radius: 8px;
+  padding: 12px 14px 16px;
+  width: 200px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+.hw-faction-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--hw-gold);
+  box-shadow: 0 8px 30px rgba(218,165,32,0.2);
+}
+
+.hw-fc-canvas { display: block; margin: 0 auto 8px; border-radius: 6px; }
+.hw-fc-name { font-family: Orbitron, sans-serif; font-size: 12px; font-weight: 700; color: var(--hw-text); letter-spacing: 2px; margin-bottom: 6px; }
+.hw-fc-desc { font-family: Rajdhani, sans-serif; font-size: 12px; color: var(--hw-text-dim); line-height: 1.4; margin-bottom: 10px; min-height: 48px; }
+
+.hw-fc-stats { margin-bottom: 10px; }
+.hw-fc-stat { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.hw-fc-stat-label { font-family: Orbitron, sans-serif; font-size: 8px; color: var(--hw-text-dim); width: 28px; letter-spacing: 1px; }
+.hw-fc-bar { flex: 1; height: 4px; background: rgba(139,90,43,0.2); border-radius: 2px; overflow: hidden; }
+.hw-fc-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+
+.hw-fc-btn {
+  font-family: Orbitron, sans-serif; font-size: 10px; font-weight: 700;
+  color: var(--hw-gold); letter-spacing: 3px;
+  border: 1px solid var(--hw-border); border-radius: 4px;
+  padding: 6px 12px;
+  transition: all 0.2s;
+}
+.hw-faction-card:hover .hw-fc-btn { background: rgba(218,165,32,0.15); border-color: var(--hw-gold); }
+
+/* ── PLAYER STATS ── */
+.hw-stats {
+  margin: 20px auto 0; max-width: 720px;
+  background: rgba(26,15,8,0.9); border: 1px solid var(--hw-border); border-radius: 6px;
+  padding: 12px 16px;
+}
+.hw-stats-title { font-family: Orbitron, sans-serif; font-size: 10px; color: var(--hw-gold); letter-spacing: 3px; text-align: center; margin-bottom: 8px; }
+.hw-stats-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+.hw-stat-box { text-align: center; min-width: 70px; }
+.hw-stat-label { font-family: Orbitron, sans-serif; font-size: 7px; color: var(--hw-text-dim); letter-spacing: 2px; }
+.hw-stat-val { font-family: Orbitron, sans-serif; font-size: 16px; color: var(--hw-text); }
+.hw-stat-val.gold { color: var(--hw-gold); }
+#hw-rating-graph { width: 100%; max-width: 700px; display: block; margin: 0 auto; border-radius: 4px; }
+
+/* ── MULTIPLAYER ── */
+.hw-mp-controls { text-align: center; margin: 20px 0; }
+.hw-mp-divider { font-family: Orbitron, sans-serif; font-size: 10px; color: var(--hw-text-dim); letter-spacing: 3px; margin-bottom: 12px; }
+.hw-mp-buttons { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; }
+.hw-mp-join-row { display: flex; gap: 6px; }
+.hw-mp-input {
+  font-family: Orbitron, sans-serif; font-size: 12px;
+  background: rgba(26,15,8,0.8); color: var(--hw-text);
+  border: 1px solid var(--hw-border); border-radius: 4px;
+  padding: 6px 10px; width: 120px; text-align: center; letter-spacing: 2px;
+}
+.hw-mp-status { font-family: Rajdhani, sans-serif; font-size: 13px; color: var(--hw-text-dim); margin-top: 10px; }
+.hw-mp-status.error { color: #dd3322; }
+.hw-mp-status.waiting { color: var(--hw-gold); }
+.hw-mp-code { font-family: Orbitron, sans-serif; color: var(--hw-gold); cursor: pointer; letter-spacing: 3px; }
+
+/* ── REVEAL SCREEN ── */
+#hw-reveal { text-align: center; }
+.hw-reveal-header { margin-bottom: 0; }
+.hw-reveal-armada {
+  font-family: Orbitron, sans-serif; font-size: 24px; font-weight: 900;
+  letter-spacing: 6px; margin-top: 10px;
+  animation: hw-fadeIn 0.6s ease;
+}
+.hw-reveal-armada.barnyard { color: #cc4422; text-shadow: 0 0 20px rgba(204,68,34,0.4); }
+.hw-reveal-armada.creek { color: #2299bb; text-shadow: 0 0 20px rgba(34,153,187,0.4); }
+.hw-reveal-armada.woodland { color: #66aa22; text-shadow: 0 0 20px rgba(102,170,34,0.4); }
+
+.hw-reveal-champion {
+  font-family: Orbitron, sans-serif; font-size: 14px; font-weight: 400;
+  letter-spacing: 4px; margin: 4px 0 10px;
+  animation: hw-fadeIn 0.8s ease;
+}
+.hw-reveal-champion.barnyard { color: #ff8866; }
+.hw-reveal-champion.creek { color: #88ddff; }
+.hw-reveal-champion.woodland { color: #aadd66; }
+
+.hw-reveal-stage { position: relative; display: inline-block; }
+#hw-rv-canvas { display: block; max-width: 100%; border-radius: 6px; }
+.hw-reveal-vignette {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(2,4,2,0.6) 100%);
+  pointer-events: none; border-radius: 6px;
+}
+
+.hw-reveal-lore {
+  font-family: Rajdhani, sans-serif; font-size: 14px; font-style: italic;
+  color: var(--hw-text-dim); max-width: 500px; margin: 10px auto;
+  animation: hw-fadeIn 1.2s ease;
+}
+.hw-reveal-btns { display: flex; gap: 12px; justify-content: center; margin: 14px 0; }
+
+.hw-rv-btn {
+  font-family: Orbitron, sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: 2px; padding: 8px 20px; border: 1px solid var(--hw-border);
+  border-radius: 4px; cursor: pointer; transition: all 0.2s;
+  background: rgba(26,15,8,0.8); color: var(--hw-text);
+}
+.hw-rv-btn:hover { border-color: var(--hw-gold); background: rgba(218,165,32,0.15); }
+.hw-rv-play { border-color: var(--hw-gold); color: var(--hw-gold); }
+.hw-rv-play:hover { background: rgba(218,165,32,0.25); }
+
+@keyframes hw-fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── GAME HUD ── */
+.hw-hud {
+  display: flex; align-items: center; justify-content: space-between;
+  background: linear-gradient(180deg, rgba(40,25,15,0.95), rgba(26,15,8,0.92));
+  border-bottom: 1px solid var(--hw-border);
+  padding: 4px 12px; min-height: 36px; gap: 10px;
+}
+.hw-hud-left, .hw-hud-right { display: flex; align-items: center; gap: 12px; }
+.hw-hud-mid { flex: 1; display: flex; justify-content: center; }
+
+.hw-faction-badge {
+  font-family: Orbitron, sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 2px; color: var(--hw-gold);
+}
+.hw-resource {
+  font-family: Rajdhani, sans-serif; font-size: 13px; color: var(--hw-text-dim);
+  display: flex; align-items: center; gap: 4px; white-space: nowrap;
+}
+.hw-res-icon { font-size: 14px; }
+.hw-resource span { color: var(--hw-text); font-weight: 600; }
+.hw-diff-row { gap: 2px; }
+.hw-diff-val { color: var(--hw-gold) !important; font-family: Orbitron, sans-serif; font-size: 12px; }
+.hw-diff-max { font-size: 11px; color: var(--hw-text-dim) !important; }
+.hw-enemy-color { color: #dd3322 !important; }
+.hw-hp-color { color: var(--hw-green) !important; }
+
+.hw-build-panel { display: flex; align-items: center; gap: 10px; }
+.hw-build-label { font-family: Rajdhani, sans-serif; font-size: 12px; color: var(--hw-text-dim); }
+.hw-build-hint span { color: var(--hw-gold); }
+
+.hw-build-btn {
+  font-family: Orbitron, sans-serif; font-size: 10px; font-weight: 700;
+  background: rgba(218,165,32,0.15); color: var(--hw-gold);
+  border: 1px solid var(--hw-border); border-radius: 4px;
+  padding: 4px 12px; cursor: pointer; letter-spacing: 1px;
+  transition: all 0.15s;
+}
+.hw-build-btn:hover { background: rgba(218,165,32,0.3); }
+.hw-build-icon { margin-right: 4px; }
+
+.hw-speed-btns { display: flex; gap: 2px; }
+.hw-speed-btns .speed-btn {
+  font-family: Orbitron, sans-serif; font-size: 9px;
+  background: rgba(26,15,8,0.6); color: var(--hw-text-dim);
+  border: 1px solid rgba(139,105,20,0.3); border-radius: 3px;
+  padding: 2px 8px; cursor: pointer;
+}
+.hw-speed-btns .speed-btn.active { color: var(--hw-gold); border-color: var(--hw-gold); background: rgba(218,165,32,0.15); }
+
+.hw-retreat-btn {
+  font-family: Orbitron, sans-serif; font-size: 9px;
+  background: rgba(26,15,8,0.6); color: var(--hw-text-dim);
+  border: 1px solid rgba(139,105,20,0.3); border-radius: 3px;
+  padding: 3px 10px; cursor: pointer; letter-spacing: 1px;
+}
+.hw-retreat-btn:hover { color: var(--hw-text); border-color: var(--hw-border); }
+
+/* ── GAME VIEWPORT ── */
+#hw-viewport-wrap {
+  position: relative; display: inline-block; cursor: grab;
+  border: 1px solid var(--hw-border); border-radius: 4px; overflow: hidden;
+}
+#hw-canvas { display: block; width: 100%; max-width: 1200px; }
+#hw-minimap {
+  position: absolute; bottom: 8px; right: 8px;
+  border: 1px solid var(--hw-border); border-radius: 3px;
+  background: rgba(10,6,2,0.8);
+}
+#hw-scroll-hint {
+  position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+  font-family: Rajdhani, sans-serif; font-size: 11px; color: var(--hw-text-dim);
+  letter-spacing: 1px; pointer-events: none; opacity: 0.6;
+}
+
+/* ── BUILD POPUP ── */
+#hw-build-popup {
+  position: absolute; z-index: 100;
+  background: linear-gradient(135deg, rgba(40,25,15,0.97), rgba(20,12,6,0.98));
+  border: 1px solid var(--hw-gold); border-radius: 6px;
+  padding: 10px; min-width: 220px; max-width: 260px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.hwbp-title {
+  font-family: Orbitron, sans-serif; font-size: 11px; font-weight: 700;
+  color: var(--hw-gold); letter-spacing: 2px; text-align: center;
+  margin-bottom: 8px; padding-bottom: 6px;
+  border-bottom: 1px solid rgba(139,105,20,0.3);
+}
+.hwbp-options { display: flex; flex-direction: column; gap: 4px; }
+.hwbp-option {
+  display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+  background: rgba(139,90,43,0.08); border: 1px solid rgba(139,90,43,0.2);
+  border-radius: 4px; cursor: pointer; transition: all 0.15s;
+  color: var(--hw-text); font-family: Rajdhani, sans-serif;
+}
+.hwbp-option:hover:not(:disabled) { background: rgba(218,165,32,0.15); border-color: var(--hw-gold); }
+.hwbp-option:disabled { opacity: 0.4; cursor: not-allowed; }
+.hwbp-opt-icon { font-size: 18px; min-width: 24px; text-align: center; }
+.hwbp-opt-info { flex: 1; }
+.hwbp-opt-name { display: block; font-family: Orbitron, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1px; }
+.hwbp-opt-desc { display: block; font-size: 10px; color: var(--hw-text-dim); }
+.hwbp-opt-cost { font-family: Orbitron, sans-serif; font-size: 11px; color: var(--hw-gold); white-space: nowrap; }
+.hwbp-close {
+  display: block; width: 100%; margin-top: 6px;
+  font-family: Orbitron, sans-serif; font-size: 9px;
+  background: transparent; color: var(--hw-text-dim);
+  border: 1px solid rgba(139,90,43,0.2); border-radius: 3px;
+  padding: 4px; cursor: pointer; letter-spacing: 2px;
+}
+.hwbp-close:hover { color: var(--hw-text); border-color: var(--hw-border); }
+
+/* ── LOG BAR ── */
+.hw-log-bar {
+  background: rgba(26,15,8,0.9); border-top: 1px solid var(--hw-border);
+  padding: 4px 12px;
+  font-family: Rajdhani, sans-serif; font-size: 12px; color: var(--hw-text-dim);
+  letter-spacing: 1px; min-height: 22px;
+}
+
+/* ── GAME OVER ── */
+.hw-over-overlay {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(10,6,2,0.85); z-index: 200;
+}
+.hw-over-title {
+  font-family: Orbitron, sans-serif; font-size: 42px; font-weight: 900;
+  letter-spacing: 6px; margin-bottom: 8px;
+}
+.hw-over-title.win { color: var(--hw-gold); text-shadow: 0 0 30px rgba(218,165,32,0.5); }
+.hw-over-title.lose { color: #dd3322; text-shadow: 0 0 30px rgba(221,51,34,0.5); }
+.hw-over-sub { font-family: Rajdhani, sans-serif; font-size: 16px; color: var(--hw-text-dim); margin-bottom: 12px; }
+.hw-over-rating {
+  font-family: Orbitron, sans-serif; font-size: 11px; color: var(--hw-text-dim);
+  letter-spacing: 1px; margin-bottom: 16px;
+}

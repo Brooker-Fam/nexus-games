@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/td.css">
 <link rel="stylesheet" href="css/rts.css">
+<link rel="stylesheet" href="css/hw.css">
 </head>
 <body>
 
@@ -42,6 +43,7 @@
   <div class="tabs">
     <button class="tab active" id="tab-btn-td">⬡ TOWER DEFENSE</button>
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS <span class="tab-badge">SOON</span></button>
+    <button class="tab" id="tab-btn-hw">🌾 HOMESTEAD WARS</button>
   </div>
 </header>
 
@@ -274,6 +276,159 @@
 
     </div>
   </div>
+
+  <!-- HOMESTEAD WARS -->
+  <div id="tab-hw" class="tab-content">
+    <div id="hw-wrapper">
+
+      <!-- FACTION SELECT SCREEN -->
+      <div id="hw-select">
+        <div class="hw-title-wrap">
+          <div class="hw-pre">CHOOSE YOUR HERD</div>
+          <div class="hw-title">HOMESTEAD WARS</div>
+          <div class="hw-sub">Your herd determines your champion, your strength, your legacy.</div>
+        </div>
+        <div class="hw-faction-cards">
+
+          <!-- BARNYARD -->
+          <div class="hw-faction-card" id="hw-fc-barnyard">
+            <canvas class="hw-fc-canvas" id="hw-fc-canvas-barnyard" width="180" height="220"></canvas>
+            <div class="hw-fc-name">BARNYARD HERD</div>
+            <div class="hw-fc-desc">Masters of the dusty corral. The Rooster King strikes before dawn breaks.</div>
+            <div class="hw-fc-stats">
+              <div class="hw-fc-stat"><span class="hw-fc-stat-label">ATK</span><div class="hw-fc-bar"><div class="hw-fc-fill" style="width:90%;background:#cc4422"></div></div></div>
+              <div class="hw-fc-stat"><span class="hw-fc-stat-label">DEF</span><div class="hw-fc-bar"><div class="hw-fc-fill" style="width:75%;background:#cc4422"></div></div></div>
+              <div class="hw-fc-stat"><span class="hw-fc-stat-label">SPD</span><div class="hw-fc-bar"><div class="hw-fc-fill" style="width:95%;background:#cc4422"></div></div></div>
+            </div>
+            <div class="hw-fc-btn">SELECT</div>
+          </div>
+
+          <!-- CREEK -->
+          <div class="hw-faction-card" id="hw-fc-creek">
+            <canvas class="hw-fc-canvas" id="hw-fc-canvas-creek" width="180" height="220"></canvas>
+            <div class="hw-fc-name">CREEK HERD</div>
+            <div class="hw-fc-desc">Guardians of the misty waters. Mother Goose commands with grace and fury.</div>
+            <div class="hw-fc-stats">
+              <div class="hw-fc-stat"><span class="hw-fc-stat-label">ATK</span><div class="hw-fc-bar"><div class="hw-fc-fill" style="width:80%;background:#2299bb"></div></div></div>
+              <div class="hw-fc-stat"><span class="hw-fc-stat-label">DEF</span><div class="hw-fc-bar"><div class="hw-fc-fill" style="width:60%;background:#2299bb"></div></div></div>
+              <div class="hw-fc-stat"><span class="hw-fc-stat-label">RNG</span><div class="hw-fc-bar"><div class="hw-fc-fill" style="width:100%;background:#2299bb"></div></div></div>
+            </div>
+            <div class="hw-fc-btn">SELECT</div>
+          </div>
+
+          <!-- WOODLAND -->
+          <div class="hw-faction-card" id="hw-fc-woodland">
+            <canvas class="hw-fc-canvas" id="hw-fc-canvas-woodland" width="180" height="220"></canvas>
+            <div class="hw-fc-name">WOODLAND HERD</div>
+            <div class="hw-fc-desc">Silent sentinels of the forest. The Great Owl never misses, never tires.</div>
+            <div class="hw-fc-stats">
+              <div class="hw-fc-stat"><span class="hw-fc-stat-label">ATK</span><div class="hw-fc-bar"><div class="hw-fc-fill" style="width:85%;background:#66aa22"></div></div></div>
+              <div class="hw-fc-stat"><span class="hw-fc-stat-label">DEF</span><div class="hw-fc-bar"><div class="hw-fc-fill" style="width:95%;background:#66aa22"></div></div></div>
+              <div class="hw-fc-stat"><span class="hw-fc-stat-label">RNG</span><div class="hw-fc-bar"><div class="hw-fc-fill" style="width:88%;background:#66aa22"></div></div></div>
+            </div>
+            <div class="hw-fc-btn">SELECT</div>
+          </div>
+
+        </div>
+
+        <!-- PLAYER STATS -->
+        <div id="hw-stats" class="hw-stats" style="display:none">
+          <div class="hw-stats-title">RANCHER STATS</div>
+          <div class="hw-stats-row">
+            <div class="hw-stat-box"><div class="hw-stat-label">RATING</div><div class="hw-stat-val gold" id="hw-stat-rating">1000</div></div>
+            <div class="hw-stat-box"><div class="hw-stat-label">GAMES</div><div class="hw-stat-val" id="hw-stat-games">0</div></div>
+            <div class="hw-stat-box"><div class="hw-stat-label">WIN RATE</div><div class="hw-stat-val" id="hw-stat-winrate">—</div></div>
+            <div class="hw-stat-box"><div class="hw-stat-label">AI LEVEL</div><div class="hw-stat-val" id="hw-stat-level">5/10</div></div>
+            <div class="hw-stat-box"><div class="hw-stat-label">STREAK</div><div class="hw-stat-val" id="hw-stat-streak">—</div></div>
+            <div class="hw-stat-box"><div class="hw-stat-label">CONFIDENCE</div><div class="hw-stat-val" id="hw-stat-rd">NEW</div></div>
+          </div>
+          <canvas id="hw-rating-graph" width="700" height="120"></canvas>
+        </div>
+
+        <!-- MULTIPLAYER -->
+        <div id="hw-mp-controls" class="hw-mp-controls">
+          <div class="hw-mp-divider">— OR PLAY ONLINE —</div>
+          <div class="hw-mp-buttons">
+            <button class="hw-rv-btn hw-rv-play" id="hw-btn-mp-host">CREATE GAME</button>
+            <div class="hw-mp-join-row">
+              <input type="text" id="hw-mp-join-input" class="hw-mp-input" placeholder="ENTER CODE" maxlength="20">
+              <button class="hw-rv-btn hw-rv-play" id="hw-btn-mp-join">JOIN</button>
+            </div>
+          </div>
+          <div id="hw-mp-status" class="hw-mp-status"></div>
+        </div>
+      </div>
+
+      <!-- REVEAL SCREEN -->
+      <div id="hw-reveal" style="display:none">
+        <div class="hw-reveal-header">
+          <div class="hw-reveal-armada" id="hw-rv-armada">BARNYARD HERD</div>
+          <div class="hw-reveal-champion" id="hw-rv-champion">THE ROOSTER KING</div>
+        </div>
+        <div class="hw-reveal-stage">
+          <canvas id="hw-rv-canvas" width="900" height="460"></canvas>
+          <div class="hw-reveal-vignette"></div>
+        </div>
+        <div class="hw-reveal-lore" id="hw-rv-lore">Born in the dust of the old barn.</div>
+        <div class="hw-reveal-btns">
+          <button class="hw-rv-btn hw-rv-back" id="hw-btn-dso-back">◂ CHANGE HERD</button>
+          <button class="hw-rv-btn hw-rv-play" id="hw-btn-dso-play">BEGIN BATTLE ▸</button>
+        </div>
+      </div>
+
+      <!-- RTS GAME SCREEN -->
+      <div id="hw-game" style="display:none">
+        <div class="hw-hud">
+          <div class="hw-hud-left">
+            <div class="hw-faction-badge" id="hw-faction-badge">BARNYARD HERD</div>
+            <div class="hw-resource"><span class="hw-res-icon">🌾</span> HAY: <span id="hw-hay">0</span></div>
+            <div class="hw-resource"><span class="hw-res-icon">⚔</span> UNITS: <span id="hw-units">0</span></div>
+            <div class="hw-resource hw-diff-row"><span class="hw-res-icon">⚙</span> AI LEVEL: <span id="hw-difficulty" class="hw-diff-val">5</span><span class="hw-diff-max">/10</span></div>
+          </div>
+          <div class="hw-hud-mid">
+            <div class="hw-build-panel">
+              <div class="hw-build-label hw-build-hint">
+                Click your <span id="hw-building-name">FARMHOUSE</span> to build
+              </div>
+              <button class="hw-build-btn hw-attack-btn" id="hw-btn-attack">
+                <span class="hw-build-icon">⚡</span>
+                ATTACK!
+              </button>
+              <div class="hw-speed-btns" id="hw-speed-btns">
+                <button class="speed-btn active" data-speed="1">1×</button>
+                <button class="speed-btn" data-speed="2">2×</button>
+                <button class="speed-btn" data-speed="3">3×</button>
+              </div>
+            </div>
+          </div>
+          <div class="hw-hud-right">
+            <div class="hw-resource">ENEMY: <span id="hw-enemy-faction" class="hw-enemy-color">???</span></div>
+            <div class="hw-resource">BASE HP: <span id="hw-base-hp" class="hw-hp-color">150</span></div>
+            <button class="hw-retreat-btn" id="hw-btn-menu">◂ MENU</button>
+          </div>
+        </div>
+        <div id="hw-viewport-wrap">
+          <canvas id="hw-canvas" width="1200" height="580"></canvas>
+          <canvas id="hw-minimap" width="240" height="98"></canvas>
+          <div id="hw-scroll-hint">Click your farmhouse to build · Right-click to move/attack</div>
+          <!-- BUILD POPUP MENU -->
+          <div id="hw-build-popup" style="display:none">
+            <div class="hwbp-title" id="hwbp-title">FARMHOUSE</div>
+            <div class="hwbp-options" id="hwbp-options"></div>
+            <button class="hwbp-close" id="hw-btn-popup-close">✕ CLOSE</button>
+          </div>
+        </div>
+        <div class="hw-log-bar"><span id="hw-log">Click your farmhouse to build units!</span></div>
+        <div id="hw-gameover-overlay" style="display:none" class="hw-over-overlay">
+          <div class="hw-over-title" id="hw-over-title">VICTORY</div>
+          <div class="hw-over-sub" id="hw-over-sub">The enemy farmhouse has fallen.</div>
+          <div class="hw-over-rating" id="hw-over-rating" style="display:none"></div>
+          <button class="overlay-btn" id="hw-btn-menu-over">◂ BACK TO MENU</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </main>
 
 <!-- Shared -->
@@ -306,6 +461,26 @@
 <script src="js/rts/warriors.js"></script>
 <script src="js/rts/elites.js"></script>
 <script src="js/rts/cinematic.js"></script>
+
+<!-- Homestead Wars (RTS) -->
+<script src="js/hw/rng.js"></script>
+<script src="js/hw/factions.js"></script>
+<script src="js/hw/faction-cards.js"></script>
+<script src="js/hw/camera.js"></script>
+<script src="js/hw/multiplayer.js"></script>
+<script src="js/hw/lockstep.js"></script>
+<script src="js/hw/commands.js"></script>
+<script src="js/hw/entities.js"></script>
+<script src="js/hw/ui.js"></script>
+<script src="js/hw/difficulty.js"></script>
+<script src="js/hw/game.js"></script>
+<script src="js/hw/draw-helpers.js"></script>
+<script src="js/hw/rendering.js"></script>
+<script src="js/hw/structures.js"></script>
+<script src="js/hw/workers.js"></script>
+<script src="js/hw/warriors.js"></script>
+<script src="js/hw/elites.js"></script>
+<script src="js/hw/cinematic.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>
