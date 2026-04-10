@@ -207,8 +207,8 @@ function startRTS(playerFaction, enemyFaction){
   S.entities.push(S.playerBase);
   S.entities.push(S.enemyBase);
 
-  // 3 starting workers each side
-  for(let i=0;i<3;i++){
+  // 5 starting workers each side
+  for(let i=0;i<5;i++){
     S.entities.push(makeWorker('player', playerFaction));
     S.entities.push(makeWorker('enemy', S.enemyFaction));
   }
