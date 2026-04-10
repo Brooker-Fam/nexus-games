@@ -70,6 +70,27 @@ const SFX={
   rtsHammer:       ()=>{ sfxNoise(0.08,0.06,1200); sfxTone(220,'square',0.06,0.001,0.04); },
   rtsPrismCannon:  ()=>{ sfxTone(900,'sine',0.15,0.005,0.18,1800); sfxTone(600,'sine',0.1,0.01,0.14,1200); sfxNoise(0.04,0.08,5000); },
   rtsShadowCannon: ()=>{ sfxTone(55,'sawtooth',0.22,0.01,0.45,28); sfxNoise(0.18,0.38,280); },
+
+  // Homestead Wars
+  hwHammer:        ()=>{ sfxNoise(0.1,0.07,1000); sfxTone(180,'square',0.07,0.001,0.05); },
+  hwBuildDone:     ()=>{ [392,494,587].forEach((f,i)=>setTimeout(()=>sfxTone(f,'sine',0.2,0.02,0.2),i*80)); },
+  hwQueueUnit:     ()=>{ sfxTone(440,'sine',0.12,0.01,0.08); },
+  hwUnitDie:       ()=>{ sfxNoise(0.18,0.18,700); sfxTone(130,'sawtooth',0.1,0.005,0.18,70); },
+  hwPeck:          ()=>{ sfxNoise(0.08,0.03,2500); sfxTone(600,'square',0.06,0.001,0.03); },
+  hwHonk:          ()=>{ sfxTone(280,'sawtooth',0.14,0.01,0.15,180); sfxTone(350,'sawtooth',0.08,0.02,0.12,220); },
+  hwHoot:          ()=>{ sfxTone(700,'sine',0.08,0.005,0.1,500); sfxTone(900,'sine',0.05,0.01,0.08,600); },
+  hwCharge:        ()=>{ sfxTone(180,'sawtooth',0.12,0.005,0.2,90); sfxNoise(0.08,0.12,500); },
+  hwFeather:       ()=>{ sfxTone(800,'sine',0.1,0.01,0.15,1400); sfxTone(500,'sine',0.06,0.02,0.12,900); },
+  hwTalon:         ()=>{ sfxNoise(0.12,0.06,3500); sfxTone(400,'square',0.08,0.001,0.05); },
+  hwStampede:      ()=>{ sfxNoise(0.35,0.45,350); sfxTone(60,'sawtooth',0.22,0.005,0.4,30); },
+  hwSplash:        ()=>{ sfxNoise(0.15,0.12,4000); sfxTone(1200,'square',0.08,0.001,0.1,300); },
+  hwCannonFire:    ()=>{ sfxNoise(0.3,0.35,400); sfxTone(80,'sawtooth',0.2,0.005,0.3,40); },
+  hwBarnyardCannon:()=>{ sfxNoise(0.25,0.3,500); sfxTone(120,'square',0.12,0.005,0.25,60); },
+  hwCreekCannon:   ()=>{ sfxTone(500,'sine',0.12,0.005,0.15,1000); sfxNoise(0.06,0.1,3000); },
+  hwWoodlandCannon:()=>{ sfxTone(350,'sawtooth',0.1,0.01,0.2,150); sfxNoise(0.12,0.15,1500); },
+  hwHayIn:         ()=>{ sfxTone(880,'sine',0.08,0.005,0.08); sfxTone(1100,'sine',0.05,0.01,0.06); },
+  hwVictory:       ()=>{ [392,494,587,784,988].forEach((f,i)=>setTimeout(()=>sfxTone(f,'sine',0.22,0.02,0.3),i*100)); },
+  hwDefeat:        ()=>{ sfxTone(370,'sawtooth',0.18,0.02,0.12); setTimeout(()=>sfxTone(277,'sawtooth',0.18,0.02,0.18),150); setTimeout(()=>sfxTone(185,'sawtooth',0.22,0.02,0.45),320); },
 };
 
 // Throttle repeated sounds so they don't stack
