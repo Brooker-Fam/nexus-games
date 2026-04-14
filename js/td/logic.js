@@ -140,6 +140,7 @@ function startWave(){
   state.waveActive = true;
   state.waveEnemiesLeft = count;
   state.waveEnemyTimer = 0;
+  state.waveMultiplier = TD_CONFIG.waveScaling.multiplier;
   document.getElementById('waveBtn').disabled = true;
   sfx('tdWave');
   addLog(`▶ WAVE ${state.wave} INCOMING — ${count} enemies`,'info');
