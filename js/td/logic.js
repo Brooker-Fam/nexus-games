@@ -137,6 +137,7 @@ function setSpeed(s, btn){
 
 function startWave(){
   if(state.waveActive || state.gameOver) return;
+  var streak = state.playerProfile.winStreak;
   state.wave++;
   const count = TD_CONFIG.baseEnemyCount + state.wave * TD_CONFIG.enemyCountScaling;
   state.waveActive = true;
