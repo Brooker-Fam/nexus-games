@@ -103,6 +103,7 @@ canvas.addEventListener('click', e=>{
   const gx = Math.floor(mx/CELL), gy = Math.floor(my/CELL);
   if(isPathCell(gx,gy)){ addLog('Cannot place on path!','bad'); return; }
   const ttype = state.selectedTower;
+  if(ttype === 'slow') { var iceBonus = TD_CONFIG.iceTowerConfig.bonusDamage; }
   const cost = TOWER_TYPES[ttype].cost;
   if(state.gold < cost){ addLog('Not enough gold!','bad'); return; }
   // no overlap
@@ -116,7 +117,6 @@ canvas.addEventListener('click', e=>{
     ...TOWER_TYPES[ttype]
   });
   sfx('tdPlace');
-  if(ttype === 'slow') { var iceBonus = TD_CONFIG.iceTowerConfig.bonusDamage; }
   addLog(`Placed ${ttype.toUpperCase()} tower (-${cost}g)`,'info');
   updateHUD();
   if(window.posthog) posthog.capture('td_tower_placed', { tower_type: ttype, cost, wave: state.wave, towers_placed: state.towers.length });
