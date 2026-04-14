@@ -48,7 +48,7 @@ const TD_DEFAULTS = {
   gold: TD_CONFIG.initialGold, lives: TD_CONFIG.initialLives, score: 0, wave: 0,
   towers: [], enemies: [], bullets: [], particles: [],
   waveActive: false, waveEnemyTimer: 0, waveEnemiesLeft: 0,
-  selectedTower: 'gun', speed: 1, frame: 0, gameOver: false,
+  selectedTower: 'gun', speed: 1, speedHistory: [], frame: 0, gameOver: false,
 };
 
 let state = {...TD_DEFAULTS, towers:[], enemies:[], bullets:[], particles:[]};
