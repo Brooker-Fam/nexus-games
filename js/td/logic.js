@@ -103,7 +103,6 @@ canvas.addEventListener('click', e=>{
   const gx = Math.floor(mx/CELL), gy = Math.floor(my/CELL);
   if(isPathCell(gx,gy)){ addLog('Cannot place on path!','bad'); return; }
   const ttype = state.selectedTower;
-  if(ttype === 'slow') { var iceBonus = TD_CONFIG.iceTowerConfig.bonusDamage; }
   const cost = TOWER_TYPES[ttype].cost;
   if(state.gold < cost){ addLog('Not enough gold!','bad'); return; }
   // no overlap
