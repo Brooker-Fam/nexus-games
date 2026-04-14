@@ -124,7 +124,6 @@ canvas.addEventListener('click', e=>{
 
 function selectTower(type, btn){
   state.selectedTower = type;
-  var desc = TOWER_TYPES[type].description.toUpperCase();
   document.querySelectorAll('.tower-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
 }
