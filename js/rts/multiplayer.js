@@ -11,6 +11,7 @@ let mpOnConnect=null;
 function mySide(){ return (window._mpMultiplayer && !mpIsHost) ? 'enemy' : 'player'; }
 function myFaction(){ return mySide()==='player' ? S.playerFaction : S.enemyFaction; }
 function myGold(){ return S.gold[mySide()]; }
+function myOil(){ return S.oil[mySide()]||0; }
 
 // Unambiguous room codes
 const MP_PREFIX='nexus-dso-';

@@ -68,6 +68,12 @@ function openBuildPopup(screenX, screenY, context){
       S.buildStructureMode='aerial'; _buildModeCost=25;
       rtsSetLog(`Click to place your ${cfg.aerialLabel}!`); closeBuildPopup();
     });
+    if(cfg.oilRigLabel){
+      addOpt(cfg.oilRigIcon, `Build ${cfg.oilRigLabel}`, `Click to place — drones collect oil for tanks & sky attackers (20g)`, 20, ()=>{
+        S.buildStructureMode='oilrig'; _buildModeCost=20;
+        rtsSetLog(`Click to place your ${cfg.oilRigLabel}!`); closeBuildPopup();
+      });
+    }
     addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Click to place — trains more workers (35g)`, 35, ()=>{
       S.buildStructureMode='base'; _buildModeCost=35;
       rtsSetLog(`Click to place your new ${cfg.buildingName}!`); closeBuildPopup();
@@ -192,7 +198,7 @@ function rtsHandleClick(e){
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:'base' });
     } else {
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:
-        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':'structure' });
+        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':S.buildStructureMode==='oilrig'?'oilrig':'structure' });
     }
     S.buildStructureMode=false;
     S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#ffdd00',size:0,isRing:true,radius:4});
@@ -237,6 +243,13 @@ function rtsHandleClick(e){
       } else {
         openBuildPopup(sx,sy,'aerial');
         rtsSetLog(`${cfg.aerialLabel} — train aerial units.`);
+      }
+    } else if(hit.type==='structure' && hit.isOilRig){
+      if(hit.underConstruction){
+        const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
+        rtsSetLog(`OIL RIG — under construction ${pct}%`);
+      } else {
+        rtsSetLog(`OIL RIG — oil: ${hit.oil||0}/${hit.maxOil||200}  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
       }
     } else if(hit.type==='structure'){
       if(hit.underConstruction){
@@ -295,6 +308,17 @@ function updateRtsHUD(){
   const units=S.entities.filter(e=>e.side===mySide()&&e.type!=='base').length;
   document.getElementById('rts-units').textContent=units;
   document.getElementById('rts-base-hp').textContent=S.baseHP;
+  // oil HUD — only show for Roboto faction
+  const cfg=FACTION_CFG[S.playerFaction||'prism'];
+  const oilRow=document.getElementById('rts-oil-row');
+  if(oilRow){
+    if(cfg.oilRigLabel){
+      oilRow.style.display='';
+      document.getElementById('rts-oil').textContent=Math.floor(myOil());
+    } else {
+      oilRow.style.display='none';
+    }
+  }
   // refresh popup options if open so gold costs update
   if(S.buildPopupOpen){
     const opts=document.getElementById('rbp-options');

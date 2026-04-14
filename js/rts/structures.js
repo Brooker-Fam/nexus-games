@@ -301,38 +301,49 @@ function drawRTSStructure(rc, s){
 
   // ── TRAINING FIELD (Shadow) ──
   if(s.structType==='trainingfield'){
-    // ground area
-    rc.fillStyle='rgba(40,20,60,0.3)';
-    rc.beginPath(); rc.ellipse(x,y+18,36,12,0,0,Math.PI*2); rc.fill();
-    // fence posts (4 corners)
-    for(const [fx,fy] of [[-24,-10],[24,-10],[-24,18],[24,18]]){
-      rc.fillStyle='#1a0028'; rc.fillRect(x+fx-3,y+fy-12,6,14);
-      rc.strokeStyle='rgba(100,0,200,0.4)'; rc.lineWidth=0.6; rc.strokeRect(x+fx-3,y+fy-12,6,14);
-      // torch on top
-      rc.fillStyle='rgba(160,60,255,0.8)'; rc.shadowColor='#8800cc'; rc.shadowBlur=10;
-      rc.beginPath(); rc.arc(x+fx,y+fy-12,3,0,Math.PI*2); rc.fill();
+    // ── TRAINING FIELD (Shadow) ── grassy combat field
+    // grassy ground — radial green gradient
+    const gGrad=rc.createRadialGradient(x,y+8,4,x,y+8,36);
+    gGrad.addColorStop(0,'#1a3a0a'); gGrad.addColorStop(1,'#0c1f05');
+    rc.fillStyle=gGrad;
+    rc.beginPath(); rc.ellipse(x,y+8,38,18,0,0,Math.PI*2); rc.fill();
+    // dirt path down middle
+    rc.fillStyle='rgba(80,50,20,0.5)';
+    rc.beginPath(); rc.roundRect(x-4,y-20,8,36,2); rc.fill();
+    // deterministic grass tufts using position seed
+    const seed=(s.x+s.y)*7;
+    for(let gi=0;gi<8;gi++){
+      const gx=x-30+((seed*gi+gi*17)%58);
+      const gy=y-2+((seed*gi*3+gi*11)%20);
+      rc.strokeStyle='rgba(60,140,20,0.7)'; rc.lineWidth=1.5;
+      rc.beginPath(); rc.moveTo(gx,gy+4); rc.lineTo(gx-2,gy); rc.stroke();
+      rc.beginPath(); rc.moveTo(gx,gy+4); rc.lineTo(gx+2,gy-1); rc.stroke();
     }
-    // fence rails
-    rc.strokeStyle='rgba(80,0,140,0.5)'; rc.lineWidth=1.5; rc.setLineDash([4,4]);
-    rc.beginPath(); rc.rect(x-24,y-10,48,28); rc.stroke();
-    rc.setLineDash([]);
-    // training dummy / target posts (3)
-    for(const [tx2,ty2] of [[-10,4],[0,0],[10,4]]){
-      rc.strokeStyle='#3a1050'; rc.lineWidth=3; rc.lineCap='round';
-      rc.beginPath(); rc.moveTo(x+tx2,y+ty2+14); rc.lineTo(x+tx2,y+ty2-14); rc.stroke();
-      // dummy cross bar
-      rc.strokeStyle='#4a1a60'; rc.lineWidth=2;
-      rc.beginPath(); rc.moveTo(x+tx2-6,y+ty2-6); rc.lineTo(x+tx2+6,y+ty2-6); rc.stroke();
-      // dummy head
-      rc.fillStyle='#2a0840'; rc.beginPath(); rc.arc(x+tx2,y+ty2-18,5,0,Math.PI*2); rc.fill();
-      rc.strokeStyle='rgba(120,0,200,0.5)'; rc.lineWidth=0.7; rc.stroke();
-      // damage marks
-      rc.strokeStyle='rgba(180,80,255,0.4)'; rc.lineWidth=0.6;
-      rc.beginPath(); rc.moveTo(x+tx2-3,y+ty2-10); rc.lineTo(x+tx2+3,y+ty2-6); rc.stroke();
+    // wooden fence posts (4 corners + rails)
+    rc.strokeStyle='rgba(120,80,30,0.8)'; rc.lineWidth=1.5;
+    rc.beginPath(); rc.rect(x-26,y-18,52,34); rc.stroke();
+    for(const [fx,fy] of [[-26,-18],[26,-18],[-26,16],[26,16]]){
+      rc.fillStyle='#5a3810'; rc.fillRect(x+fx-2,y+fy-4,4,10);
+      // glowing post-tops
+      rc.fillStyle='rgba(160,60,255,0.8)'; rc.shadowColor='#8800cc'; rc.shadowBlur=8;
+      rc.beginPath(); rc.arc(x+fx,y+fy-4,2.5,0,Math.PI*2); rc.fill(); rc.shadowBlur=0;
     }
-    // entrance gate
-    rc.fillStyle='#1a0028'; rc.fillRect(x-6,y+4,12,16);
-    rc.strokeStyle='rgba(100,0,180,0.5)'; rc.lineWidth=0.7; rc.strokeRect(x-6,y+4,12,16);
+    // 3 scarecrow-style dummies
+    for(const [tx2,ty2] of [[-12,0],[0,-4],[12,0]]){
+      // stake
+      rc.strokeStyle='#6b4a20'; rc.lineWidth=2.5; rc.lineCap='round';
+      rc.beginPath(); rc.moveTo(x+tx2,y+ty2+12); rc.lineTo(x+tx2,y+ty2-16); rc.stroke();
+      // cross arms (straw body)
+      rc.strokeStyle='#9b7a3a'; rc.lineWidth=2;
+      rc.beginPath(); rc.moveTo(x+tx2-7,y+ty2-8); rc.lineTo(x+tx2+7,y+ty2-8); rc.stroke();
+      // cloth head
+      rc.fillStyle='#8b6a40';
+      rc.beginPath(); rc.arc(x+tx2,y+ty2-20,4,0,Math.PI*2); rc.fill();
+      rc.strokeStyle='rgba(120,0,200,0.5)'; rc.lineWidth=0.8; rc.stroke();
+      // slash marks (battle damage)
+      rc.strokeStyle='rgba(180,80,255,0.5)'; rc.lineWidth=0.8;
+      rc.beginPath(); rc.moveTo(x+tx2-3,y+ty2-12); rc.lineTo(x+tx2+3,y+ty2-8); rc.stroke();
+    }
     rc.font='6px Orbitron,sans-serif'; rc.textAlign='center'; rc.fillStyle=cfg.color; rc.shadowBlur=6;
     rc.fillText('TRAINING',x,y+38); rc.fillText('FIELD',x,y+46);
   }
@@ -399,6 +410,69 @@ function drawRTSStructure(rc, s){
     // label
     rc.shadowBlur=6; rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
     rc.fillStyle=cfg.color; rc.fillText('SHIP',x,y+34); rc.fillText('YARD',x,y+42);
+  }
+
+  if(s.structType==='oilrig'){
+    // ── OIL RIG (Roboto) ── pump-jack derrick with animated piston
+    const t=S.frame*0.04;
+    // ground base plate
+    rc.fillStyle='#1a1208';
+    rc.beginPath(); rc.roundRect(x-28,y+14,56,10,2); rc.fill();
+    rc.strokeStyle='rgba(200,120,0,0.4)'; rc.lineWidth=1; rc.stroke();
+    // oil puddle
+    rc.fillStyle='rgba(20,10,0,0.55)';
+    rc.beginPath(); rc.ellipse(x,y+20,24,6,0,0,Math.PI*2); rc.fill();
+    // derrick legs (A-frame)
+    rc.strokeStyle='#2a2010'; rc.lineWidth=4;
+    rc.beginPath(); rc.moveTo(x-22,y+14); rc.lineTo(x,y-36); rc.stroke();
+    rc.beginPath(); rc.moveTo(x+22,y+14); rc.lineTo(x,y-36); rc.stroke();
+    rc.beginPath(); rc.moveTo(x-22,y+14); rc.lineTo(x+22,y+14); rc.stroke();
+    // cross-brace struts
+    rc.strokeStyle='rgba(150,100,30,0.7)'; rc.lineWidth=2;
+    rc.beginPath(); rc.moveTo(x-18,y+4); rc.lineTo(x+18,y+4); rc.stroke();
+    rc.beginPath(); rc.moveTo(x-12,y-12); rc.lineTo(x+12,y-12); rc.stroke();
+    // crown block (top cap)
+    rc.fillStyle='#2a1a08';
+    rc.beginPath(); rc.roundRect(x-8,y-40,16,6,2); rc.fill();
+    rc.strokeStyle='rgba(255,140,0,0.5)'; rc.lineWidth=1; rc.stroke();
+    // walking beam (pivoting arm) — animated
+    const beamAngle=Math.sin(t)*0.4;
+    rc.save();
+    rc.translate(x, y-34);
+    rc.rotate(beamAngle);
+    rc.fillStyle='#3a2810';
+    rc.beginPath(); rc.roundRect(-20,-3,40,6,2); rc.fill();
+    rc.strokeStyle='rgba(255,140,0,0.4)'; rc.lineWidth=1; rc.stroke();
+    rc.restore();
+    // piston rod — moves with beam
+    const pistonY=y-16+Math.sin(t)*8;
+    rc.strokeStyle='#888'; rc.lineWidth=3;
+    rc.beginPath(); rc.moveTo(x+18,y-34+Math.sin(t)*6); rc.lineTo(x+18,pistonY); rc.stroke();
+    rc.fillStyle='#555';
+    rc.beginPath(); rc.roundRect(x+14,pistonY,8,5,1); rc.fill();
+    // pipe going down to ground
+    rc.strokeStyle='rgba(100,80,40,0.8)'; rc.lineWidth=4;
+    rc.beginPath(); rc.moveTo(x+18,pistonY+5); rc.lineTo(x+18,y+14); rc.stroke();
+    // oil drum on side
+    rc.fillStyle='#1a0a00';
+    rc.beginPath(); rc.roundRect(x-38,y+4,14,18,3); rc.fill();
+    rc.strokeStyle='rgba(255,120,0,0.5)'; rc.lineWidth=1.5; rc.stroke();
+    rc.strokeStyle='rgba(255,120,0,0.25)'; rc.lineWidth=1;
+    for(const ly of [y+8,y+13,y+18]){ rc.beginPath(); rc.moveTo(x-37,ly); rc.lineTo(x-25,ly); rc.stroke(); }
+    // oil level indicator (fill based on s.oil / s.maxOil)
+    const oilPct=(s.oil||0)/(s.maxOil||200);
+    const lvlH=Math.round(14*oilPct);
+    rc.fillStyle=`rgba(20,80,0,${0.4+oilPct*0.5})`;
+    rc.beginPath(); rc.rect(x-37,y+22-lvlH,12,lvlH); rc.fill();
+    // flame flicker at tip
+    const flicker=0.6+Math.sin(t*7)*0.4;
+    rc.fillStyle=`rgba(255,${Math.round(100+flicker*100)},0,${flicker*0.8})`;
+    rc.shadowColor='#ff6600'; rc.shadowBlur=10;
+    rc.beginPath(); rc.arc(x,y-40,3+Math.sin(t*9)*1.5,0,Math.PI*2); rc.fill();
+    rc.shadowBlur=0;
+    // label
+    rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
+    rc.fillStyle=cfg.color; rc.fillText('OIL',x,y+34); rc.fillText('RIG',x,y+42);
   }
 
   // HP bar

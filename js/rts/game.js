@@ -125,6 +125,15 @@ function aiTick(){
       aiBuild('aerial', eb.x-160, eb.y-150, 25);
     }
 
+    // Roboto: build oil rig once barracks + 3 workers exist
+    const eCfg2=FACTION_CFG[S.enemyFaction];
+    if(eCfg2.oilRigLabel){
+      const oilRigs=aiCount('structure',e=>e.isOilRig);
+      if(oilRigs===0 && barracks>=1 && workers>=3){
+        aiBuild('oilrig', eb.x-180, eb.y+200, 20);
+      }
+    }
+
     } // end mistake check
   }
 
@@ -140,22 +149,36 @@ function aiTick(){
       aiQueueAt(bar,'Warrior',BUILD_TIMES.warrior,()=>makeWarrior('enemy',S.enemyFaction,bar.x,bar.y),AI_CONFIG.warriorCost);
     }
 
-    // Train elites
-    const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.underConstruction);
-    if(eliteStruct && S.gold.enemy>=AI_CONFIG.eliteCost){
-      aiQueueAt(eliteStruct,'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),AI_CONFIG.eliteCost);
+    // Train elites (and elite2/tanks for Roboto)
+    const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.isOilRig&&!e.underConstruction);
+    if(eliteStruct){
+      const eCfg3=FACTION_CFG[S.enemyFaction];
+      const tankOilNeeded=eCfg3.tankOilCost||0;
+      const canAffordTank=eCfg3.elite2Fn==='makeTank' && S.gold.enemy>=eCfg3.elite2Cost && (S.oil.enemy||0)>=tankOilNeeded;
+      if(canAffordTank){
+        const elite2FnMap2={makeTank};
+        const tfn=elite2FnMap2[eCfg3.elite2Fn];
+        if(tfn && aiQueueAt(eliteStruct,eCfg3.elite2Label,BUILD_TIMES.elite2,()=>tfn('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),eCfg3.elite2Cost)){
+          if(tankOilNeeded>0) S.oil.enemy=Math.max(0,(S.oil.enemy||0)-tankOilNeeded);
+        }
+      } else if(S.gold.enemy>=AI_CONFIG.eliteCost){
+        aiQueueAt(eliteStruct,eCfg3.eliteLabel||'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),AI_CONFIG.eliteCost);
+      }
     }
 
     // Train aerial units from hangar
     const eCfg=FACTION_CFG[S.enemyFaction];
     const aerialHangar=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&e.isAerialHangar&&!e.underConstruction);
     const aerialFnMap2={makeStarFighter,makeSkyAttacker};
-    if(aerialHangar && eCfg.aerialFn && S.gold.enemy>=eCfg.aerialUnitCost){
+    const aerialOilNeeded=eCfg.aerialOilCost||0;
+    if(aerialHangar && eCfg.aerialFn && S.gold.enemy>=eCfg.aerialUnitCost && (S.oil.enemy||0)>=aerialOilNeeded){
       const afn=aerialFnMap2[eCfg.aerialFn];
-      if(afn) aiQueueAt(aerialHangar,eCfg.aerialUnitLabel,
+      if(afn && aiQueueAt(aerialHangar,eCfg.aerialUnitLabel,
         BUILD_TIMES[eCfg.aerialFn==='makeSkyAttacker'?'skyattacker':'starfighter'],
         ()=>afn('enemy',S.enemyFaction,aerialHangar.x,aerialHangar.y),
-        eCfg.aerialUnitCost);
+        eCfg.aerialUnitCost)){
+        if(aerialOilNeeded>0) S.oil.enemy=Math.max(0,(S.oil.enemy||0)-aerialOilNeeded);
+      }
     }
 
     } // end mistake check
@@ -211,6 +234,8 @@ function rtsTick(){
     if(e.type==='cannon') cannonTick(e);
     if(e.type==='structure' && e.queue) buildingTick(e);
     if(e.type==='base' && e.queue) buildingTick(e);
+    // oil rig slow refill (1 oil per 2s)
+    if(e.isOilRig && !e.underConstruction && (e.oil||0)<e.maxOil && S.frame%120===0) e.oil++;
     // necromancer revival tick
     if(e.type==='warrior' && e.subtype==='necromancer' && e.state!=='idle'){
       e.reviveTimer=(e.reviveTimer||0)+1;
@@ -290,7 +315,7 @@ function workerBuild(w){
   if(moveToward(w, w.buildTarget.x, w.buildTarget.y, BUILD_ARRIVE_DIST)) {
     const bt=w.buildTarget.buildType||'structure';
     if(!w.buildTarget.ghost){
-      const makers={cannon:makeCannon, barracks:makeBarracks, base:makeBase, aerial:makeAerialBuilding};
+      const makers={cannon:makeCannon, barracks:makeBarracks, base:makeBase, aerial:makeAerialBuilding, oilrig:makeOilRig};
       const ghost=(makers[bt]||makeStructure)(w.side, w.faction, w.buildTarget.x, w.buildTarget.y);
       S.entities.push(ghost);
       w.buildTarget.ghost=ghost;
@@ -306,7 +331,7 @@ function workerBuild(w){
       ghost.hp=ghost.maxHp;
       sfx('rtsBuildDone');
       if(w.side==='player'){
-        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:bt==='aerial'?FACTION_CFG[w.faction].aerialLabel:FACTION_CFG[w.faction].structLabel;
+        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:bt==='aerial'?FACTION_CFG[w.faction].aerialLabel:bt==='oilrig'?'OIL RIG':FACTION_CFG[w.faction].structLabel;
         rtsSetLog(`${lbl} complete!`);
       }
       w.state='idle'; w.buildTarget=null; w.hammerSwing=0; w.buildTimer=0;
@@ -323,6 +348,17 @@ function workerFindGold(w){
     const score=d+penalty;
     if(score<bestScore){ bestScore=score; best=node; }
   }
+  // Roboto workers also collect oil from oil rigs on their side
+  const cfg=FACTION_CFG[w.faction||S.playerFaction];
+  if(cfg.oilRigLabel){
+    for(const ent of S.entities){
+      if(!ent.isOilRig||ent.side!==w.side||ent.underConstruction) continue;
+      if((ent.oil||0)<=0) continue;
+      const d=_dist(ent.x-w.x, ent.y-w.y);
+      const score=d+250; // prefer gold, use oil rig when closer or no gold
+      if(score<bestScore){ bestScore=score; best=ent; }
+    }
+  }
   if(!best){ w.state='idle'; return; }
   w.target=best; w.state='moving';
   if(moveToward(w, best.x, best.y, MINE_ARRIVE_DIST)){
@@ -333,7 +369,13 @@ function workerFindGold(w){
 function workerMine(w){
   w.mineTimer++;
   if(w.mineTimer>MINE_TICKS){
-    if(w.target && w.target.gold>0){
+    if(w.target && w.target.isOilRig){
+      // Mining an oil rig
+      if(w.target.oil>0){
+        w.target.oil--; w.oilCarry=(w.oilCarry||0)+1;
+        if(w.oilCarry>=w.goldCap) w.state='returning';
+      } else { w.state='idle'; }
+    } else if(w.target && w.target.gold>0){
       w.target.gold--; w.goldCarry++;
       if(w.goldCarry>=w.goldCap) w.state='returning';
     } else { w.state='idle'; }
@@ -350,10 +392,19 @@ function workerReturn(w, myBase){
   }
   const dropoff=nearestBase||myBase;
   if(moveToward(w, dropoff.x, dropoff.y, MINE_DROPOFF_DIST)){
-    let gold = w.goldCarry;
-    if(w.side==='enemy' && !window._mpMultiplayer) gold = Math.round(gold * AI_CONFIG.resourceBonus);
-    S.gold[w.side]+=gold;
-    w.goldCarry=0; w.state='idle';
+    if((w.oilCarry||0)>0){
+      let oil=w.oilCarry;
+      if(w.side==='enemy' && !window._mpMultiplayer) oil=Math.round(oil*AI_CONFIG.resourceBonus);
+      S.oil[w.side]=(S.oil[w.side]||0)+oil;
+      w.oilCarry=0;
+    }
+    if(w.goldCarry>0){
+      let gold = w.goldCarry;
+      if(w.side==='enemy' && !window._mpMultiplayer) gold = Math.round(gold * AI_CONFIG.resourceBonus);
+      S.gold[w.side]+=gold;
+      w.goldCarry=0;
+    }
+    w.state='idle';
   }
 }
 

@@ -38,6 +38,10 @@ function executeCommand(cmd){
       const costMap = { worker:cfg.workerCost, warrior:cfg.warriorCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost, aerial:cfg.aerialUnitCost };
       const cost = costMap[cmd.unitType] || 0;
       if(S.gold[side] < cost) break;
+      // Roboto: tanks and sky attackers also cost oil
+      const oilCost = cmd.unitType==='elite2' ? (cfg.tankOilCost||0)
+                    : cmd.unitType==='aerial'  ? (cfg.aerialOilCost||0) : 0;
+      if(oilCost > 0 && (S.oil[side]||0) < oilCost) break;
 
       const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite2, aerial:BUILD_TIMES[cfg.aerialFn==='makeSkyAttacker'?'skyattacker':'starfighter'] };
       const time = timeMap[cmd.unitType] || BUILD_TIMES.worker;
@@ -60,6 +64,7 @@ function executeCommand(cmd){
 
       if(!queueUnit(building, label, time, fn)) break;
       S.gold[side] -= cost;
+      if(oilCost>0) S.oil[side]=Math.max(0,(S.oil[side]||0)-oilCost);
       updateRtsHUD();
       rtsSetLog(`${label} queued (${building.queue.length}/${QUEUE_MAX})`);
       break;

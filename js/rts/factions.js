@@ -53,16 +53,17 @@ const FACTION_CFG={
     warriorCost:6, warriorDesc:'Ranged — rapid fire gun',
     structName:'ARMORY', structLabel:'ARMORY',
     eliteLabel:'SHOCKBOT', eliteDesc:'Ranged — chain lightning hits multiple enemies',
-    eliteCost:30, eliteIcon:'⚡',
+    eliteCost:18, eliteIcon:'⚡',
     elite2Label:'TANK', elite2Desc:'Heavy armored unit — high HP, AOE cannon',
-    elite2Cost:25, elite2Icon:'🚗', elite2Fn:'makeTank',
+    elite2Cost:25, elite2Icon:'🚗', elite2Fn:'makeTank', tankOilCost:12,
     // UI icons
     workerIcon:'🤖', warriorIcon:'🦾',
     barracksIcon:'🪖', structIcon:'🏭', baseIcon:'🏗',
     cannonColor:'#ffaa00', cannonSound:'rtsCannonFire',
     aerialName:'SHIPYARD', aerialLabel:'SHIPYARD', aerialIcon:'🚀',
     aerialUnitLabel:'SKY ATTACKER', aerialUnitDesc:'Aerial — heavy missiles, immune to melee',
-    aerialUnitCost:32, aerialUnitIcon:'🚀', aerialFn:'makeSkyAttacker',
+    aerialUnitCost:28, aerialUnitIcon:'🚀', aerialFn:'makeSkyAttacker', aerialOilCost:8,
+    oilRigName:'OIL RIG', oilRigLabel:'OIL RIG', oilRigIcon:'🛢',
   },
 };
 
