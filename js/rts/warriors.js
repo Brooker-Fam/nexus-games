@@ -5,7 +5,24 @@ function drawRTSWarrior(rc,w){
   const bob=Math.sin(w.frame*0.15)*1.5;
   const facing = w.side==='player'?1:-1;
   rc.save(); rc.translate(w.x, w.y+bob);
-  if(facing===-1) rc.scale(-1,1);
+
+  if(w.aerial){
+    // Aerial units rotate to face their target.
+    // Hover bob is applied in screen-space (before rotation) so it always moves up/down.
+    const hover = w.subtype==='skyattacker' ? Math.sin(w.frame*0.1)*2.5 : Math.sin(w.frame*0.12)*3;
+    // Ground shadow — drawn before rotation so it stays flat below the unit.
+    rc.fillStyle='rgba(0,0,0,0.18)';
+    rc.beginPath(); rc.ellipse(0, 20, w.subtype==='skyattacker'?18:14, 5, 0, 0, Math.PI*2); rc.fill();
+    // Move unit up by floating height (screen-space, pre-rotation).
+    rc.translate(0, -8+hover);
+    // Now rotate to face target. Default direction is right (0) for player, left (π) for enemy.
+    const defaultAngle = w.side==='player' ? 0 : Math.PI;
+    const angle = w.aimAngle !== undefined ? w.aimAngle : defaultAngle;
+    rc.rotate(angle);
+  } else {
+    if(facing===-1) rc.scale(-1,1);
+  }
+
   rc.shadowColor=cfg.color; rc.shadowBlur=12;
 
   if(w.subtype==='starfighter'){
@@ -417,13 +434,8 @@ function drawRTSProjectiles(rc){
 
 // ── AERIAL UNIT DRAWING ──
 // Star Fighter — sleek prism/shadow fighter, angled delta silhouette, glows faction color
+// Drawn at origin facing right; rotation + hover applied by caller (drawRTSWarrior).
 function drawStarFighterUnit(rc,cfg,w){
-  // altitude bob (higher than ground units)
-  const hover = Math.sin(w.frame*0.12)*3;
-  // shadow on ground
-  rc.fillStyle='rgba(0,0,0,0.18)';
-  rc.beginPath(); rc.ellipse(0, 22-hover, 14, 5, 0, 0, Math.PI*2); rc.fill();
-  rc.translate(0, -8+hover);
   // engine glow trail
   rc.shadowColor=cfg.color; rc.shadowBlur=20;
   // delta wing body
@@ -446,12 +458,8 @@ function drawStarFighterUnit(rc,cfg,w){
 }
 
 // Sky Attacker — heavy Roboto gunship, wider/chunkier, missile pods
+// Drawn at origin facing right; rotation + hover applied by caller (drawRTSWarrior).
 function drawSkyAttackerUnit(rc,cfg,w){
-  const hover = Math.sin(w.frame*0.1)*2.5;
-  // shadow
-  rc.fillStyle='rgba(0,0,0,0.2)';
-  rc.beginPath(); rc.ellipse(0, 24-hover, 18, 6, 0, 0, Math.PI*2); rc.fill();
-  rc.translate(0, -6+hover);
   rc.shadowColor=cfg.color; rc.shadowBlur=18;
   // main fuselage
   const fg=rc.createLinearGradient(-16,0,16,0);

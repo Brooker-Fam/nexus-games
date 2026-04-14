@@ -502,6 +502,7 @@ function warriorRangedAttack(w, target, targetDist){
         const dx=w.x-e.x, dy=w.y-e.y, dist=_dist(dx,dy)||1;
         w.x+=dx/dist*w.speed; w.y+=dy/dist*w.speed;
         // Still fire if ready
+        if(w.aerial) w.aimAngle=Math.atan2(target.y-w.y, target.x-w.x);
         w.attackTimer++;
         if(w.attackTimer>=(w.fireRate||50)){ w.attackTimer=0; spawnProjectile(w, target); }
         return;
@@ -512,8 +513,11 @@ function warriorRangedAttack(w, target, targetDist){
   if(targetDist<=w.range){
     w.state='attack';
     w.attackTimer++;
+    // track aim angle for aerial units so they visually face their target
+    if(w.aerial) w.aimAngle=Math.atan2(target.y-w.y, target.x-w.x);
     if(w.attackTimer>=(w.fireRate||50)){ w.attackTimer=0; spawnProjectile(w, target); }
   } else {
+    if(w.aerial) w.aimAngle=Math.atan2(target.y-w.y, target.x-w.x);
     warriorMarchToward(w, target, 13, 4);
   }
 }
