@@ -391,3 +391,5 @@ function drawRatingGraph(){
   ctx.lineWidth = 1;
   ctx.stroke();
 }
+
+//# sourceMappingURL=difficulty.js.map

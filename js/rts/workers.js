@@ -233,3 +233,5 @@ function drawWorkerRoboto(rc, cfg, w, isMining, isMoving){
   rc.fillStyle='rgba(255,255,200,0.6)'; rc.fillRect(scanX2,-19,1.5,4);
 }
 
+
+//# sourceMappingURL=workers.js.map

@@ -571,3 +571,5 @@ function dsoPreviewClear(){
     if(el) drawCardCharacter(el, f, false);
   }
 }
+
+//# sourceMappingURL=faction-cards.js.map

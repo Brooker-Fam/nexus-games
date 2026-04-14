@@ -408,3 +408,5 @@ function drawTankUnit(rc,cfg,w){
   rc.beginPath(); rc.arc(-5,0,5,0,Math.PI*2); rc.fill();
 }
 
+
+//# sourceMappingURL=elites.js.map

@@ -671,3 +671,5 @@ function drawQueueBar(rc, x, y, bw, timer, totalTime, count){
   }
 }
 
+
+//# sourceMappingURL=structures.js.map

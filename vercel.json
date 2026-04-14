@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node scripts/generate-posthog-config.js",
+  "buildCommand": "node scripts/generate-posthog-config.js && node scripts/generate-sourcemaps.js",
   "outputDirectory": ".",
   "cleanUrls": true,
   "headers": [

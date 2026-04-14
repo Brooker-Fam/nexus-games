@@ -3,3 +3,4 @@
 *.log
 .env
 js/posthog-config.js
+js/**/*.js.map

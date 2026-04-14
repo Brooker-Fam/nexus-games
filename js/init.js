@@ -172,3 +172,5 @@ document.getElementById('rts-speed-btns').onclick=function(e){
 document.getElementById('btn-rts-menu').onclick=rtsMenuBack;
 document.getElementById('btn-rts-menu-over').onclick=rtsMenuBack;
 document.getElementById('btn-popup-close').onclick=closeBuildPopup;
+
+//# sourceMappingURL=init.js.map

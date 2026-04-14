@@ -156,3 +156,5 @@ function tickCamera(){
   clampCam();
 }
 
+
+//# sourceMappingURL=camera.js.map

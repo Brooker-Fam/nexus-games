@@ -477,3 +477,5 @@ function drawSkyAttackerUnit(rc,cfg,w){
   rc.beginPath(); rc.ellipse(0, 0, 20, 5, rot, 0, Math.PI*2); rc.stroke();
 }
 
+
+//# sourceMappingURL=warriors.js.map

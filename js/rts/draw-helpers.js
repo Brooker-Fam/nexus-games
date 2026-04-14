@@ -23,3 +23,5 @@ function drawSelectionRing(rc, x, y, rw, rh, lineWidth){
   rc.stroke();
   rc.restore();
 }
+
+//# sourceMappingURL=draw-helpers.js.map

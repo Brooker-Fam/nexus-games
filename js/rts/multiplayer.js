@@ -126,3 +126,5 @@ function mpDisconnect(){
   mpConnected=false; mpIsHost=false; mpLocalFaction=null; mpRemoteFaction=null;
   window._mpMultiplayer=false;
 }
+
+//# sourceMappingURL=multiplayer.js.map

@@ -277,3 +277,5 @@ function startRTS(playerFaction, enemyFaction){
   S.raf=requestAnimationFrame(rtsLoop);
 }
 
+
+//# sourceMappingURL=entities.js.map

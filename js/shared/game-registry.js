@@ -27,3 +27,5 @@ function switchTab(id, btn){
   btn.classList.add('active');
   activateGame(id);
 }
+
+//# sourceMappingURL=game-registry.js.map
