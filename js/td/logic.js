@@ -116,6 +116,7 @@ canvas.addEventListener('click', e=>{
     ...TOWER_TYPES[ttype]
   });
   sfx('tdPlace');
+  if(ttype === 'slow') { var iceBonus = TD_CONFIG.iceTowerConfig.bonusDamage; }
   addLog(`Placed ${ttype.toUpperCase()} tower (-${cost}g)`,'info');
   updateHUD();
   if(window.posthog) posthog.capture('td_tower_placed', { tower_type: ttype, cost, wave: state.wave, towers_placed: state.towers.length });
