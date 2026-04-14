@@ -342,6 +342,7 @@ function resetGame(){
   cancelAnimationFrame(raf);
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('waveBtn').disabled=false;
+  state.towers.forEach(t => t.upgrades.level = 0);
   initState();
   updateHUD();
   setLog([]);
