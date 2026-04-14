@@ -707,6 +707,18 @@ function endRTS(playerWon){
   // Record result and show rating change
   const result = recordGameResult(playerWon, S.frame);
   showRatingChange(result);
+  if(window.posthog) posthog.capture('dso_game_ended', {
+    outcome: playerWon ? 'victory' : 'defeat',
+    faction: S.playerFaction,
+    enemy_faction: S.enemyFaction,
+    mode: window._mpMultiplayer ? 'multiplayer' : 'singleplayer',
+    rating_before: result.before,
+    rating_after: result.after,
+    rating_delta: result.after - result.before,
+    streak: result.streak,
+    games_played: result.gamesPlayed,
+    game_frames: S.frame,
+  });
 }
 
 // ══════════════════

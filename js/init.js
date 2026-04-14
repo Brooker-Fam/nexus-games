@@ -30,6 +30,7 @@ function dsoPlay(){
   document.getElementById('dso-game').style.display='block';
   document.getElementById('rts-gameover-overlay').style.display='none';
   startRTS(dsoSelectedFaction);
+  if(window.posthog) posthog.capture('dso_game_started', { faction: dsoSelectedFaction, mode: 'singleplayer' });
 }
 function rtsMenuBack(){
   cancelAnimationFrame(S.raf); S.raf=null;
@@ -73,8 +74,15 @@ activateGame('td');
 // ── EVENT HANDLERS (moved from inline HTML) ──
 
 // Tabs
-document.getElementById('tab-btn-td').onclick=function(){ switchTab('td', this); };
-document.getElementById('tab-btn-cs').onclick=function(){ switchTab('cs', this); };
+document.getElementById('tab-btn-td').onclick=function(){
+  switchTab('td', this);
+  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'tower_defense' });
+};
+document.getElementById('tab-btn-cs').onclick=function(){
+  switchTab('cs', this);
+  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'deep_space_ops' });
+  document.getElementById('dso-player-count').textContent = '0';
+};
 
 // TD controls
 document.getElementById('btn-reset').onclick=resetGame;
@@ -106,6 +114,7 @@ document.querySelector('.speed-btns').onclick=function(e){
     } else {
       dsoSelect(faction);
     }
+    if(window.posthog) posthog.capture('dso_faction_selected', { faction, mode: mpConnected ? 'multiplayer' : 'singleplayer' });
   });
   card.addEventListener('mouseenter', ()=>dsoPreview(faction));
   card.addEventListener('mouseleave', ()=>dsoPreviewClear());
@@ -121,6 +130,7 @@ document.getElementById('btn-mp-host').onclick=async function(){
   status.className='mp-status'; status.textContent='Creating...';
   try {
     const code = await mpHost();
+    if(window.posthog) posthog.capture('mp_game_hosted');
     mpOnConnect=()=>{ status.className='mp-status'; status.innerHTML='Connected! Both pick a faction.'; };
     status.className='mp-status waiting';
     status.innerHTML=`Code: <span class="mp-code" title="Click to copy">${code}</span> — waiting for opponent...`;
@@ -141,6 +151,7 @@ document.getElementById('btn-mp-join').onclick=async function(){
   status.textContent='Connecting...';
   try {
     await mpJoin(code);
+    if(window.posthog) posthog.capture('mp_game_joined');
     status.className='mp-status';
     status.innerHTML='Connected! Both pick a faction.';
   } catch(e){

@@ -118,6 +118,7 @@ canvas.addEventListener('click', e=>{
   sfx('tdPlace');
   addLog(`Placed ${ttype.toUpperCase()} tower (-${cost}g)`,'info');
   updateHUD();
+  if(window.posthog) posthog.capture('td_tower_placed', { tower_type: ttype, cost, wave: state.wave, towers_placed: state.towers.length });
 });
 
 function selectTower(type, btn){
@@ -143,6 +144,7 @@ function startWave(){
   sfx('tdWave');
   addLog(`▶ WAVE ${state.wave} INCOMING — ${count} enemies`,'info');
   updateHUD();
+  if(window.posthog) posthog.capture('td_wave_started', { wave: state.wave, enemy_count: count, towers: state.towers.length, gold: state.gold, score: state.score });
 }
 
 function spawnEnemy(){
@@ -330,9 +332,11 @@ function endGame(won){
   ov.classList.add('show');
   if(won){ ot.className='overlay-title win'; ot.textContent='VICTORY'; os.textContent=`WAVE ${state.wave} — SCORE: ${state.score}`; sfx('tdVictory'); }
   else    { ot.className='overlay-title lose'; ot.textContent='GAME OVER'; os.textContent=`REACHED WAVE ${state.wave} — SCORE: ${state.score}`; sfx('tdDead'); }
+  if(window.posthog) posthog.capture('td_game_ended', { outcome: won ? 'victory' : 'defeat', wave: state.wave, score: state.score, towers_placed: state.towers.length });
 }
 
 function resetGame(){
+  if(window.posthog) posthog.capture('td_game_restarted', { previous_wave: state.wave, previous_score: state.score });
   cancelAnimationFrame(raf);
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('waveBtn').disabled=false;

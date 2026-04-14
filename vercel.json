@@ -1,5 +1,5 @@
 {
-  "buildCommand": null,
+  "buildCommand": "node scripts/generate-posthog-config.js",
   "outputDirectory": ".",
   "cleanUrls": true,
   "headers": [

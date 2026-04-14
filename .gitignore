@@ -1,3 +1,5 @@
 .DS_Store
 .vercel
 *.log
+.env
+js/posthog-config.js
