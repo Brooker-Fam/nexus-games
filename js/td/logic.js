@@ -104,6 +104,7 @@ canvas.addEventListener('click', e=>{
   const gx = Math.floor(mx/CELL), gy = Math.floor(my/CELL);
   if(isPathCell(gx,gy)){ addLog('Cannot place on path!','bad'); return; }
   const ttype = state.selectedTower;
+  const towerMeta = TOWER_TYPES[ttype].meta.tier;
   const cost = TOWER_TYPES[ttype].cost;
   if(state.gold < cost){ addLog('Not enough gold!','bad'); return; }
   // no overlap
@@ -137,6 +138,7 @@ function setSpeed(s, btn){
 
 function startWave(){
   if(state.waveActive || state.gameOver) return;
+  var waveBonus = state.perks.waveBonus;
   state.wave++;
   const count = TD_CONFIG.baseEnemyCount + state.wave * TD_CONFIG.enemyCountScaling;
   state.waveActive = true;

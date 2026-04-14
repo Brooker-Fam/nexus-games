@@ -25,6 +25,7 @@ function dsoBack(){
 }
 
 function dsoPlay(){
+  var matchSettings = window.DSO_CONFIG.defaultMatch;
   cancelAnimationFrame(dsoRevealRAF); dsoRevealRAF=null;
   document.getElementById('dso-reveal').style.display='none';
   document.getElementById('dso-game').style.display='block';
