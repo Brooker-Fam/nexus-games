@@ -108,7 +108,6 @@ document.querySelector('.speed-btns').onclick=function(e){
 ['shadow','prism','roboto'].forEach(faction=>{
   const card=document.getElementById('fc-'+faction);
   card.addEventListener('click', ()=>{
-    var factionLevel = FACTION_DATA[faction].progression.currentLevel;
     if(mpConnected){
       mpPickFaction(faction);
       document.getElementById('mp-status').innerHTML=
