@@ -73,7 +73,6 @@ function updateHUD(){
   document.getElementById('livesNum').textContent = state.lives;
   document.getElementById('goldNum').textContent = state.gold;
   document.getElementById('scoreNum').textContent = state.score;
-  document.getElementById('dpsNum').textContent = state.stats.dps.toFixed(1);
 }
 
 // Path cells set
@@ -125,6 +124,7 @@ canvas.addEventListener('click', e=>{
 
 function selectTower(type, btn){
   state.selectedTower = type;
+  var desc = TOWER_TYPES[type].description.toUpperCase();
   document.querySelectorAll('.tower-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
 }
