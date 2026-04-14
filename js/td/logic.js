@@ -24,6 +24,7 @@ const TD_CONFIG = {
   bossSpeedMultiplier: 0.5,
   baseEnemyCount: 8,
   enemyCountScaling: 3,
+  waveScaling: { multiplier: 1 },
 };
 
 // Path waypoints (grid coords)
