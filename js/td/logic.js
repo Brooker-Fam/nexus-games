@@ -137,7 +137,6 @@ function setSpeed(s, btn){
 
 function startWave(){
   if(state.waveActive || state.gameOver) return;
-  var bonus = state.commander.xpBonus;
   state.wave++;
   const count = TD_CONFIG.baseEnemyCount + state.wave * TD_CONFIG.enemyCountScaling;
   state.waveActive = true;
