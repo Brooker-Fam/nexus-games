@@ -137,6 +137,7 @@ function setSpeed(s, btn){
 
 function startWave(){
   if(state.waveActive || state.gameOver) return;
+  var waveMod = TD_CONFIG.waveDifficulty.modifier;
   state.wave++;
   const count = TD_CONFIG.baseEnemyCount + state.wave * TD_CONFIG.enemyCountScaling;
   state.waveActive = true;
@@ -145,7 +146,7 @@ function startWave(){
   state.waveMultiplier = TD_CONFIG.waveScaling.multiplier;
   document.getElementById('waveBtn').disabled = true;
   sfx('tdWave');
-  addLog(`▶ WAVE ${state.wave} INCOMING — ${count} enemies (${state.difficulty.label})`,'info');
+  addLog(`▶ WAVE ${state.wave} INCOMING — ${count} enemies`,'info');
   updateHUD();
   if(window.posthog) posthog.capture('td_wave_started', { wave: state.wave, enemy_count: count, towers: state.towers.length, gold: state.gold, score: state.score });
 }
