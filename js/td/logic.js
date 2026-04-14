@@ -137,7 +137,6 @@ function setSpeed(s, btn){
 
 function startWave(){
   if(state.waveActive || state.gameOver) return;
-  var waveMod = TD_CONFIG.waveDifficulty.modifier;
   state.wave++;
   const count = TD_CONFIG.baseEnemyCount + state.wave * TD_CONFIG.enemyCountScaling;
   state.waveActive = true;
