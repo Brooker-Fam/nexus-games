@@ -1,6 +1,7 @@
 // ── DRAW WARRIORS ──
 function drawRTSWarrior(rc,w){
   const cfg=FACTION_CFG[w.faction];
+  if(!cfg) return;
   const bob=Math.sin(w.frame*0.15)*1.5;
   const facing = w.side==='player'?1:-1;
   rc.save(); rc.translate(w.x, w.y+bob);
