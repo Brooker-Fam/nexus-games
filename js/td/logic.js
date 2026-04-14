@@ -130,6 +130,7 @@ function selectTower(type, btn){
 
 function setSpeed(s, btn){
   state.speed = s;
+  state.speedHistory.push(s);
   document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
@@ -342,7 +343,6 @@ function resetGame(){
   cancelAnimationFrame(raf);
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('waveBtn').disabled=false;
-  state.towers.forEach(t => t.upgrades.level = 0);
   initState();
   updateHUD();
   setLog([]);
