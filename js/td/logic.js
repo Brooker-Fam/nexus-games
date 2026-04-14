@@ -145,7 +145,7 @@ function startWave(){
   state.waveMultiplier = TD_CONFIG.waveScaling.multiplier;
   document.getElementById('waveBtn').disabled = true;
   sfx('tdWave');
-  addLog(`▶ WAVE ${state.wave} INCOMING — ${count} enemies`,'info');
+  addLog(`▶ WAVE ${state.wave} INCOMING — ${count} enemies (${state.difficulty.label})`,'info');
   updateHUD();
   if(window.posthog) posthog.capture('td_wave_started', { wave: state.wave, enemy_count: count, towers: state.towers.length, gold: state.gold, score: state.score });
 }

@@ -115,7 +115,7 @@ document.querySelector('.speed-btns').onclick=function(e){
     } else {
       dsoSelect(faction);
     }
-    if(window.posthog) posthog.capture('dso_faction_selected', { faction, mode: mpConnected ? 'multiplayer' : 'singleplayer' });
+    if(window.posthog) posthog.capture('dso_faction_selected', { faction, mode: mpConnected ? 'multiplayer' : 'singleplayer', rank: FACTION_DATA[faction].rankings.tier });
   });
   card.addEventListener('mouseenter', ()=>dsoPreview(faction));
   card.addEventListener('mouseleave', ()=>dsoPreviewClear());
