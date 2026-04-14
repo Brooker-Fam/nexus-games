@@ -51,13 +51,13 @@ function makeWarrior(side, faction, nearX, nearY){
 
 // ── BUILD TIMES (ticks at 60/s) ──
 const BUILD_TIMES={
-  structure: 360,  // 6s to construct a building
-  barracks:  360,
-  cannon:    300,  // 5s
-  worker:    180,  // 3s train time
-  warrior:   300,  // 5s
-  elite:     420,  // 7s
-  elite2:    480,  // 8s
+  structure: 900,   // 15s to construct a building
+  barracks:  900,   // 15s
+  cannon:    720,   // 12s
+  worker:    480,   // 8s train time
+  warrior:   720,   // 12s
+  elite:     960,   // 16s
+  elite2:    1200,  // 20s
 };
 const QUEUE_MAX = 5; // max units queued per building
 
