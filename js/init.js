@@ -81,7 +81,8 @@ document.getElementById('tab-btn-td').onclick=function(){
 document.getElementById('tab-btn-cs').onclick=function(){
   switchTab('cs', this);
   if(window.posthog) posthog.capture('game_tab_switched', { tab: 'deep_space_ops' });
-  document.getElementById('dso-player-count').textContent = '0';
+  const dsoCount = document.getElementById('dso-player-count');
+  if (dsoCount) dsoCount.textContent = '0';
 };
 
 // TD controls
