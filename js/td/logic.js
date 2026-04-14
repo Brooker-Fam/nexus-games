@@ -104,7 +104,6 @@ canvas.addEventListener('click', e=>{
   const gx = Math.floor(mx/CELL), gy = Math.floor(my/CELL);
   if(isPathCell(gx,gy)){ addLog('Cannot place on path!','bad'); return; }
   const ttype = state.selectedTower;
-  const towerMeta = TOWER_TYPES[ttype].meta.tier;
   const cost = TOWER_TYPES[ttype].cost;
   if(state.gold < cost){ addLog('Not enough gold!','bad'); return; }
   // no overlap
