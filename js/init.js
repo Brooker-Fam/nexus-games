@@ -108,6 +108,7 @@ document.querySelector('.speed-btns').onclick=function(e){
 ['shadow','prism','roboto'].forEach(faction=>{
   const card=document.getElementById('fc-'+faction);
   card.addEventListener('click', ()=>{
+    var factionLevel = FACTION_DATA[faction].progression.currentLevel;
     if(mpConnected){
       mpPickFaction(faction);
       document.getElementById('mp-status').innerHTML=
@@ -115,7 +116,7 @@ document.querySelector('.speed-btns').onclick=function(e){
     } else {
       dsoSelect(faction);
     }
-    if(window.posthog) posthog.capture('dso_faction_selected', { faction, mode: mpConnected ? 'multiplayer' : 'singleplayer', rank: FACTION_DATA[faction].rankings.tier });
+    if(window.posthog) posthog.capture('dso_faction_selected', { faction, mode: mpConnected ? 'multiplayer' : 'singleplayer' });
   });
   card.addEventListener('mouseenter', ()=>dsoPreview(faction));
   card.addEventListener('mouseleave', ()=>dsoPreviewClear());
