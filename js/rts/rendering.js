@@ -84,8 +84,11 @@ function drawMinimap(){
       mc.fillStyle=hexAlpha(pCfg.color,0.7);
       mc.beginPath(); mc.arc(mx,my,1.5,0,Math.PI*2); mc.fill();
     } else if(e.type==='warrior'){
-      mc.fillStyle=e.subtype==='elite'?'#ffffff':pCfg.color;
-      mc.beginPath(); mc.arc(mx,my,e.subtype==='elite'?2.5:2,0,Math.PI*2); mc.fill();
+      const isAerial=e.aerial;
+      mc.fillStyle=e.subtype==='elite'?'#ffffff':isAerial?'#ffffff':pCfg.color;
+      mc.globalAlpha=isAerial?0.7:1;
+      mc.beginPath(); mc.arc(mx,my,e.subtype==='elite'?2.5:isAerial?2.5:2,0,Math.PI*2); mc.fill();
+      mc.globalAlpha=1;
     }
   }
 

@@ -7,7 +7,11 @@ function drawRTSWarrior(rc,w){
   if(facing===-1) rc.scale(-1,1);
   rc.shadowColor=cfg.color; rc.shadowBlur=12;
 
-  if(w.subtype==='elite'){
+  if(w.subtype==='starfighter'){
+    drawStarFighterUnit(rc,cfg,w);
+  } else if(w.subtype==='skyattacker'){
+    drawSkyAttackerUnit(rc,cfg,w);
+  } else if(w.subtype==='elite'){
     if(w.faction==='prism') drawEliteOracle(rc,cfg,w);
     else if(w.faction==='shadow') drawEliteDarkWarrior(rc,cfg,w);
     else drawEliteShockbot(rc,cfg,w);
@@ -408,5 +412,68 @@ function drawRTSProjectiles(rc){
     }
     rc.restore();
   }
+}
+
+// ── AERIAL UNIT DRAWING ──
+// Star Fighter — sleek prism/shadow fighter, angled delta silhouette, glows faction color
+function drawStarFighterUnit(rc,cfg,w){
+  // altitude bob (higher than ground units)
+  const hover = Math.sin(w.frame*0.12)*3;
+  // shadow on ground
+  rc.fillStyle='rgba(0,0,0,0.18)';
+  rc.beginPath(); rc.ellipse(0, 22-hover, 14, 5, 0, 0, Math.PI*2); rc.fill();
+  rc.translate(0, -8+hover);
+  // engine glow trail
+  rc.shadowColor=cfg.color; rc.shadowBlur=20;
+  // delta wing body
+  const g=rc.createLinearGradient(-14,0,14,0);
+  g.addColorStop(0,cfg.color); g.addColorStop(0.5,'#ffffff'); g.addColorStop(1,cfg.color);
+  rc.fillStyle=g;
+  rc.beginPath();
+  rc.moveTo(18, 0);     // nose
+  rc.lineTo(-14, -9);   // left wing tip
+  rc.lineTo(-8, 0);     // wing root
+  rc.lineTo(-14, 9);    // right wing tip
+  rc.closePath(); rc.fill();
+  // cockpit
+  rc.fillStyle='rgba(255,255,255,0.85)';
+  rc.beginPath(); rc.ellipse(8, 0, 5, 3, 0, 0, Math.PI*2); rc.fill();
+  // engine exhaust pulse
+  const pulse=0.6+Math.sin(w.frame*0.3)*0.4;
+  rc.fillStyle=`rgba(${cfg.color.startsWith('#00')?'0,245,255':'180,100,255'},${pulse})`;
+  rc.beginPath(); rc.ellipse(-12, 0, 4, 2, 0, 0, Math.PI*2); rc.fill();
+}
+
+// Sky Attacker — heavy Roboto gunship, wider/chunkier, missile pods
+function drawSkyAttackerUnit(rc,cfg,w){
+  const hover = Math.sin(w.frame*0.1)*2.5;
+  // shadow
+  rc.fillStyle='rgba(0,0,0,0.2)';
+  rc.beginPath(); rc.ellipse(0, 24-hover, 18, 6, 0, 0, Math.PI*2); rc.fill();
+  rc.translate(0, -6+hover);
+  rc.shadowColor=cfg.color; rc.shadowBlur=18;
+  // main fuselage
+  const fg=rc.createLinearGradient(-16,0,16,0);
+  fg.addColorStop(0,'#443322'); fg.addColorStop(0.4,cfg.color); fg.addColorStop(1,'#221100');
+  rc.fillStyle=fg;
+  rc.beginPath();
+  rc.moveTo(16, 0);
+  rc.lineTo(4, -7);
+  rc.lineTo(-16, -7);
+  rc.lineTo(-16, 7);
+  rc.lineTo(4, 7);
+  rc.closePath(); rc.fill();
+  // missile pods (top + bottom)
+  rc.fillStyle=cfg.accent||cfg.color;
+  rc.fillRect(-14, -11, 10, 4);
+  rc.fillRect(-14,   7, 10, 4);
+  // cockpit visor
+  rc.fillStyle='rgba(255,200,100,0.9)';
+  rc.beginPath(); rc.ellipse(10, 0, 5, 3.5, 0, 0, Math.PI*2); rc.fill();
+  // rotor blur ring
+  const rot=w.frame*0.2;
+  rc.strokeStyle=`rgba(255,180,0,0.35)`;
+  rc.lineWidth=2;
+  rc.beginPath(); rc.ellipse(0, 0, 20, 5, rot, 0, Math.PI*2); rc.stroke();
 }
 

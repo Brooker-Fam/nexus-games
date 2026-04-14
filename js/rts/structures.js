@@ -337,6 +337,70 @@ function drawRTSStructure(rc, s){
     rc.fillText('TRAINING',x,y+38); rc.fillText('FIELD',x,y+46);
   }
 
+  if(s.structType==='warpconduit'){
+    // ── WARP CONDUIT (Prism/Shadow) ── swirling portal ring on a pedestal
+    const t=S.frame*0.04;
+    // base pedestal
+    rc.fillStyle='rgba(40,0,80,0.5)';
+    rc.beginPath(); rc.ellipse(x,y+22,30,10,0,0,Math.PI*2); rc.fill();
+    // outer ring glow
+    for(let r=3;r>=1;r--){
+      rc.strokeStyle=`rgba(${cfg.color.startsWith('#00')?'0,221,255':'150,50,255'},${0.15*r})`;
+      rc.lineWidth=r*4;
+      rc.beginPath(); rc.ellipse(x,y-4,26,14,0,0,Math.PI*2); rc.stroke();
+    }
+    // spinning portal ring
+    rc.strokeStyle=cfg.color; rc.lineWidth=3;
+    rc.shadowColor=cfg.color; rc.shadowBlur=20;
+    rc.beginPath(); rc.ellipse(x,y-4,24,12,t,0,Math.PI*2); rc.stroke();
+    // inner vortex
+    const vg=rc.createRadialGradient(x,y-4,2,x,y-4,14);
+    vg.addColorStop(0,'rgba(255,255,255,0.5)');
+    vg.addColorStop(0.4,`${cfg.color}cc`);
+    vg.addColorStop(1,'transparent');
+    rc.fillStyle=vg; rc.beginPath(); rc.ellipse(x,y-4,14,7,0,0,Math.PI*2); rc.fill();
+    // support struts
+    for(let i=0;i<3;i++){
+      const a=i/3*Math.PI*2;
+      rc.strokeStyle=`rgba(${cfg.color.startsWith('#00')?'0,180,220':'120,40,200'},0.7)`;
+      rc.lineWidth=2;
+      rc.beginPath(); rc.moveTo(x+Math.cos(a)*26,y-4+Math.sin(a)*13);
+      rc.lineTo(x+Math.cos(a)*18,y+18); rc.stroke();
+    }
+    rc.shadowBlur=6; rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
+    rc.fillStyle=cfg.color; rc.fillText('WARP',x,y+36); rc.fillText('CONDUIT',x,y+44);
+  }
+
+  if(s.structType==='shipyard'){
+    // ── SHIPYARD (Roboto) ── launch pad with scaffolding
+    const t=S.frame*0.03;
+    // pad base
+    rc.fillStyle='#1a1208';
+    rc.beginPath(); rc.rect(x-30,y+8,60,16); rc.fill();
+    rc.strokeStyle='rgba(255,140,0,0.3)'; rc.lineWidth=1; rc.stroke();
+    // landing pad stripes
+    for(let i=0;i<4;i++){
+      rc.fillStyle=i%2===0?'rgba(255,140,0,0.2)':'rgba(0,0,0,0)';
+      rc.fillRect(x-30+i*15,y+8,15,16);
+    }
+    // launch ramp
+    rc.fillStyle='#2a1a08';
+    rc.beginPath(); rc.moveTo(x-10,y+8); rc.lineTo(x+10,y+8); rc.lineTo(x+6,y-16); rc.lineTo(x-6,y-16); rc.closePath(); rc.fill();
+    rc.strokeStyle='rgba(255,160,0,0.4)'; rc.lineWidth=1; rc.stroke();
+    // scaffolding arms
+    rc.strokeStyle='rgba(200,130,0,0.6)'; rc.lineWidth=2;
+    rc.beginPath(); rc.moveTo(x-20,y-4); rc.lineTo(x-8,y-16); rc.stroke();
+    rc.beginPath(); rc.moveTo(x+20,y-4); rc.lineTo(x+8,y-16); rc.stroke();
+    // beacon pulse
+    const pulse=0.5+Math.sin(t*4)*0.5;
+    rc.fillStyle=`rgba(255,160,0,${pulse})`;
+    rc.shadowColor='#ff8800'; rc.shadowBlur=12;
+    rc.beginPath(); rc.arc(x,y-22,4,0,Math.PI*2); rc.fill();
+    // label
+    rc.shadowBlur=6; rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
+    rc.fillStyle=cfg.color; rc.fillText('SHIP',x,y+34); rc.fillText('YARD',x,y+42);
+  }
+
   // HP bar
   const bw=48, bh=4;
   drawHealthBar(rc, x, y-52, bw, bh, s.hp, s.maxHp);

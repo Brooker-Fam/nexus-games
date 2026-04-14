@@ -76,7 +76,8 @@ function aiTick(){
   const workers   = aiCount('worker');
   const warriors  = aiCount('warrior');
   const barracks  = aiCount('structure', e=>e.isBarracks);
-  const eliteStructs = aiCount('structure', e=>!e.isBarracks);
+  const eliteStructs = aiCount('structure', e=>!e.isBarracks&&!e.isAerialHangar);
+  const aerialHangars = aiCount('structure', e=>e.isAerialHangar);
   const cannons   = aiCount('cannon');
   const playerWarriors = S.entities.filter(e=>e.side==='player'&&e.type==='warrior').length;
   const idleWarriors = S.entities.filter(e=>e.side==='enemy'&&e.type==='warrior'&&e.state==='idle').length;
@@ -119,6 +120,11 @@ function aiTick(){
       aiBuild('structure', eb.x-200, eb.y, AI_CONFIG.structureCost);
     }
 
+    // Build aerial hangar once elite structure exists
+    if(aerialHangars===0 && eliteStructs>=1 && workers>=AI_CONFIG.eliteWorkerReq){
+      aiBuild('aerial', eb.x-160, eb.y-150, 25);
+    }
+
     } // end mistake check
   }
 
@@ -135,9 +141,21 @@ function aiTick(){
     }
 
     // Train elites
-    const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.underConstruction);
+    const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.underConstruction);
     if(eliteStruct && S.gold.enemy>=AI_CONFIG.eliteCost){
       aiQueueAt(eliteStruct,'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),AI_CONFIG.eliteCost);
+    }
+
+    // Train aerial units from hangar
+    const eCfg=FACTION_CFG[S.enemyFaction];
+    const aerialHangar=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&e.isAerialHangar&&!e.underConstruction);
+    const aerialFnMap2={makeStarFighter,makeSkyAttacker};
+    if(aerialHangar && eCfg.aerialFn && S.gold.enemy>=eCfg.aerialUnitCost){
+      const afn=aerialFnMap2[eCfg.aerialFn];
+      if(afn) aiQueueAt(aerialHangar,eCfg.aerialUnitLabel,
+        BUILD_TIMES[eCfg.aerialFn==='makeSkyAttacker'?'skyattacker':'starfighter'],
+        ()=>afn('enemy',S.enemyFaction,aerialHangar.x,aerialHangar.y),
+        eCfg.aerialUnitCost);
     }
 
     } // end mistake check
@@ -272,7 +290,7 @@ function workerBuild(w){
   if(moveToward(w, w.buildTarget.x, w.buildTarget.y, BUILD_ARRIVE_DIST)) {
     const bt=w.buildTarget.buildType||'structure';
     if(!w.buildTarget.ghost){
-      const makers={cannon:makeCannon, barracks:makeBarracks, base:makeBase};
+      const makers={cannon:makeCannon, barracks:makeBarracks, base:makeBase, aerial:makeAerialBuilding};
       const ghost=(makers[bt]||makeStructure)(w.side, w.faction, w.buildTarget.x, w.buildTarget.y);
       S.entities.push(ghost);
       w.buildTarget.ghost=ghost;
@@ -288,7 +306,7 @@ function workerBuild(w){
       ghost.hp=ghost.maxHp;
       sfx('rtsBuildDone');
       if(w.side==='player'){
-        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:FACTION_CFG[w.faction].structLabel;
+        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:bt==='aerial'?FACTION_CFG[w.faction].aerialLabel:FACTION_CFG[w.faction].structLabel;
         rtsSetLog(`${lbl} complete!`);
       }
       w.state='idle'; w.buildTarget=null; w.hammerSwing=0; w.buildTimer=0;
@@ -358,11 +376,12 @@ function cannonTick(c){
   if(c.underConstruction) return; // can't fire while being built
   c.cooldown=Math.max(0,(c.cooldown||0)-1);
   if(c.cooldown>0) return;
-  // find nearest enemy within range
+  // find nearest enemy within range (cannons cannot target aerial units)
   let target=null, bestDist=c.range;
   const enemySide=c.side==='player'?'enemy':'player';
   for(const e of S.entities){
     if(e.side!==enemySide) continue;
+    if(e.aerial) continue; // cannons can't hit aerial units
     const d=_dist(e.x-c.x,e.y-c.y);
     if(d<bestDist){ bestDist=d; target=e; }
   }
@@ -405,13 +424,31 @@ function queueUnit(building, label, time, fn){
 // ── WARRIOR STATE HANDLERS ──
 const MELEE_ATTACK_TICKS = 45;
 
+// Returns true if this attacker can hit aerial units.
+// Allowed: gunbot (roboto warrior), shockbot, dark warrior (shadow elite),
+//          witch (prism warrior), oracle (prism elite), wizard, starfighter, skyattacker.
+// Blocked: cannons, workers, swordsman (shadow melee warrior), necromancer, tank.
+function canTargetAerial(w){
+  if(w.type==='cannon') return false;
+  if(w.type!=='warrior') return false;
+  // shadow base warrior has no subtype — that's the swordsman (melee only)
+  if(w.faction==='shadow' && !w.subtype) return false;
+  if(w.subtype==='necromancer') return false;
+  if(w.subtype==='tank') return false;
+  return true;
+}
+
 function warriorFindTarget(w, enemyBase2){
   // Forced target (right-click)
   if(w.forcedTarget){
     if(w.forcedTarget.hp<=0||!S.entities.includes(w.forcedTarget)){
       w.forcedTarget=null;
     } else {
-      return { target:w.forcedTarget, dist:_dist(w.forcedTarget.x-w.x, w.forcedTarget.y-w.y) };
+      // respect aerial restriction even for forced targets
+      if(!w.forcedTarget.aerial || canTargetAerial(w)){
+        return { target:w.forcedTarget, dist:_dist(w.forcedTarget.x-w.x, w.forcedTarget.y-w.y) };
+      }
+      w.forcedTarget=null;
     }
   }
 
@@ -423,6 +460,7 @@ function warriorFindTarget(w, enemyBase2){
       if(e.side===w.side) continue;
       // skip primary bases (handled as fallback)
       if(e===S.playerBase||e===S.enemyBase) continue;
+      if(e.aerial && !canTargetAerial(w)) continue;
       const d=_dist(e.x-w.x,e.y-w.y);
       if(d<scanRange && e.hp<weakestHP){ weakestHP=e.hp; weakest=e; }
     }
@@ -437,6 +475,7 @@ function warriorFindTarget(w, enemyBase2){
     if(e.side===w.side) continue;
     // skip primary bases (handled as fallback)
     if(e===S.playerBase||e===S.enemyBase) continue;
+    if(e.aerial && !canTargetAerial(w)) continue;
     const d=_dist(e.x-w.x,e.y-w.y);
     if(d<nearestDist){ nearestDist=d; nearest=e; }
   }

@@ -18,6 +18,9 @@ const FACTION_CFG={
     workerIcon:'🧙', warriorIcon:'✨',
     barracksIcon:'🌀', structIcon:'🏛', baseIcon:'🏰',
     cannonColor:'#00f5ff', cannonSound:'rtsPrismCannon',
+    aerialName:'WARP CONDUIT', aerialLabel:'WARP CONDUIT', aerialIcon:'🌀',
+    aerialUnitLabel:'STAR FIGHTER', aerialUnitDesc:'Aerial — fast energy bolts, immune to melee',
+    aerialUnitCost:28, aerialUnitIcon:'✦', aerialFn:'makeStarFighter',
   },
   shadow:{
     color:'#9922ff', accent:'#dd88ff', workerColor:'#8855cc',
@@ -36,6 +39,9 @@ const FACTION_CFG={
     workerIcon:'🥷', warriorIcon:'⚔',
     barracksIcon:'⚔', structIcon:'⚡', baseIcon:'🏰',
     cannonColor:'#cc44ff', cannonSound:'rtsShadowCannon',
+    aerialName:'WARP CONDUIT', aerialLabel:'WARP CONDUIT', aerialIcon:'🌀',
+    aerialUnitLabel:'STAR FIGHTER', aerialUnitDesc:'Aerial — fast energy bolts, immune to melee',
+    aerialUnitCost:28, aerialUnitIcon:'✦', aerialFn:'makeStarFighter',
   },
   roboto:{
     color:'#ff8800', accent:'#ffcc44', workerColor:'#aa6622',
@@ -54,6 +60,9 @@ const FACTION_CFG={
     workerIcon:'🤖', warriorIcon:'🦾',
     barracksIcon:'🪖', structIcon:'🏭', baseIcon:'🏗',
     cannonColor:'#ffaa00', cannonSound:'rtsCannonFire',
+    aerialName:'SHIPYARD', aerialLabel:'SHIPYARD', aerialIcon:'🚀',
+    aerialUnitLabel:'SKY ATTACKER', aerialUnitDesc:'Aerial — heavy missiles, immune to melee',
+    aerialUnitCost:32, aerialUnitIcon:'🚀', aerialFn:'makeSkyAttacker',
   },
 };
 

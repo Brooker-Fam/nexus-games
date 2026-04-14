@@ -64,10 +64,22 @@ function openBuildPopup(screenX, screenY, context){
       S.buildStructureMode='cannon'; _buildModeCost=15;
       rtsSetLog('Click to place your CANNON!'); closeBuildPopup();
     });
+    addOpt(cfg.aerialIcon, `Build ${cfg.aerialLabel}`, `Click to place — trains aerial units (25g)`, 25, ()=>{
+      S.buildStructureMode='aerial'; _buildModeCost=25;
+      rtsSetLog(`Click to place your ${cfg.aerialLabel}!`); closeBuildPopup();
+    });
     addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Click to place — trains more workers (35g)`, 35, ()=>{
       S.buildStructureMode='base'; _buildModeCost=35;
       rtsSetLog(`Click to place your new ${cfg.buildingName}!`); closeBuildPopup();
     });
+
+  } else if(context==='aerial'){
+    const sel=S.selected[0];
+    if(!sel) return;
+    title.textContent = cfg.aerialLabel;
+    addOpt(cfg.aerialUnitIcon, cfg.aerialUnitLabel, cfg.aerialUnitDesc, cfg.aerialUnitCost,
+      ()=>trainCmd(sel.id, 'aerial', 'aerial'),
+      myGold()<cfg.aerialUnitCost||sel.underConstruction);
 
   } else if(context==='structure'){
     const sel=S.selected[0];
@@ -180,7 +192,7 @@ function rtsHandleClick(e){
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:'base' });
     } else {
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:
-        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':'structure' });
+        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':'structure' });
     }
     S.buildStructureMode=false;
     S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#ffdd00',size:0,isRing:true,radius:4});
@@ -218,6 +230,14 @@ function rtsHandleClick(e){
         openBuildPopup(sx,sy,'barracks');
         rtsSetLog(`${cfg.barracksLabel} — train ${cfg.warriorLabel}s here.`);
       }
+    } else if(hit.type==='structure' && hit.isAerialHangar){
+      if(hit.underConstruction){
+        const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
+        rtsSetLog(`${cfg.aerialLabel} — under construction ${pct}%`);
+      } else {
+        openBuildPopup(sx,sy,'aerial');
+        rtsSetLog(`${cfg.aerialLabel} — train aerial units.`);
+      }
     } else if(hit.type==='structure'){
       if(hit.underConstruction){
         const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
@@ -233,7 +253,7 @@ function rtsHandleClick(e){
       openBuildPopup(sx,sy,'worker');
       rtsSetLog(`${cfg.workerLabel} selected — build or click to move.`);
     } else if(hit.type==='warrior'){
-      const UNIT_LABELS={elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label'};
+      const UNIT_LABELS={elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel'};
       const lbl=cfg[UNIT_LABELS[hit.subtype]]||cfg.warriorLabel;
       rtsSetLog(`${lbl} selected — click to move or attack.`);
     }

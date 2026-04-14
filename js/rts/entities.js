@@ -51,13 +51,16 @@ function makeWarrior(side, faction, nearX, nearY){
 
 // ── BUILD TIMES (ticks at 60/s) ──
 const BUILD_TIMES={
-  structure: 900,   // 15s to construct a building
-  barracks:  900,   // 15s
-  cannon:    720,   // 12s
-  worker:    480,   // 8s train time
-  warrior:   720,   // 12s
-  elite:     960,   // 16s
-  elite2:    1200,  // 20s
+  structure: 900,    // 15s
+  barracks:  900,    // 15s
+  cannon:    720,    // 12s
+  aerial:    1080,   // 18s — warp conduit / shipyard
+  worker:    480,    // 8s
+  warrior:   720,    // 12s
+  elite:     960,    // 16s
+  elite2:    1200,   // 20s
+  starfighter: 720,  // 12s
+  skyattacker: 840,  // 14s
 };
 const QUEUE_MAX = 5; // max units queued per building
 
@@ -102,6 +105,48 @@ function makeCannon(side, faction, x, y){
     selected:false, frame:0,
     label:'CANNON',
     underConstruction:true, buildProgress:0, buildTime:BUILD_TIMES.cannon,
+  };
+}
+
+// ── AERIAL BUILDINGS ──
+function makeAerialBuilding(side, faction, x, y){
+  const typeMap={roboto:'shipyard', prism:'warpconduit', shadow:'warpconduit'};
+  const cfg=FACTION_CFG[faction];
+  return {
+    id:nextId(), type:'structure', side, faction,
+    x, y, hp:70, maxHp:70,
+    structType: typeMap[faction],
+    selected:false, frame:0,
+    label: cfg.aerialLabel,
+    isAerialHangar:true,
+    underConstruction:true, buildProgress:0, buildTime:BUILD_TIMES.aerial,
+    queue:[], trainTimer:0,
+  };
+}
+
+// ── AERIAL UNITS ──
+function makeStarFighter(side, faction, nearX, nearY){
+  const isPlayer=side==='player';
+  return {
+    id:nextId(), type:'warrior', subtype:'starfighter', side, faction,
+    x: nearX+(isPlayer?60:-60), y: nearY+(rtsRand()-0.5)*120,
+    hp:70, maxHp:70, speed:1.8,
+    state:'idle', target:null, attackTimer:0,
+    damage:16, range:200, ranged:true, fireRate:45,
+    aerial:true,
+    frame:0, selected:false, forcedTarget:null, moveTarget:null,
+  };
+}
+function makeSkyAttacker(side, faction, nearX, nearY){
+  const isPlayer=side==='player';
+  return {
+    id:nextId(), type:'warrior', subtype:'skyattacker', side, faction,
+    x: nearX+(isPlayer?60:-60), y: nearY+(rtsRand()-0.5)*120,
+    hp:90, maxHp:90, speed:1.4,
+    state:'idle', target:null, attackTimer:0,
+    damage:22, range:180, ranged:true, fireRate:60,
+    aerial:true,
+    frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };
 }
 

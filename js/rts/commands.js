@@ -34,11 +34,12 @@ function executeCommand(cmd){
       const building = S.entities.find(e=>e.id===cmd.buildingId);
       if(!building || building.underConstruction) break;
       if(building.side !== side) break; // can't train from enemy building
-      const costMap = { worker:cfg.workerCost, warrior:cfg.warriorCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost };
+      const aerialFnMap = { makeStarFighter, makeSkyAttacker };
+      const costMap = { worker:cfg.workerCost, warrior:cfg.warriorCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost, aerial:cfg.aerialUnitCost };
       const cost = costMap[cmd.unitType] || 0;
       if(S.gold[side] < cost) break;
 
-      const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite2 };
+      const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite2, aerial:BUILD_TIMES[cfg.aerialFn==='makeSkyAttacker'?'skyattacker':'starfighter'] };
       const time = timeMap[cmd.unitType] || BUILD_TIMES.worker;
 
       const fnMap = {
@@ -46,6 +47,7 @@ function executeCommand(cmd){
         warrior: ()=>makeWarrior(side, faction, building.x, building.y),
         elite:   ()=>makeElite(side, faction, building.x, building.y),
         elite2:  ()=>elite2FnMap[cfg.elite2Fn](side, faction, building.x, building.y),
+        aerial:  ()=>aerialFnMap[cfg.aerialFn](side, faction, building.x, building.y),
       };
 
       const fn = fnMap[cmd.unitType];
@@ -53,6 +55,7 @@ function executeCommand(cmd){
       const label = cmd.unitType==='worker' ? cfg.workerLabel
         : cmd.unitType==='warrior' ? cfg.warriorLabel
         : cmd.unitType==='elite' ? cfg.eliteLabel
+        : cmd.unitType==='aerial' ? cfg.aerialUnitLabel
         : cfg.elite2Label;
 
       if(!queueUnit(building, label, time, fn)) break;
