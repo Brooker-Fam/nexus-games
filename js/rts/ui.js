@@ -14,14 +14,19 @@ function openBuildPopup(screenX, screenY, context){
   opts.innerHTML='';
 
   // Helper to create a popup button
-  function addOpt(icon, name, desc, cost, onclick, disabled){
+  function addOpt(icon, name, desc, cost, onclick, disabled, oilCost=0){
     const btn=document.createElement('button');
     btn.className='rbp-option';
-    btn.disabled=disabled!==undefined ? disabled : myGold()<cost;
+    btn.dataset.goldCost=String(cost||0);
+    btn.dataset.oilCost=String(oilCost||0);
+    const forceDisabled = disabled!==undefined ? !!disabled : false;
+    btn.dataset.forceDisabled = forceDisabled ? '1' : '0';
+    btn.disabled=forceDisabled || myGold()<cost || myOil()<oilCost;
+    const oilCostLabel = oilCost>0 ? `+${oilCost}o` : '';
     btn.innerHTML=`<span class="rbp-opt-icon">${icon}</span>
       <span class="rbp-opt-info"><span class="rbp-opt-name">${name}</span>
       <span class="rbp-opt-desc">${desc}</span></span>
-      <span class="rbp-opt-cost">${cost}g</span>`;
+      <span class="rbp-opt-cost">${cost}g${oilCostLabel}</span>`;
     btn.onclick=onclick;
     opts.appendChild(btn);
   }
@@ -83,9 +88,11 @@ function openBuildPopup(screenX, screenY, context){
     const sel=S.selected[0];
     if(!sel) return;
     title.textContent = cfg.aerialLabel;
+    const aerialOilCost = cfg.aerialOilCost||0;
     addOpt(cfg.aerialUnitIcon, cfg.aerialUnitLabel, cfg.aerialUnitDesc, cfg.aerialUnitCost,
       ()=>trainCmd(sel.id, 'aerial', 'aerial'),
-      myGold()<cfg.aerialUnitCost||sel.underConstruction);
+      myGold()<cfg.aerialUnitCost||myOil()<aerialOilCost||sel.underConstruction,
+      aerialOilCost);
 
   } else if(context==='structure'){
     const sel=S.selected[0];
@@ -93,14 +100,15 @@ function openBuildPopup(screenX, screenY, context){
     title.textContent = cfg.structLabel;
 
     const eliteTypes = [
-      { icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost, unitType:'elite' },
-      { icon:cfg.elite2Icon, label:cfg.elite2Label, desc:cfg.elite2Desc, cost:cfg.elite2Cost, unitType:'elite2' },
+      { icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost, oilCost:0, unitType:'elite' },
+      { icon:cfg.elite2Icon, label:cfg.elite2Label, desc:cfg.elite2Desc, cost:cfg.elite2Cost, oilCost:cfg.tankOilCost||0, unitType:'elite2' },
     ];
 
     for(const u of eliteTypes){
       addOpt(u.icon, u.label, u.desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'structure'),
-        myGold()<u.cost||sel.underConstruction);
+        myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        u.oilCost);
     }
   }
 
@@ -323,8 +331,14 @@ function updateRtsHUD(){
   if(S.buildPopupOpen){
     const opts=document.getElementById('rbp-options');
     if(opts) opts.querySelectorAll('.rbp-option').forEach(btn=>{
-      const cost=parseInt(btn.querySelector('.rbp-opt-cost').textContent);
-      btn.disabled = myGold() < cost;
+      const forceDisabled = btn.dataset.forceDisabled === '1';
+      if(forceDisabled){
+        btn.disabled = true;
+        return;
+      }
+      const goldCost=parseInt(btn.dataset.goldCost||'0',10);
+      const oilCost=parseInt(btn.dataset.oilCost||'0',10);
+      btn.disabled = myGold() < goldCost || myOil() < oilCost;
     });
   }
 }

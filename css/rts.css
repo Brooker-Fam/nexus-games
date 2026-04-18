@@ -311,12 +311,15 @@
   }
   .rbp-option:disabled { opacity:0.35; cursor:not-allowed; }
   .rbp-opt-icon { font-size:22px; flex-shrink:0; }
-  .rbp-opt-info { display:flex; flex-direction:column; flex:1; }
+  .rbp-opt-info { display:flex; flex-direction:column; flex:1; min-width:0; }
   .rbp-opt-name {
     font-family:'Orbitron',sans-serif; font-size:10px; letter-spacing:2px;
     color:var(--text-bright); margin-bottom:2px;
   }
-  .rbp-opt-desc { font-size:10px; color:var(--text-dim); letter-spacing:0.5px; }
+  .rbp-opt-desc {
+    font-size:10px; color:var(--text-dim); letter-spacing:0.5px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
   .rbp-opt-cost {
     font-family:'Orbitron',sans-serif; font-size:11px;
     color:gold; flex-shrink:0;
