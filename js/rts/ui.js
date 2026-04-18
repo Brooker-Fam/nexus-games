@@ -69,7 +69,7 @@ function openBuildPopup(screenX, screenY, context){
       rtsSetLog(`Click to place your ${cfg.aerialLabel}!`); closeBuildPopup();
     });
     if(cfg.oilRigLabel){
-      addOpt(cfg.oilRigIcon, `Build ${cfg.oilRigLabel}`, `Click to place — drones collect oil for tanks & sky attackers (20g)`, 20, ()=>{
+      addOpt(cfg.oilRigIcon, `Build ${cfg.oilRigLabel}`, `Click to place — drones collect oil for tanks & war drones (20g)`, 20, ()=>{
         S.buildStructureMode='oilrig'; _buildModeCost=20;
         rtsSetLog(`Click to place your ${cfg.oilRigLabel}!`); closeBuildPopup();
       });
