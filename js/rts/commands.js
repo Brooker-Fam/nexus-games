@@ -27,6 +27,15 @@ function executeCommand(cmd){
   const faction = side==='player' ? S.playerFaction : S.enemyFaction;
   const cfg = FACTION_CFG[faction];
   const elite2FnMap = { makeWizard, makeNecromancer, makeTank };
+  const getBuildTypeFromEntity = (ent)=>{
+    if(!ent) return 'structure';
+    if(ent.type==='base') return 'base';
+    if(ent.type==='cannon') return 'cannon';
+    if(ent.isBarracks) return 'barracks';
+    if(ent.isAerialHangar) return 'aerial';
+    if(ent.isOilRig) return 'oilrig';
+    return 'structure';
+  };
 
   switch(cmd.type){
 
@@ -87,7 +96,43 @@ function executeCommand(cmd){
         const spread = idx * 20 - (cmd.unitIds.length * 10);
         unit.moveTarget = { x:cmd.x + spread, y:cmd.y };
         unit.forcedTarget = null;
+        if(unit.type==='worker'){
+          unit.assignedTask = null;
+          unit.assignedTargetId = null;
+        }
         unit.state = unit.type==='warrior' ? 'march' : 'moving';
+      }
+      break;
+    }
+
+    case 'assign_worker_task': {
+      const target = S.entities.find(e=>e.id===cmd.targetId);
+      if(!target || target.side!==side) break;
+      for(const workerId of cmd.workerIds||[]){
+        const worker = S.entities.find(e=>e.id===workerId);
+        if(!worker || worker.side!==side || worker.type!=='worker') continue;
+        worker.moveTarget = null;
+        if(cmd.task==='build'){
+          if(!target.underConstruction) continue;
+          worker.assignedTask = null;
+          worker.assignedTargetId = null;
+          worker.target = null;
+          worker.buildTarget = {
+            x:target.x,
+            y:target.y,
+            buildType:getBuildTypeFromEntity(target),
+            ghost:target,
+          };
+          worker.state = 'building';
+        } else if(cmd.task==='gather_oil'){
+          if(!target.isOilRig || target.underConstruction) continue;
+          worker.buildTarget = null;
+          worker.target = target;
+          worker.assignedTask = 'gather_oil';
+          worker.assignedTargetId = target.id;
+          worker.state = 'moving';
+          worker.mineTimer = 0;
+        }
       }
       break;
     }

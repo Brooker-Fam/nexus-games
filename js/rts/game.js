@@ -417,6 +417,26 @@ function workerTick(w, playerBase, enemyBase){
     }
     return;
   }
+  if(w.assignedTask==='gather_oil'){
+    const rig=S.entities.find(e=>e.id===w.assignedTargetId && e.isOilRig && e.side===w.side && !e.underConstruction);
+    if(!rig || (rig.oil||0)<=0){
+      w.assignedTask=null;
+      w.assignedTargetId=null;
+      w.target=null;
+      if(w.state!=='returning') w.state='idle';
+    } else {
+      w.target=rig;
+      if(w.state==='returning'){
+        workerReturn(w, myBase);
+      } else if(moveToward(w, rig.x, rig.y, MINE_ARRIVE_DIST)){
+        w.state='mining';
+        workerMine(w);
+      } else {
+        w.state='moving';
+      }
+      return;
+    }
+  }
   if(w.state==='idle'||w.state==='moving') workerFindGold(w);
   else if(w.state==='mining') workerMine(w);
   else if(w.state==='returning') workerReturn(w, myBase);
