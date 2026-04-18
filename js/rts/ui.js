@@ -281,6 +281,17 @@ function rtsHandleRightClick(e){
 
   if(S.selected.length===0) return;
 
+  const OIL_RIG_RIGHT_CLICK_RADIUS = 110;
+
+  // check friendly hit
+  let friendlyHit=null, friendlyDist=Infinity;
+  for(const ent of S.entities){
+    if(ent.side!==mySide()) continue;
+    const r=ent.isOilRig ? OIL_RIG_RIGHT_CLICK_RADIUS : (CLICK_RADII[ent.type]||20);
+    const d=Math.hypot(wp.x-ent.x,wp.y-ent.y);
+    if(d<r && d<friendlyDist){ friendlyHit=ent; friendlyDist=d; }
+  }
+
   // check enemy hit
   let enemyHit=null, enemyDist=Infinity;
   for(const ent of S.entities){
@@ -291,6 +302,23 @@ function rtsHandleRightClick(e){
   }
 
   const selectedIds=S.selected.filter(s=>s.side===mySide()).map(s=>s.id);
+  const selectedWorkerIds=S.selected.filter(s=>s.side===mySide()&&s.type==='worker').map(s=>s.id);
+  if(friendlyHit && selectedWorkerIds.length>0){
+    const buildable=friendlyHit.type==='base'||friendlyHit.type==='structure'||friendlyHit.type==='cannon';
+    if(buildable && friendlyHit.underConstruction){
+      issueCommand({ type:'assign_worker_task', workerIds:selectedWorkerIds, task:'build', targetId:friendlyHit.id });
+      rtsSetLog(`Build order issued!`);
+      S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#ffdd00',size:0,isRing:true,radius:4});
+      return;
+    }
+    if(friendlyHit.isOilRig && !friendlyHit.underConstruction){
+      issueCommand({ type:'assign_worker_task', workerIds:selectedWorkerIds, task:'gather_oil', targetId:friendlyHit.id });
+      rtsSetLog(`Oil gathering order issued!`);
+      S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#00d27f',size:0,isRing:true,radius:4});
+      return;
+    }
+  }
+
   if(enemyHit){
     issueCommand({ type:'attack_target', unitIds:selectedIds, targetId:enemyHit.id });
     rtsSetLog(`Attack order issued!`);
