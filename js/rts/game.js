@@ -629,7 +629,7 @@ function warriorTick(w, playerBase, enemyBase){
     // Rush toward opponent
     const dx=opp.x-w.x, dy=opp.y-w.y, d=_dist(dx,dy)||1;
     if(d>22){ w.x+=dx/d*3.5; w.y+=dy/d*3.5; }
-    else {
+    else if(w.duelAttacker){
       w.attackTimer=(w.attackTimer||0)+1;
       if(w.attackTimer>=15){
         w.attackTimer=0;

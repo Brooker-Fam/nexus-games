@@ -160,8 +160,9 @@ function executeCommand(cmd){
         if(d<nearestDist){ nearestDist=d; nearest=e; }
       }
       if(!nearest){ if(side==='player') rtsSetLog('Need another Swordsman to start a duel!'); break; }
-      s1.state='duel'; s1.duelOpponentId=nearest.id;
-      nearest.state='duel'; nearest.duelOpponentId=s1.id;
+      const s1Wins = Math.random() < 0.5;
+      s1.state='duel'; s1.duelOpponentId=nearest.id; s1.duelAttacker=s1Wins;
+      nearest.state='duel'; nearest.duelOpponentId=s1.id; nearest.duelAttacker=!s1Wins;
       if(side==='player') rtsSetLog('Two Swordsmen enter the duel ring...');
       break;
     }
