@@ -164,6 +164,17 @@ function makeSkyAttacker(side, faction, nearX, nearY){
 }
 
 // ── ELITE WARRIORS ──
+function makeBloodhound(side, faction, x, y){
+  return {
+    id:nextId(), type:'warrior', subtype:'bloodhound', side, faction,
+    x, y,
+    hp:120, maxHp:120, speed:2.8,
+    state:'idle', target:null, attackTimer:0,
+    damage:22, range:50, ranged:false, fireRate:30,
+    bowMode:false,
+    frame:0, selected:false, forcedTarget:null, moveTarget:null,
+  };
+}
 function makeElite(side, faction, nearX, nearY){
   const spread=(rtsRand()-0.5)*100;
   const isPlayer=side==='player';

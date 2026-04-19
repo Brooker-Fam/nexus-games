@@ -150,6 +150,32 @@ function executeCommand(cmd){
       break;
     }
 
+    case 'start_duel': {
+      const s1=S.entities.find(e=>e.id===cmd.swordsmanId);
+      if(!s1||s1.side!==side||s1.faction!=='shadow'||s1.subtype||s1.state==='duel') break;
+      let nearest=null, nearestDist=Infinity;
+      for(const e of S.entities){
+        if(e===s1||e.side!==side||e.type!=='warrior'||e.faction!=='shadow'||e.subtype||e.state==='duel') continue;
+        const d=_dist(e.x-s1.x,e.y-s1.y);
+        if(d<nearestDist){ nearestDist=d; nearest=e; }
+      }
+      if(!nearest){ if(side==='player') rtsSetLog('Need another Swordsman to start a duel!'); break; }
+      s1.state='duel'; s1.duelOpponentId=nearest.id;
+      nearest.state='duel'; nearest.duelOpponentId=s1.id;
+      if(side==='player') rtsSetLog('Two Swordsmen enter the duel ring...');
+      break;
+    }
+
+    case 'toggle_weapon': {
+      const bh=S.entities.find(e=>e.id===cmd.unitId);
+      if(!bh||bh.side!==side||bh.subtype!=='bloodhound') break;
+      bh.bowMode=!bh.bowMode;
+      if(bh.bowMode){ bh.ranged=true; bh.range=220; bh.speed=0.7; bh.fireRate=55; bh.damage=18; }
+      else           { bh.ranged=false; bh.range=50;  bh.speed=2.8; bh.fireRate=30; bh.damage=22; }
+      if(side==='player') rtsSetLog(`Bloodhound switched to ${bh.bowMode?'bow':'sword'} mode!`);
+      break;
+    }
+
     case 'attack_all': {
       let count = 0;
       for(const e of S.entities){

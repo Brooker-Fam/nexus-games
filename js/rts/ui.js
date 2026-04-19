@@ -94,6 +94,20 @@ function openBuildPopup(screenX, screenY, context){
       myGold()<cfg.aerialUnitCost||myOil()<aerialOilCost||sel.underConstruction,
       aerialOilCost);
 
+  } else if(context==='swordsman'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='SWORDSMAN';
+    addOpt('⚔', 'FIGHT', 'Duel a nearby Swordsman — the victor becomes a Bloodhound', 0,
+      ()=>{ issueCommand({type:'start_duel',swordsmanId:sel.id}); closeBuildPopup(); }, false);
+
+  } else if(context==='bloodhound'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='BLOODHOUND';
+    const isBow=sel.bowMode;
+    addOpt(isBow?'🗡':'🏹', isBow?'Switch to SWORD':'Switch to BOW',
+      isBow?'Charge into melee — high damage, wide aggro':'Stand and shoot — ranged, no charge',
+      0, ()=>{ issueCommand({type:'toggle_weapon',unitId:sel.id}); closeBuildPopup(); }, false);
+
   } else if(context==='structure'){
     const sel=S.selected[0];
     if(!sel) return;
@@ -273,6 +287,12 @@ function rtsHandleClick(e){
     } else if(hit.type==='worker'){
       openBuildPopup(sx,sy,'worker');
       rtsSetLog(`${cfg.workerLabel} selected — build or click to move.`);
+    } else if(hit.type==='warrior' && hit.faction==='shadow' && !hit.subtype){
+      openBuildPopup(sx,sy,'swordsman');
+      rtsSetLog(`${cfg.warriorLabel} selected — right-click to move or attack.`);
+    } else if(hit.type==='warrior' && hit.subtype==='bloodhound'){
+      openBuildPopup(sx,sy,'bloodhound');
+      rtsSetLog(`BLOODHOUND — ${hit.bowMode?'bow':'sword'} mode  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior'){
       const UNIT_LABELS={elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel'};
       const lbl=cfg[UNIT_LABELS[hit.subtype]]||cfg.warriorLabel;

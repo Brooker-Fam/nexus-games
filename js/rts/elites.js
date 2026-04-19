@@ -58,12 +58,19 @@ function drawEliteDarkWarrior(rc,cfg,w){
   rc.strokeStyle='#220033'; rc.lineWidth=4; rc.lineCap='round';
   rc.beginPath(); rc.moveTo(-4,6); rc.lineTo(-6+Math.sin(t*0.25)*8,18); rc.stroke();
   rc.beginPath(); rc.moveTo(4,6); rc.lineTo(6-Math.sin(t*0.25)*8,18); rc.stroke();
-  // billowing dark robe
-  const capeBlow=w.state==='march'?-10:0;
+  // dark robe — trails behind when marching, no sideways puff
+  const capeTrail=w.state==='march'?4:0;
   const cGrad=rc.createLinearGradient(-12,-26,12,10);
   cGrad.addColorStop(0,'#0a0015'); cGrad.addColorStop(0.6,'#110022'); cGrad.addColorStop(1,'#04000a');
   rc.fillStyle=cGrad;
-  rc.beginPath(); rc.moveTo(-8,-4); rc.bezierCurveTo(-14+capeBlow,0,-13+capeBlow,10,-8+capeBlow,10); rc.lineTo(8,10); rc.bezierCurveTo(13,10,14,0,10,-4); rc.lineTo(5,-26); rc.lineTo(-5,-26); rc.closePath(); rc.fill();
+  rc.beginPath();
+  rc.moveTo(-5,-26);
+  rc.lineTo(-6-capeTrail,-4);
+  rc.lineTo(-8-capeTrail,10);
+  rc.lineTo(8,10);
+  rc.lineTo(6,-4);
+  rc.lineTo(5,-26);
+  rc.closePath(); rc.fill();
   rc.strokeStyle='rgba(120,0,200,0.5)'; rc.lineWidth=0.8; rc.stroke();
   // void trim swirling
   rc.strokeStyle='rgba(100,0,180,0.3)'; rc.lineWidth=0.8;
@@ -408,5 +415,112 @@ function drawTankUnit(rc,cfg,w){
   rc.beginPath(); rc.arc(-5,0,5,0,Math.PI*2); rc.fill();
 }
 
+function drawBloodhound(rc,cfg,w){
+  const t=w.frame, isAtt=w.state==='attack', isMarching=w.state==='march';
+  const isBow=w.bowMode;
+
+  // LEGS — striding in gold armour
+  for(const [lx,ph] of [[-5,0],[4,Math.PI]]){
+    const step=isMarching?Math.sin(t*0.3+ph)*5:0;
+    const lGrad=rc.createLinearGradient(lx,-4+step,lx+6,14+step);
+    lGrad.addColorStop(0,'#ffe066'); lGrad.addColorStop(1,'#cc6600');
+    rc.fillStyle=lGrad; rc.beginPath(); rc.roundRect(lx,-4+step,6,16,2); rc.fill();
+    rc.strokeStyle='rgba(255,200,50,0.4)'; rc.lineWidth=0.5; rc.stroke();
+  }
+
+  // BODY — full gold suit, fire-bright gradient
+  const bGrad=rc.createLinearGradient(-10,-24,10,4);
+  bGrad.addColorStop(0,'#ffe066'); bGrad.addColorStop(0.4,'#ffaa00'); bGrad.addColorStop(1,'#cc5500');
+  rc.fillStyle=bGrad; rc.beginPath(); rc.roundRect(-10,-24,20,28,3); rc.fill();
+  rc.strokeStyle='rgba(255,220,80,0.6)'; rc.lineWidth=1; rc.stroke();
+
+  // SHIMMER DOTS — tiny gold & silver specks on the suit, staggered shimmer animation
+  const dotPositions=[[-6,-20],[-2,-16],[5,-14],[-7,-8],[3,-6],[0,-18],[-4,-12],[6,-10],[-8,-4],[4,-2]];
+  for(let i=0;i<dotPositions.length;i++){
+    const [dx,dy]=dotPositions[i];
+    const shimmer=Math.sin(t*0.15+i*2.1)*0.5+0.5;
+    const silver=(i+((w.id||0)%3))%3===0;
+    rc.fillStyle=silver?`rgba(220,230,255,${0.4+shimmer*0.6})`:`rgba(255,240,100,${0.4+shimmer*0.6})`;
+    rc.shadowColor=silver?'#aaddff':'#ffdd44'; rc.shadowBlur=shimmer*8;
+    rc.beginPath(); rc.arc(dx,dy,1.2,0,Math.PI*2); rc.fill();
+  }
+  rc.shadowBlur=0;
+
+  // WEAPON — bow or sword
+  if(isBow){
+    const bowAngle=isAtt?-0.4:0;
+    rc.save(); rc.translate(14,-12); rc.rotate(bowAngle);
+    rc.strokeStyle='#a07030'; rc.lineWidth=2.5;
+    rc.beginPath(); rc.arc(0,0,12,-Math.PI*0.5,Math.PI*0.5); rc.stroke();
+    rc.strokeStyle=isAtt?'rgba(255,220,100,0.9)':'rgba(200,180,80,0.6)'; rc.lineWidth=1;
+    rc.beginPath(); rc.moveTo(0,-12); rc.lineTo(isAtt?-5:0,0); rc.lineTo(0,12); rc.stroke();
+    if(isAtt){
+      rc.strokeStyle='#ffcc44'; rc.lineWidth=1.5;
+      rc.beginPath(); rc.moveTo(-5,0); rc.lineTo(-18,0); rc.stroke();
+    }
+    rc.restore();
+  } else if(isAtt){
+    const slash=Math.sin(t*0.3)*0.7-0.3;
+    rc.save(); rc.rotate(slash);
+    rc.strokeStyle='#cc6600'; rc.lineWidth=6; rc.lineCap='round';
+    rc.beginPath(); rc.moveTo(6,-18); rc.lineTo(20,-4); rc.stroke();
+    rc.shadowColor='#ffcc00'; rc.shadowBlur=22;
+    const sGrad=rc.createLinearGradient(20,-4,44,-28);
+    sGrad.addColorStop(0,'#ffffff'); sGrad.addColorStop(0.3,'#ffee88'); sGrad.addColorStop(1,'#cc6600');
+    rc.strokeStyle=sGrad; rc.lineWidth=4;
+    rc.beginPath(); rc.moveTo(20,-4); rc.lineTo(44,-28); rc.stroke();
+    rc.strokeStyle='rgba(255,240,150,0.8)'; rc.lineWidth=1.5;
+    rc.beginPath(); rc.moveTo(21,-5); rc.lineTo(45,-29); rc.stroke();
+    rc.strokeStyle='rgba(255,160,0,0.3)'; rc.lineWidth=10;
+    rc.beginPath(); rc.arc(10,-14,22,-Math.PI*0.6+slash,-Math.PI*0.1+slash); rc.stroke();
+    rc.restore();
+  } else {
+    const armBob=isMarching?Math.sin(t*0.3)*4:0;
+    rc.strokeStyle='#cc6600'; rc.lineWidth=5; rc.lineCap='round';
+    rc.beginPath(); rc.moveTo(8,-18); rc.lineTo(18+armBob,-10+armBob*0.3); rc.stroke();
+    rc.save(); rc.shadowColor='#ffcc00'; rc.shadowBlur=14;
+    const sGrad2=rc.createLinearGradient(18,-10,36,-30);
+    sGrad2.addColorStop(0,'#ffe099'); sGrad2.addColorStop(0.5,'#cc8800'); sGrad2.addColorStop(1,'#663300');
+    rc.strokeStyle=sGrad2; rc.lineWidth=3;
+    rc.beginPath(); rc.moveTo(18+armBob,-10); rc.lineTo(36+armBob,-30); rc.stroke();
+    rc.restore();
+  }
+
+  // HEAD — smooth black skin
+  rc.fillStyle='#050010'; rc.beginPath(); rc.ellipse(0,-32,7,9,0,0,Math.PI*2); rc.fill();
+  rc.strokeStyle='rgba(255,180,0,0.4)'; rc.lineWidth=0.7; rc.stroke();
+
+  // GOLD CROWN
+  const hGrad=rc.createLinearGradient(-7,-44,7,-32);
+  hGrad.addColorStop(0,'#ffe066'); hGrad.addColorStop(1,'#cc6600');
+  rc.fillStyle=hGrad; rc.beginPath(); rc.ellipse(0,-38,6,7,0,0,Math.PI,true); rc.fill();
+  rc.strokeStyle='rgba(255,220,50,0.5)'; rc.lineWidth=0.7; rc.stroke();
+
+  // DARK FLOWING HAIR — trails behind when moving
+  const hairTrail=isMarching?8:isAtt?4:0;
+  rc.fillStyle='#100018';
+  rc.beginPath();
+  rc.moveTo(-5,-40);
+  rc.bezierCurveTo(-10-hairTrail,-36,-13-hairTrail,-20,-9-hairTrail,-12);
+  rc.lineTo(-4,-16); rc.bezierCurveTo(-5,-24,-3,-32,-3,-40); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(40,0,80,0.5)'; rc.lineWidth=0.8;
+  for(let hi=0;hi<3;hi++){
+    rc.beginPath();
+    rc.moveTo(-3+hi*2,-40);
+    rc.bezierCurveTo(-7-hairTrail*0.8+hi,-32,-10-hairTrail+hi,-18,-6-hairTrail+hi*2,-12);
+    rc.stroke();
+  }
+
+  // GOLDEN EYES
+  for(const ex of [-2.5,2.5]){
+    const eg=rc.createRadialGradient(ex,-32,0,ex,-32,isAtt?4:2.5);
+    eg.addColorStop(0,'#ffee88'); eg.addColorStop(0.4,'#ffaa00'); eg.addColorStop(1,'transparent');
+    rc.fillStyle=eg; rc.beginPath(); rc.arc(ex,-32,isAtt?4:2.5,0,Math.PI*2); rc.fill();
+  }
+
+  // GOLD AURA
+  rc.strokeStyle=`rgba(255,180,0,${0.12+Math.sin(t*0.06)*0.05})`; rc.lineWidth=5;
+  rc.beginPath(); rc.ellipse(0,-14,22,36,0,0,Math.PI*2); rc.stroke();
+}
 
 //# sourceMappingURL=elites.js.map

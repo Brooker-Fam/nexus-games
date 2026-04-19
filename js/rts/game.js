@@ -259,7 +259,7 @@ function rtsTick(){
     // Skip primary bases (handled by game-over check below)
     if(e===playerBase || e===enemyBase) continue;
     if(e.hp<=0){
-      if(e.type==='warrior' && e.faction==='shadow' && !e.subtype){
+      if(e.type==='warrior' && e.faction==='shadow' && !e.subtype && e.state!=='duel'){
         deadSwordsmenPool.push({x:e.x, y:e.y, side:e.side});
         if(deadSwordsmenPool.length>12) deadSwordsmenPool.shift();
       }
@@ -502,8 +502,8 @@ const MELEE_ATTACK_TICKS = 45;
 function canTargetAerial(w){
   if(w.type==='cannon') return false;
   if(w.type!=='warrior') return false;
-  // shadow base warrior has no subtype — that's the swordsman (melee only)
-  if(w.faction==='shadow' && !w.subtype) return false;
+  if(w.faction==='shadow' && !w.subtype) return false; // swordsman (melee only)
+  if(w.subtype==='bloodhound') return w.bowMode===true; // bow mode can hit aerial
   if(w.subtype==='necromancer') return false;
   if(w.subtype==='tank') return false;
   return true;
@@ -611,9 +611,40 @@ function warriorMeleeAttack(w, target, targetDist){
 function warriorTick(w, playerBase, enemyBase){
   const enemyBase2=w.side==='player'?enemyBase:playerBase;
 
+  // DUEL STATE — two swordsmen fighting to become a bloodhound
+  if(w.state==='duel'){
+    const opp=S.entities.find(e=>e.id===w.duelOpponentId);
+    if(!opp||opp.hp<=0||!S.entities.includes(opp)){
+      // Opponent is gone — this warrior won
+      if(w.hp>0){
+        w.subtype='bloodhound';
+        w.maxHp=120; w.hp=120; w.damage=22; w.speed=2.8;
+        w.range=50; w.ranged=false; w.fireRate=30; w.bowMode=false;
+        w.state='idle'; w.duelOpponentId=null;
+        if(w.side==='player') rtsSetLog('A Bloodhound has emerged from the duel!');
+        spawnMagicBurst(w.x, w.y, '#ffaa00');
+      }
+      return;
+    }
+    // Rush toward opponent
+    const dx=opp.x-w.x, dy=opp.y-w.y, d=_dist(dx,dy)||1;
+    if(d>22){ w.x+=dx/d*3.5; w.y+=dy/d*3.5; }
+    else {
+      w.attackTimer=(w.attackTimer||0)+1;
+      if(w.attackTimer>=15){
+        w.attackTimer=0;
+        opp.hp-=12;
+        spawnHitFlash(opp.x,opp.y,'#ffdd00');
+        sfx('rtsUnitHit',50);
+      }
+    }
+    return;
+  }
+
   // Auto-aggro: idle warriors engage nearby enemies
+  // Bloodhounds in sword mode have a much wider charge range
   if(w.state==='idle'){
-    const AGGRO_RANGE = Math.max(w.range || 50, 150);
+    const AGGRO_RANGE = (w.subtype==='bloodhound'&&!w.bowMode) ? 350 : Math.max(w.range||50,150);
     for(const e of S.entities){
       if(e.side===w.side) continue;
       if(e===S.playerBase||e===S.enemyBase) continue;

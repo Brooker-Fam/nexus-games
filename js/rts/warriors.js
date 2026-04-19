@@ -39,6 +39,8 @@ function drawRTSWarrior(rc,w){
     drawNecromancer(rc,cfg,w);
   } else if(w.subtype==='tank'){
     drawTankUnit(rc,cfg,w);
+  } else if(w.subtype==='bloodhound'){
+    drawBloodhound(rc,cfg,w);
   } else {
     if(w.faction==='prism') drawWarriorPrism(rc,cfg,w);
     else if(w.faction==='shadow') drawWarriorShadow(rc,cfg,w);
@@ -152,15 +154,17 @@ function drawWarriorShadow(rc,cfg,w){
     rc.beginPath(); rc.moveTo(4,4);  rc.lineTo(6,14);  rc.stroke();
   }
 
-  // CAPE — billows behind while marching, swings on attack
-  const capeBlow = isMarching ? -8 : isAttacking ? Math.sin(t*0.25)*6 : 0;
-  const cGrad=rc.createLinearGradient(-10,-30,10,8);
+  // CLOAK — streams behind when marching, stays flat (no sideways puff)
+  const cTrail = isMarching ? 5 : isAttacking ? 2 : 0;
+  const cGrad=rc.createLinearGradient(-10,-30,4,8);
   cGrad.addColorStop(0,'#120020'); cGrad.addColorStop(1,'#04000a');
   rc.fillStyle=cGrad;
   rc.beginPath();
-  rc.moveTo(-6,-22);
-  rc.bezierCurveTo(-18+capeBlow,-15,-20+capeBlow,0,-14+capeBlow,8);
-  rc.lineTo(8,8); rc.bezierCurveTo(10,0,6,-14,6,-22); rc.closePath(); rc.fill();
+  rc.moveTo(-5,-22);
+  rc.quadraticCurveTo(-12-cTrail, -4, -10-cTrail, 8);
+  rc.lineTo(7,8);
+  rc.quadraticCurveTo(10,-4,6,-22);
+  rc.closePath(); rc.fill();
   rc.strokeStyle='rgba(100,0,200,0.4)'; rc.lineWidth=0.7; rc.stroke();
 
   // BODY ARMOUR
