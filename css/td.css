@@ -37,6 +37,73 @@
     display: grid;
     grid-template-columns: 1fr 220px;
     gap: 16px;
+    position: relative;
+  }
+
+  .td-start-screen {
+    position: absolute;
+    inset: 0;
+    z-index: 120;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2,8,16,0.95);
+    border: 1px solid var(--panel-border);
+  }
+  .td-start-screen.hidden { display: none; }
+  .td-start-card {
+    width: min(520px, calc(100% - 30px));
+    background: rgba(0,20,40,0.65);
+    border: 1px solid rgba(0,245,255,0.35);
+    box-shadow: 0 0 35px rgba(0,245,255,0.12);
+    padding: 22px 20px;
+    text-align: center;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  }
+  .td-start-kicker {
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    font-size: 11px;
+  }
+  .td-start-title {
+    margin-top: 8px;
+    color: var(--neon-cyan);
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 4px;
+    font-size: 24px;
+    font-weight: 900;
+  }
+  .td-start-sub {
+    margin-top: 8px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    font-size: 13px;
+  }
+  .td-difficulty-grid {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .td-difficulty-btn {
+    background: rgba(0,20,40,0.6);
+    border: 1px solid rgba(0,245,255,0.25);
+    color: var(--text-bright);
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+    padding: 11px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .td-difficulty-btn:hover,
+  .td-difficulty-btn.active {
+    background: rgba(0,245,255,0.12);
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    box-shadow: 0 0 18px rgba(0,245,255,0.2);
+  }
+  .td-start-play {
+    margin-top: 14px;
   }
 
   /* CANVAS */

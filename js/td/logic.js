@@ -25,6 +25,13 @@ const TD_CONFIG = {
   baseEnemyCount: 8,
   enemyCountScaling: 3,
 };
+const TD_BASE_CONFIG = {...TD_CONFIG};
+const TD_DIFFICULTY = {
+  easy: {label:'Easy', enemyHp:0.85, enemySpeed:0.9, enemyCount:0.8, reward:1.2, lives:26, gold:240},
+  normal: {label:'Normal', enemyHp:1, enemySpeed:1, enemyCount:1, reward:1, lives:20, gold:200},
+  hard: {label:'Hard', enemyHp:1.2, enemySpeed:1.12, enemyCount:1.2, reward:0.9, lives:16, gold:170},
+  nightmare: {label:'Nightmare', enemyHp:1.45, enemySpeed:1.22, enemyCount:1.35, reward:0.8, lives:12, gold:140},
+};
 
 // Path waypoints (grid coords)
 const PATH_WAYPOINTS = [
@@ -51,6 +58,24 @@ const TD_DEFAULTS = {
 };
 
 let state = {...TD_DEFAULTS, towers:[], enemies:[], bullets:[], particles:[]};
+let tdSelectedDifficulty = 'normal';
+let tdStarted = false;
+
+function applyDifficulty(level){
+  const diff = TD_DIFFICULTY[level] || TD_DIFFICULTY.normal;
+  tdSelectedDifficulty = TD_DIFFICULTY[level] ? level : 'normal';
+  TD_CONFIG.initialGold = diff.gold;
+  TD_CONFIG.initialLives = diff.lives;
+  TD_CONFIG.enemyBaseHp = Math.round(TD_BASE_CONFIG.enemyBaseHp * diff.enemyHp);
+  TD_CONFIG.enemyHpScaling = Math.round(TD_BASE_CONFIG.enemyHpScaling * diff.enemyHp);
+  TD_CONFIG.enemyBaseSpeed = +(TD_BASE_CONFIG.enemyBaseSpeed * diff.enemySpeed).toFixed(3);
+  TD_CONFIG.enemySpeedScaling = +(TD_BASE_CONFIG.enemySpeedScaling * diff.enemySpeed).toFixed(3);
+  TD_CONFIG.waveReward = Math.round(TD_BASE_CONFIG.waveReward * diff.reward);
+  TD_CONFIG.baseEnemyCount = Math.round(TD_BASE_CONFIG.baseEnemyCount * diff.enemyCount);
+  TD_CONFIG.enemyCountScaling = Math.max(1, Math.round(TD_BASE_CONFIG.enemyCountScaling * diff.enemyCount));
+  TD_DEFAULTS.gold = TD_CONFIG.initialGold;
+  TD_DEFAULTS.lives = TD_CONFIG.initialLives;
+}
 
 function initState(){
   state = {...TD_DEFAULTS, towers:[], enemies:[], bullets:[], particles:[]};
@@ -337,12 +362,20 @@ function resetGame(){
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('waveBtn').disabled=false;
   initState();
+  state.selectedTower = 'gun';
   updateHUD();
   setLog([]);
-  addLog('Game initialized. Place towers and send waves!','info');
+  addLog(`${TD_DIFFICULTY[tdSelectedDifficulty].label} difficulty selected. Place towers and send waves!`,'info');
   lastTime=performance.now();
   tdAccum=0;
   raf=requestAnimationFrame(gameLoop);
+}
+
+function startTDFromMenu(){
+  applyDifficulty(tdSelectedDifficulty);
+  tdStarted = true;
+  document.getElementById('td-start-screen').classList.add('hidden');
+  resetGame();
 }
 
 // ── GAME LIFECYCLE ──
@@ -352,14 +385,30 @@ registerGame('td', {
     renderPreviewLaser(document.getElementById('prev-laser').getContext('2d'));
     renderPreviewMissile(document.getElementById('prev-missile').getContext('2d'));
     renderPreviewCryo(document.getElementById('prev-slow').getContext('2d'));
-    addLog('Game initialized. Place towers and send waves!','info');
-    updateHUD();
-    lastTime=performance.now();
-    tdAccum=0;
-    if(!raf) raf=requestAnimationFrame(gameLoop);
+    if(!tdStarted){
+      document.getElementById('td-start-screen').classList.remove('hidden');
+      applyDifficulty(tdSelectedDifficulty);
+      initState();
+      updateHUD();
+    } else {
+      addLog(`${TD_DIFFICULTY[tdSelectedDifficulty].label} difficulty selected. Place towers and send waves!`,'info');
+      updateHUD();
+      lastTime=performance.now();
+      tdAccum=0;
+      if(!raf) raf=requestAnimationFrame(gameLoop);
+    }
   },
   cleanup(){
     cancelAnimationFrame(raf);
     raf=null;
   },
 });
+
+document.querySelectorAll('.td-difficulty-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    tdSelectedDifficulty = btn.dataset.difficulty || 'normal';
+    document.querySelectorAll('.td-difficulty-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+document.getElementById('td-start-btn').addEventListener('click', startTDFromMenu);

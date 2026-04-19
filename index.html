@@ -62,6 +62,20 @@
     </div>
 
     <div class="game-area">
+      <div id="td-start-screen" class="td-start-screen">
+        <div class="td-start-card">
+          <div class="td-start-kicker">VOID FORTRESS</div>
+          <div class="td-start-title">SELECT DIFFICULTY</div>
+          <div class="td-start-sub">How hard do you want this run to be?</div>
+          <div class="td-difficulty-grid">
+            <button class="td-difficulty-btn" data-difficulty="easy">EASY</button>
+            <button class="td-difficulty-btn active" data-difficulty="normal">NORMAL</button>
+            <button class="td-difficulty-btn" data-difficulty="hard">HARD</button>
+            <button class="td-difficulty-btn" data-difficulty="nightmare">NIGHTMARE</button>
+          </div>
+          <button class="wave-btn td-start-play" id="td-start-btn">▶ BEGIN DEFENSE</button>
+        </div>
+      </div>
       <div class="canvas-wrap">
         <canvas id="tdCanvas" width="700" height="500"></canvas>
         <div class="overlay" id="overlay">
