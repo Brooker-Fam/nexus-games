@@ -316,12 +316,13 @@ function cannonTick(c){
   c.aimAngle=Math.atan2(target.y-c.y,target.x-c.x);
   c.cooldown=c.rate;
   const cCfg=FACTION_CFG[c.faction];
+  const isRobotoCannon = c.faction==='roboto';
   sfx(cCfg.cannonSound||'rtsCannonFire',300);
   rtsProjectiles.push({
     x:c.x, y:c.y, tx:target,
-    speed:8, damage:c.damage,
+    speed:isRobotoCannon?11:8, damage:c.damage,
     faction:c.faction, color:cCfg.cannonColor||'#ffaa00',
-    type:'cannonball', trail:[], side:c.side,
+    type:isRobotoCannon?'bullet':'cannonball', trail:[], side:c.side,
   });
 }
 
@@ -627,4 +628,3 @@ document.addEventListener('visibilitychange',()=>{
     rtsLastTime=performance.now(); rtsAccum=0;
   }
 });
-
