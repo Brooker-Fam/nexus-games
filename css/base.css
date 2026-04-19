@@ -152,14 +152,6 @@
   .tab.active::before {
     background: rgba(0,245,255,0.08);
   }
-  .tab-badge {
-    display: inline-block;
-    background: var(--neon-purple);
-    color: white; font-size: 8px; letter-spacing: 1px;
-    padding: 2px 5px; margin-left: 6px; border-radius: 2px;
-    vertical-align: middle;
-  }
-
   /* ── MAIN CONTENT ── */
   main {
     position: relative; z-index: 5;
@@ -173,7 +165,6 @@
     .logo { font-size: 20px; letter-spacing: 3px; }
     .logo-sub { font-size: 8px; letter-spacing: 4px; }
     .tab { font-size: 9px; letter-spacing: 2px; padding: 10px 14px; }
-    .tab-badge { font-size: 7px; }
   }
   @media (max-width: 600px) {
     .header-top { padding: 10px 0 6px; }
