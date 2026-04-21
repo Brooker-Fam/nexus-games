@@ -226,11 +226,6 @@ function refreshDifficultyStats(){
 
   const d = loadDifficultyData();
 
-  // Hide panel if no games played
-  if(d.gamesPlayed === 0){
-    panel.style.display = 'none';
-    return;
-  }
   panel.style.display = '';
 
   // Update stat values
