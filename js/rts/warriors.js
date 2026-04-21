@@ -26,7 +26,8 @@ function drawRTSWarrior(rc,w){
   rc.shadowColor=cfg.color; rc.shadowBlur=12;
 
   if(w.subtype==='starfighter'){
-    drawStarFighterUnit(rc,cfg,w);
+    if(w.faction==='prism') drawPrismWarDrone(rc,cfg,w);
+    else drawShadowWraith(rc,cfg,w);
   } else if(w.subtype==='skyattacker'){
     drawSkyAttackerUnit(rc,cfg,w);
   } else if(w.subtype==='elite'){
@@ -439,55 +440,143 @@ function drawRTSProjectiles(rc){
 // ── AERIAL UNIT DRAWING ──
 // Star Fighter — sleek prism/shadow fighter, angled delta silhouette, glows faction color
 // Drawn at origin facing right; rotation + hover applied by caller (drawRTSWarrior).
-function drawStarFighterUnit(rc,cfg,w){
-  // engine glow trail
-  rc.shadowColor=cfg.color; rc.shadowBlur=20;
-  // delta wing body
-  const g=rc.createLinearGradient(-14,0,14,0);
-  g.addColorStop(0,cfg.color); g.addColorStop(0.5,'#ffffff'); g.addColorStop(1,cfg.color);
-  rc.fillStyle=g;
-  rc.beginPath();
-  rc.moveTo(18, 0);     // nose
-  rc.lineTo(-14, -9);   // left wing tip
-  rc.lineTo(-8, 0);     // wing root
-  rc.lineTo(-14, 9);    // right wing tip
-  rc.closePath(); rc.fill();
-  // cockpit
-  rc.fillStyle='rgba(255,255,255,0.85)';
-  rc.beginPath(); rc.ellipse(8, 0, 5, 3, 0, 0, Math.PI*2); rc.fill();
-  // engine exhaust pulse
-  const pulse=0.6+Math.sin(w.frame*0.3)*0.4;
-  rc.fillStyle=`rgba(${cfg.color.startsWith('#00')?'0,245,255':'180,100,255'},${pulse})`;
-  rc.beginPath(); rc.ellipse(-12, 0, 4, 2, 0, 0, Math.PI*2); rc.fill();
+// ── PRISM WAR DRONE — crystalline interceptor, swept X-wings, prismatic core ──
+function drawPrismWarDrone(rc,cfg,w){
+  rc.shadowColor=cfg.color; rc.shadowBlur=22;
+
+  // engine glow (rear)
+  const pulse=0.5+Math.sin(w.frame*0.28)*0.5;
+  const eg=rc.createRadialGradient(-12,0,0,-12,0,7);
+  eg.addColorStop(0,`rgba(0,245,255,${pulse})`); eg.addColorStop(1,'transparent');
+  rc.fillStyle=eg; rc.beginPath(); rc.arc(-12,0,7,0,Math.PI*2); rc.fill();
+
+  // upper crystal wing
+  const wg1=rc.createLinearGradient(-10,-14,6,-2);
+  wg1.addColorStop(0,'rgba(200,255,255,0.9)'); wg1.addColorStop(1,'rgba(0,200,220,0.6)');
+  rc.fillStyle=wg1;
+  rc.beginPath(); rc.moveTo(-4,-2); rc.lineTo(6,-2); rc.lineTo(-2,-15); rc.lineTo(-11,-10); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(255,255,255,0.5)'; rc.lineWidth=0.8; rc.stroke();
+
+  // lower crystal wing (mirrored)
+  const wg2=rc.createLinearGradient(-10,14,6,2);
+  wg2.addColorStop(0,'rgba(200,255,255,0.9)'); wg2.addColorStop(1,'rgba(0,200,220,0.6)');
+  rc.fillStyle=wg2;
+  rc.beginPath(); rc.moveTo(-4,2); rc.lineTo(6,2); rc.lineTo(-2,15); rc.lineTo(-11,10); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(255,255,255,0.5)'; rc.lineWidth=0.8; rc.stroke();
+
+  // central hull — crystal shard
+  const hg=rc.createLinearGradient(-8,0,16,0);
+  hg.addColorStop(0,'#aaffff'); hg.addColorStop(0.5,'#ffffff'); hg.addColorStop(1,cfg.color);
+  rc.fillStyle=hg;
+  rc.beginPath(); rc.moveTo(17,0); rc.lineTo(4,-5); rc.lineTo(-8,-4); rc.lineTo(-8,4); rc.lineTo(4,5); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(255,255,255,0.6)'; rc.lineWidth=0.8; rc.stroke();
+
+  // prismatic cockpit gem
+  const cg=rc.createRadialGradient(8,0,0,8,0,4);
+  cg.addColorStop(0,'#ffffff'); cg.addColorStop(0.5,cfg.color); cg.addColorStop(1,'transparent');
+  rc.fillStyle=cg; rc.beginPath(); rc.arc(8,0,4,0,Math.PI*2); rc.fill();
+
+  // shimmer facet lines on wings
+  rc.strokeStyle=`rgba(255,255,255,${0.3+Math.sin(w.frame*0.1)*0.2})`; rc.lineWidth=0.7;
+  rc.beginPath(); rc.moveTo(2,-3); rc.lineTo(-7,-11); rc.stroke();
+  rc.beginPath(); rc.moveTo(2,3); rc.lineTo(-7,11); rc.stroke();
 }
 
-// Sky Attacker — heavy Roboto gunship, wider/chunkier, missile pods
+// ── SHADOW WRAITH — crescent scythe-wings, void eye, ghostly energy ──
+function drawShadowWraith(rc,cfg,w){
+  rc.shadowColor=cfg.color; rc.shadowBlur=22;
+
+  // void energy trail
+  const trailA=0.25+Math.sin(w.frame*0.14)*0.12;
+  rc.fillStyle=`rgba(60,0,120,${trailA})`;
+  rc.beginPath(); rc.ellipse(-10,0,14,6,0,0,Math.PI*2); rc.fill();
+
+  // upper scythe wing
+  const ug=rc.createLinearGradient(0,-16,6,0);
+  ug.addColorStop(0,'#3a0066'); ug.addColorStop(0.5,cfg.color); ug.addColorStop(1,'#080010');
+  rc.fillStyle=ug;
+  rc.beginPath();
+  rc.moveTo(8,-2);
+  rc.bezierCurveTo(2,-7,-6,-14,-12,-16);
+  rc.bezierCurveTo(-8,-10,-3,-5,8,-2);
+  rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(180,80,255,0.5)'; rc.lineWidth=0.8; rc.stroke();
+
+  // lower scythe wing (mirrored)
+  const lg=rc.createLinearGradient(0,16,6,0);
+  lg.addColorStop(0,'#3a0066'); lg.addColorStop(0.5,cfg.color); lg.addColorStop(1,'#080010');
+  rc.fillStyle=lg;
+  rc.beginPath();
+  rc.moveTo(8,2);
+  rc.bezierCurveTo(2,7,-6,14,-12,16);
+  rc.bezierCurveTo(-8,10,-3,5,8,2);
+  rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(180,80,255,0.5)'; rc.lineWidth=0.8; rc.stroke();
+
+  // void core hull
+  const cc=rc.createLinearGradient(-6,0,14,0);
+  cc.addColorStop(0,'#080010'); cc.addColorStop(0.5,cfg.color); cc.addColorStop(1,'#1a0030');
+  rc.fillStyle=cc;
+  rc.beginPath(); rc.moveTo(15,0); rc.lineTo(4,-4); rc.lineTo(-6,-3); rc.lineTo(-6,3); rc.lineTo(4,4); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(180,80,255,0.6)'; rc.lineWidth=0.8; rc.stroke();
+
+  // void eye
+  const ve=rc.createRadialGradient(6,0,0,6,0,4);
+  ve.addColorStop(0,'#ff88ff'); ve.addColorStop(0.5,'#8800cc'); ve.addColorStop(1,'transparent');
+  rc.fillStyle=ve; rc.shadowColor='#dd00ff'; rc.shadowBlur=16;
+  rc.beginPath(); rc.arc(6,0,4,0,Math.PI*2); rc.fill();
+
+  // crackling void lines
+  rc.strokeStyle=`rgba(180,80,255,${0.35+Math.sin(w.frame*0.12)*0.25})`; rc.lineWidth=0.8;
+  rc.beginPath(); rc.moveTo(2,-2); rc.lineTo(-5,-9); rc.stroke();
+  rc.beginPath(); rc.moveTo(2,2); rc.lineTo(-5,9); rc.stroke();
+}
+
+// ── ROBOTO SKY ATTACKER — armoured gunship, missile pods, engine jets ──
 // Drawn at origin facing right; rotation + hover applied by caller (drawRTSWarrior).
 function drawSkyAttackerUnit(rc,cfg,w){
   rc.shadowColor=cfg.color; rc.shadowBlur=18;
-  // main fuselage
-  const fg=rc.createLinearGradient(-16,0,16,0);
-  fg.addColorStop(0,'#443322'); fg.addColorStop(0.4,cfg.color); fg.addColorStop(1,'#221100');
-  rc.fillStyle=fg;
+
+  // twin engine jets (rear)
+  const pulse=0.5+Math.sin(w.frame*0.3)*0.5;
+  for(const ey of [-3,3]){
+    const eg=rc.createRadialGradient(-15,ey,0,-15,ey,5);
+    eg.addColorStop(0,`rgba(255,180,0,${pulse})`); eg.addColorStop(1,'transparent');
+    rc.fillStyle=eg; rc.beginPath(); rc.arc(-15,ey,5,0,Math.PI*2); rc.fill();
+  }
+
+  // armoured hull
+  const bg=rc.createLinearGradient(-16,0,18,0);
+  bg.addColorStop(0,'#2a2010'); bg.addColorStop(0.5,cfg.color); bg.addColorStop(1,'#1a1008');
+  rc.fillStyle=bg;
   rc.beginPath();
-  rc.moveTo(16, 0);
-  rc.lineTo(4, -7);
-  rc.lineTo(-16, -7);
-  rc.lineTo(-16, 7);
-  rc.lineTo(4, 7);
+  rc.moveTo(19,0);
+  rc.lineTo(10,-6); rc.lineTo(-14,-8); rc.lineTo(-18,-4); rc.lineTo(-18,4); rc.lineTo(-14,8); rc.lineTo(10,6);
   rc.closePath(); rc.fill();
-  // missile pods (top + bottom)
-  rc.fillStyle=cfg.accent||cfg.color;
-  rc.fillRect(-14, -11, 10, 4);
-  rc.fillRect(-14,   7, 10, 4);
+  rc.strokeStyle='rgba(255,160,0,0.5)'; rc.lineWidth=1; rc.stroke();
+
+  // armour panel seam lines
+  rc.strokeStyle='rgba(80,50,0,0.7)'; rc.lineWidth=0.8;
+  rc.beginPath(); rc.moveTo(-8,-7); rc.lineTo(8,-5); rc.stroke();
+  rc.beginPath(); rc.moveTo(-8,7); rc.lineTo(8,5); rc.stroke();
+  rc.beginPath(); rc.moveTo(-2,-7); rc.lineTo(-2,7); rc.stroke();
+
+  // missile pods
+  rc.fillStyle='#2a1a08';
+  rc.beginPath(); rc.roundRect(-14,-14,13,5,2); rc.fill();
+  rc.beginPath(); rc.roundRect(-14,9,13,5,2); rc.fill();
+  rc.strokeStyle='rgba(255,120,0,0.45)'; rc.lineWidth=0.7;
+  rc.beginPath(); rc.roundRect(-14,-14,13,5,2); rc.stroke();
+  rc.beginPath(); rc.roundRect(-14,9,13,5,2); rc.stroke();
+  // missile warhead glow
+  rc.fillStyle=`rgba(255,160,0,${0.7+pulse*0.3})`;
+  rc.beginPath(); rc.arc(-1,-11,2.5,0,Math.PI*2); rc.fill();
+  rc.beginPath(); rc.arc(-1,11,2.5,0,Math.PI*2); rc.fill();
+
   // cockpit visor
-  rc.fillStyle='rgba(255,200,100,0.9)';
-  rc.beginPath(); rc.ellipse(10, 0, 5, 3.5, 0, 0, Math.PI*2); rc.fill();
-  // rotor blur ring
-  const rot=w.frame*0.2;
-  rc.strokeStyle=`rgba(255,180,0,0.35)`;
-  rc.lineWidth=2;
-  rc.beginPath(); rc.ellipse(0, 0, 20, 5, rot, 0, Math.PI*2); rc.stroke();
+  const cg=rc.createLinearGradient(6,-4,16,4);
+  cg.addColorStop(0,'rgba(255,220,100,0.95)'); cg.addColorStop(1,'rgba(200,100,0,0.7)');
+  rc.fillStyle=cg; rc.beginPath(); rc.ellipse(11,0,5,3.5,0,0,Math.PI*2); rc.fill();
 }
 
 
