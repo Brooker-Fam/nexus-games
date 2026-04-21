@@ -145,7 +145,7 @@ function makeStarFighter(side, faction, nearX, nearY){
     x: nearX+(isPlayer?60:-60), y: nearY+(rtsRand()-0.5)*120,
     hp:70, maxHp:70, speed:1.8,
     state:'idle', target:null, attackTimer:0,
-    damage:16, range:200, ranged:true, fireRate:45,
+    damage:7, range:200, ranged:true, fireRate:18,
     aerial:true,
     frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };
