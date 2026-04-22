@@ -100,6 +100,28 @@ function openBuildPopup(screenX, screenY, context){
     addOpt('⚔', 'FIGHT', 'Duel a nearby Swordsman — the victor becomes a Bloodhound', 0,
       ()=>{ issueCommand({type:'start_duel',swordsmanId:sel.id}); closeBuildPopup(); }, false);
 
+  } else if(context==='gunbot'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='GUNBOT';
+    addOpt('🤜', 'BRAWL', 'Fight a nearby GunBot — the winner becomes an Assault Bot', 0,
+      ()=>{ issueCommand({type:'start_duel',swordsmanId:sel.id}); closeBuildPopup(); }, false);
+
+  } else if(context==='witch'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='WITCH';
+    addOpt('✨', 'DUEL', 'Duel a nearby Witch — the victor becomes a Psionic Warrior', 0,
+      ()=>{ issueCommand({type:'start_duel',swordsmanId:sel.id}); closeBuildPopup(); }, false);
+
+  } else if(context==='assaultbot'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='ASSAULT BOT';
+    addOpt('🤖', 'ASSAULT BOT', `HP: ${Math.floor(sel?.hp||0)}/${sel?.maxHp||180} · Rapid heavy fire`, 0, ()=>closeBuildPopup(), true);
+
+  } else if(context==='psionic'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='PSIONIC WARRIOR';
+    addOpt('🔮', 'PSIONIC WARRIOR', `HP: ${Math.floor(sel?.hp||0)}/${sel?.maxHp||110} · Long-range mind blast`, 0, ()=>closeBuildPopup(), true);
+
   } else if(context==='bloodhound'){
     const sel=S.selected[0]; if(!sel) return;
     title.textContent='BLOODHOUND';
@@ -287,12 +309,20 @@ function rtsHandleClick(e){
     } else if(hit.type==='worker'){
       openBuildPopup(sx,sy,'worker');
       rtsSetLog(`${cfg.workerLabel} selected — build or click to move.`);
-    } else if(hit.type==='warrior' && hit.faction==='shadow' && !hit.subtype){
-      openBuildPopup(sx,sy,'swordsman');
+    } else if(hit.type==='warrior' && !hit.subtype){
+      const duelCtx={shadow:'swordsman',roboto:'gunbot',prism:'witch'};
+      const ctx=duelCtx[hit.faction];
+      if(ctx) openBuildPopup(sx,sy,ctx);
       rtsSetLog(`${cfg.warriorLabel} selected — right-click to move or attack.`);
     } else if(hit.type==='warrior' && hit.subtype==='bloodhound'){
       openBuildPopup(sx,sy,'bloodhound');
       rtsSetLog(`BLOODHOUND — ${hit.bowMode?'bow':'sword'} mode  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
+    } else if(hit.type==='warrior' && hit.subtype==='assaultbot'){
+      openBuildPopup(sx,sy,'assaultbot');
+      rtsSetLog(`ASSAULT BOT — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
+    } else if(hit.type==='warrior' && hit.subtype==='psionic'){
+      openBuildPopup(sx,sy,'psionic');
+      rtsSetLog(`PSIONIC WARRIOR — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior'){
       const UNIT_LABELS={elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel'};
       const lbl=cfg[UNIT_LABELS[hit.subtype]]||cfg.warriorLabel;

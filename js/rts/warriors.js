@@ -42,6 +42,10 @@ function drawRTSWarrior(rc,w){
     drawTankUnit(rc,cfg,w);
   } else if(w.subtype==='bloodhound'){
     drawBloodhound(rc,cfg,w);
+  } else if(w.subtype==='assaultbot'){
+    drawAssaultBot(rc,cfg,w);
+  } else if(w.subtype==='psionic'){
+    drawPsionicWarrior(rc,cfg,w);
   } else {
     if(w.faction==='prism') drawWarriorPrism(rc,cfg,w);
     else if(w.faction==='shadow') drawWarriorShadow(rc,cfg,w);

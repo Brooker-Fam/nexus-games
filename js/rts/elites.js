@@ -523,4 +523,165 @@ function drawBloodhound(rc,cfg,w){
   rc.beginPath(); rc.ellipse(0,-14,22,36,0,0,Math.PI*2); rc.stroke();
 }
 
+function drawAssaultBot(rc, cfg, w){
+  const t=w.frame, isAtt=w.state==='attack', isMarch=w.state==='march';
+
+  // HEAVY LEGS — thick plated treads
+  for(const [lx,ph] of [[-8,0],[5,Math.PI]]){
+    const step=isMarch?Math.sin(t*0.25+ph)*4:0;
+    rc.fillStyle='#441100';
+    rc.beginPath(); rc.roundRect(lx,2+step,9,18,2); rc.fill();
+    rc.fillStyle='#993300';
+    rc.beginPath(); rc.roundRect(lx+1,2+step,7,5,1); rc.fill();
+    rc.strokeStyle='rgba(255,100,0,0.3)'; rc.lineWidth=0.7; rc.stroke();
+  }
+
+  // MAIN BODY — heavy plate armor
+  const bGrad=rc.createLinearGradient(-14,-28,14,6);
+  bGrad.addColorStop(0,'#ff7700'); bGrad.addColorStop(0.5,'#cc3300'); bGrad.addColorStop(1,'#661100');
+  rc.fillStyle=bGrad;
+  rc.beginPath(); rc.roundRect(-13,-28,26,34,3); rc.fill();
+  rc.strokeStyle='rgba(255,120,0,0.5)'; rc.lineWidth=1.5; rc.stroke();
+
+  // ARMOR SEAMS
+  rc.strokeStyle='rgba(0,0,0,0.35)'; rc.lineWidth=1;
+  rc.beginPath(); rc.moveTo(-13,-10); rc.lineTo(13,-10); rc.stroke();
+  rc.beginPath(); rc.moveTo(-11,2); rc.lineTo(11,2); rc.stroke();
+
+  // SHOULDER SPIKES
+  rc.fillStyle='#ff6600';
+  for(const [sx,dx] of [[-13,-6],[13,6]]){
+    rc.beginPath(); rc.moveTo(sx,-28); rc.lineTo(sx+dx,-36); rc.lineTo(sx+dx*0.4,-28); rc.closePath(); rc.fill();
+  }
+
+  // ARM CANNONS — massive dual barrels
+  const recoil=isAtt?Math.sin(t*0.5)*3:0;
+  for(const [ax,dir] of [[13,1],[-13,-1]]){
+    rc.fillStyle='#552200';
+    rc.beginPath(); rc.roundRect(ax+(dir>0?0:-6),-20,6,12,2); rc.fill();
+    rc.fillStyle='#1a0500';
+    rc.beginPath(); rc.roundRect(ax+(dir>0?4:-8)+recoil*dir,-18,10,5,1); rc.fill();
+    rc.fillStyle='#331100';
+    rc.beginPath(); rc.roundRect(ax+(dir>0?4:-8)+recoil*dir,-14,10,5,1); rc.fill();
+    if(isAtt){
+      const mg=rc.createRadialGradient(ax+(dir>0?14:-8)+recoil*dir,-15,0,ax+(dir>0?14:-8)+recoil*dir,-15,6);
+      mg.addColorStop(0,'rgba(255,200,50,0.95)'); mg.addColorStop(1,'transparent');
+      rc.fillStyle=mg; rc.beginPath(); rc.arc(ax+(dir>0?14:-8)+recoil*dir,-15,6,0,Math.PI*2); rc.fill();
+    }
+  }
+
+  // HEAD — angular robot skull
+  rc.fillStyle='#441100';
+  rc.beginPath(); rc.roundRect(-10,-44,20,17,2); rc.fill();
+  rc.fillStyle='#cc3300';
+  rc.beginPath(); rc.roundRect(-10,-44,20,6,1); rc.fill();
+
+  // EYES — glowing red combat sensors
+  for(const ex of [-3.5,3.5]){
+    const eg=rc.createRadialGradient(ex,-36,0,ex,-36,isAtt?5:3);
+    eg.addColorStop(0,isAtt?'#ffee00':'#ff3300');
+    eg.addColorStop(0.5,isAtt?'#ff8800':'#990000');
+    eg.addColorStop(1,'transparent');
+    rc.fillStyle=eg; rc.beginPath(); rc.arc(ex,-36,isAtt?5:3,0,Math.PI*2); rc.fill();
+  }
+
+  // BATTLE DAMAGE SCRATCHES
+  rc.strokeStyle='rgba(0,0,0,0.4)'; rc.lineWidth=0.8;
+  rc.beginPath(); rc.moveTo(-7,-22); rc.lineTo(-3,-15); rc.stroke();
+  rc.beginPath(); rc.moveTo(3,-20); rc.lineTo(7,-13); rc.stroke();
+
+  // POWER CORE GLOW on chest
+  const pulse=0.6+Math.sin(t*0.08)*0.4;
+  const cg=rc.createRadialGradient(0,-14,0,0,-14,8);
+  cg.addColorStop(0,`rgba(255,150,0,${pulse})`); cg.addColorStop(1,'transparent');
+  rc.fillStyle=cg; rc.beginPath(); rc.arc(0,-14,8,0,Math.PI*2); rc.fill();
+  rc.strokeStyle=`rgba(255,100,0,${pulse*0.8})`; rc.lineWidth=1;
+  rc.beginPath(); rc.arc(0,-14,5,0,Math.PI*2); rc.stroke();
+}
+
+function drawPsionicWarrior(rc, cfg, w){
+  const t=w.frame, isAtt=w.state==='attack', isMarch=w.state==='march';
+  const sway=isMarch?Math.sin(t*0.2)*2:0;
+
+  // PSIONIC AURA — outer glow rings
+  const pulse=0.5+Math.sin(t*0.07)*0.3;
+  for(const [r,a] of [[30,0.10],[22,0.18],[15,0.28]]){
+    rc.strokeStyle=`rgba(180,80,255,${a*pulse})`; rc.lineWidth=3;
+    rc.beginPath(); rc.ellipse(0,-14,r,r*1.5,0,0,Math.PI*2); rc.stroke();
+  }
+
+  // LEGS — flowing psionic energy wisps
+  rc.strokeStyle='rgba(160,80,255,0.5)'; rc.lineWidth=2.5; rc.lineCap='round';
+  rc.beginPath(); rc.moveTo(-3,8); rc.lineTo(-4+Math.sin(t*0.2)*3,18); rc.stroke();
+  rc.beginPath(); rc.moveTo(3,8);  rc.lineTo(4-Math.sin(t*0.2)*3,18); rc.stroke();
+
+  // ROBE — white/violet with psionic shimmer
+  const rGrad=rc.createLinearGradient(-8,-22,8,8);
+  rGrad.addColorStop(0,'#f8f0ff'); rGrad.addColorStop(0.5,'#cc88ff'); rGrad.addColorStop(1,'#7722cc');
+  rc.fillStyle=rGrad;
+  rc.beginPath();
+  rc.moveTo(-8,-6); rc.bezierCurveTo(-11+sway,0,-10+sway,8,-6+sway,8);
+  rc.lineTo(6-sway,8); rc.bezierCurveTo(10-sway,8,11-sway,0,8,-6);
+  rc.lineTo(4,-22); rc.lineTo(-4,-22); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(200,120,255,0.5)'; rc.lineWidth=0.8; rc.stroke();
+
+  // ENERGY TENDRILS radiating outward
+  const tendrils=isAtt?5:3;
+  for(let i=0;i<tendrils;i++){
+    const angle=(t*0.04+i*(Math.PI*2/tendrils));
+    const r=isAtt?26:18;
+    rc.strokeStyle=`rgba(${isAtt?'220,100,255':'160,80,255'},${0.4+Math.sin(t*0.1+i)*0.3})`; rc.lineWidth=1.5;
+    rc.beginPath();
+    rc.moveTo(Math.cos(angle)*6,-14+Math.sin(angle)*8);
+    rc.quadraticCurveTo(Math.cos(angle+0.5)*r*0.7,-14+Math.sin(angle+0.5)*r*0.5,
+      Math.cos(angle)*r,-14+Math.sin(angle)*r);
+    rc.stroke();
+  }
+
+  // HEAD
+  rc.fillStyle='#f0e8ff';
+  rc.beginPath(); rc.ellipse(0,-30,7,9,0,0,Math.PI*2); rc.fill();
+  rc.strokeStyle='rgba(180,80,255,0.5)'; rc.lineWidth=0.8; rc.stroke();
+
+  // THIRD EYE — center of forehead, blazing violet
+  const eyePulse=isAtt?1:0.5+Math.sin(t*0.12)*0.3;
+  const teg=rc.createRadialGradient(0,-34,0,0,-34,isAtt?7:4);
+  teg.addColorStop(0,`rgba(255,255,255,${eyePulse})`);
+  teg.addColorStop(0.3,`rgba(220,100,255,${eyePulse*0.9})`);
+  teg.addColorStop(1,'transparent');
+  rc.fillStyle=teg; rc.beginPath(); rc.arc(0,-34,isAtt?7:4,0,Math.PI*2); rc.fill();
+
+  // NORMAL EYES
+  for(const ex of [-2.5,2.5]){
+    rc.fillStyle=`rgba(180,80,255,0.8)`; rc.beginPath(); rc.arc(ex,-29,1.5,0,Math.PI*2); rc.fill();
+  }
+
+  // HAIR — white flowing locks
+  const hairDrift=isMarch?-4:0;
+  rc.fillStyle='#eedcff';
+  rc.beginPath();
+  rc.moveTo(-5,-38);
+  rc.bezierCurveTo(-9+hairDrift,-33,-11+hairDrift,-20,-7+hairDrift,-14);
+  rc.lineTo(-3,-18); rc.bezierCurveTo(-4,-27,-2,-34,-3,-38); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(200,160,255,0.4)'; rc.lineWidth=0.7;
+  for(let hi=0;hi<2;hi++){
+    rc.beginPath();
+    rc.moveTo(-3+hi*2,-38);
+    rc.bezierCurveTo(-6+hairDrift*0.7+hi,-30,-8+hairDrift+hi,-18,-4+hairDrift+hi*2,-14);
+    rc.stroke();
+  }
+
+  // CRYSTAL ORBITING SHARDS
+  for(let i=0;i<3;i++){
+    const a=t*0.05+i*(Math.PI*2/3);
+    const cx=Math.cos(a)*20, cy=-14+Math.sin(a)*12;
+    rc.save(); rc.translate(cx,cy); rc.rotate(a+t*0.08);
+    const cGrad=rc.createLinearGradient(-3,-5,3,5);
+    cGrad.addColorStop(0,'#ffffff'); cGrad.addColorStop(0.5,'#cc88ff'); cGrad.addColorStop(1,'#6622cc');
+    rc.fillStyle=cGrad;
+    rc.beginPath(); rc.moveTo(0,-5); rc.lineTo(2.5,0); rc.lineTo(0,5); rc.lineTo(-2.5,0); rc.closePath(); rc.fill();
+    rc.restore();
+  }
+}
+
 //# sourceMappingURL=elites.js.map

@@ -175,6 +175,18 @@ function makeBloodhound(side, faction, x, y){
     frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };
 }
+function makeAssaultBot(side, faction, x, y){
+  return { id:nextId(), type:'warrior', subtype:'assaultbot', side, faction,
+    x, y, hp:180, maxHp:180, speed:1.5, state:'idle', target:null, attackTimer:0,
+    damage:18, range:140, ranged:true, fireRate:12,
+    frame:0, selected:false, forcedTarget:null, moveTarget:null };
+}
+function makePsionicWarrior(side, faction, x, y){
+  return { id:nextId(), type:'warrior', subtype:'psionic', side, faction,
+    x, y, hp:110, maxHp:110, speed:0.85, state:'idle', target:null, attackTimer:0,
+    damage:28, range:270, ranged:true, fireRate:65,
+    frame:0, selected:false, forcedTarget:null, moveTarget:null };
+}
 function makeElite(side, faction, nearX, nearY){
   const spread=(rtsRand()-0.5)*100;
   const isPlayer=side==='player';

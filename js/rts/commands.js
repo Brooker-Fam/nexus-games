@@ -152,18 +152,21 @@ function executeCommand(cmd){
 
     case 'start_duel': {
       const s1=S.entities.find(e=>e.id===cmd.swordsmanId);
-      if(!s1||s1.side!==side||s1.faction!=='shadow'||s1.subtype||s1.state==='duel') break;
+      if(!s1||s1.side!==side||s1.subtype||s1.state==='duel'||s1.type!=='warrior') break;
       let nearest=null, nearestDist=Infinity;
       for(const e of S.entities){
-        if(e===s1||e.side!==side||e.type!=='warrior'||e.faction!=='shadow'||e.subtype||e.state==='duel') continue;
+        if(e===s1||e.side!==side||e.type!=='warrior'||e.faction!==s1.faction||e.subtype||e.state==='duel') continue;
         const d=_dist(e.x-s1.x,e.y-s1.y);
         if(d<nearestDist){ nearestDist=d; nearest=e; }
       }
-      if(!nearest){ if(side==='player') rtsSetLog('Need another Swordsman to start a duel!'); break; }
+      const pairLabels={shadow:'Swordsmen',roboto:'GunBots',prism:'Witches'};
+      const needLabel={shadow:'Swordsman',roboto:'GunBot',prism:'Witch'};
+      const label=pairLabels[s1.faction]||'Warriors';
+      if(!nearest){ if(side==='player') rtsSetLog(`Need another ${needLabel[s1.faction]||'warrior'} to start a duel!`); break; }
       const s1Wins = Math.random() < 0.5;
       s1.state='duel'; s1.duelOpponentId=nearest.id; s1.duelAttacker=s1Wins;
       nearest.state='duel'; nearest.duelOpponentId=s1.id; nearest.duelAttacker=!s1Wins;
-      if(side==='player') rtsSetLog('Two Swordsmen enter the duel ring...');
+      if(side==='player') rtsSetLog(`Two ${label} enter the duel ring...`);
       break;
     }
 

@@ -611,18 +611,29 @@ function warriorMeleeAttack(w, target, targetDist){
 function warriorTick(w, playerBase, enemyBase){
   const enemyBase2=w.side==='player'?enemyBase:playerBase;
 
-  // DUEL STATE — two swordsmen fighting to become a bloodhound
+  // DUEL STATE — two warriors fighting to become an elite
   if(w.state==='duel'){
     const opp=S.entities.find(e=>e.id===w.duelOpponentId);
     if(!opp||opp.hp<=0||!S.entities.includes(opp)){
       // Opponent is gone — this warrior won
       if(w.hp>0){
-        w.subtype='bloodhound';
-        w.maxHp=120; w.hp=120; w.damage=22; w.speed=2.8;
-        w.range=50; w.ranged=false; w.fireRate=30; w.bowMode=false;
+        if(w.faction==='shadow'){
+          w.subtype='bloodhound'; w.maxHp=120; w.hp=120; w.damage=22; w.speed=2.8;
+          w.range=50; w.ranged=false; w.fireRate=30; w.bowMode=false;
+          if(w.side==='player') rtsSetLog('A Bloodhound has emerged from the duel!');
+          spawnMagicBurst(w.x, w.y, '#ffaa00');
+        } else if(w.faction==='roboto'){
+          w.subtype='assaultbot'; w.maxHp=180; w.hp=180; w.damage=18; w.speed=1.5;
+          w.range=140; w.ranged=true; w.fireRate=12;
+          if(w.side==='player') rtsSetLog('An Assault Bot has emerged from the brawl!');
+          spawnMagicBurst(w.x, w.y, '#ff6600');
+        } else if(w.faction==='prism'){
+          w.subtype='psionic'; w.maxHp=110; w.hp=110; w.damage=28; w.speed=0.85;
+          w.range=270; w.ranged=true; w.fireRate=65;
+          if(w.side==='player') rtsSetLog('A Psionic Warrior has emerged from the duel!');
+          spawnMagicBurst(w.x, w.y, '#cc44ff');
+        }
         w.state='idle'; w.duelOpponentId=null;
-        if(w.side==='player') rtsSetLog('A Bloodhound has emerged from the duel!');
-        spawnMagicBurst(w.x, w.y, '#ffaa00');
       }
       return;
     }
@@ -644,7 +655,7 @@ function warriorTick(w, playerBase, enemyBase){
   // Auto-aggro: idle warriors engage nearby enemies
   // Bloodhounds in sword mode have a much wider charge range
   if(w.state==='idle'){
-    const AGGRO_RANGE = (w.subtype==='bloodhound'&&!w.bowMode) ? 350 : Math.max(w.range||50,150);
+    const AGGRO_RANGE = (w.subtype==='bloodhound'&&!w.bowMode)||w.subtype==='assaultbot' ? 350 : Math.max(w.range||50,150);
     for(const e of S.entities){
       if(e.side===w.side) continue;
       if(e===S.playerBase||e===S.enemyBase) continue;
