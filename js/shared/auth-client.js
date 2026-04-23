@@ -93,6 +93,13 @@
     await refresh();
   }
 
+  async function signInWithMagicLink(email){
+    if (!email) throw new Error('email_required');
+    const callbackURL = window.location.origin + window.location.pathname;
+    await postJson('/api/auth/sign-in/magic-link', { email, callbackURL });
+    return true;
+  }
+
   async function signInWithPasskey(){
     if (!window.PublicKeyCredential) throw new Error('passkeys_unsupported');
     const { startAuthentication } = await getWebAuthn();
@@ -106,6 +113,7 @@
     state,
     refresh,
     signInWithGoogle,
+    signInWithMagicLink,
     signInWithPasskey,
     registerPasskey,
     signOut,

@@ -20,6 +20,21 @@
       const google = el('button', { className: 'auth-btn auth-signin' }, 'SIGN IN');
       google.addEventListener('click', () => window.NexusAuth.signInWithGoogle());
       slot.appendChild(google);
+
+      const mail = el('button', { className: 'auth-btn auth-mail', title: 'Sign in via email link' }, '✉');
+      mail.addEventListener('click', async () => {
+        const email = prompt('Enter your email for a sign-in link:');
+        if (!email) return;
+        try {
+          await window.NexusAuth.signInWithMagicLink(email.trim());
+          alert('Check your email for a sign-in link.');
+        } catch (err) {
+          console.error('magic link failed', err);
+          alert('Could not send link: ' + (err?.message || 'unknown error'));
+        }
+      });
+      slot.appendChild(mail);
+
       if (window.NexusAuth.passkeysSupported()) {
         const passkey = el('button', { className: 'auth-btn auth-passkey', title: 'Sign in with passkey' }, '🔑');
         passkey.addEventListener('click', async () => {
