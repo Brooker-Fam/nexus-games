@@ -24,6 +24,47 @@
     overflow-x: hidden;
   }
 
+  /* ── AUTH CHIP ── */
+  .auth-slot { display: inline-flex; align-items: center; margin-right: 12px; }
+  .auth-btn {
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    color: var(--neon-cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .auth-btn:hover { background: rgba(0,245,255,0.1); box-shadow: 0 0 8px rgba(0,245,255,0.4); }
+  .auth-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 4px 8px 4px 4px;
+    border: 1px solid var(--panel-border);
+    background: var(--panel-bg);
+  }
+  .auth-avatar { width: 22px; height: 22px; border-radius: 50%; display: block; }
+  .auth-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--text-bright);
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .auth-signout {
+    padding: 3px 8px;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    border-color: rgba(255,255,255,0.12);
+  }
+  .auth-signout:hover { color: var(--neon-pink); border-color: var(--neon-pink); box-shadow: 0 0 6px rgba(255,0,136,0.4); }
+
   /* ── BACKGROUND ── */
   .bg-layer {
     position: fixed; inset: 0; z-index: 0; pointer-events: none;

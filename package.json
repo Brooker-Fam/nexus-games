@@ -1,0 +1,19 @@
+{
+  "name": "nexus-games",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Nexus Games arcade — vanilla JS frontend, serverless API on Vercel",
+  "scripts": {
+    "migrate": "node scripts/migrate.js",
+    "build": "node scripts/generate-posthog-config.cjs && node scripts/generate-sourcemaps.cjs && node scripts/migrate.js",
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "better-auth": "^1.2.7"
+  },
+  "devDependencies": {
+    "@vercel/node": "^5.0.0"
+  }
+}
