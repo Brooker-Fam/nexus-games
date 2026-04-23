@@ -4,11 +4,9 @@ export default async function handler(req, res) {
   try {
     const apiKeys = auth?.api ? Object.keys(auth.api).sort() : [];
     const passkeyKeys = apiKeys.filter((k) => k.toLowerCase().includes("passkey"));
+    const handlerExists = typeof auth?.handler === "function";
     res.status(200).json({
-      version: {
-        betterAuth: (await import("better-auth/package.json", { with: { type: "json" } })).default.version,
-        passkey: (await import("@better-auth/passkey/package.json", { with: { type: "json" } })).default.version,
-      },
+      handlerExists,
       apiCount: apiKeys.length,
       passkeyKeys,
       allKeys: apiKeys,
