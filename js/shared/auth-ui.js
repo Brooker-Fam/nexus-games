@@ -17,9 +17,17 @@
     slot.innerHTML = '';
 
     if (!user || user.isAnonymous) {
-      const btn = el('button', { className: 'auth-btn auth-signin' }, 'SIGN IN');
-      btn.addEventListener('click', () => window.NexusAuth.signInWithGoogle());
-      slot.appendChild(btn);
+      const google = el('button', { className: 'auth-btn auth-signin' }, 'SIGN IN');
+      google.addEventListener('click', () => window.NexusAuth.signInWithGoogle());
+      slot.appendChild(google);
+      if (window.NexusAuth.passkeysSupported()) {
+        const passkey = el('button', { className: 'auth-btn auth-passkey', title: 'Sign in with passkey' }, '🔑');
+        passkey.addEventListener('click', async () => {
+          try { await window.NexusAuth.signInWithPasskey(); }
+          catch (err) { console.error('passkey sign-in failed', err); alert('Passkey sign-in failed. Try SIGN IN with Google first, then add a passkey.'); }
+        });
+        slot.appendChild(passkey);
+      }
       return;
     }
 
@@ -29,6 +37,21 @@
       wrap.appendChild(img);
     }
     wrap.appendChild(el('span', { className: 'auth-name' }, user.name || user.email || 'PLAYER'));
+
+    if (window.NexusAuth.passkeysSupported()) {
+      const addPk = el('button', { className: 'auth-btn auth-passkey', title: 'Add a passkey for fast sign-in' }, '+🔑');
+      addPk.addEventListener('click', async () => {
+        try {
+          await window.NexusAuth.registerPasskey('This device');
+          alert('Passkey saved. Next time, click 🔑 to sign in.');
+        } catch (err) {
+          console.error('passkey register failed', err);
+          alert('Could not register passkey: ' + (err?.message || 'unknown error'));
+        }
+      });
+      wrap.appendChild(addPk);
+    }
+
     const out = el('button', { className: 'auth-btn auth-signout', title: 'Sign out' }, 'SIGN OUT');
     out.addEventListener('click', () => window.NexusAuth.signOut());
     wrap.appendChild(out);

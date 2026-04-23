@@ -1,5 +1,6 @@
 // Tiny vanilla auth client — wraps fetch() against /api/auth/* and /api/session.
 // Exposes window.NexusAuth.
+// Passkey support uses @simplewebauthn/browser via esm.sh (lazy-loaded).
 
 (function(){
   const state = {
@@ -7,6 +8,13 @@
     ready: false,
     listeners: new Set(),
   };
+
+  let _webauthn = null;
+  async function getWebAuthn(){
+    if (_webauthn) return _webauthn;
+    _webauthn = await import('https://esm.sh/@simplewebauthn/browser@11');
+    return _webauthn;
+  }
 
   function notify(){
     for (const fn of state.listeners) {
@@ -62,14 +70,49 @@
     await refresh();
   }
 
+  async function postJson(path, body){
+    const res = await fetch(path, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body ?? {}),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`${path} -> ${res.status}: ${text}`);
+    }
+    return await res.json();
+  }
+
+  async function registerPasskey(name){
+    if (!window.PublicKeyCredential) throw new Error('passkeys_unsupported');
+    const { startRegistration } = await getWebAuthn();
+    const options = await postJson('/api/auth/passkey/generate-register-options', name ? { name } : {});
+    const attestation = await startRegistration({ optionsJSON: options });
+    await postJson('/api/auth/passkey/verify-registration', { response: attestation, name });
+    await refresh();
+  }
+
+  async function signInWithPasskey(){
+    if (!window.PublicKeyCredential) throw new Error('passkeys_unsupported');
+    const { startAuthentication } = await getWebAuthn();
+    const options = await postJson('/api/auth/passkey/generate-authenticate-options', {});
+    const assertion = await startAuthentication({ optionsJSON: options });
+    await postJson('/api/auth/passkey/verify-authentication', { response: assertion });
+    await refresh();
+  }
+
   window.NexusAuth = {
     state,
     refresh,
     signInWithGoogle,
+    signInWithPasskey,
+    registerPasskey,
     signOut,
     onChange(fn){ state.listeners.add(fn); if (state.ready) fn(state.user); return () => state.listeners.delete(fn); },
     user(){ return state.user; },
     isLoggedIn(){ return !!state.user && !state.user.isAnonymous; },
+    passkeysSupported(){ return typeof window.PublicKeyCredential !== 'undefined'; },
   };
 
   // Kick off on load.

@@ -10,6 +10,7 @@
     "dev": "vercel dev"
   },
   "dependencies": {
+    "@better-auth/passkey": "^1.6.8",
     "@neondatabase/serverless": "^1.0.2",
     "better-auth": "^1.2.7"
   },
