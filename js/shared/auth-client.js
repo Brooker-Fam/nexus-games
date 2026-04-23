@@ -29,10 +29,27 @@
     }
   }
 
-  function signInWithGoogle(){
+  async function signInWithGoogle(){
     const callbackURL = window.location.origin + window.location.pathname;
-    const u = '/api/auth/sign-in/social?provider=google&callbackURL=' + encodeURIComponent(callbackURL);
-    window.location.href = u;
+    try {
+      const res = await fetch('/api/auth/sign-in/social', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ provider: 'google', callbackURL }),
+      });
+      if (!res.ok) { console.error('sign-in failed', res.status, await res.text()); return; }
+      const body = await res.json();
+      if (body?.url) {
+        window.location.href = body.url;
+      } else if (body?.redirect === true && body?.url) {
+        window.location.href = body.url;
+      } else {
+        console.error('unexpected sign-in response', body);
+      }
+    } catch (e) {
+      console.error('sign-in error', e);
+    }
   }
 
   async function signOut(){
