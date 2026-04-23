@@ -51,7 +51,25 @@ function saveDifficultyData(d){
 
 // ── RATING ALGORITHM ──
 
-function recordGameResult(playerWon, gameFrames){
+function _perfScore(stats, gameFrames){
+  // Returns a performance multiplier 0.4–1.6 based on in-game play quality.
+  // High K/D and solid gold income boost the multiplier; dying a lot tanks it.
+  const kills      = (stats && stats.kills)      || 0;
+  const deaths     = (stats && stats.deaths)     || 0;
+  const goldEarned = (stats && stats.goldEarned) || 0;
+  const gameSecs   = Math.max(60, (gameFrames || 3600) / 60);
+
+  const kd       = kills / Math.max(1, deaths);          // 1 = break-even, 3+ = dominant
+  const goldRate = goldEarned / gameSecs;                // gold per second
+
+  const kdScore    = Math.min(kd / 3, 1);               // caps at 1 for 3:1 KD
+  const econScore  = Math.min(goldRate / 4, 1);          // caps at 1 for 4g/s
+
+  const perf = kdScore * 0.65 + econScore * 0.35;        // 0–1
+  return +(0.4 + perf * 1.2).toFixed(3);                 // 0.4 (terrible) – 1.6 (excellent)
+}
+
+function recordGameResult(playerWon, gameFrames, gameStats){
   const d = loadDifficultyData();
   const before = d.rating;
   const isMP = !!window._mpMultiplayer;
@@ -99,6 +117,10 @@ function recordGameResult(playerWon, gameFrames){
   // Asymmetric: losses push 30% harder (frustration relief comes faster)
   if(!playerWon) delta *= 1.3;
 
+  // Performance multiplier — good play boosts rating gains/reduces losses
+  const pm = _perfScore(gameStats, gameFrames);
+  delta *= pm;
+
   d.rating = Math.round(d.rating + delta);
   d.rating = Math.max(400, Math.min(1600, d.rating));
 
@@ -114,11 +136,16 @@ function recordGameResult(playerWon, gameFrames){
     ra: d.rating,
     f: gameFrames || 0,
     mp: isMP ? 1 : 0,
+    k:  (gameStats && gameStats.kills)      || 0,
+    dt: (gameStats && gameStats.deaths)     || 0,
+    ge: (gameStats && gameStats.goldEarned) || 0,
+    ub: (gameStats && gameStats.unitsBuilt) || 0,
+    pm,
   });
   while(d.history.length > DIFF_HISTORY_MAX) d.history.shift();
 
   saveDifficultyData(d);
-  return { before, after: d.rating, streak: d.streak, gamesPlayed: d.gamesPlayed, rd: d.rd, isMP };
+  return { before, after: d.rating, streak: d.streak, gamesPlayed: d.gamesPlayed, rd: d.rd, isMP, pm };
 }
 
 // ── DIFFICULTY QUERIES & CURVES ──
@@ -212,9 +239,15 @@ function showRatingChange(result){
     : '';
   const rdText = result.rd > 100 ? ' · CALIBRATING' : '';
   const modeText = result.isMP ? ' · PVP' : '';
+  // Performance label
+  const pm = result.pm || 1;
+  const perfLabel = pm >= 1.4 ? ' · OUTSTANDING' : pm >= 1.1 ? ' · SOLID PLAY'
+    : pm <= 0.6 ? ' · POOR FORM' : '';
+  const perfColor = pm >= 1.1 ? '#ffdd44' : pm <= 0.6 ? '#ff6666' : 'var(--text-dim)';
   el.innerHTML = `<span style="color:${color}">RATING ${sign}${delta}</span>`
     + ` · AI LEVEL ${level}/10`
-    + `<span style="color:var(--text-dim)">${streakText}${rdText}${modeText}</span>`;
+    + `<span style="color:var(--text-dim)">${streakText}${rdText}${modeText}</span>`
+    + `<span style="color:${perfColor}">${perfLabel}</span>`;
   el.style.display = 'block';
 }
 
@@ -234,9 +267,26 @@ function refreshDifficultyStats(){
   setTxt('dso-stat-games', d.gamesPlayed);
   setTxt('dso-stat-level', getDifficultyLevel() + '/10');
 
-  const wins = d.history.filter(g => g.w).length;
-  const total = d.history.length;
-  setTxt('dso-stat-winrate', total > 0 ? Math.round(wins / total * 100) + '%' : '—');
+  // K/D ratio from history
+  const gamesWithStats = d.history.filter(g => g.k !== undefined);
+  if(gamesWithStats.length > 0){
+    const totalKills  = gamesWithStats.reduce((s,g)=>s+(g.k||0),0);
+    const totalDeaths = gamesWithStats.reduce((s,g)=>s+(g.dt||0),0);
+    const kd = totalKills / Math.max(1, totalDeaths);
+    setTxt('dso-stat-kd', kd.toFixed(2));
+  } else {
+    setTxt('dso-stat-kd', '—');
+  }
+
+  // Average gold per minute
+  if(gamesWithStats.length > 0){
+    const totalGold = gamesWithStats.reduce((s,g)=>s+(g.ge||0),0);
+    const totalMins = gamesWithStats.reduce((s,g)=>s+((g.f||0)/3600),0); // frames→minutes at 60fps
+    const gpm = totalMins > 0 ? Math.round(totalGold / totalMins) : 0;
+    setTxt('dso-stat-gpm', gpm > 0 ? gpm + '/m' : '—');
+  } else {
+    setTxt('dso-stat-gpm', '—');
+  }
 
   if(d.streak > 0) setTxt('dso-stat-streak', d.streak + 'W');
   else if(d.streak < 0) setTxt('dso-stat-streak', Math.abs(d.streak) + 'L');

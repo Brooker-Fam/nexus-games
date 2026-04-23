@@ -263,6 +263,11 @@ function rtsTick(){
         deadSwordsmenPool.push({x:e.x, y:e.y, side:e.side});
         if(deadSwordsmenPool.length>12) deadSwordsmenPool.shift();
       }
+      // Track kills and deaths for performance rating
+      if(e.type==='warrior'||e.type==='worker'){
+        if(e.side==='enemy') S.stats.kills++;
+        else S.stats.deaths++;
+      }
       spawnDeathParticles(e.x,e.y,FACTION_CFG[e.faction]?.color||'#886633');
       sfx('rtsUnitDie',120);
       S.entities.splice(i,1);
@@ -402,6 +407,7 @@ function workerReturn(w, myBase){
       let gold = w.goldCarry;
       if(w.side==='enemy' && !window._mpMultiplayer) gold = Math.round(gold * AI_CONFIG.resourceBonus);
       S.gold[w.side]+=gold;
+      if(w.side==='player') S.stats.goldEarned+=gold;
       w.goldCarry=0;
     }
     w.state='idle';
@@ -481,7 +487,7 @@ function buildingTick(b){
     // spawn the unit
     const u=item.fn();
     S.entities.push(u);
-    if(b.side==='player') rtsSetLog(`${item.label} ready!`);
+    if(b.side==='player'){ S.stats.unitsBuilt++; rtsSetLog(`${item.label} ready!`); }
   }
 }
 
@@ -861,7 +867,7 @@ function endRTS(playerWon){
   else { title.textContent='DEFEAT'; title.className='rts-over-title lose'; sub.textContent='Your base has fallen.'; }
 
   // Record result and show rating change
-  const result = recordGameResult(playerWon, S.frame);
+  const result = recordGameResult(playerWon, S.frame, S.stats);
   showRatingChange(result);
   if(window.posthog) posthog.capture('dso_game_ended', {
     outcome: playerWon ? 'victory' : 'defeat',

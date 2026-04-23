@@ -28,6 +28,8 @@ const S = {
   aiTimer: 0,
   // camera
   camX: 0, camY: RH/2 - VH/2, mouseWorld: null,
+  // performance stats (reset each game)
+  stats: { kills:0, deaths:0, goldEarned:0, unitsBuilt:0 },
 };
 
 function resetRtsState(){
@@ -37,6 +39,7 @@ function resetRtsState(){
   S.particles=[]; S.goldNodes=[]; S.projectiles=[];
   S.selected=[]; S.buildPopupOpen=false; S.buildStructureMode=false; S.buildingSource=null;
   S.aiTimer=0;
+  S.stats={ kills:0, deaths:0, goldEarned:0, unitsBuilt:0 };
   S.camX=0; S.camY=RH/2-VH/2; S.mouseWorld=null;
 }
 
