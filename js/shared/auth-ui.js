@@ -51,7 +51,9 @@
       const img = el('img', { src: user.image, alt: '', className: 'auth-avatar' });
       wrap.appendChild(img);
     }
-    wrap.appendChild(el('span', { className: 'auth-name' }, user.name || user.email || 'PLAYER'));
+    const nameEl = el('a', { className: 'auth-name', href: '/profile.html', title: 'View profile' }, user.name || user.email || 'PLAYER');
+    nameEl.style.textDecoration = 'none';
+    wrap.appendChild(nameEl);
 
     if (window.NexusAuth.passkeysSupported()) {
       const addPk = el('button', { className: 'auth-btn auth-passkey', title: 'Add a passkey for fast sign-in' }, '+🔑');
