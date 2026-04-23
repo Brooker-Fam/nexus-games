@@ -624,8 +624,8 @@ function warriorTick(w, playerBase, enemyBase){
       // Opponent is gone — this warrior won
       if(w.hp>0){
         if(w.faction==='shadow'){
-          w.subtype='bloodhound'; w.maxHp=120; w.hp=120; w.damage=22; w.speed=2.8;
-          w.range=50; w.ranged=false; w.fireRate=30; w.bowMode=false;
+          w.subtype='bloodhound'; w.maxHp=180; w.hp=180; w.damage=35; w.speed=3.2;
+          w.range=50; w.ranged=false; w.fireRate=22; w.bowMode=false;
           if(w.side==='player') rtsSetLog('A Bloodhound has emerged from the duel!');
           spawnMagicBurst(w.x, w.y, '#ffaa00');
         } else if(w.faction==='roboto'){

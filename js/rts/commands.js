@@ -174,8 +174,8 @@ function executeCommand(cmd){
       const bh=S.entities.find(e=>e.id===cmd.unitId);
       if(!bh||bh.side!==side||bh.subtype!=='bloodhound') break;
       bh.bowMode=!bh.bowMode;
-      if(bh.bowMode){ bh.ranged=true; bh.range=220; bh.speed=0.7; bh.fireRate=55; bh.damage=18; }
-      else           { bh.ranged=false; bh.range=50;  bh.speed=2.8; bh.fireRate=30; bh.damage=22; }
+      if(bh.bowMode){ bh.ranged=true; bh.range=260; bh.speed=0.9; bh.fireRate=38; bh.damage=28; }
+      else           { bh.ranged=false; bh.range=50;  bh.speed=3.2; bh.fireRate=22; bh.damage=35; }
       if(side==='player') rtsSetLog(`Bloodhound switched to ${bh.bowMode?'bow':'sword'} mode!`);
       break;
     }

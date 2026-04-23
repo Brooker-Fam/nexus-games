@@ -168,9 +168,9 @@ function makeBloodhound(side, faction, x, y){
   return {
     id:nextId(), type:'warrior', subtype:'bloodhound', side, faction,
     x, y,
-    hp:120, maxHp:120, speed:2.8,
+    hp:180, maxHp:180, speed:3.2,
     state:'idle', target:null, attackTimer:0,
-    damage:22, range:50, ranged:false, fireRate:30,
+    damage:35, range:50, ranged:false, fireRate:22,
     bowMode:false,
     frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };
