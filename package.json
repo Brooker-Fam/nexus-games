@@ -6,7 +6,7 @@
   "description": "Nexus Games arcade — vanilla JS frontend, serverless API on Vercel",
   "scripts": {
     "migrate": "node scripts/migrate.js",
-    "build": "node scripts/generate-posthog-config.js && node scripts/generate-sourcemaps.js && node scripts/migrate.js",
+    "build": "node scripts/generate-posthog-config.cjs && node scripts/generate-sourcemaps.cjs && node scripts/migrate.js",
     "dev": "vercel dev"
   },
   "dependencies": {
