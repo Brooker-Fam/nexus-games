@@ -623,7 +623,7 @@ function warriorTick(w, playerBase, enemyBase){
           if(w.side==='player') rtsSetLog('A Bloodhound has emerged from the duel!');
           spawnMagicBurst(w.x, w.y, '#ffaa00');
         } else if(w.faction==='roboto'){
-          w.subtype='assaultbot'; w.maxHp=180; w.hp=180; w.damage=18; w.speed=1.5;
+          w.subtype='assaultbot'; w.maxHp=180; w.hp=180; w.damage=8; w.speed=1.5;
           w.range=140; w.ranged=true; w.fireRate=12;
           if(w.side==='player') rtsSetLog('An Assault Bot has emerged from the brawl!');
           spawnMagicBurst(w.x, w.y, '#ff6600');

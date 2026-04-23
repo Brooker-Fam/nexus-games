@@ -178,7 +178,7 @@ function makeBloodhound(side, faction, x, y){
 function makeAssaultBot(side, faction, x, y){
   return { id:nextId(), type:'warrior', subtype:'assaultbot', side, faction,
     x, y, hp:180, maxHp:180, speed:1.5, state:'idle', target:null, attackTimer:0,
-    damage:18, range:140, ranged:true, fireRate:12,
+    damage:8, range:140, ranged:true, fireRate:12,
     frame:0, selected:false, forcedTarget:null, moveTarget:null };
 }
 function makePsionicWarrior(side, faction, x, y){
