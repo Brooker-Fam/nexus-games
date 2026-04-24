@@ -84,10 +84,20 @@
     return await res.json();
   }
 
+  async function getJson(path){
+    const res = await fetch(path, { credentials: 'same-origin' });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`${path} -> ${res.status}: ${text}`);
+    }
+    return await res.json();
+  }
+
   async function registerPasskey(name){
     if (!window.PublicKeyCredential) throw new Error('passkeys_unsupported');
     const { startRegistration } = await getWebAuthn();
-    const options = await postJson('/api/auth/passkey/generate-register-options', name ? { name } : {});
+    const qs = name ? `?name=${encodeURIComponent(name)}` : '';
+    const options = await getJson('/api/auth/passkey/generate-register-options' + qs);
     const attestation = await startRegistration({ optionsJSON: options });
     await postJson('/api/auth/passkey/verify-registration', { response: attestation, name });
     await refresh();
@@ -103,7 +113,7 @@
   async function signInWithPasskey(){
     if (!window.PublicKeyCredential) throw new Error('passkeys_unsupported');
     const { startAuthentication } = await getWebAuthn();
-    const options = await postJson('/api/auth/passkey/generate-authenticate-options', {});
+    const options = await getJson('/api/auth/passkey/generate-authenticate-options');
     const assertion = await startAuthentication({ optionsJSON: options });
     await postJson('/api/auth/passkey/verify-authentication', { response: assertion });
     await refresh();
