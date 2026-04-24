@@ -1,0 +1,1035 @@
+// ── AI CONFIG ──
+// Base values — overwritten by applyDifficultyToAI() at game start.
+// _AI_DEFAULTS stores the original values so multiplayer can reset them.
+const AI_CONFIG = {
+  buildInterval: 180,        // ticks between build decisions
+  trainInterval: 120,        // ticks between train decisions
+  attackInterval: 400,       // ticks between attack waves
+  maxWorkers: 14,
+  attackMinWarriors: 5,      // min idle warriors to launch attack
+  attackMatchMin: 3,         // min warriors for "outnumber player" attack
+  resourceBonus: 1.0,        // gold multiplier for AI workers
+  // build order quality
+  barracksWorkerReq: 2,      // workers needed before 1st barracks
+  barracks2WorkerReq: 6,     // workers needed before 2nd barracks
+  eliteWorkerReq: 4,         // workers needed before elite structure
+  maxCannons: 3,             // defensive cannon cap
+  // tactical micro
+  focusFireChance: 0,        // chance to target lowest-HP enemy (0 in MP)
+  kiteChance: 0,             // chance for ranged AI to retreat from melee (0 in MP)
+  // mistakes & coordination
+  mistakeChance: 0,          // chance to skip a decision cycle
+  attackPartialChance: 0,    // chance to only send some warriors
+  // costs
+  barracksCost: 20,
+  cannonCost: 15,
+  structureCost: 30,
+  eliteCost: 30,
+  warriorCost: 10,
+  workerCost: 5,
+};
+const _AI_DEFAULTS = Object.assign({}, AI_CONFIG);
+function resetAIConfig(){ Object.assign(AI_CONFIG, _AI_DEFAULTS); }
+
+// Deterministic distance — _dist is "implementation-approximated" per spec,
+// so Safari/JSC and Chrome/V8 can return different last-bit results.
+// Math.sqrt is IEEE 754 correctly-rounded, so dx*dx+dy*dy → sqrt is portable.
+function _dist(dx,dy){ return Math.sqrt(dx*dx+dy*dy); }
+
+function aiCount(type, subFilter){
+  return S.entities.filter(e=>{
+    if(e.side!=='enemy') return false;
+    if(e.type!==type) return false;
+    return subFilter ? subFilter(e) : true;
+  }).length;
+}
+
+function aiQueueAt(building, label, time, fn, cost){
+  if(!building || building.underConstruction) return false;
+  if(building.queue && building.queue.length>=QUEUE_MAX) return false;
+  if(S.gold.enemy<cost) return false;
+  S.gold.enemy-=cost;
+  queueUnit(building, label, time, fn);
+  return true;
+}
+
+function aiBuild(type, nearX, nearY, cost){
+  if(S.gold.enemy<cost) return false;
+  // Find an idle AI worker to assign
+  const worker = S.entities.find(e=>e.side==='enemy'&&e.type==='worker'&&e.state!=='building');
+  if(!worker) return false;
+  S.gold.enemy-=cost;
+  const x=nearX+(rtsRand()-0.5)*160;
+  const y=nearY+(rtsRand()-0.5)*200;
+  // Assign worker to build (same flow as player)
+  worker.buildTarget = { x, y, buildType:type, ghost:null };
+  worker.state = 'building';
+  return true;
+}
+
+function aiTick(){
+  S.aiTimer++;
+  const eb=S.enemyBase;
+  if(!eb) return;
+
+  // Gather intel
+  const workers   = aiCount('worker');
+  const warriors  = aiCount('warrior');
+  const barracks  = aiCount('structure', e=>e.isBarracks);
+  const eliteStructs = aiCount('structure', e=>!e.isBarracks&&!e.isAerialHangar&&!e.isOilRig&&!e.isDarknessGen&&!e.isLightGen);
+  const aerialHangars = aiCount('structure', e=>e.isAerialHangar);
+  const cannons   = aiCount('cannon');
+  const playerWarriors = S.entities.filter(e=>e.side==='player'&&e.type==='warrior').length;
+  const idleWarriors = S.entities.filter(e=>e.side==='enemy'&&e.type==='warrior'&&e.state==='idle').length;
+
+  // Detect threats near base
+  const baseThreat = S.entities.filter(e=>
+    e.side==='player'&&e.type==='warrior'&&_dist(e.x-eb.x,e.y-eb.y)<400
+  ).length;
+
+  // In multiplayer, skip economy/building AI (guest player handles that manually)
+  if(!window._mpMultiplayer){
+
+  // === BUILD DECISIONS (cadence set by difficulty) ===
+  if(S.aiTimer%AI_CONFIG.buildInterval===0){
+
+    // Mistake: easy AI sometimes skips build decisions entirely
+    if(Math.random() >= AI_CONFIG.mistakeChance){
+
+    // Always keep training workers (up to cap)
+    if(workers<AI_CONFIG.maxWorkers){
+      aiQueueAt(eb,'Worker',BUILD_TIMES.worker,()=>makeWorker('enemy',S.enemyFaction),AI_CONFIG.workerCost);
+    }
+
+    // Build first barracks (worker threshold set by difficulty)
+    if(barracks===0 && workers>=AI_CONFIG.barracksWorkerReq){
+      aiBuild('barracks', eb.x-150, eb.y, AI_CONFIG.barracksCost);
+    }
+    // Build second barracks for faster production
+    else if(barracks===1 && workers>=AI_CONFIG.barracks2WorkerReq && S.gold.enemy>=AI_CONFIG.barracksCost){
+      aiBuild('barracks', eb.x-200, eb.y+120, AI_CONFIG.barracksCost);
+    }
+
+    // Build cannons (cap set by difficulty)
+    if(cannons<AI_CONFIG.maxCannons && workers>=3 && S.gold.enemy>=AI_CONFIG.cannonCost){
+      aiBuild('cannon', eb.x-100, eb.y, AI_CONFIG.cannonCost);
+    }
+
+    // Build elite structure (worker threshold set by difficulty)
+    if(eliteStructs===0 && workers>=AI_CONFIG.eliteWorkerReq && barracks>=1){
+      aiBuild('structure', eb.x-200, eb.y, AI_CONFIG.structureCost);
+    }
+
+    // Build aerial hangar once elite structure exists
+    if(aerialHangars===0 && eliteStructs>=1 && workers>=AI_CONFIG.eliteWorkerReq){
+      aiBuild('aerial', eb.x-160, eb.y-150, 25);
+    }
+
+    // Faction resource generators
+    const eCfg2=FACTION_CFG[S.enemyFaction];
+    if(eCfg2.oilRigLabel){
+      const oilRigs=aiCount('structure',e=>e.isOilRig);
+      if(oilRigs===0 && barracks>=1 && workers>=3) aiBuild('oilrig', eb.x-180, eb.y+200, 20);
+    }
+    if(eCfg2.darknessGenLabel){
+      const darknessGens=aiCount('structure',e=>e.isDarknessGen);
+      if(darknessGens===0 && barracks>=1 && workers>=3) aiBuild('darknessgen', eb.x-180, eb.y+200, 20);
+    }
+    if(eCfg2.lightGenLabel){
+      const lightGens=aiCount('structure',e=>e.isLightGen);
+      if(lightGens===0 && barracks>=1 && workers>=3) aiBuild('lightgen', eb.x-180, eb.y+200, 20);
+    }
+
+    } // end mistake check
+  }
+
+  // === TRAIN UNITS (cadence set by difficulty) ===
+  if(S.aiTimer%AI_CONFIG.trainInterval===0){
+
+    // Mistake: easy AI sometimes skips training
+    if(Math.random() >= AI_CONFIG.mistakeChance){
+
+    // Train warriors from ALL barracks
+    const allBarracks=S.entities.filter(e=>e.side==='enemy'&&e.type==='structure'&&e.isBarracks&&!e.underConstruction);
+    for(const bar of allBarracks){
+      aiQueueAt(bar,'Warrior',BUILD_TIMES.warrior,()=>makeWarrior('enemy',S.enemyFaction,bar.x,bar.y),AI_CONFIG.warriorCost);
+    }
+
+    // Train elites (and elite2/tanks for Roboto)
+    const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.isOilRig&&!e.isDarknessGen&&!e.isLightGen&&!e.underConstruction);
+    if(eliteStruct){
+      const eCfg3=FACTION_CFG[S.enemyFaction];
+      const tankOilNeeded=eCfg3.tankOilCost||0;
+      const canAffordTank=eCfg3.elite2Fn==='makeTank' && S.gold.enemy>=eCfg3.elite2Cost && (S.oil.enemy||0)>=tankOilNeeded;
+      const elite2DarknessNeeded=eCfg3.elite2DarknessCost||0;
+      const canAffordElite2Other=!canAffordTank && eCfg3.elite2Fn && eCfg3.elite2Fn!=='makeTank' && S.gold.enemy>=eCfg3.elite2Cost && (elite2DarknessNeeded===0||(S.darkness.enemy||0)>=elite2DarknessNeeded);
+      if(canAffordTank){
+        const elite2FnMap2={makeTank};
+        const tfn=elite2FnMap2[eCfg3.elite2Fn];
+        if(tfn && aiQueueAt(eliteStruct,eCfg3.elite2Label,BUILD_TIMES.elite2,()=>tfn('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),eCfg3.elite2Cost)){
+          if(tankOilNeeded>0) S.oil.enemy=Math.max(0,(S.oil.enemy||0)-tankOilNeeded);
+        }
+      } else if(canAffordElite2Other){
+        const elite2FnMapAI={makeWizard,makeNecromancer};
+        const efn2=elite2FnMapAI[eCfg3.elite2Fn];
+        if(efn2 && aiQueueAt(eliteStruct,eCfg3.elite2Label,BUILD_TIMES.elite2,()=>efn2('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),eCfg3.elite2Cost)){
+          if(elite2DarknessNeeded>0) S.darkness.enemy=Math.max(0,(S.darkness.enemy||0)-elite2DarknessNeeded);
+        }
+      } else if(S.gold.enemy>=AI_CONFIG.eliteCost){
+        const eliteLightNeeded=eCfg3.eliteLightCost||0;
+        if(eliteLightNeeded===0||(S.light.enemy||0)>=eliteLightNeeded){
+          if(aiQueueAt(eliteStruct,eCfg3.eliteLabel||'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),AI_CONFIG.eliteCost)){
+            if(eliteLightNeeded>0) S.light.enemy=Math.max(0,(S.light.enemy||0)-eliteLightNeeded);
+          }
+        }
+      }
+    }
+
+    // Train aerial units from hangar
+    const eCfg=FACTION_CFG[S.enemyFaction];
+    const aerialHangar=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&e.isAerialHangar&&!e.underConstruction);
+    const aerialFnMap2={makeStarFighter,makeSkyAttacker};
+    const aerialOilNeeded=eCfg.aerialOilCost||0;
+    if(aerialHangar && eCfg.aerialFn && S.gold.enemy>=eCfg.aerialUnitCost && (S.oil.enemy||0)>=aerialOilNeeded){
+      const afn=aerialFnMap2[eCfg.aerialFn];
+      if(afn && aiQueueAt(aerialHangar,eCfg.aerialUnitLabel,
+        BUILD_TIMES[eCfg.aerialFn==='makeSkyAttacker'?'skyattacker':'starfighter'],
+        ()=>afn('enemy',S.enemyFaction,aerialHangar.x,aerialHangar.y),
+        eCfg.aerialUnitCost)){
+        if(aerialOilNeeded>0) S.oil.enemy=Math.max(0,(S.oil.enemy||0)-aerialOilNeeded);
+      }
+    }
+
+    } // end mistake check
+  }
+
+  } // end !_mpMultiplayer
+
+  // === ATTACK DECISIONS (always run, including multiplayer) ===
+  // Defend base when threatened
+  if(baseThreat>0 && S.aiTimer%60===0){
+    for(const e of S.entities){
+      if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle'){
+        e.state='march';
+      }
+    }
+  }
+
+  // Attack when we have a decent army (thresholds set by difficulty)
+  if(S.aiTimer%AI_CONFIG.attackInterval===0){
+    const shouldAttack = idleWarriors>=AI_CONFIG.attackMinWarriors || (idleWarriors>=AI_CONFIG.attackMatchMin && idleWarriors>=playerWarriors);
+    if(shouldAttack){
+      // Partial attack: easy AI sometimes only sends a portion (singleplayer only)
+      const sendAll = window._mpMultiplayer || Math.random() >= AI_CONFIG.attackPartialChance;
+      let sent = 0;
+      for(const e of S.entities){
+        if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle'){
+          if(sendAll || sent < Math.ceil(idleWarriors * 0.5)){
+            e.state='march';
+            sent++;
+          }
+        }
+      }
+    }
+  }
+
+  // Champion duels — every 240 ticks, AI tries to forge a champion from 2 idle base warriors
+  if(!window._mpMultiplayer && S.aiTimer%240===0){
+    const idleBaseWarriors=S.entities.filter(e=>e.side==='enemy'&&e.type==='warrior'&&!e.subtype&&e.state==='idle');
+    if(idleBaseWarriors.length>=2){
+      const u=idleBaseWarriors[Math.floor(rtsRand()*idleBaseWarriors.length)];
+      rtsCommandQueue.push({type:'start_duel', side:'enemy', swordsmanId:u.id, tick:S.frame});
+    }
+  }
+}
+
+// ── TICK ──
+function rtsTick(){
+  if(S.gameOver) return;
+  S.frame++;
+  processCommands();
+  tickCamera();
+  aiTick();
+
+  const playerBase = S.playerBase;
+  const enemyBase  = S.enemyBase;
+  if(!playerBase||!enemyBase) return;
+
+  for(const e of S.entities){
+    e.frame=(e.frame||0)+1;
+    if(e.type==='worker') workerTick(e, playerBase, enemyBase);
+    if(e.type==='warrior') warriorTick(e, playerBase, enemyBase);
+    if(e.type==='cannon') cannonTick(e);
+    if(e.type==='structure' && e.queue) buildingTick(e);
+    if(e.type==='base' && e.queue) buildingTick(e);
+    // oil rig slow refill (1 oil per 2s)
+    // resource generator slow refill (1 per 2s)
+    if(e.isOilRig      && !e.underConstruction && (e.oil||0)<e.maxOil                  && S.frame%120===0) e.oil++;
+    if(e.isDarknessGen && !e.underConstruction && (e.darkness||0)<(e.maxDarkness||200) && S.frame%120===0) e.darkness++;
+    if(e.isLightGen    && !e.underConstruction && (e.light||0)<(e.maxLight||200)       && S.frame%120===0) e.light++;
+    // necromancer revival tick
+    if(e.type==='warrior' && e.subtype==='necromancer' && e.state!=='idle'){
+      e.reviveTimer=(e.reviveTimer||0)+1;
+      if(e.reviveTimer>=e.reviveCooldown && deadSwordsmenPool.length>0){
+        e.reviveTimer=0;
+        const pos=deadSwordsmenPool.pop();
+        // raise at where they fell, on necromancer's side
+        const revived=makeWarrior(e.side, e.faction, pos.x-80, pos.y);
+        revived.state='march';
+        revived.x=pos.x; revived.y=pos.y;
+        S.entities.push(revived);
+        spawnMagicBurst(pos.x, pos.y, '#9922ff');
+        if(e.side==='player') rtsSetLog('Necromancer raised a Swordsman from the dead!');
+      }
+    }
+  }
+
+  // remove dead units — record fallen swordsmen for necromancer
+  for(let i=S.entities.length-1;i>=0;i--){
+    const e=S.entities[i];
+    // Skip primary bases (handled by game-over check below)
+    if(e===playerBase || e===enemyBase) continue;
+    if(e.hp<=0){
+      if(e.type==='warrior' && e.faction==='shadow' && !e.subtype && e.state!=='duel'){
+        deadSwordsmenPool.push({x:e.x, y:e.y, side:e.side});
+        if(deadSwordsmenPool.length>12) deadSwordsmenPool.shift();
+      }
+      // Track kills and deaths for performance rating
+      if(e.type==='warrior'||e.type==='worker'){
+        if(e.side==='enemy') S.stats.kills++;
+        else S.stats.deaths++;
+      }
+      spawnDeathParticles(e.x,e.y,FACTION_CFG[e.faction]?.color||'#886633');
+      sfx('rtsUnitDie',120);
+      S.entities.splice(i,1);
+    }
+  }
+
+  updateProjectiles();
+  tickPendingChains();
+
+  // check base HP
+  if(playerBase.hp<=0){
+    S.baseHP=0;
+    console.log('[GAME OVER] player base destroyed. frame=',S.frame,'hp=',playerBase.hp);
+    endRTS(mySide()==='player' ? false : true); return;
+  }
+  if(enemyBase.hp<=0){
+    S.enemyBaseHP=0;
+    console.log('[GAME OVER] enemy base destroyed. frame=',S.frame,'hp=',enemyBase.hp);
+    endRTS(mySide()==='player' ? true : false); return;
+  }
+  S.baseHP=Math.floor(playerBase.hp);
+  S.enemyBaseHP=Math.floor(enemyBase.hp);
+
+  // particles
+  for(let i=S.particles.length-1;i>=0;i--){
+    const p=S.particles[i]; p.x+=p.vx; p.y+=p.vy; p.vx*=0.9; p.vy*=0.9; p.life--;
+    if(p.isRing) p.radius+=3;
+    if(p.life<=0) S.particles.splice(i,1);
+  }
+
+  updateRtsHUD();
+}
+
+// ── WORKER STATE HANDLERS ──
+const MINE_TICKS = 90;
+const MINE_DROPOFF_DIST = 55;
+const BUILD_ARRIVE_DIST = 20;
+const MOVE_ARRIVE_DIST = 10;
+const MINE_ARRIVE_DIST = 8;
+const GOLD_NODE_PENALTIES = { neutral:200, player:0, enemy:400 };
+
+function moveToward(unit, tx, ty, arrivedDist){
+  const dx=tx-unit.x, dy=ty-unit.y, d=_dist(dx,dy);
+  if(d<arrivedDist) return true;
+  unit.x+=dx/d*unit.speed; unit.y+=dy/d*unit.speed;
+  return false;
+}
+
+function workerBuild(w){
+  if(moveToward(w, w.buildTarget.x, w.buildTarget.y, BUILD_ARRIVE_DIST)) {
+    const bt=w.buildTarget.buildType||'structure';
+    if(!w.buildTarget.ghost){
+      const makers={cannon:makeCannon, barracks:makeBarracks, base:makeBase, aerial:makeAerialBuilding, oilrig:makeOilRig, darknessgen:makeDarknessGenerator, lightgen:makeLightGenerator};
+      const ghost=(makers[bt]||makeStructure)(w.side, w.faction, w.buildTarget.x, w.buildTarget.y);
+      S.entities.push(ghost);
+      w.buildTarget.ghost=ghost;
+    }
+    const ghost=w.buildTarget.ghost;
+    if(!ghost || ghost.hp<=0){ w.state='idle'; w.buildTarget=null; return; }
+    ghost.buildProgress=(ghost.buildProgress||0)+1;
+    w.buildTimer=(w.buildTimer||0)+1;
+    w.hammerSwing=Math.sin(w.buildTimer*0.4);
+    if(w.hammerSwing<-0.95 && w.buildTimer>2) sfx('rtsHammer',200);
+    if(ghost.buildProgress>=ghost.buildTime){
+      ghost.underConstruction=false;
+      ghost.hp=ghost.maxHp;
+      sfx('rtsBuildDone');
+      if(w.side==='player'){
+        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:bt==='aerial'?FACTION_CFG[w.faction].aerialLabel:bt==='oilrig'?'OIL RIG':bt==='darknessgen'?'DARKNESS GEN':bt==='lightgen'?'LIGHT GEN':FACTION_CFG[w.faction].structLabel;
+        rtsSetLog(`${lbl} complete!`);
+      }
+      w.state='idle'; w.buildTarget=null; w.hammerSwing=0; w.buildTimer=0;
+    }
+  }
+}
+
+function workerFindGold(w){
+  let best=null, bestScore=Infinity;
+  for(const node of S.goldNodes){
+    if(node.gold<=0) continue;
+    const d=_dist(node.x-w.x, node.y-w.y);
+    const penalty=GOLD_NODE_PENALTIES[node.owner]||(node.owner===w.side?0:400);
+    const score=d+penalty;
+    if(score<bestScore){ bestScore=score; best=node; }
+  }
+  // Faction-specific resource buildings
+  const cfg=FACTION_CFG[w.faction||S.playerFaction];
+  if(cfg.oilRigLabel){
+    for(const ent of S.entities){
+      if(!ent.isOilRig||ent.side!==w.side||ent.underConstruction) continue;
+      if((ent.oil||0)<=0) continue;
+      const d=_dist(ent.x-w.x, ent.y-w.y);
+      const score=d+250;
+      if(score<bestScore){ bestScore=score; best=ent; }
+    }
+  }
+  if(cfg.darknessGenLabel){
+    for(const ent of S.entities){
+      if(!ent.isDarknessGen||ent.side!==w.side||ent.underConstruction) continue;
+      if((ent.darkness||0)<=0) continue;
+      const d=_dist(ent.x-w.x, ent.y-w.y);
+      const score=d+250;
+      if(score<bestScore){ bestScore=score; best=ent; }
+    }
+  }
+  if(cfg.lightGenLabel){
+    for(const ent of S.entities){
+      if(!ent.isLightGen||ent.side!==w.side||ent.underConstruction) continue;
+      if((ent.light||0)<=0) continue;
+      const d=_dist(ent.x-w.x, ent.y-w.y);
+      const score=d+250;
+      if(score<bestScore){ bestScore=score; best=ent; }
+    }
+  }
+  if(!best){ w.state='idle'; return; }
+  w.target=best; w.state='moving';
+  if(moveToward(w, best.x, best.y, MINE_ARRIVE_DIST)){
+    w.state='mining'; w.mineTimer=0;
+  }
+}
+
+function workerMine(w){
+  w.mineTimer++;
+  if(w.mineTimer>MINE_TICKS){
+    if(w.target && w.target.isOilRig){
+      if(w.target.oil>0){
+        w.target.oil--; w.oilCarry=(w.oilCarry||0)+1;
+        if(w.oilCarry>=w.goldCap) w.state='returning';
+      } else { w.state='idle'; }
+    } else if(w.target && w.target.isDarknessGen){
+      if(w.target.darkness>0){
+        w.target.darkness--; w.darknessCarry=(w.darknessCarry||0)+1;
+        if(w.darknessCarry>=w.goldCap) w.state='returning';
+      } else { w.state='idle'; }
+    } else if(w.target && w.target.isLightGen){
+      if(w.target.light>0){
+        w.target.light--; w.lightCarry=(w.lightCarry||0)+1;
+        if(w.lightCarry>=w.goldCap) w.state='returning';
+      } else { w.state='idle'; }
+    } else if(w.target && w.target.gold>0){
+      w.target.gold--; w.goldCarry++;
+      if(w.goldCarry>=w.goldCap) w.state='returning';
+    } else { w.state='idle'; }
+    w.mineTimer=0;
+  }
+}
+
+function workerReturn(w, myBase){
+  let nearestBase=null, nearestDist=Infinity;
+  for(const ent of S.entities){
+    if(ent.type!=='base'||ent.side!==w.side) continue;
+    const d=_dist(ent.x-w.x,ent.y-w.y);
+    if(d<nearestDist){ nearestDist=d; nearestBase=ent; }
+  }
+  const dropoff=nearestBase||myBase;
+  if(moveToward(w, dropoff.x, dropoff.y, MINE_DROPOFF_DIST)){
+    if((w.oilCarry||0)>0){
+      let oil=w.oilCarry;
+      if(w.side==='enemy' && !window._mpMultiplayer) oil=Math.round(oil*AI_CONFIG.resourceBonus);
+      S.oil[w.side]=(S.oil[w.side]||0)+oil;
+      w.oilCarry=0;
+    }
+    if((w.darknessCarry||0)>0){
+      let dark=w.darknessCarry;
+      if(w.side==='enemy' && !window._mpMultiplayer) dark=Math.round(dark*AI_CONFIG.resourceBonus);
+      S.darkness[w.side]=(S.darkness[w.side]||0)+dark;
+      w.darknessCarry=0;
+    }
+    if((w.lightCarry||0)>0){
+      let light=w.lightCarry;
+      if(w.side==='enemy' && !window._mpMultiplayer) light=Math.round(light*AI_CONFIG.resourceBonus);
+      S.light[w.side]=(S.light[w.side]||0)+light;
+      w.lightCarry=0;
+    }
+    if(w.goldCarry>0){
+      let gold = w.goldCarry;
+      if(w.side==='enemy' && !window._mpMultiplayer) gold = Math.round(gold * AI_CONFIG.resourceBonus);
+      S.gold[w.side]+=gold;
+      if(w.side==='player') S.stats.goldEarned+=gold;
+      w.goldCarry=0;
+    }
+    w.state='idle';
+  }
+}
+
+function workerTick(w, playerBase, enemyBase){
+  const myBase=w.side==='player'?playerBase:enemyBase;
+  if(w.state==='building' && w.buildTarget){ workerBuild(w); return; }
+  if(w.moveTarget){
+    if(moveToward(w, w.moveTarget.x, w.moveTarget.y, MOVE_ARRIVE_DIST)){
+      w.moveTarget=null; w.state='idle';
+    }
+    return;
+  }
+  if(w.assignedTask==='gather_oil'){
+    const rig=S.entities.find(e=>e.id===w.assignedTargetId && e.isOilRig && e.side===w.side && !e.underConstruction);
+    if(!rig || (rig.oil||0)<=0){
+      w.assignedTask=null; w.assignedTargetId=null; w.target=null;
+      if(w.state!=='returning') w.state='idle';
+    } else {
+      w.target=rig;
+      if(w.state==='returning'){ workerReturn(w, myBase); }
+      else if(moveToward(w, rig.x, rig.y, MINE_ARRIVE_DIST)){ w.state='mining'; workerMine(w); }
+      else { w.state='moving'; }
+      return;
+    }
+  }
+  if(w.assignedTask==='gather_darkness'){
+    const gen=S.entities.find(e=>e.id===w.assignedTargetId && e.isDarknessGen && e.side===w.side && !e.underConstruction);
+    if(!gen || (gen.darkness||0)<=0){
+      w.assignedTask=null; w.assignedTargetId=null; w.target=null;
+      if(w.state!=='returning') w.state='idle';
+    } else {
+      w.target=gen;
+      if(w.state==='returning'){ workerReturn(w, myBase); }
+      else if(moveToward(w, gen.x, gen.y, MINE_ARRIVE_DIST)){ w.state='mining'; workerMine(w); }
+      else { w.state='moving'; }
+      return;
+    }
+  }
+  if(w.assignedTask==='gather_light'){
+    const gen=S.entities.find(e=>e.id===w.assignedTargetId && e.isLightGen && e.side===w.side && !e.underConstruction);
+    if(!gen || (gen.light||0)<=0){
+      w.assignedTask=null; w.assignedTargetId=null; w.target=null;
+      if(w.state!=='returning') w.state='idle';
+    } else {
+      w.target=gen;
+      if(w.state==='returning'){ workerReturn(w, myBase); }
+      else if(moveToward(w, gen.x, gen.y, MINE_ARRIVE_DIST)){ w.state='mining'; workerMine(w); }
+      else { w.state='moving'; }
+      return;
+    }
+  }
+  if(w.state==='idle'||w.state==='moving') workerFindGold(w);
+  else if(w.state==='mining') workerMine(w);
+  else if(w.state==='returning') workerReturn(w, myBase);
+}
+
+// ── CANNON TICK ──
+function cannonTick(c){
+  if(c.underConstruction) return; // can't fire while being built
+  c.cooldown=Math.max(0,(c.cooldown||0)-1);
+  if(c.cooldown>0) return;
+  // find nearest enemy within range (cannons cannot target aerial units)
+  let target=null, bestDist=c.range;
+  const enemySide=c.side==='player'?'enemy':'player';
+  for(const e of S.entities){
+    if(e.side!==enemySide) continue;
+    if(e.aerial) continue; // cannons can't hit aerial units
+    const d=_dist(e.x-c.x,e.y-c.y);
+    if(d<bestDist){ bestDist=d; target=e; }
+  }
+  if(!target) return;
+  c.aimAngle=Math.atan2(target.y-c.y,target.x-c.x);
+  c.cooldown=c.rate;
+  const cCfg=FACTION_CFG[c.faction];
+  sfx(cCfg.cannonSound||'rtsCannonFire',300);
+  S.projectiles.push({
+    x:c.x, y:c.y, tx:target,
+    speed:8, damage:c.damage,
+    faction:c.faction, color:cCfg.cannonColor||'#ffaa00',
+    type:'cannonball', trail:[], side:c.side,
+  });
+}
+
+// ── BUILDING TICK — processes train queues ──
+function buildingTick(b){
+  if(b.underConstruction) return; // can't train while being built
+  if(!b.queue || b.queue.length===0) return;
+  b.trainTimer=(b.trainTimer||0)+1;
+  const item=b.queue[0];
+  if(b.trainTimer>=item.time){
+    b.trainTimer=0;
+    b.queue.shift();
+    // spawn the unit
+    const u=item.fn();
+    S.entities.push(u);
+    if(b.side==='player'){ S.stats.unitsBuilt++; rtsSetLog(`${item.label} ready!`); }
+  }
+}
+
+function queueUnit(building, label, time, fn){
+  if(!building.queue) building.queue=[];
+  if(building.queue.length>=QUEUE_MAX){ rtsSetLog('Queue full!'); return false; }
+  building.queue.push({label,time,fn});
+  return true;
+}
+
+// ── WARRIOR STATE HANDLERS ──
+const MELEE_ATTACK_TICKS = 45;
+
+// Returns true if this attacker can hit aerial units.
+// Allowed: gunbot (roboto warrior), shockbot, dark warrior (shadow elite),
+//          witch (prism warrior), oracle (prism elite), wizard, starfighter, skyattacker.
+// Blocked: cannons, workers, swordsman (shadow melee warrior), necromancer, tank.
+function canTargetAerial(w){
+  if(w.type==='cannon') return false;
+  if(w.type!=='warrior') return false;
+  if(w.faction==='shadow' && !w.subtype) return false; // swordsman (melee only)
+  if(w.subtype==='bloodhound') return w.bowMode===true; // bow mode can hit aerial
+  if(w.subtype==='necromancer') return false;
+  if(w.subtype==='tank') return false;
+  return true;
+}
+
+function warriorFindTarget(w, enemyBase2){
+  // Forced target (right-click)
+  if(w.forcedTarget){
+    if(w.forcedTarget.hp<=0||!S.entities.includes(w.forcedTarget)){
+      w.forcedTarget=null;
+    } else {
+      // respect aerial restriction even for forced targets
+      if(!w.forcedTarget.aerial || canTargetAerial(w)){
+        return { target:w.forcedTarget, dist:_dist(w.forcedTarget.x-w.x, w.forcedTarget.y-w.y) };
+      }
+      w.forcedTarget=null;
+    }
+  }
+
+  // AI focus-fire: target lowest-HP enemy in engagement range (singleplayer only)
+  if(!window._mpMultiplayer && w.side==='enemy' && AI_CONFIG.focusFireChance>0 && Math.random()<AI_CONFIG.focusFireChance){
+    let weakest=null, weakestHP=Infinity;
+    const scanRange = (w.range||50) * 2;
+    for(const e of S.entities){
+      if(e.side===w.side) continue;
+      // skip primary bases (handled as fallback)
+      if(e===S.playerBase||e===S.enemyBase) continue;
+      if(e.aerial && !canTargetAerial(w)) continue;
+      const d=_dist(e.x-w.x,e.y-w.y);
+      if(d<scanRange && e.hp<weakestHP){ weakestHP=e.hp; weakest=e; }
+    }
+    if(weakest){
+      return { target:weakest, dist:_dist(weakest.x-w.x, weakest.y-w.y) };
+    }
+  }
+
+  // Auto-target nearest enemy (including non-primary bases)
+  let nearest=null, nearestDist=Infinity;
+  for(const e of S.entities){
+    if(e.side===w.side) continue;
+    // skip primary bases (handled as fallback)
+    if(e===S.playerBase||e===S.enemyBase) continue;
+    if(e.aerial && !canTargetAerial(w)) continue;
+    const d=_dist(e.x-w.x,e.y-w.y);
+    if(d<nearestDist){ nearestDist=d; nearest=e; }
+  }
+  const target=nearest||enemyBase2;
+  const dist=nearest?nearestDist:_dist(enemyBase2.x-w.x,enemyBase2.y-w.y);
+  return { target, dist };
+}
+
+function warriorMarchToward(w, target, spreadMod, spreadScale){
+  w.state='march';
+  const dx=target.x-w.x, dy=target.y-w.y, d=_dist(dx,dy)||1;
+  const spread=(w.id%spreadMod)*spreadScale-(spreadMod*spreadScale/2);
+  w.x+=dx/d*w.speed; w.y+=(dy+spread*0.05)/d*w.speed;
+}
+
+function warriorRangedAttack(w, target, targetDist){
+  // AI kiting: ranged units retreat from nearby melee threats (singleplayer only)
+  if(!window._mpMultiplayer && w.side==='enemy' && AI_CONFIG.kiteChance>0 && targetDist<=w.range){
+    for(const e of S.entities){
+      if(e.side===w.side||e.type==='base'||e.ranged) continue;
+      const d=_dist(e.x-w.x,e.y-w.y);
+      if(d<100 && Math.random()<AI_CONFIG.kiteChance*0.08){
+        // Retreat away from melee threat while still shooting
+        const dx=w.x-e.x, dy=w.y-e.y, dist=_dist(dx,dy)||1;
+        w.x+=dx/dist*w.speed; w.y+=dy/dist*w.speed;
+        // Still fire if ready
+        if(w.aerial) w.aimAngle=Math.atan2(target.y-w.y, target.x-w.x);
+        w.attackTimer++;
+        if(w.attackTimer>=(w.fireRate||50)){ w.attackTimer=0; spawnProjectile(w, target); }
+        return;
+      }
+    }
+  }
+
+  if(targetDist<=w.range){
+    w.state='attack';
+    w.attackTimer++;
+    // track aim angle for aerial units so they visually face their target
+    if(w.aerial) w.aimAngle=Math.atan2(target.y-w.y, target.x-w.x);
+    if(w.attackTimer>=(w.fireRate||50)){ w.attackTimer=0; spawnProjectile(w, target); }
+  } else {
+    if(w.aerial) w.aimAngle=Math.atan2(target.y-w.y, target.x-w.x);
+    warriorMarchToward(w, target, 13, 4);
+  }
+}
+
+function warriorMeleeAttack(w, target, targetDist){
+  if(targetDist<=w.range){
+    w.state='attack';
+    w.attackTimer++;
+    if(w.attackTimer>=MELEE_ATTACK_TICKS){
+      w.attackTimer=0;
+      target.hp-=w.damage;
+      if(target.type==='base') spawnHitFlash(target.x+(w.side==='player'?-30:30),target.y+(Math.random()-0.5)*60,'#ff4444');
+      else spawnHitFlash(target.x,target.y,FACTION_CFG[w.faction].color);
+    }
+  } else {
+    warriorMarchToward(w, target, 11, 5);
+  }
+}
+
+function warriorTick(w, playerBase, enemyBase){
+  const enemyBase2=w.side==='player'?enemyBase:playerBase;
+
+  // DUEL STATE — two warriors fighting to become an elite
+  if(w.state==='duel'){
+    const opp=S.entities.find(e=>e.id===w.duelOpponentId);
+    if(!opp||opp.hp<=0||!S.entities.includes(opp)){
+      // Opponent is gone — this warrior won
+      if(w.hp>0){
+        if(w.faction==='shadow'){
+          w.subtype='bloodhound'; w.maxHp=180; w.hp=180; w.damage=35; w.speed=3.2;
+          w.range=50; w.ranged=false; w.fireRate=22; w.bowMode=false;
+          if(w.side==='player') rtsSetLog('A Bloodhound has emerged from the duel!');
+          spawnMagicBurst(w.x, w.y, '#ffaa00');
+        } else if(w.faction==='roboto'){
+          w.subtype='assaultbot'; w.maxHp=180; w.hp=180; w.damage=8; w.speed=1.5;
+          w.range=140; w.ranged=true; w.fireRate=12;
+          if(w.side==='player') rtsSetLog('An Assault Bot has emerged from the brawl!');
+          spawnMagicBurst(w.x, w.y, '#ff6600');
+        } else if(w.faction==='prism'){
+          w.subtype='psionic'; w.maxHp=110; w.hp=110; w.damage=28; w.speed=0.85;
+          w.range=270; w.ranged=true; w.fireRate=65;
+          if(w.side==='player') rtsSetLog('A Psionic Warrior has emerged from the duel!');
+          spawnMagicBurst(w.x, w.y, '#cc44ff');
+        }
+        w.state='idle'; w.duelOpponentId=null;
+      }
+      return;
+    }
+    // Rush toward opponent
+    const dx=opp.x-w.x, dy=opp.y-w.y, d=_dist(dx,dy)||1;
+    if(d>22){ w.x+=dx/d*3.5; w.y+=dy/d*3.5; }
+    else if(w.duelAttacker){
+      w.attackTimer=(w.attackTimer||0)+1;
+      if(w.attackTimer>=15){
+        w.attackTimer=0;
+        opp.hp-=12;
+        spawnHitFlash(opp.x,opp.y,'#ffdd00');
+        sfx('rtsUnitHit',50);
+      }
+    }
+    return;
+  }
+
+  // Auto-aggro: idle warriors engage nearby enemies
+  // Bloodhounds in sword mode have a much wider charge range
+  if(w.state==='idle'){
+    const AGGRO_RANGE = (w.subtype==='bloodhound'&&!w.bowMode)||w.subtype==='assaultbot' ? 350 : Math.max(w.range||50,150);
+    for(const e of S.entities){
+      if(e.side===w.side) continue;
+      if(e===S.playerBase||e===S.enemyBase) continue;
+      if(_dist(e.x-w.x, e.y-w.y) <= AGGRO_RANGE){
+        w.state='march';
+        break;
+      }
+    }
+    if(w.state==='idle') return;
+  }
+
+  if(w.moveTarget){
+    if(moveToward(w, w.moveTarget.x, w.moveTarget.y, 8)){
+      w.moveTarget=null; w.state='idle';
+    }
+    return;
+  }
+
+  const {target, dist}=warriorFindTarget(w, enemyBase2);
+  if(!target) return;
+
+  if(w.ranged) warriorRangedAttack(w, target, dist);
+  else warriorMeleeAttack(w, target, dist);
+}
+
+// ── COMBAT CONSTANTS ──
+const COMBAT = {
+  tankAoeRadius: 80,
+  tankAoeDamageFactor: 0.5,
+  chainLightningRange: 200,
+  chainLightningDamageFactor: 0.6,
+  chainLightningBounces: 2,
+};
+
+// ── PROJECTILES ──
+const PROJECTILE_TYPES = {
+  // subtype overrides (checked first)
+  tank:        { type:'shell',      color:'#ff6600', speed:9,  sound:'rtsCannonFire' },
+  wizard:      { type:'lightning',  color:'#88ffff', speed:6,  sound:'rtsLightning' },
+  necromancer: { type:'darkmagic',  color:'#440088', speed:4,  sound:'rtsDarkMagic' },
+  // elite per-faction
+  'elite.roboto': { type:'lightning',  color:'#44ffff', speed:11, sound:'rtsLightning' },
+  'elite.shadow': { type:'darkmagic',  color:'#220044', speed:4,  sound:'rtsDarkMagic' },
+  'elite.prism':  { type:'prismblast', color:'#ffffff', speed:4,  sound:'rtsMagicFire' },
+  // base warriors per-faction
+  'warrior.roboto': { type:'bullet', speed:11, sound:'rtsBullet' },
+  'warrior.shadow': { type:'magic',  speed:4,  sound:'rtsMagicFire' },
+  'warrior.prism':  { type:'magic',  speed:4,  sound:'rtsMagicFire' },
+};
+
+function spawnProjectile(shooter, target){
+  const cfg=FACTION_CFG[shooter.faction];
+  const sub = shooter.subtype;
+  // Lookup: subtype first, then elite.faction, then warrior.faction
+  const pCfg = PROJECTILE_TYPES[sub]
+    || (sub==='elite' && PROJECTILE_TYPES['elite.'+shooter.faction])
+    || PROJECTILE_TYPES['warrior.'+shooter.faction]
+    || { type:'magic', speed:4, sound:'rtsMagicFire' };
+
+  S.projectiles.push({
+    x:shooter.x, y:shooter.y,
+    tx:target,
+    speed: pCfg.speed,
+    damage:shooter.damage,
+    faction:shooter.faction,
+    color: pCfg.color || cfg.color,
+    type: pCfg.type,
+    trail:[],
+    isElite: sub==='elite',
+    isWizard: sub==='wizard',
+    isNecro: sub==='necromancer',
+    isTank: sub==='tank',
+    side:shooter.side,
+  });
+  sfx(pCfg.sound||'rtsBullet', 80);
+}
+
+function updateProjectiles(){
+  for(let i=S.projectiles.length-1;i>=0;i--){
+    const p=S.projectiles[i];
+    p.trail.push({x:p.x,y:p.y});
+    if(p.trail.length>8) p.trail.shift();
+    if(!p.tx||p.tx.hp<=0){ S.projectiles.splice(i,1); continue; }
+    const dx=p.tx.x-p.x, dy=p.tx.y-p.y, d=_dist(dx,dy);
+    if(d<p.speed+4){
+      p.tx.hp-=p.damage;
+      if(p.type==='bullet') spawnHitFlash(p.tx.x,p.tx.y,'#ffcc44');
+      else if(p.type==='cannonball'){
+        spawnHitParticles2(p.tx.x,p.tx.y);
+      }
+      else if(p.type==='shell'){
+        // tank shell — AOE explosion
+        for(const ent of S.entities){
+          if(ent.side===p.side||ent.type==='base') continue;
+          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<COMBAT.tankAoeRadius) ent.hp-=p.damage*COMBAT.tankAoeDamageFactor;
+        }
+        spawnHitParticles2(p.tx.x, p.tx.y);
+      }
+      else if(p.type==='lightning'||p.type==='darkmagic'){
+        spawnLightningHit(p.tx.x,p.tx.y,p.color);
+        chainLightning(p.tx, p.damage*COMBAT.chainLightningDamageFactor, p.color, p.side, COMBAT.chainLightningBounces);
+      } else {
+        spawnMagicBurst(p.tx.x,p.tx.y,p.color);
+      }
+      S.projectiles.splice(i,1);
+    } else {
+      p.x+=dx/d*p.speed; p.y+=dy/d*p.speed;
+    }
+  }
+}
+
+// Pending chain lightning bounces — processed in rtsTick instead of setTimeout
+const _pendingChains=[];
+const CHAIN_BOUNCE_DELAY=4; // ticks between bounces (~67ms at 60fps)
+
+function chainLightning(origin, damage, color, shooterSide, bounces){
+  if(bounces<=0) return;
+  // find nearest enemy unit within range, not the origin
+  let best=null, bestD=COMBAT.chainLightningRange;
+  for(const e of S.entities){
+    if(e.side===shooterSide||e===origin||e.type==='base') continue;
+    const d=_dist(e.x-origin.x,e.y-origin.y);
+    if(d<bestD){ bestD=d; best=e; }
+  }
+  if(!best) return;
+  best.hp-=damage;
+  // draw arc between origin and best as a particle trail
+  const steps=8;
+  for(let s=0;s<=steps;s++){
+    const t2=s/steps;
+    const jx=(Math.random()-0.5)*20*(1-t2);
+    const jy=(Math.random()-0.5)*20*(1-t2);
+    S.particles.push({
+      x:origin.x+(best.x-origin.x)*t2+jx,
+      y:origin.y+(best.y-origin.y)*t2+jy,
+      vx:0,vy:0,life:12,maxLife:12,color,size:3,
+    });
+  }
+  spawnLightningHit(best.x,best.y,color);
+  // queue next bounce instead of setTimeout
+  if(bounces-1>0){
+    _pendingChains.push({ origin:best, damage:damage*0.6, color, shooterSide, bounces:bounces-1, delay:CHAIN_BOUNCE_DELAY });
+  }
+}
+
+function tickPendingChains(){
+  for(let i=_pendingChains.length-1;i>=0;i--){
+    const c=_pendingChains[i];
+    if(--c.delay<=0){
+      _pendingChains.splice(i,1);
+      chainLightning(c.origin, c.damage, c.color, c.shooterSide, c.bounces);
+    }
+  }
+}
+
+function spawnLightningHit(x,y,color){
+  for(let i=0;i<6;i++){
+    const a=Math.random()*Math.PI*2, s=Math.random()*4+2;
+    S.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:16,maxLife:16,color,size:2+Math.random()*2});
+  }
+  S.particles.push({x,y,vx:0,vy:0,life:10,maxLife:10,color,size:0,isRing:true,radius:3});
+}
+
+function spawnMagicBurst(x,y,color){
+  for(let i=0;i<8;i++){
+    const a=(i/8)*Math.PI*2;
+    S.particles.push({x,y,vx:Math.cos(a)*2,vy:Math.sin(a)*2,life:22,maxLife:22,color,size:3});
+  }
+  S.particles.push({x,y,vx:0,vy:0,life:12,maxLife:12,color,size:0,isRing:true,radius:2});
+}
+
+function spawnHitParticles2(x,y){
+  // big fiery explosion for tank shells
+  for(let i=0;i<18;i++){
+    const a=Math.random()*Math.PI*2, s=Math.random()*6+3;
+    const cols=['#ff4400','#ff8800','#ffcc00','#ffffff','#ff2200'];
+    S.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:30,maxLife:30,color:cols[Math.floor(Math.random()*cols.length)],size:4+Math.random()*4});
+  }
+  S.particles.push({x,y,vx:0,vy:0,life:18,maxLife:18,color:'#ff8800',size:0,isRing:true,radius:4});
+  S.particles.push({x,y,vx:0,vy:0,life:12,maxLife:12,color:'#ffcc44',size:0,isRing:true,radius:6});
+}
+
+function spawnHitFlash(x,y,color){
+  for(let i=0;i<5;i++){
+    const a=Math.random()*Math.PI*2, s=Math.random()*2+1;
+    S.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:18,maxLife:18,color,size:2+Math.random()*2});
+  }
+}
+function spawnDeathParticles(x,y,color){
+  for(let i=0;i<10;i++){
+    const a=Math.random()*Math.PI*2, s=Math.random()*3+1;
+    S.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:30,maxLife:30,color,size:3+Math.random()*3});
+  }
+}
+
+function endRTS(playerWon){
+  S.gameOver=true;
+  const ov=document.getElementById('rts-gameover-overlay');
+  const title=document.getElementById('rts-over-title');
+  const sub=document.getElementById('rts-over-sub');
+  ov.style.display='flex';
+  if(playerWon){ title.textContent='VICTORY'; title.className='rts-over-title win'; sub.textContent='The enemy base has been destroyed.'; }
+  else { title.textContent='DEFEAT'; title.className='rts-over-title lose'; sub.textContent='Your base has fallen.'; }
+
+  // Record result and show rating change
+  const result = recordGameResult(playerWon, S.frame, S.stats);
+  showRatingChange(result);
+  if(window.posthog) posthog.capture('dso_game_ended', {
+    outcome: playerWon ? 'victory' : 'defeat',
+    faction: S.playerFaction,
+    enemy_faction: S.enemyFaction,
+    mode: window._mpMultiplayer ? 'multiplayer' : 'singleplayer',
+    rating_before: result.before,
+    rating_after: result.after,
+    rating_delta: result.after - result.before,
+    streak: result.streak,
+    games_played: result.gamesPlayed,
+    game_frames: S.frame,
+  });
+}
+
+// ══════════════════
+//  RTS DRAW ENGINE
+// ══════════════════
+let rtsLastTime=0, rtsAccum=0;
+function rtsLoop(ts){
+  const dt = Math.min(ts - rtsLastTime, 100);
+  rtsLastTime = ts;
+
+  if(window._mpMultiplayer){
+    // Lockstep: both clients run simulation, advance only when commands ready
+    rtsAccum += dt * S.speed;
+    while(rtsAccum >= TARGET_MS){
+      if(!lsCanAdvance()) break;
+      lsTick();
+      rtsTick();
+      rtsAccum -= TARGET_MS;
+    }
+  } else {
+    // Singleplayer
+    rtsAccum += dt * S.speed;
+    while(rtsAccum >= TARGET_MS){
+      rtsTick();
+      rtsAccum -= TARGET_MS;
+    }
+  }
+
+  rtsDraw();
+  S.raf=requestAnimationFrame(rtsLoop);
+}
+
+// ── MULTIPLAYER BACKGROUND KEEPALIVE ──
+// Chrome/Safari throttle requestAnimationFrame in background tabs.
+// This interval keeps the simulation alive so the lockstep doesn't stall.
+let _mpKeepAlive = null;
+
+function mpStartKeepAlive(){
+  if(_mpKeepAlive) return;
+  _mpKeepAlive = setInterval(()=>{
+    if(!window._mpMultiplayer || S.gameOver) { mpStopKeepAlive(); return; }
+    const now = performance.now();
+    // Only kick in when rAF has stopped firing (tab is backgrounded)
+    if(now - rtsLastTime > 200){
+      const dt = Math.min(now - rtsLastTime, 100);
+      rtsLastTime = now;
+      rtsAccum += dt * S.speed;
+      while(rtsAccum >= TARGET_MS){
+        if(!lsCanAdvance()) break;
+        lsTick();
+        rtsTick();
+        rtsAccum -= TARGET_MS;
+      }
+    }
+  }, 100);
+}
+
+function mpStopKeepAlive(){
+  if(_mpKeepAlive){ clearInterval(_mpKeepAlive); _mpKeepAlive=null; }
+}
+
+
+//# sourceMappingURL=game.js.map

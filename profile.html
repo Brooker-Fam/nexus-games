@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS GAMES · PROFILE</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script>
+  if(location.protocol!=='file:'){
+    const l=document.createElement('link');
+    l.rel='stylesheet';
+    l.href='https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap';
+    document.head.appendChild(l);
+  }
+</script>
+<link rel="stylesheet" href="css/base.css">
+<style>
+  .profile-wrap { max-width: 800px; margin: 40px auto; padding: 0 20px; position: relative; z-index: 1; }
+  .pf-card { background: var(--panel-bg); border: 1px solid var(--panel-border); padding: 24px; margin-bottom: 20px; }
+  .pf-card h2 { font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: 2px; color: var(--neon-cyan); margin-bottom: 16px; }
+  .pf-header { display: flex; align-items: center; gap: 16px; }
+  .pf-avatar { width: 72px; height: 72px; border-radius: 50%; border: 2px solid var(--neon-cyan); }
+  .pf-avatar.ph { background: #123; display:flex; align-items:center; justify-content:center; font-family:'Orbitron',sans-serif; font-size:28px; color:var(--neon-cyan); }
+  .pf-name { font-family: 'Orbitron', sans-serif; font-size: 22px; letter-spacing: 1.5px; color: var(--text-bright); }
+  .pf-email { color: var(--text-dim); font-size: 13px; margin-top: 4px; }
+  .pf-row { display:flex; justify-content:space-between; align-items:center; padding: 10px 0; border-bottom: 1px solid rgba(0,245,255,0.08); }
+  .pf-row:last-child { border-bottom: none; }
+  .pf-k { color: var(--text-dim); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; font-family:'Orbitron',sans-serif; }
+  .pf-v { color: var(--text-bright); font-family: monospace; font-size: 13px; }
+  .pf-btn { background: transparent; border: 1px solid var(--panel-border); color: var(--neon-cyan); font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; padding: 8px 14px; cursor: pointer; }
+  .pf-btn:hover { background: rgba(0,245,255,0.1); box-shadow: 0 0 8px rgba(0,245,255,0.4); }
+  .pf-btn.danger { color: var(--neon-pink); border-color: rgba(255,0,136,0.3); }
+  .pf-btn.danger:hover { background: rgba(255,0,136,0.1); box-shadow: 0 0 8px rgba(255,0,136,0.4); }
+  .pf-back { display: inline-block; color: var(--neon-cyan); text-decoration: none; font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 2px; margin-bottom: 20px; }
+  .pf-back:hover { text-shadow: 0 0 8px var(--neon-cyan); }
+  .pf-empty { color: var(--text-dim); font-size: 12px; padding: 8px 0; }
+  .pf-loading { color: var(--text-dim); text-align: center; padding: 40px; font-family: 'Orbitron', sans-serif; letter-spacing: 2px; }
+</style>
+</head>
+<body>
+
+<div class="bg-layer">
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+  <div class="scanline"></div>
+</div>
+
+<div class="profile-wrap">
+  <a href="/" class="pf-back">◂ BACK TO NEXUS</a>
+
+  <div id="pf-loading" class="pf-loading">LOADING…</div>
+  <div id="pf-signin" class="pf-card" style="display:none">
+    <h2>▸ SIGN IN REQUIRED</h2>
+    <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px">Sign in with Google, a passkey, or an email link to view your profile.</p>
+    <button class="pf-btn" onclick="window.NexusAuth.signInWithGoogle()">SIGN IN WITH GOOGLE</button>
+  </div>
+
+  <div id="pf-content" style="display:none">
+    <div class="pf-card">
+      <div class="pf-header">
+        <div id="pf-avatar-slot"></div>
+        <div>
+          <div class="pf-name" id="pf-name"></div>
+          <div class="pf-email" id="pf-email"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pf-card">
+      <h2>▸ ACCOUNT</h2>
+      <div class="pf-row"><span class="pf-k">User ID</span><span class="pf-v" id="pf-id"></span></div>
+      <div class="pf-row"><span class="pf-k">Type</span><span class="pf-v" id="pf-type"></span></div>
+    </div>
+
+    <div class="pf-card">
+      <h2>▸ PASSKEYS</h2>
+      <div id="pf-passkeys"></div>
+      <button class="pf-btn" style="margin-top:12px" id="pf-add-passkey">+ ADD PASSKEY ON THIS DEVICE</button>
+    </div>
+
+    <div class="pf-card">
+      <h2>▸ GAME STATS</h2>
+      <div id="pf-stats"></div>
+    </div>
+
+    <div class="pf-card">
+      <button class="pf-btn danger" onclick="window.NexusAuth.signOut().then(()=>location.href='/')">SIGN OUT</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/shared/auth-client.js"></script>
+<script>
+(async function(){
+  const loading = document.getElementById('pf-loading');
+  const signin = document.getElementById('pf-signin');
+  const content = document.getElementById('pf-content');
+
+  function showSignIn(){ loading.style.display='none'; signin.style.display='block'; content.style.display='none'; }
+  function showContent(){ loading.style.display='none'; signin.style.display='none'; content.style.display='block'; }
+
+  function fmtDate(s){ if(!s)return '—'; try{return new Date(s).toLocaleString();}catch{return s;} }
+
+  async function renderPasskeys(){
+    const box = document.getElementById('pf-passkeys');
+    box.innerHTML = '<div class="pf-empty">LOADING…</div>';
+    try {
+      const res = await fetch('/api/auth/passkey/list-user-passkeys', { method: 'GET', credentials: 'same-origin' });
+      if (!res.ok) { box.innerHTML = '<div class="pf-empty">Could not load passkeys.</div>'; return; }
+      const list = await res.json();
+      if (!Array.isArray(list) || list.length === 0) {
+        box.innerHTML = '<div class="pf-empty">No passkeys yet. Add one below for one-tap sign-in.</div>';
+        return;
+      }
+      box.innerHTML = '';
+      for (const pk of list) {
+        const row = document.createElement('div'); row.className = 'pf-row';
+        const left = document.createElement('div');
+        left.innerHTML = `<span class="pf-v">${pk.name || '(unnamed)'}</span><br><span class="pf-k" style="font-size:10px">${pk.deviceType || ''} · added ${fmtDate(pk.createdAt)}</span>`;
+        const del = document.createElement('button');
+        del.className = 'pf-btn danger'; del.textContent = 'REMOVE';
+        del.addEventListener('click', async () => {
+          if (!confirm('Remove this passkey?')) return;
+          const r = await fetch('/api/auth/passkey/delete-passkey', { method: 'POST', credentials: 'same-origin', headers: {'content-type':'application/json'}, body: JSON.stringify({ id: pk.id }) });
+          if (r.ok) renderPasskeys();
+          else alert('Failed to delete: ' + r.status);
+        });
+        row.appendChild(left); row.appendChild(del);
+        box.appendChild(row);
+      }
+    } catch (e) {
+      box.innerHTML = '<div class="pf-empty">Error: ' + (e?.message || 'unknown') + '</div>';
+    }
+  }
+
+  async function renderStats(){
+    const box = document.getElementById('pf-stats');
+    try {
+      const res = await fetch('/api/stats', { credentials: 'same-origin' });
+      if (!res.ok) { box.innerHTML = '<div class="pf-empty">Could not load stats.</div>'; return; }
+      const body = await res.json();
+      const rows = body?.stats ?? [];
+      if (!rows.length) { box.innerHTML = '<div class="pf-empty">No games played yet.</div>'; return; }
+      box.innerHTML = '';
+      for (const r of rows) {
+        const d = r.data ?? {};
+        const parts = [];
+        if (d.rating != null) parts.push(`Rating <b>${d.rating}</b>`);
+        if (d.gamesPlayed != null) parts.push(`${d.gamesPlayed} games`);
+        if (d.streak != null && d.streak !== 0) parts.push(`streak ${d.streak > 0 ? d.streak+'W' : Math.abs(d.streak)+'L'}`);
+        const row = document.createElement('div'); row.className = 'pf-row';
+        row.innerHTML = `<span class="pf-k">${r.game_id.toUpperCase()}</span><span class="pf-v">${parts.join(' · ') || '—'}</span>`;
+        box.appendChild(row);
+      }
+    } catch (e) {
+      box.innerHTML = '<div class="pf-empty">Error: ' + (e?.message || 'unknown') + '</div>';
+    }
+  }
+
+  function renderUser(u){
+    const av = document.getElementById('pf-avatar-slot');
+    av.innerHTML = '';
+    if (u.image) {
+      const img = document.createElement('img'); img.src = u.image; img.className = 'pf-avatar'; av.appendChild(img);
+    } else {
+      const ph = document.createElement('div'); ph.className = 'pf-avatar ph'; ph.textContent = (u.name || u.email || '?').slice(0,1).toUpperCase(); av.appendChild(ph);
+    }
+    document.getElementById('pf-name').textContent = u.name || 'Player';
+    document.getElementById('pf-email').textContent = u.email || '';
+    document.getElementById('pf-id').textContent = u.id;
+    document.getElementById('pf-type').textContent = u.isAnonymous ? 'Anonymous (sign in to save progress)' : 'Logged in';
+  }
+
+  document.getElementById('pf-add-passkey').addEventListener('click', async () => {
+    try {
+      const name = prompt('Name this passkey (e.g. "MacBook", "iPhone"):', 'This device');
+      if (!name) return;
+      await window.NexusAuth.registerPasskey(name);
+      await renderPasskeys();
+    } catch (err) {
+      alert('Could not add passkey: ' + (err?.message || 'unknown'));
+    }
+  });
+
+  window.NexusAuth.onChange(async (u) => {
+    if (!u) return;
+    if (u.isAnonymous) { showSignIn(); return; }
+    renderUser(u);
+    showContent();
+    await Promise.all([renderPasskeys(), renderStats()]);
+  });
+
+  // If still loading, show spinner; if already resolved, the onChange callback already fired.
+  setTimeout(() => {
+    if (!window.NexusAuth.state.ready) return;
+    if (!window.NexusAuth.state.user || window.NexusAuth.state.user.isAnonymous) showSignIn();
+  }, 100);
+})();
+</script>
+
+</body>
+</html>

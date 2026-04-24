@@ -1,7 +1,10 @@
 {
-  "buildCommand": null,
+  "buildCommand": "node scripts/generate-posthog-config.cjs && node scripts/generate-sourcemaps.cjs && node scripts/migrate.js",
   "outputDirectory": ".",
-  "cleanUrls": true,
+  "cleanUrls": false,
+  "rewrites": [
+    { "source": "/api/auth/:path*", "destination": "/api/auth" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

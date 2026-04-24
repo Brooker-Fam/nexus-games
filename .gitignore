@@ -1,3 +1,8 @@
 .DS_Store
 .vercel
 *.log
+.env
+.env.local
+node_modules
+js/posthog-config.js
+js/**/*.js.map
