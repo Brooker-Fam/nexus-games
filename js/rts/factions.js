@@ -53,7 +53,7 @@ const FACTION_CFG={
     warriorCost:6, warriorDesc:'Ranged — rapid fire gun',
     structName:'ARMORY', structLabel:'ARMORY',
     eliteLabel:'SHOCKBOT', eliteDesc:'Ranged — chain lightning hits multiple enemies',
-    eliteCost:18, eliteIcon:'⚡',
+    eliteCost:24, eliteIcon:'⚡',
     elite2Label:'TANK', elite2Desc:'Heavy armored unit — high HP, AOE cannon',
     elite2Cost:25, elite2Icon:'🚗', elite2Fn:'makeTank', tankOilCost:12,
     // UI icons
