@@ -58,6 +58,18 @@ function openBuildPopup(screenX, screenY, context){
     title.textContent = cfg.barracksLabel;
     addOpt(cfg.warriorIcon, cfg.warriorLabel, cfg.warriorDesc, cfg.warriorCost,
       ()=>trainCmd(sel.id, 'warrior', 'barracks'));
+    {
+      const idleWarriors=S.entities.filter(e=>e.side===mySide()&&e.type==='warrior'&&!e.subtype&&e.state==='idle');
+      const duelIcons={shadow:'⚔',roboto:'🤜',prism:'✨'};
+      const duelNames={shadow:'CHAMPION DUEL',roboto:'CHAMPION BRAWL',prism:'CHAMPION DUEL'};
+      const duelDescs={shadow:'Two Swordsmen duel — the victor becomes a Bloodhound',roboto:'Two GunBots brawl — winner becomes an Assault Bot',prism:'Two Witches duel — victor becomes a Psionic Warrior'};
+      const fi=duelIcons[S.playerFaction]||'⚔';
+      const fn=duelNames[S.playerFaction]||'CHAMPION DUEL';
+      const fd=duelDescs[S.playerFaction]||'Two warriors duel — the victor becomes a champion';
+      addOpt(fi, fn, fd, 0,
+        ()=>{ issueCommand({type:'start_duel',swordsmanId:idleWarriors[0].id}); closeBuildPopup(); },
+        idleWarriors.length<2);
+    }
 
   } else if(context==='worker'){
     title.textContent = 'WORKER ACTIONS';
