@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="css/td.css">
 <link rel="stylesheet" href="css/rts.css">
 <link rel="stylesheet" href="css/snake.css">
+<link rel="stylesheet" href="css/fish.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -64,6 +65,7 @@
     <button class="tab active" id="tab-btn-td">⬡ TOWER DEFENSE</button>
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
     <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
+    <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
     <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
@@ -352,6 +354,61 @@
       </div>
     </div>
   </div>
+
+  <!-- FISH FRENZY -->
+  <div id="tab-fish" class="tab-content">
+    <div class="game-header">
+      <div>
+        <div class="game-title">FISH <span>FRENZY</span></div>
+      </div>
+      <div class="game-stats">
+        <div class="stat-box"><div class="stat-label">SCORE</div><div class="stat-val cyan" id="fishScore">0</div></div>
+        <div class="stat-box"><div class="stat-label">SIZE</div><div class="stat-val purple" id="fishSize">14</div></div>
+        <div class="stat-box"><div class="stat-label">BEST</div><div class="stat-val gold" id="fishBest">0</div></div>
+      </div>
+    </div>
+
+    <div class="fish-area">
+      <div class="fish-canvas-wrap">
+        <canvas id="fishCanvas" width="900" height="520"></canvas>
+        <div class="fish-overlay" id="fishOverlay">
+          <div class="fish-over-title" id="fishOverTitle">EATEN</div>
+          <div class="fish-over-sub" id="fishOverSub">SOMETHING BIGGER WAS HUNGRY</div>
+          <div class="fish-over-stats">
+            <div class="fish-over-stat"><div class="l">SCORE</div><div class="v" id="fishOverScore">0</div></div>
+            <div class="fish-over-stat"><div class="l">SIZE</div><div class="v" id="fishOverSize">0</div></div>
+            <div class="fish-over-stat"><div class="l">EATEN</div><div class="v" id="fishOverEaten">0</div></div>
+          </div>
+          <button class="fish-restart-btn" id="btn-fish-reset">⟳ RESTART</button>
+        </div>
+      </div>
+
+      <div class="fish-sidebar">
+        <div class="panel">
+          <div class="panel-title">▸ GROWTH</div>
+          <div class="fish-meter">
+            <div class="fish-meter-label"><span>FRY</span><span>APEX</span></div>
+            <div class="fish-meter-bar"><div class="fish-meter-fill" id="fishMeterFill"></div></div>
+          </div>
+          <div class="fish-legend">
+            <div class="fish-legend-row"><span class="fish-legend-dot green"></span> SMALLER — EAT IT</div>
+            <div class="fish-legend-row"><span class="fish-legend-dot red"></span> BIGGER — RUN</div>
+            <div class="fish-legend-row"><span class="fish-legend-dot gold"></span> BONUS — +50</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ CONTROLS</div>
+          <div class="fish-controls">
+            MOVE <kbd>MOUSE</kbd> TO SWIM<br>
+            EAT FISH SMALLER THAN YOU<br>
+            AVOID THE BIG ONES<br>
+            FILL THE METER TO WIN
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Shared -->
@@ -390,6 +447,9 @@
 
 <!-- Nexus Snake -->
 <script src="js/snake/game.js"></script>
+
+<!-- Fish Frenzy -->
+<script src="js/fish/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>

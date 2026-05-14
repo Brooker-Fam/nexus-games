@@ -74,6 +74,12 @@ const SFX={
   // Snake
   snakeEat:  ()=>{ sfxTone(880,'sine',0.18,0.005,0.1,1320); sfxTone(1320,'sine',0.08,0.01,0.08); },
   snakeDie:  ()=>{ sfxTone(220,'sawtooth',0.2,0.01,0.35,80); sfxNoise(0.15,0.2,500); },
+
+  // Fish Frenzy
+  fishEat:   ()=>{ sfxTone(560,'sine',0.18,0.005,0.12,920); sfxNoise(0.04,0.05,1200); },
+  fishBonus: ()=>{ [880,1175,1568].forEach((f,i)=>setTimeout(()=>sfxTone(f,'sine',0.18,0.01,0.14),i*60)); },
+  fishDie:   ()=>{ sfxTone(180,'sawtooth',0.22,0.01,0.4,60); sfxNoise(0.2,0.3,500); },
+  fishWin:   ()=>{ [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>sfxTone(f,'sine',0.22,0.02,0.3),i*90)); },
 };
 
 // Throttle repeated sounds so they don't stack

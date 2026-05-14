@@ -1,0 +1,145 @@
+  /* ── FISH FRENZY ── */
+  #tab-fish .game-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  #tab-fish .game-title {
+    font-family:'Orbitron', sans-serif;
+    font-size:20px; font-weight:900; letter-spacing:4px;
+    color:#00f5ff;
+  }
+  #tab-fish .game-title span { color:#00ff88; }
+
+  .fish-area {
+    display:grid;
+    grid-template-columns: 1fr 220px;
+    gap:16px;
+  }
+
+  #fishCanvas {
+    display:block;
+    width:100%;
+    height:auto;
+    border:1px solid var(--panel-border);
+    box-shadow: 0 0 30px rgba(0,200,255,0.15), inset 0 0 80px rgba(0,40,80,0.6);
+    background: linear-gradient(180deg, #021428 0%, #01101f 50%, #000810 100%);
+    cursor: none;
+  }
+
+  .fish-canvas-wrap {
+    position:relative;
+  }
+
+  .fish-overlay {
+    position:absolute; inset:0;
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    background: rgba(2,8,16,0.85);
+    backdrop-filter: blur(6px);
+    z-index: 5;
+    text-align:center;
+    padding: 30px;
+  }
+  .fish-overlay.show { display:flex; }
+  .fish-over-title {
+    font-family:'Orbitron', sans-serif;
+    font-size: 42px; font-weight:900; letter-spacing:6px;
+    color: #ff0088;
+    text-shadow: 0 0 30px rgba(255,0,136,0.8);
+    margin-bottom: 14px;
+  }
+  .fish-over-title.win { color: #00ff88; text-shadow: 0 0 30px rgba(0,255,136,0.8); }
+  .fish-over-sub {
+    font-size: 16px; letter-spacing:2px;
+    color: var(--text-bright);
+    opacity: 0.85;
+    margin-bottom: 26px;
+  }
+  .fish-over-stats {
+    display:flex; gap:24px; margin-bottom:26px;
+    flex-wrap: wrap; justify-content:center;
+  }
+  .fish-over-stat { text-align:center; }
+  .fish-over-stat .l {
+    font-size:10px; letter-spacing:2px; color:var(--text-dim); text-transform:uppercase;
+  }
+  .fish-over-stat .v {
+    font-family:'Orbitron', sans-serif;
+    font-size:24px; font-weight:700; color:#00f5ff;
+  }
+  .fish-restart-btn {
+    font-family:'Orbitron', sans-serif;
+    font-size: 13px; letter-spacing: 4px; font-weight:700;
+    padding: 14px 38px;
+    background: transparent;
+    border: 1px solid #00f5ff;
+    color: #00f5ff;
+    cursor: pointer;
+    transition: all 0.2s;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .fish-restart-btn:hover {
+    background: rgba(0,245,255,0.15);
+    box-shadow: 0 0 20px rgba(0,245,255,0.5);
+  }
+
+  .fish-sidebar {
+    display:flex; flex-direction:column; gap:12px;
+  }
+
+  .fish-meter {
+    margin-bottom: 8px;
+  }
+  .fish-meter-label {
+    display:flex; justify-content:space-between;
+    font-size: 9px; letter-spacing:2px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .fish-meter-bar {
+    height: 8px;
+    background: rgba(0,30,60,0.7);
+    border: 1px solid rgba(0,245,255,0.2);
+    position: relative;
+    overflow: hidden;
+  }
+  .fish-meter-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00f5ff, #00ff88);
+    box-shadow: 0 0 8px rgba(0,255,136,0.6);
+    transition: width 0.15s ease-out;
+    width: 0%;
+  }
+
+  .fish-legend {
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text-bright);
+  }
+  .fish-legend-row {
+    display:flex; align-items:center; gap:8px;
+  }
+  .fish-legend-dot {
+    width: 12px; height: 12px; border-radius:50%;
+    flex-shrink:0;
+  }
+  .fish-legend-dot.green { background:#00ff88; box-shadow:0 0 8px #00ff88; }
+  .fish-legend-dot.red { background:#ff3060; box-shadow:0 0 8px #ff3060; }
+  .fish-legend-dot.gold { background:#ffcc00; box-shadow:0 0 8px #ffcc00; }
+
+  .fish-controls {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    letter-spacing: 1px;
+  }
+  .fish-controls kbd {
+    font-family:'Orbitron', sans-serif;
+    font-size: 9px;
+    background: rgba(0,245,255,0.1);
+    border: 1px solid rgba(0,245,255,0.3);
+    color: #00f5ff;
+    padding: 2px 6px;
+    margin: 0 1px;
+  }
+
+  @media (max-width: 900px) {
+    .fish-area { grid-template-columns: 1fr; }
+    #fishCanvas { cursor: auto; }
+  }
