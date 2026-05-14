@@ -95,7 +95,7 @@ document.getElementById('tab-btn-fish').onclick=function(){
 document.getElementById('btn-fish-reset').onclick=function(){ fishReset(); };
 document.getElementById('tab-btn-exc').onclick=function(){
   const id = new Date().toISOString() + '-' + Math.random().toString(36).slice(2, 10);
-  throw new Error('Nexus test exception ' + id);
+  throw new TypeError("Cannot read properties of undefined (reading 'entities') at GameState.tick [session " + id + ']');
 };
 
 // Snake controls
