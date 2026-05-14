@@ -88,6 +88,10 @@ document.getElementById('tab-btn-snake').onclick=function(){
   switchTab('snake', this);
   if(window.posthog) posthog.capture('game_tab_switched', { tab: 'snake' });
 };
+document.getElementById('tab-btn-exc').onclick=function(){
+  const id = new Date().toISOString() + '-' + Math.random().toString(36).slice(2, 10);
+  throw new Error('Nexus test exception ' + id);
+};
 
 // Snake controls
 document.getElementById('btn-snake-reset').onclick=function(){ snakeReset(); };
