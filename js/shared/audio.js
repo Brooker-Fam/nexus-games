@@ -80,6 +80,17 @@ const SFX={
   fishBonus: ()=>{ [880,1175,1568].forEach((f,i)=>setTimeout(()=>sfxTone(f,'sine',0.18,0.01,0.14),i*60)); },
   fishDie:   ()=>{ sfxTone(180,'sawtooth',0.22,0.01,0.4,60); sfxNoise(0.2,0.3,500); },
   fishWin:   ()=>{ [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>sfxTone(f,'sine',0.22,0.02,0.3),i*90)); },
+
+  // Doom Raycaster
+  doomShoot:     ()=>{ sfxNoise(0.35,0.18,1800); sfxTone(120,'square',0.18,0.001,0.08,60); },
+  doomEmpty:     ()=>{ sfxTone(220,'square',0.08,0.001,0.04); setTimeout(()=>sfxTone(180,'square',0.06,0.001,0.04),50); },
+  doomEnemyHurt: ()=>{ sfxNoise(0.18,0.08,2600); sfxTone(360,'sawtooth',0.12,0.001,0.07,240); },
+  doomEnemyDie:  ()=>{ sfxNoise(0.28,0.32,700); sfxTone(150,'sawtooth',0.15,0.005,0.35,55); },
+  doomBite:      ()=>{ sfxTone(220,'sawtooth',0.16,0.005,0.1,90); sfxNoise(0.1,0.07,1200); },
+  doomPickup:    ()=>{ sfxTone(880,'sine',0.14,0.005,0.08,1320); sfxTone(1320,'sine',0.08,0.01,0.08); },
+  doomMedkit:    ()=>{ sfxTone(660,'sine',0.16,0.005,0.1,990); sfxTone(990,'sine',0.1,0.01,0.12); },
+  doomDie:       ()=>{ sfxTone(220,'sawtooth',0.22,0.01,0.4,60); sfxNoise(0.2,0.4,400); },
+  doomVictory:   ()=>{ [392,523,659,784,1047].forEach((f,i)=>setTimeout(()=>sfxTone(f,'square',0.18,0.02,0.32),i*110)); },
 };
 
 // Throttle repeated sounds so they don't stack
