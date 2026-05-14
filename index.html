@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="css/rts.css">
 <link rel="stylesheet" href="css/snake.css">
 <link rel="stylesheet" href="css/fish.css">
+<link rel="stylesheet" href="css/pong.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -66,6 +67,7 @@
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
     <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
     <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
+    <button class="tab" id="tab-btn-pong">◫ ATARI PONG</button>
     <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
@@ -409,6 +411,56 @@
       </div>
     </div>
   </div>
+
+  <!-- ATARI PONG -->
+  <div id="tab-pong" class="tab-content">
+    <div class="game-header">
+      <div>
+        <div class="game-title">ATARI <span>PONG</span></div>
+      </div>
+      <div class="game-stats">
+        <div class="stat-box"><div class="stat-label">MODE</div><div class="stat-val cyan">1P / 2P</div></div>
+        <div class="stat-box"><div class="stat-label">AI</div><div class="stat-val purple">EASY–HARD</div></div>
+        <div class="stat-box"><div class="stat-label">STATUS</div><div class="stat-val gold" id="pongStatus">SHELL</div></div>
+      </div>
+    </div>
+
+    <div class="game-area pong-area">
+      <div class="canvas-wrap pong-canvas-wrap">
+        <canvas id="pongCanvas" width="900" height="520" aria-label="Atari Pong game canvas"></canvas>
+        <div class="overlay show" id="pongOverlay">
+          <div class="overlay-title">ENTRY POINT READY</div>
+          <div class="overlay-sub">PONG CORE WILL LOAD FROM <code>js/pong/game.js</code></div>
+          <button class="overlay-btn" id="btn-pong-reset" type="button">⟳ REFRESH SHELL</button>
+        </div>
+      </div>
+
+      <div class="sidebar pong-sidebar">
+        <div class="panel">
+          <div class="panel-title">▸ DESCRIPTION</div>
+          <div class="pong-copy">
+            Retro Atari-style table tennis with one-player AI tiers and local two-player rallies.
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ TAGS</div>
+          <div class="pong-tags" aria-label="Atari Pong tags">
+            <span>ARCADE</span><span>RETRO</span><span>2P</span><span>CANVAS</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ INTEGRATION CONTRACT</div>
+          <div class="pong-copy">
+            Tab ID: <code>pong</code><br>
+            Canvas: <code>pongCanvas</code><br>
+            Registry: <code>registerGame('pong', ...)</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Shared -->
@@ -450,6 +502,9 @@
 
 <!-- Fish Frenzy -->
 <script src="js/fish/game.js"></script>
+
+<!-- Atari Pong -->
+<script src="js/pong/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>
