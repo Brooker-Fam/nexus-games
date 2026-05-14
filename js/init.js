@@ -92,6 +92,10 @@ document.getElementById('tab-btn-fish').onclick=function(){
   switchTab('fish', this);
   if(window.posthog) posthog.capture('game_tab_switched', { tab: 'fish' });
 };
+document.getElementById('tab-btn-doom').onclick=function(){
+  switchTab('doom', this);
+  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'doom' });
+};
 document.getElementById('btn-fish-reset').onclick=function(){ fishReset(); };
 document.getElementById('tab-btn-exc').onclick=function(){
   const id = new Date().toISOString() + '-' + Math.random().toString(36).slice(2, 10);

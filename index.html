@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="css/rts.css">
 <link rel="stylesheet" href="css/snake.css">
 <link rel="stylesheet" href="css/fish.css">
+<link rel="stylesheet" href="css/doom.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -66,6 +67,7 @@
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
     <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
     <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
+    <button class="tab" id="tab-btn-doom">✜ DOOM</button>
     <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
@@ -409,6 +411,53 @@
       </div>
     </div>
   </div>
+
+  <!-- DOOM -->
+  <div id="tab-doom" class="tab-content">
+    <div class="game-header">
+      <div>
+        <div class="game-title">NEXUS <span>DOOM</span></div>
+      </div>
+      <div class="game-stats">
+        <div class="stat-box"><div class="stat-label">FPS</div><div class="stat-val cyan" id="doomFps">--</div></div>
+        <div class="stat-box"><div class="stat-label">POS</div><div class="stat-val purple" id="doomPos">0,0</div></div>
+        <div class="stat-box"><div class="stat-label">STATE</div><div class="stat-val gold" id="doomState">--</div></div>
+      </div>
+    </div>
+
+    <div class="game-area">
+      <div class="canvas-wrap doom-canvas-wrap">
+        <canvas id="doomCanvas" width="800" height="500" tabindex="0"></canvas>
+        <div class="doom-overlay" id="doomOverlay">
+          <div class="doom-overlay-title" id="doomOverlayTitle">PAUSED</div>
+          <div class="doom-overlay-sub" id="doomOverlaySub">Press ESC to resume</div>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <div class="panel">
+          <div class="panel-title">▸ CONTROLS</div>
+          <div class="doom-hint">
+            <b>W A S D</b> MOVE / STRAFE<br>
+            <b>← →</b> TURN<br>
+            <b>MOUSE</b> LOOK (CLICK CANVAS)<br>
+            <b>SPACE</b> / <b>CTRL</b> FIRE<br>
+            <b>ESC</b> PAUSE
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ BUILD</div>
+          <div class="doom-hint">
+            CORE ENGINE v0.1<br>
+            RAYCASTER + DDA<br>
+            SPRITE Z-BUFFER<br>
+            AWAITING LEVELS &amp; AI
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Shared -->
@@ -450,6 +499,11 @@
 
 <!-- Fish Frenzy -->
 <script src="js/fish/game.js"></script>
+
+<!-- Doom -->
+<script src="js/doom/textures.js"></script>
+<script src="js/doom/raycaster.js"></script>
+<script src="js/doom/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>
