@@ -1,15 +1,10 @@
-# Nexus Doom — Core Engine
+# Nexus Doom
 
 A Wolfenstein/Doom-style raycaster built on vanilla HTML5 Canvas + JS.
 
-This PR ships the **engine foundation only**. Two sibling hoglets are
-populating data on top of it in parallel:
-
-- **Hoglet 1 — Levels & Assets:** authors `DoomMap` objects and image
-  textures. Calls `Doom.setMap(map)` and `Doom.loadTexture(id, url)`.
-- **Hoglet 2 — Gameplay:** authors `DoomEntity` objects (player abilities,
-  enemies, items, projectiles). Calls `Doom.addEntity(entity)` and listens
-  on `Doom.events`.
+Stacked on top of the core engine (per-column DDA raycaster, sprite
+z-buffer, fixed-timestep loop) is a self-contained gameplay layer:
+weapons, pickups, enemies, projectiles, and a programmatic status-bar HUD.
 
 ## How to run
 
@@ -35,10 +30,30 @@ canvas to capture the mouse (pointer lock), or just use the keyboard.
 | `D` | Strafe right |
 | `←` / `→` | Turn |
 | Mouse (after click) | Look left/right |
-| `Space` / `Ctrl` | Fire |
+| `LMB` / `Space` / `Ctrl` | Fire |
+| `1` … `5` | Select weapon by slot |
+| Mouse wheel | Cycle weapons |
+| `Q` | Quick-switch to last weapon |
+| `R` | Restart (when dead) |
 | `Esc` | Pause / unpause |
 
 Click the canvas again while paused to resume.
+
+## Weapons
+
+| Slot | Weapon | Ammo | Damage | Notes |
+| --- | --- | --- | --- | --- |
+| `1` | Fist            | —       | 22    | Melee. Slow swing, no ammo. |
+| `2` | Pistol          | clip    | 15    | Hitscan, semi-auto, tight spread. |
+| `3` | Shotgun         | shells  | 7 × 9 | 7-pellet spread; brutal up close. |
+| `4` | Chaingun        | clip    | 11    | Hitscan, full-auto, mid spread. |
+| `5` | Rocket Launcher | rockets | 90 (+70 splash) | Projectile, splash damage. **Mind your toes.** |
+
+Pickups: `clip`, `box_bullets`, `shells`, `box_shells`, `rocket`,
+`box_rockets`, `cell`, `stimpack`, `medkit`, `armor_green` (green,
+1/3 absorb), `armor_blue` (mega, 1/2 absorb), and the three weapon
+spawners (`weapon_shotgun`, `weapon_chaingun`, `weapon_rocket`).
+Walk over them to consume.
 
 ## Architecture
 
@@ -46,8 +61,16 @@ Click the canvas again while paused to resume.
 js/doom/
 ├── textures.js   — DoomTextures.* texture/sprite atlas + loaders
 ├── raycaster.js  — DoomRaycaster.create(canvas) — DDA + sprite pipeline
+├── weapons.js    — DoomWeapons — loadout, ammo, switch FSM, fire dispatch
+├── combat.js     — DoomCombat — player state, damage, pickups, enemies,
+│                   projectiles, hitscan resolution, screen-shake/vignette
+├── hud.js        — DoomHud — viewmodel, status bar, face portrait, vignette
 └── game.js       — window.Doom — loop, input, lifecycle, event bus
 ```
+
+The HUD draws to a second canvas (`#doomHudCanvas`) stacked on top of the
+game canvas; that keeps the engine's `putImageData` path uncontested and
+lets the HUD use crisp text/lines while the world stays pixelated.
 
 `game.js` registers itself with the shared `registerGame('doom', …)`
 registry from `js/shared/game-registry.js`, so switching tabs cleans up
@@ -193,12 +216,12 @@ if (hit.dist < 6) {
 
 ## Status / open follow-ups
 
+- [x] HUD beyond FPS / position / state (weapon, health, armor, ammo, face).
+- [x] Audio (Web Audio SFX through the shared `sfx()` synth).
+- [x] Weapons (fist / pistol / shotgun / chaingun / rocket launcher).
+- [x] Pickups + ammo system, enemies + AI, hitscan + splash projectiles.
 - [ ] Textured floor & ceiling pass.
-- [ ] Door / pushwall tile types — currently every non-zero tile is a
-      solid wall.
-- [ ] Multi-frame sprite atlases (sprite ids today map to single images).
-- [ ] HUD beyond FPS / position / state (weapon, health, ammo).
-- [ ] Audio.
-
-None of these are blockers for the level or entity hoglets to start
-work — the data shapes above are stable.
+- [ ] Door / pushwall tile types — currently every non-zero tile is solid.
+- [ ] Multi-frame sprite atlases (sprite ids today map to single images),
+      directional enemy sprites, enemy ranged-attack projectiles.
+- [ ] Level loader — real maps from level data files, exit triggers, locked doors.

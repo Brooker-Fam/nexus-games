@@ -76,7 +76,10 @@
     turnL: false, turnR: false,
     fire: false, fireEdge: false,
     mouseDX: 0,
+    movingFlag: false,
   };
+  // Mirror to window for hud.js viewmodel bob without coupling to the engine.
+  global._doomInputState = input;
   let paused = false;
   let pointerLocked = false;
   let raf = null;
@@ -93,31 +96,69 @@
   const MOUSE_SENS = 0.0025;
   const COLLIDE_PAD = 0.18; // keep this far from a wall centre line
 
-  // ── Stub default map (proof-of-life) ────────────────────────────────────
-  // 8×8 grid, solid border, one inner pillar to test occlusion.
-  // Texture ids: 1 = brick (border), 2 = tech panel (pillar).
+  // ── Default map ─────────────────────────────────────────────────────────
+  // 16×14 testbed with inner pillars and alcoves so weapons / pickups /
+  // enemies have somewhere to live. Texture ids: 1 = brick, 2 = tech panel.
   function _defaultMap() {
-    const W = 8, H = 8;
+    const W = 16, H = 14;
     const t = new Array(W * H).fill(0);
-    for (let x = 0; x < W; x++) { t[x] = 1; t[(H - 1) * W + x] = 1; }
-    for (let y = 0; y < H; y++) { t[y * W] = 1; t[y * W + (W - 1)] = 1; }
-    t[3 * W + 4] = 2;
+    const set = (x, y, v) => { if (x >= 0 && y >= 0 && x < W && y < H) t[y * W + x] = v; };
+    for (let x = 0; x < W; x++) { set(x, 0, 1); set(x, H - 1, 1); }
+    for (let y = 0; y < H; y++) { set(0, y, 1); set(W - 1, y, 1); }
+    // Inner pillars / divider walls (mix of texture 1 and 2).
+    set(4, 3, 2); set(4, 4, 2);
+    set(11, 3, 2); set(11, 4, 2);
+    set(4, 9, 2); set(4, 10, 2);
+    set(11, 9, 2); set(11, 10, 2);
+    set(7, 6, 1); set(8, 6, 1);
+    set(7, 7, 1); set(8, 7, 1);
     return {
       width: W,
       height: H,
       tiles: t,
-      spawnPoints: [{ x: 1.5, y: 1.5, angle: Math.PI / 4 }],
-      floorColor: [35, 25, 25],
-      ceilColor: [20, 25, 40],
+      spawnPoints: [{ x: 2.5, y: 2.5, angle: Math.PI / 4 }],
+      floorColor: [32, 24, 22],
+      ceilColor: [16, 18, 30],
     };
   }
-  function _defaultEntity() {
-    return {
-      x: 5.5, y: 5.5, angle: 0,
-      sprite: 100,
-      state: 'idle',
-      update(/* dt */) {},
-    };
+
+  // Populate the active map with pickups and enemies. Runs once after the
+  // engine is up — gameplay layer (combat.js) handles entity behaviour.
+  function _populateLevel() {
+    if (!global.DoomCombat) return;
+    api.clearEntities();
+    const C = global.DoomCombat;
+    // Pickups scattered around the map.
+    C.spawnPickup('clip',           6.5, 2.5);
+    C.spawnPickup('clip',          13.5, 2.5);
+    C.spawnPickup('box_bullets',    9.5, 12.5);
+    C.spawnPickup('shells',         2.5, 8.5);
+    C.spawnPickup('box_shells',    13.5, 6.5);
+    C.spawnPickup('rocket',         6.5, 10.5);
+    C.spawnPickup('box_rockets',   13.5, 11.5);
+    C.spawnPickup('stimpack',       3.5, 5.5);
+    C.spawnPickup('medkit',         5.5, 11.5);
+    C.spawnPickup('armor_green',    9.5, 2.5);
+    C.spawnPickup('armor_blue',    13.5, 9.5);
+    C.spawnPickup('weapon_shotgun',     5.5, 6.5);
+    C.spawnPickup('weapon_chaingun',   12.5, 5.5);
+    C.spawnPickup('weapon_rocket',     12.5, 12.5);
+    // Enemies — kept off the spawn so the player has a beat to orient.
+    C.spawnEnemy('zombie', 10.5, 2.5);
+    C.spawnEnemy('zombie',  2.5, 11.5);
+    C.spawnEnemy('imp',     9.5, 9.5);
+    C.spawnEnemy('imp',     2.5, 6.5);
+    C.spawnEnemy('demon',  12.5, 11.5);
+  }
+
+  function _restartLevel() {
+    if (global.DoomCombat) global.DoomCombat.resetPlayer();
+    if (global.DoomWeapons) global.DoomWeapons.reset();
+    if (map && map.spawnPoints && map.spawnPoints[0]) {
+      const s = map.spawnPoints[0];
+      rc.setPlayer({ x: s.x, y: s.y, angle: s.angle || 0 });
+    }
+    _populateLevel();
   }
 
   // ── Movement & collision ────────────────────────────────────────────────
@@ -164,6 +205,7 @@
     if (input.back)    fwd -= 1;
     if (input.strafeR) str += 1;
     if (input.strafeL) str -= 1;
+    input.movingFlag = !!(fwd || str);
     if (fwd || str) {
       const mag = Math.hypot(fwd, str) || 1;
       const speed = MOVE_SPEED * dts;
@@ -173,6 +215,10 @@
     }
 
     events.emit('onPlayerMove', { x: p.x, y: p.y, angle: p.angle });
+
+    // Weapon + combat tick (gameplay-layer modules — loaded after engine).
+    if (global.DoomWeapons) global.DoomWeapons.tick(dts, input.fire);
+    if (global.DoomCombat)  global.DoomCombat.tick(dts);
 
     // Entities
     for (let i = 0; i < entities.length; i++) {
@@ -189,11 +235,15 @@
       }
     }
 
-    // Fire (edge-triggered)
+    // Fire (edge-triggered). Gameplay layer (DoomWeapons) handles ammo +
+    // cooldown + hitscan resolution; the engine emits the event for any
+    // listeners that want the raw cast.
     if (input.fireEdge) {
       input.fireEdge = false;
       const hit = rc.castRay(p.angle);
-      events.emit('onPlayerFire', { angle: p.angle, hit });
+      let dispatched = false;
+      if (global.DoomWeapons) dispatched = global.DoomWeapons.dispatchFire();
+      events.emit('onPlayerFire', { angle: p.angle, hit, dispatched });
     }
 
     events.emit('tick', { dt: dts });
@@ -264,6 +314,20 @@
         _setPaused(!paused);
         e.preventDefault();
         break;
+      case 'Digit1': case 'Digit2': case 'Digit3': case 'Digit4': case 'Digit5':
+        if (global.DoomWeapons) global.DoomWeapons.selectSlot(+e.code.slice(-1));
+        e.preventDefault();
+        break;
+      case 'KeyQ':
+        if (global.DoomWeapons) global.DoomWeapons.switchLast();
+        e.preventDefault();
+        break;
+      case 'KeyR':
+        if (global.DoomCombat && global.DoomCombat.player.dead) {
+          _restartLevel();
+        }
+        e.preventDefault();
+        break;
     }
   }
   function _onKeyUp(e) {
@@ -285,7 +349,24 @@
   }
   function _onCanvasClick() {
     if (paused) { _setPaused(false); return; }
-    if (canvas.requestPointerLock) canvas.requestPointerLock();
+    if (!pointerLocked && canvas.requestPointerLock) canvas.requestPointerLock();
+  }
+  function _onMouseDown(e) {
+    if (!pointerLocked) return;
+    if (e.button === 0) {
+      if (!input.fire) input.fireEdge = true;
+      input.fire = true;
+      e.preventDefault();
+    }
+  }
+  function _onMouseUp(e) {
+    if (e.button === 0) input.fire = false;
+  }
+  function _onWheel(e) {
+    if (!global.DoomWeapons) return;
+    const dir = e.deltaY > 0 ? 1 : -1;
+    global.DoomWeapons.cycle(dir);
+    if (pointerLocked) e.preventDefault();
   }
   function _onPointerLockChange() {
     pointerLocked = (document.pointerLockElement === canvas);
@@ -335,14 +416,18 @@
   // ── Lifecycle ───────────────────────────────────────────────────────────
   function init() {
     if (!_bootEngine()) return;
-    if (entities.length === 0) {
-      entities.push(_defaultEntity());
-    }
+    if (global.DoomCombat) global.DoomCombat.resetPlayer();
+    if (global.DoomWeapons) global.DoomWeapons.reset();
+    _populateLevel();
     document.addEventListener('keydown', _onKeyDown);
     document.addEventListener('keyup', _onKeyUp);
     document.addEventListener('mousemove', _onMouseMove);
+    document.addEventListener('mousedown', _onMouseDown);
+    document.addEventListener('mouseup', _onMouseUp);
     document.addEventListener('pointerlockchange', _onPointerLockChange);
     canvas.addEventListener('click', _onCanvasClick);
+    canvas.addEventListener('wheel', _onWheel, { passive: false });
+    canvas.addEventListener('contextmenu', _preventContext);
     active = true;
     paused = false;
     lastTime = performance.now();
@@ -350,9 +435,12 @@
     frameCount = 0;
     fpsAccum = 0;
     _updateHud();
+    if (global.DoomHud) global.DoomHud.init();
     if (!raf) raf = requestAnimationFrame(_loop);
     if (global.posthog) global.posthog.capture('doom_game_started', {});
   }
+
+  function _preventContext(e) { e.preventDefault(); }
 
   function cleanup() {
     active = false;
@@ -360,9 +448,16 @@
     document.removeEventListener('keydown', _onKeyDown);
     document.removeEventListener('keyup', _onKeyUp);
     document.removeEventListener('mousemove', _onMouseMove);
+    document.removeEventListener('mousedown', _onMouseDown);
+    document.removeEventListener('mouseup', _onMouseUp);
     document.removeEventListener('pointerlockchange', _onPointerLockChange);
-    if (canvas) canvas.removeEventListener('click', _onCanvasClick);
+    if (canvas) {
+      canvas.removeEventListener('click', _onCanvasClick);
+      canvas.removeEventListener('wheel', _onWheel);
+      canvas.removeEventListener('contextmenu', _preventContext);
+    }
     if (pointerLocked && document.exitPointerLock) document.exitPointerLock();
+    if (global.DoomHud) global.DoomHud.cleanup();
     // reset transient input
     input.forward = input.back = input.strafeL = input.strafeR = false;
     input.turnL = input.turnR = input.fire = input.fireEdge = false;

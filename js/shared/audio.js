@@ -80,6 +80,21 @@ const SFX={
   fishBonus: ()=>{ [880,1175,1568].forEach((f,i)=>setTimeout(()=>sfxTone(f,'sine',0.18,0.01,0.14),i*60)); },
   fishDie:   ()=>{ sfxTone(180,'sawtooth',0.22,0.01,0.4,60); sfxNoise(0.2,0.3,500); },
   fishWin:   ()=>{ [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>sfxTone(f,'sine',0.22,0.02,0.3),i*90)); },
+
+  // Doom
+  doomPunch:      ()=>{ sfxNoise(0.18,0.08,1800); sfxTone(180,'square',0.08,0.005,0.06); },
+  doomPistol:     ()=>{ sfxNoise(0.22,0.06,3200); sfxTone(340,'square',0.12,0.001,0.05,160); },
+  doomShotgun:    ()=>{ sfxNoise(0.42,0.18,1100); sfxTone(95,'sawtooth',0.22,0.005,0.18,55); },
+  doomChaingun:   ()=>{ sfxNoise(0.16,0.05,3600); sfxTone(420,'square',0.09,0.001,0.04,260); },
+  doomRocketFire: ()=>{ sfxNoise(0.28,0.22,500); sfxTone(130,'sawtooth',0.18,0.01,0.22,55); },
+  doomExplosion:  ()=>{ sfxNoise(0.55,0.45,420); sfxTone(60,'sawtooth',0.28,0.005,0.45,28); },
+  doomEmpty:      ()=>{ sfxTone(220,'square',0.08,0.005,0.04); setTimeout(()=>sfxTone(180,'square',0.06,0.005,0.05),50); },
+  doomPickup:     ()=>{ sfxTone(660,'sine',0.18,0.005,0.1,1100); sfxTone(990,'sine',0.1,0.01,0.08); },
+  doomHurt:       ()=>{ sfxNoise(0.18,0.22,650); sfxTone(180,'sawtooth',0.14,0.005,0.18,90); },
+  doomDie:        ()=>{ sfxTone(220,'sawtooth',0.25,0.01,0.4,55); sfxNoise(0.22,0.45,420); },
+  doomSwitch:     ()=>{ sfxTone(540,'square',0.08,0.005,0.06,720); },
+  doomEnemyDie:   ()=>{ sfxNoise(0.22,0.25,800); sfxTone(150,'sawtooth',0.12,0.005,0.22,70); },
+  doomEnemyHurt:  ()=>{ sfxNoise(0.14,0.08,1500); sfxTone(280,'square',0.08,0.001,0.06); },
 };
 
 // Throttle repeated sounds so they don't stack
