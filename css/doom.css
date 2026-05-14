@@ -1,0 +1,59 @@
+/* ── DOOM ── */
+.doom-canvas-wrap {
+  position: relative;
+}
+#doomCanvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 800px;
+  margin: 0 auto;
+  background: #000;
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 0 30px rgba(255,0,136,0.18), inset 0 0 60px rgba(0,0,0,0.6);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  cursor: crosshair;
+  outline: none;
+}
+#doomCanvas:focus {
+  box-shadow: 0 0 36px rgba(255,0,136,0.35), inset 0 0 60px rgba(0,0,0,0.6);
+}
+.doom-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  background: rgba(2,8,16,0.75);
+  pointer-events: none;
+}
+.doom-overlay.show { display: flex; }
+.doom-overlay-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  color: var(--neon-pink);
+  text-shadow: 0 0 24px rgba(255,0,136,0.7);
+}
+.doom-overlay-sub {
+  margin-top: 12px;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+}
+.doom-hint {
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+.doom-hint b {
+  color: var(--neon-pink);
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
