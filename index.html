@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="css/rts.css">
 <link rel="stylesheet" href="css/snake.css">
 <link rel="stylesheet" href="css/fish.css">
+<link rel="stylesheet" href="css/doom.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -66,6 +67,7 @@
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
     <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
     <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
+    <button class="tab" id="tab-btn-doom">▼ DOOM</button>
     <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
@@ -409,6 +411,66 @@
       </div>
     </div>
   </div>
+
+  <!-- DOOM RAYCASTER -->
+  <div id="tab-doom" class="tab-content">
+    <div class="game-header">
+      <div>
+        <div class="game-title">CITADEL <span>OF DOOM</span></div>
+      </div>
+      <div class="game-stats">
+        <div class="stat-box"><div class="stat-label">HEALTH</div><div class="stat-val pink" id="doomHp">100</div></div>
+        <div class="stat-box"><div class="stat-label">AMMO</div><div class="stat-val cyan" id="doomAmmo">30</div></div>
+        <div class="stat-box"><div class="stat-label">KILLS</div><div class="stat-val purple" id="doomKills">0</div></div>
+        <div class="stat-box"><div class="stat-label">FLOOR</div><div class="stat-val gold">1</div></div>
+      </div>
+    </div>
+
+    <div class="game-area">
+      <div class="canvas-wrap doom-canvas-wrap">
+        <canvas id="doomCanvas" width="720" height="440"></canvas>
+        <canvas id="doomMinimap" width="160" height="160"></canvas>
+        <div class="doom-start-hint" id="doomStartHint">CLICK TO ENTER · ESC TO RELEASE MOUSE</div>
+        <div class="overlay" id="doomOverlay">
+          <div class="overlay-title" id="doomOverlayTitle">GAME OVER</div>
+          <div class="overlay-sub" id="doomOverlaySub">THE CITADEL CLAIMED YOU</div>
+          <button class="overlay-btn" id="btn-doom-reset">⟳ RESTART</button>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <div class="panel">
+          <div class="panel-title">▸ CONTROLS</div>
+          <div class="doom-hint">
+            <b>W A S D</b> · MOVE<br>
+            <b>MOUSE</b> · LOOK<br>
+            <b>← →</b> · TURN<br>
+            <b>CLICK</b> · FIRE<br>
+            <b>SHIFT</b> · SPRINT<br>
+            <b>ESC</b> · RELEASE MOUSE
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ OBJECTIVE</div>
+          <div class="doom-hint">
+            REACH THE <b>GLOWING EXIT</b><br>
+            OR PURGE ALL <b>DEMONS</b><br>
+            DO NOT DIE
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ LEGEND</div>
+          <div class="doom-legend">
+            <div class="doom-legend-row"><span class="doom-legend-dot you"></span> YOU</div>
+            <div class="doom-legend-row"><span class="doom-legend-dot demon"></span> DEMON</div>
+            <div class="doom-legend-row"><span class="doom-legend-dot exit"></span> EXIT</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Shared -->
@@ -450,6 +512,9 @@
 
 <!-- Fish Frenzy -->
 <script src="js/fish/game.js"></script>
+
+<!-- Doom Raycaster -->
+<script src="js/doom/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>

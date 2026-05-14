@@ -1,0 +1,97 @@
+# DOOM — Nexus Games raycaster
+
+A self-contained first-person shooter built on a Wolfenstein 3D / DOOM-style
+DDA raycaster. Pure HTML5 Canvas + vanilla JS, no dependencies.
+
+## Files
+
+- `js/doom/game.js` — game logic, raycaster, sprite billboarding, AI, HUD.
+- `css/doom.css` — styling for the canvas, minimap, hint, and HUD panels.
+- The game registers under tab id `doom` and is launched from the **▼ DOOM**
+  tab in the main hub (`/index.html`).
+
+All textures (brick / metal / stone / exit portal), sprites (demon / ammo /
+medkit / gun + muzzle flash), and sound effects (shoot / hurt / pickup /
+victory) are generated procedurally — nothing is loaded from disk and nothing
+copyrighted is shipped.
+
+## How to play
+
+1. Open the project's `index.html`.
+2. Click the **▼ DOOM** tab.
+3. Click the canvas to capture the mouse (pointer lock).
+4. Survive the citadel.
+
+| Action | Keys |
+|---|---|
+| Move | `W` `A` `S` `D` or `↑ ↓` |
+| Strafe | `A` / `D` |
+| Turn | mouse / `← →` |
+| Sprint | `Shift` |
+| Fire | mouse click |
+| Release mouse | `Esc` |
+
+**Win** by either reaching the glowing green exit portal or by purging every
+demon in the citadel. **Lose** when your HP hits 0.
+
+## How it works
+
+### Raycasting (`doomRender`)
+
+For each vertical screen column `x`:
+
+1. Build a ray from the player's `dirX/dirY` rotated by `cameraX = 2*x/W − 1`
+   along the camera plane `planeX/planeY`. The plane's length sets the FOV
+   (here `|plane|=0.66` → ~66°).
+2. Walk the 2D map grid with the standard DDA algorithm, advancing along
+   whichever axis has the smaller `sideDist` until a non-zero map cell is hit.
+3. The perpendicular wall distance gives the projected slice height
+   (`H / perpWallDist`).
+4. The hit point's fractional coordinate (`wallX`) becomes the `texX` into the
+   64×64 pre-rendered wall texture canvas, and the whole column is drawn with
+   a single `drawImage` slice.
+5. Side shading + distance fog + a green exit pulse are layered on top.
+
+The per-column `perpWallDist` is stashed in a `Float32Array` z-buffer used for
+sprite occlusion.
+
+### Sprites
+
+Enemies and pickups are billboards. For each one we transform the world
+offset into camera space using the inverse of the `(plane, dir)` matrix and
+project onto the screen. Each vertical stripe is drawn only if its
+`transformY` is closer than the wall behind it (`zBuffer[stripeX]`).
+
+### Enemies
+
+`doomUpdateEnemies` runs simple AI per demon:
+
+- Line-of-sight check by stepping along the segment to the player; any wall
+  cell blocks vision.
+- If they see the player and are farther than `0.9` units, they walk toward
+  the player at `1.4 u/s` with axis-separated collision.
+- When within `1.4` units they bite for `8` HP on a `0.9` s cooldown.
+- Demons have `50` HP. Pistol does `28` damage per shot — two-shot kills.
+
+### Shooting
+
+Hitscan from the player's eye along `dir`. For each alive enemy we compute
+the forward projection (along `dir`) and the perpendicular offset (across
+`dir`); enemies inside a `0.35`-unit half-width cone and closer than the
+straight-ahead wall are valid targets. The closest valid enemy takes the
+hit.
+
+### Map
+
+The level is defined in `DOOM_MAP_SRC` as a 16×16 ASCII grid:
+
+- `1`/`2`/`3` — brick / metal / stone wall types
+- `9` — exit tile (the only "wall" you can walk through; standing on it
+  triggers victory)
+- `P` — player spawn
+- `E` — enemy spawn
+- `A` — ammo crate pickup (+12 ammo)
+- `M` — medkit pickup (+25 HP)
+- `.` — empty floor
+
+Edit `DOOM_MAP_SRC` in `js/doom/game.js` to change the layout.
