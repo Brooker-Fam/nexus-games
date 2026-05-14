@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DOOM — gameplay test harness</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #000; color: #ddd; font-family: monospace; height: 100%; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+  h1 { margin: 8px 0; font-size: 18px; color: #ffd166; letter-spacing: 4px; }
+  #doom-canvas { background: #000; image-rendering: pixelated; cursor: crosshair; }
+  .hint { font-size: 12px; color: #888; }
+  .hint b { color: #ffd166; }
+</style>
+</head>
+<body>
+  <h1>DOOM — GAMEPLAY TEST HARNESS</h1>
+  <canvas id="doom-canvas" width="800" height="500"></canvas>
+  <div class="hint">
+    <b>WASD</b> move · <b>A/D</b> strafe · <b>mouse</b> aim (click to lock) · <b>LMB</b> fire · <b>2/3/4</b> weapons · <b>P</b>/ESC pause · <b>R</b> restart
+  </div>
+  <div class="hint">
+    Running on stub engine (top-down). Swap in Lizzie's raycaster engine + Juraj's levels via <code>createGame({ engine, level })</code>.
+  </div>
+
+  <script type="module">
+    import { createGame, createStubEngine, createStubLevel } from './game/index.js';
+
+    const canvas = document.getElementById('doom-canvas');
+    const engine = createStubEngine();
+    engine.attach(canvas);
+
+    const level = createStubLevel();
+
+    const game = createGame({
+      engine,
+      level,
+      hooks: {
+        onStart:         () => console.log('[doom] start'),
+        onPause:         () => console.log('[doom] pause'),
+        onResume:        () => console.log('[doom] resume'),
+        onLevelComplete: g  => console.log('[doom] level complete', { score: g.player.score, kills: g.player.kills }),
+        onGameOver:      g  => console.log('[doom] game over',     { score: g.player.score, kills: g.player.kills }),
+        onKill:          (g, enemy) => console.log('[doom] kill', enemy.type),
+      },
+    });
+
+    // Expose for poking in devtools.
+    window.__doomGame = game;
+  </script>
+</body>
+</html>
