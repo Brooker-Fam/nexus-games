@@ -1,0 +1,203 @@
+/* ── ATARI PONG ── */
+#tab-pong .game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+#tab-pong .game-title {
+  font-family: 'Orbitron', 'Courier New', monospace;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255,255,255,0.65);
+}
+#tab-pong .game-title span { color: #bfbfbf; }
+
+#tab-pong .stat-val { font-family: 'Courier New', monospace; }
+
+.pong-area {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 16px;
+}
+
+.pong-canvas-wrap {
+  position: relative;
+  background: #000;
+}
+
+#pongCanvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 900px;
+  margin: 0 auto;
+  border: 1px solid rgba(255,255,255,0.55);
+  background: #000;
+  box-shadow: 0 0 28px rgba(255,255,255,0.08), inset 0 0 70px rgba(255,255,255,0.03);
+  image-rendering: pixelated;
+}
+
+.pong-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 28px;
+  background: rgba(0,0,0,0.82);
+  border: 1px solid rgba(255,255,255,0.4);
+  text-align: center;
+  z-index: 5;
+}
+.pong-overlay.show { display: flex; }
+
+.pong-overlay-title {
+  font-family: 'Courier New', monospace;
+  font-size: clamp(34px, 7vw, 76px);
+  font-weight: 900;
+  letter-spacing: 8px;
+  color: #fff;
+  line-height: 0.95;
+  text-shadow: 0 0 12px rgba(255,255,255,0.8);
+}
+
+.pong-overlay-sub {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.75);
+  text-transform: uppercase;
+}
+
+.pong-menu {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  max-width: 680px;
+}
+.pong-menu.hidden { display: none; }
+
+.pong-menu-btn {
+  min-width: 150px;
+  padding: 14px 18px;
+  border: 2px solid #fff;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+}
+.pong-menu-btn:hover,
+.pong-menu-btn:focus-visible {
+  background: #fff;
+  color: #000;
+  box-shadow: 0 0 20px rgba(255,255,255,0.45);
+  transform: translateY(-2px);
+  outline: none;
+}
+.pong-menu-btn.secondary {
+  border-color: rgba(255,255,255,0.6);
+  color: rgba(255,255,255,0.78);
+}
+.pong-menu-btn.secondary:hover,
+.pong-menu-btn.secondary:focus-visible {
+  border-color: #fff;
+  color: #000;
+}
+
+.pong-menu-note {
+  width: 100%;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.6;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+}
+
+.pong-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pong-hint {
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+.pong-hint b,
+.pong-hint kbd {
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  font-weight: 900;
+}
+.pong-hint kbd {
+  display: inline-block;
+  min-width: 24px;
+  padding: 1px 5px;
+  margin: 0 1px;
+  border: 1px solid rgba(255,255,255,0.45);
+  background: rgba(255,255,255,0.08);
+  text-align: center;
+}
+
+.pong-difficulty-list {
+  display: grid;
+  gap: 8px;
+}
+.pong-difficulty-row {
+  border: 1px solid rgba(255,255,255,0.16);
+  padding: 8px;
+  background: rgba(255,255,255,0.03);
+}
+.pong-difficulty-name {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #fff;
+  margin-bottom: 3px;
+}
+.pong-difficulty-copy {
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.pong-status-line {
+  min-height: 18px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .pong-area { grid-template-columns: 1fr; }
+  .pong-sidebar { flex-direction: row; flex-wrap: wrap; }
+  .pong-sidebar .panel { flex: 1; min-width: 220px; }
+}
+
+@media (max-width: 600px) {
+  #tab-pong .game-header { flex-direction: column; gap: 10px; }
+  .pong-menu-btn { min-width: 130px; padding: 12px 14px; font-size: 12px; }
+  .pong-overlay-title { letter-spacing: 5px; }
+  .pong-sidebar { flex-direction: column; }
+  .pong-sidebar .panel { min-width: unset; }
+}

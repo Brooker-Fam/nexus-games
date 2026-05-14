@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="css/rts.css">
 <link rel="stylesheet" href="css/snake.css">
 <link rel="stylesheet" href="css/fish.css">
+<link rel="stylesheet" href="css/pong.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -66,6 +67,7 @@
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
     <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
     <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
+    <button class="tab" id="tab-btn-pong">◫ PONG</button>
     <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
@@ -409,6 +411,86 @@
       </div>
     </div>
   </div>
+
+  <!-- ATARI PONG -->
+  <div id="tab-pong" class="tab-content">
+    <div class="game-header">
+      <div>
+        <div class="game-title">ATARI <span>PONG</span></div>
+      </div>
+      <div class="game-stats">
+        <div class="stat-box"><div class="stat-label">P1</div><div class="stat-val cyan" id="pongLeftScore">0</div></div>
+        <div class="stat-box"><div class="stat-label">P2 / AI</div><div class="stat-val purple" id="pongRightScore">0</div></div>
+        <div class="stat-box"><div class="stat-label">MODE</div><div class="stat-val gold" id="pongModeStat">—</div></div>
+        <div class="stat-box"><div class="stat-label">AI</div><div class="stat-val green" id="pongDifficultyStat">—</div></div>
+      </div>
+    </div>
+
+    <div class="pong-area">
+      <div class="pong-canvas-wrap">
+        <canvas id="pongCanvas" width="900" height="520"></canvas>
+        <div class="pong-overlay show" id="pongOverlay">
+          <div class="pong-overlay-title" id="pongOverlayTitle">PONG</div>
+          <div class="pong-overlay-sub" id="pongOverlaySub">SELECT MODE</div>
+
+          <div class="pong-menu" id="pongModeMenu">
+            <button class="pong-menu-btn" data-pong-mode="1p">1 PLAYER</button>
+            <button class="pong-menu-btn" data-pong-mode="2p">2 PLAYER</button>
+            <div class="pong-menu-note">1P uses W/S against AI · 2P uses W/S and ArrowUp/ArrowDown</div>
+          </div>
+
+          <div class="pong-menu hidden" id="pongDifficultyMenu">
+            <button class="pong-menu-btn" data-pong-difficulty="easy">Easy</button>
+            <button class="pong-menu-btn" data-pong-difficulty="medium">Medium</button>
+            <button class="pong-menu-btn" data-pong-difficulty="hard">Hard</button>
+            <button class="pong-menu-btn secondary" data-pong-action="menu">Back</button>
+            <div class="pong-menu-note">Easy misses often · Medium tracks fairly · Hard reacts fast</div>
+          </div>
+
+          <div class="pong-menu hidden" id="pongGameOverMenu">
+            <button class="pong-menu-btn" data-pong-action="play-again">Play Again</button>
+            <button class="pong-menu-btn secondary" data-pong-action="menu">Back to Menu</button>
+            <div class="pong-menu-note">Press Enter to replay · Escape for menu</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pong-sidebar">
+        <div class="panel">
+          <div class="panel-title">▸ STATUS</div>
+          <div class="pong-status-line" id="pongStatusLine">MENU</div>
+          <div class="pong-hint">FIRST TO <b>7</b> WINS</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ CONTROLS</div>
+          <div class="pong-hint">
+            PLAYER 1 <kbd>W</kbd> <kbd>S</kbd><br>
+            PLAYER 2 <kbd>↑</kbd> <kbd>↓</kbd><br>
+            PAUSE <kbd>P</kbd>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ AI TIERS</div>
+          <div class="pong-difficulty-list">
+            <div class="pong-difficulty-row">
+              <div class="pong-difficulty-name">EASY</div>
+              <div class="pong-difficulty-copy">Slow reaction, high tracking error, frequent misses.</div>
+            </div>
+            <div class="pong-difficulty-row">
+              <div class="pong-difficulty-name">MEDIUM</div>
+              <div class="pong-difficulty-copy">Moderate speed, smaller errors, occasional misses.</div>
+            </div>
+            <div class="pong-difficulty-row">
+              <div class="pong-difficulty-name">HARD</div>
+              <div class="pong-difficulty-copy">Fast reaction, low jitter, rare mistakes.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Shared -->
@@ -450,6 +532,9 @@
 
 <!-- Fish Frenzy -->
 <script src="js/fish/game.js"></script>
+
+<!-- Atari Pong -->
+<script src="js/pong/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>
