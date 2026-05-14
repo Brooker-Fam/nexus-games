@@ -145,9 +145,18 @@
   }
 
   // ── Tick ────────────────────────────────────────────────────────────────
+  let kills = 0;
+  let damageFlashT = 0;     // seconds remaining for damage flash overlay
+  let gameOver = false;
+
   function _tick(dt) {
     const dts = dt / 1000;
     const p = rc.getPlayer();
+    if (gameOver) {
+      // freeze player movement but keep render loop alive
+      events.emit('tick', { dt: dts });
+      return;
+    }
 
     // Turn
     let dAng = 0;
@@ -193,8 +202,11 @@
     if (input.fireEdge) {
       input.fireEdge = false;
       const hit = rc.castRay(p.angle);
+      if (typeof global.sfx === 'function') global.sfx('doomPistol');
       events.emit('onPlayerFire', { angle: p.angle, hit });
     }
+
+    if (damageFlashT > 0) damageFlashT = Math.max(0, damageFlashT - dts);
 
     events.emit('tick', { dt: dts });
   }
@@ -202,12 +214,24 @@
   // ── Render & loop ───────────────────────────────────────────────────────
   function _updateHud() {
     const fpsEl = document.getElementById('doomFps');
-    const posEl = document.getElementById('doomPos');
+    const hpEl  = document.getElementById('doomHp');
+    const kEl   = document.getElementById('doomKills');
     const stEl  = document.getElementById('doomState');
-    const p = rc.getPlayer();
     if (fpsEl) fpsEl.textContent = String(fpsValue);
-    if (posEl) posEl.textContent = p.x.toFixed(1) + ',' + p.y.toFixed(1);
-    if (stEl)  stEl.textContent  = paused ? 'PAUSED' : 'RUN';
+    if (hpEl) {
+      const hp = global.DoomEnemies ? global.DoomEnemies.getPlayerHealth() : 100;
+      hpEl.textContent = String(hp);
+      hpEl.style.color = hp <= 25 ? '#ff2c5c' : (hp <= 60 ? '#ffb84a' : '');
+    }
+    if (kEl) kEl.textContent = String(kills);
+    if (stEl) stEl.textContent = gameOver ? 'DEAD' : (paused ? 'PAUSED' : 'RUN');
+
+    // damage-flash overlay
+    const dfl = document.getElementById('doomDamageFlash');
+    if (dfl) {
+      if (gameOver) dfl.className = 'doom-damage-flash die';
+      else dfl.className = 'doom-damage-flash' + (damageFlashT > 0 ? ' show' : '');
+    }
   }
 
   function _loop(ts) {
@@ -231,6 +255,8 @@
       frameCount = 0;
       fpsAccum = 0;
       _updateHud();
+    } else if (damageFlashT > 0 || gameOver) {
+      _updateHud(); // keep overlay state in sync at higher rate when flashing
     }
 
     raf = requestAnimationFrame(_loop);
@@ -261,8 +287,11 @@
         e.preventDefault();
         break;
       case 'Escape':
-        _setPaused(!paused);
+        if (!gameOver) _setPaused(!paused);
         e.preventDefault();
+        break;
+      case 'KeyR':
+        if (gameOver) { restart(); e.preventDefault(); }
         break;
     }
   }
@@ -297,11 +326,47 @@
     if (!canvas) return false;
     if (!rc) {
       global.DoomTextures.installDefaults();
+      if (global.DoomEnemySprites && typeof global.DoomEnemySprites.install === 'function') {
+        global.DoomEnemySprites.install();
+      }
       rc = global.DoomRaycaster.create(canvas);
       map = _defaultMap();
       rc.setMap(map);
     }
     return true;
+  }
+
+  function _spawnEncounter() {
+    if (!global.DoomEnemies) return;
+    global.DoomEnemies.reset();
+    // wipe any stub entities the engine left behind from prior runs
+    for (const e of api.getEntities().slice()) api.removeEntity(e);
+    global.DoomEnemies.spawnDefaultEncounter();
+  }
+
+  function _resetPlayer() {
+    if (!rc || !map) return;
+    const spawn = (map.spawnPoints && map.spawnPoints[0]) || { x: 1.5, y: 1.5, angle: 0 };
+    rc.setPlayer({ x: spawn.x, y: spawn.y, angle: spawn.angle || 0 });
+    kills = 0;
+    damageFlashT = 0;
+    gameOver = false;
+    if (global.DoomEnemies) global.DoomEnemies.setPlayerHealth(global.DoomEnemies.PLAYER_MAX_HP);
+  }
+
+  function restart() {
+    _resetPlayer();
+    _spawnEncounter();
+    const ov = document.getElementById('doomOverlay');
+    if (ov) ov.classList.remove('show');
+    const btn = document.getElementById('btn-doom-restart');
+    if (btn) btn.style.display = 'none';
+    paused = false;
+    // clear any input edges held over from the death overlay
+    input.fireEdge = false;
+    input.fire = false;
+    input.mouseDX = 0;
+    _updateHud();
   }
 
   // ── Public API ──────────────────────────────────────────────────────────
@@ -327,22 +392,62 @@
     setPlayer(p) { if (rc) rc.setPlayer(p); },
     castRay(angle) { return rc ? rc.castRay(angle) : null; },
     loadTexture(id, url) { return global.DoomTextures.loadImageTexture(id, url); },
+    restart() { restart(); },
     // expose primitives for testing / advanced gameplay code
     _raycaster() { return rc; },
   };
   global.Doom = api;
 
+  // ── Event wiring (player damage/death, kill scoring, restart button) ────
+  let _wiredEvents = false;
+  function _wireEvents() {
+    if (_wiredEvents) return;
+    _wiredEvents = true;
+    events.on('onPlayerHurt', () => {
+      damageFlashT = 0.25;
+      _updateHud();
+    });
+    events.on('onPlayerDie', () => {
+      gameOver = true;
+      const ov = document.getElementById('doomOverlay');
+      const tt = document.getElementById('doomOverlayTitle');
+      const sub = document.getElementById('doomOverlaySub');
+      const btn = document.getElementById('btn-doom-restart');
+      if (ov) ov.classList.add('show');
+      if (tt) tt.textContent = 'YOU DIED';
+      if (sub) sub.textContent = 'Press R or click RESTART';
+      if (btn) btn.style.display = '';
+      if (pointerLocked && document.exitPointerLock) document.exitPointerLock();
+      _updateHud();
+    });
+    events.on('onEntityDeath', ({ entity }) => {
+      if (entity && entity._isEnemy && entity._state !== 'dead') {
+        // counted at the start of dying; ignore duplicate
+        return;
+      }
+    });
+    events.on('onEnemyHurt', ({ entity, killed }) => {
+      if (killed && entity && entity._isEnemy) {
+        kills++;
+        _updateHud();
+      }
+    });
+  }
+
   // ── Lifecycle ───────────────────────────────────────────────────────────
   function init() {
     if (!_bootEngine()) return;
-    if (entities.length === 0) {
-      entities.push(_defaultEntity());
-    }
+    _wireEvents();
+    // wipe any stub entity from a prior engine boot and drop in the encounter
+    _resetPlayer();
+    _spawnEncounter();
     document.addEventListener('keydown', _onKeyDown);
     document.addEventListener('keyup', _onKeyUp);
     document.addEventListener('mousemove', _onMouseMove);
     document.addEventListener('pointerlockchange', _onPointerLockChange);
     canvas.addEventListener('click', _onCanvasClick);
+    const rbtn = document.getElementById('btn-doom-restart');
+    if (rbtn) rbtn.onclick = restart;
     active = true;
     paused = false;
     lastTime = performance.now();
@@ -367,6 +472,15 @@
     input.forward = input.back = input.strafeL = input.strafeR = false;
     input.turnL = input.turnR = input.fire = input.fireEdge = false;
     input.mouseDX = 0;
+    // tear down enemies so next tab activation starts a fresh fight
+    if (global.DoomEnemies) global.DoomEnemies.reset();
+    for (const e of entities.slice()) api.removeEntity(e);
+    gameOver = false;
+    damageFlashT = 0;
+    const ov = document.getElementById('doomOverlay');
+    if (ov) ov.classList.remove('show');
+    const btn = document.getElementById('btn-doom-restart');
+    if (btn) btn.style.display = 'none';
   }
 
   if (typeof global.registerGame === 'function') {

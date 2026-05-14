@@ -2,14 +2,46 @@
 
 A Wolfenstein/Doom-style raycaster built on vanilla HTML5 Canvas + JS.
 
-This PR ships the **engine foundation only**. Two sibling hoglets are
-populating data on top of it in parallel:
+This branch now ships **engine + enemies/AI/combat**. Future PRs from the
+parallel hoglets will plug in real levels / textures and a richer weapon
+suite; the contracts below are stable.
 
-- **Hoglet 1 — Levels & Assets:** authors `DoomMap` objects and image
-  textures. Calls `Doom.setMap(map)` and `Doom.loadTexture(id, url)`.
-- **Hoglet 2 — Gameplay:** authors `DoomEntity` objects (player abilities,
-  enemies, items, projectiles). Calls `Doom.addEntity(entity)` and listens
-  on `Doom.events`.
+## Enemies, AI, combat (this PR)
+
+`js/doom/enemies.js` adds a finite-state AI tick (idle → alerted → chase →
+attack → pain → dying → corpse) on top of Carlos's entity update hook, plus
+its own DDA line-of-sight check so enemies see through the same wall grid
+the renderer does. Three archetypes ship:
+
+| Enemy   | HP | Speed | Attack            | Range | DMG | Notes |
+| ------- | -- | ----- | ----------------- | ----- | --- | ----- |
+| Imp     | 40 | 1.7   | Fireball projectile | 8   | 8   | Keeps distance, lobs fire |
+| Zombie  | 25 | 1.3   | Hitscan rifle      | 10   | 10  | Spread shot, slight inaccuracy |
+| Pinky   | 90 | 2.6   | Melee bite        | 1.0  | 18  | Fast bruiser, charges in |
+
+Stats live in `DoomEnemies.TYPES[...]`; tweak there to rebalance.
+
+### Testing enemies in the browser
+
+1. Serve the repo root (`npx serve .` or `python3 -m http.server`).
+2. Open `index.html` and click the **✜ DOOM** tab. Three enemies spawn in
+   the default 8×8 stub map.
+3. **LOS detection** — turn to face an enemy; once your eye-line clears
+   the central pillar you'll hear an alert grunt and they'll start
+   chasing. Step behind the pillar to break sight; they drift toward
+   your last-seen position.
+4. **Chase / attack** — back away from the Imp and watch it lob
+   fireballs. Let the Zombie shoot you — your HP HUD drops and the
+   screen flashes red. The Pinky will charge straight in; back-pedal
+   while firing.
+5. **Pain** — every shot that doesn't kill has a per-archetype chance to
+   flinch the enemy, briefly interrupting its attack (look for the pain
+   sprite — the Pinky almost never flinches).
+6. **Death animation + corpse** — keep firing. Each death plays a 2-frame
+   death animation followed by a flattened corpse that stays on the
+   ground for the rest of the encounter.
+7. **Player death** — let them kill you. The screen turns red, "YOU DIED"
+   shows, press `R` or click **RESTART** to spawn fresh.
 
 ## How to run
 
@@ -46,7 +78,9 @@ Click the canvas again while paused to resume.
 js/doom/
 ├── textures.js   — DoomTextures.* texture/sprite atlas + loaders
 ├── raycaster.js  — DoomRaycaster.create(canvas) — DDA + sprite pipeline
-└── game.js       — window.Doom — loop, input, lifecycle, event bus
+├── sprites.js    — DoomEnemySprites — procedural multi-frame enemy art
+├── game.js       — window.Doom — loop, input, lifecycle, event bus, HUD
+└── enemies.js    — DoomEnemies — enemy types, FSM AI, LOS, projectiles
 ```
 
 `game.js` registers itself with the shared `registerGame('doom', …)`
@@ -191,14 +225,50 @@ if (hit.dist < 6) {
   60 Hz simulation tick. Gameplay code receiving `'tick'` always sees a
   constant `dt` of `1/60` seconds.
 
+## Public API additions (enemies/AI)
+
+```js
+// Spawning
+DoomEnemies.spawnEnemy('imp', 5.5, 4.5);   // type, world x, world y
+DoomEnemies.spawnDefaultEncounter();       // 3-enemy demo for the stub map
+
+// Player HP
+DoomEnemies.getPlayerHealth();             // → number
+DoomEnemies.damagePlayer(amount, source);  // funnel for all incoming hits
+DoomEnemies.setPlayerHealth(100);          // restore (also used by Doom.restart())
+
+// Hitscan against enemies (auto-wired to onPlayerFire)
+DoomEnemies.tryFirePlayerHitscan({ angle, hit }) → entity | null;
+
+// Generic LOS — DDA grid walk between any two world points
+DoomEnemies.lineOfSight(x1, y1, x2, y2) → boolean;
+
+// Reset all enemies + projectiles (called by Doom.restart() too)
+DoomEnemies.reset();
+```
+
+New events on `Doom.events`:
+
+| Name | Payload | Fired |
+| --- | --- | --- |
+| `onPlayerHurt` | `{ amount, source, hp }` | every hit through `damagePlayer` |
+| `onPlayerDie`  | `{}` | once HP reaches 0 |
+| `onEnemyHurt`  | `{ entity, amount, killed }` | every damage event against an enemy |
+
 ## Status / open follow-ups
 
 - [ ] Textured floor & ceiling pass.
 - [ ] Door / pushwall tile types — currently every non-zero tile is a
       solid wall.
-- [ ] Multi-frame sprite atlases (sprite ids today map to single images).
-- [ ] HUD beyond FPS / position / state (weapon, health, ammo).
-- [ ] Audio.
-
-None of these are blockers for the level or entity hoglets to start
-work — the data shapes above are stable.
+- [x] Multi-frame sprite atlases (per-enemy frame sequences live in
+      `DoomEnemies.TYPES[*].sprites`).
+- [x] HUD beyond FPS / position / state (HP, kills, damage flash, death overlay).
+- [x] Audio (player + per-enemy alert/pain/die/attack SFX via shared audio module).
+- [ ] Weapons beyond the single hitscan pistol — pickups, ammo, multi-frame
+      first-person weapon sprite.
+- [ ] Smarter pathing — current chase is greedy seek with wall-slide.
+- [ ] LOS exact-corner case: a ray that passes through the geometric corner
+      of a wall tile reports "blocked" because both side distances equalise on
+      the same step. Symptom is mild jitter between idle/chase at one or two
+      degenerate angles in the stub map. Real maps with offset enemy positions
+      don't trip it; worth a one-line tie-break later.

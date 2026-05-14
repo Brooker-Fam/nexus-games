@@ -80,6 +80,33 @@ const SFX={
   fishBonus: ()=>{ [880,1175,1568].forEach((f,i)=>setTimeout(()=>sfxTone(f,'sine',0.18,0.01,0.14),i*60)); },
   fishDie:   ()=>{ sfxTone(180,'sawtooth',0.22,0.01,0.4,60); sfxNoise(0.2,0.3,500); },
   fishWin:   ()=>{ [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>sfxTone(f,'sine',0.22,0.02,0.3),i*90)); },
+
+  // DOOM — player
+  doomPistol:     ()=>{ sfxNoise(0.16,0.06,2200); sfxTone(220,'square',0.1,0.001,0.05); },
+  doomPlayerHurt: ()=>{ sfxTone(180,'sawtooth',0.18,0.005,0.18,90); sfxNoise(0.08,0.08,1200); },
+  doomPlayerDie:  ()=>{ sfxTone(220,'sawtooth',0.25,0.02,0.5,55); setTimeout(()=>sfxNoise(0.2,0.4,500),120); },
+
+  // DOOM — Imp (projectile)
+  doomImpAlert:   ()=>{ sfxTone(180,'sawtooth',0.16,0.01,0.18,260); sfxNoise(0.05,0.1,800); },
+  doomImpPain:    ()=>{ sfxTone(380,'square',0.14,0.005,0.1,180); },
+  doomImpDie:     ()=>{ sfxTone(280,'sawtooth',0.2,0.01,0.35,90); sfxNoise(0.12,0.25,700); },
+  doomImpAttack:  ()=>{ sfxTone(420,'sine',0.12,0.005,0.18,820); sfxNoise(0.05,0.1,1500); },
+
+  // DOOM — Zombieman (hitscan)
+  doomZombieAlert:  ()=>{ sfxTone(150,'sawtooth',0.14,0.01,0.2,90); },
+  doomZombiePain:   ()=>{ sfxTone(220,'square',0.14,0.005,0.1,140); },
+  doomZombieDie:    ()=>{ sfxTone(160,'sawtooth',0.18,0.01,0.4,70); sfxNoise(0.12,0.3,600); },
+  doomZombieAttack: ()=>{ sfxNoise(0.18,0.05,2800); sfxTone(260,'square',0.09,0.001,0.04); },
+
+  // DOOM — Pinky (melee bruiser)
+  doomPinkyAlert:   ()=>{ sfxTone(95,'sawtooth',0.2,0.015,0.28,65); sfxNoise(0.06,0.12,500); },
+  doomPinkyPain:    ()=>{ sfxTone(180,'square',0.18,0.005,0.12,110); },
+  doomPinkyDie:     ()=>{ sfxTone(110,'sawtooth',0.22,0.01,0.5,55); sfxNoise(0.15,0.4,400); },
+  doomPinkyAttack:  ()=>{ sfxNoise(0.18,0.18,900); sfxTone(160,'square',0.14,0.005,0.12,90); },
+
+  // DOOM — generic
+  doomFireballHit:  ()=>{ sfxNoise(0.18,0.18,1100); sfxTone(220,'sawtooth',0.1,0.005,0.15,80); },
+  doomEnemyHit:     ()=>{ sfxNoise(0.1,0.05,2600); sfxTone(280,'square',0.08,0.001,0.04); },
 };
 
 // Throttle repeated sounds so they don't stack
