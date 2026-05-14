@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="css/rts.css">
 <link rel="stylesheet" href="css/snake.css">
 <link rel="stylesheet" href="css/fish.css">
+<link rel="stylesheet" href="css/invaders.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -66,6 +67,7 @@
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
     <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
     <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
+    <button class="tab" id="tab-btn-invaders">⌬ NEXUS INVADERS</button>
     <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
@@ -409,6 +411,54 @@
       </div>
     </div>
   </div>
+
+  <!-- NEXUS INVADERS -->
+  <div id="tab-invaders" class="tab-content">
+    <div class="game-header">
+      <div>
+        <div class="game-title">NEXUS <span>INVADERS</span></div>
+      </div>
+    </div>
+
+    <div class="game-area">
+      <div class="canvas-wrap">
+        <canvas id="invadersCanvas" width="720" height="540" tabindex="0"></canvas>
+      </div>
+
+      <div class="sidebar">
+        <div class="panel">
+          <div class="panel-title">▸ CONTROLS</div>
+          <div class="inv-hint">
+            <b>← →</b> / <b>A D</b> MOVE<br>
+            <b>SPACE</b> FIRE<br>
+            <b>P</b> / <b>ESC</b> PAUSE
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ TARGETS</div>
+          <div class="inv-row-legend">
+            <div class="inv-row-row"><span class="inv-row-swatch" style="background:#ff44aa"></span> SQUID — 30 PTS</div>
+            <div class="inv-row-row"><span class="inv-row-swatch" style="background:#ff8855"></span> CRAB — 20 PTS</div>
+            <div class="inv-row-row"><span class="inv-row-swatch" style="background:#ffdd44"></span> CRAB — 20 PTS</div>
+            <div class="inv-row-row"><span class="inv-row-swatch" style="background:#88ff66"></span> GRUNT — 10 PTS</div>
+            <div class="inv-row-row"><span class="inv-row-swatch" style="background:#44ddff"></span> GRUNT — 10 PTS</div>
+            <div class="inv-row-row"><span class="inv-row-swatch" style="background:#ff44aa"></span> UFO — 50–300</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ RULES</div>
+          <div class="inv-hint">
+            CLEAR ALL INVADERS<br>
+            BUNKERS CHIP AWAY<br>
+            WAVES SPEED UP<br>
+            HI-SCORE PERSISTS
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Shared -->
@@ -450,6 +500,9 @@
 
 <!-- Fish Frenzy -->
 <script src="js/fish/game.js"></script>
+
+<!-- Nexus Invaders -->
+<script src="js/invaders/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>

@@ -1,0 +1,46 @@
+/* ── NEXUS INVADERS ── */
+#invadersCanvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 720px;
+  margin: 0 auto;
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 0 32px rgba(0,245,255,0.14), inset 0 0 60px rgba(0,0,0,0.55);
+  background: #02060d;
+  image-rendering: pixelated;
+  outline: none;
+}
+.inv-hint {
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  text-align: center;
+}
+.inv-hint b {
+  color: var(--neon-cyan);
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+.inv-row-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+.inv-row-legend .inv-row-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inv-row-legend .inv-row-swatch {
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
