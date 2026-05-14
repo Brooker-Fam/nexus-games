@@ -80,6 +80,19 @@ const SFX={
   fishBonus: ()=>{ [880,1175,1568].forEach((f,i)=>setTimeout(()=>sfxTone(f,'sine',0.18,0.01,0.14),i*60)); },
   fishDie:   ()=>{ sfxTone(180,'sawtooth',0.22,0.01,0.4,60); sfxNoise(0.2,0.3,500); },
   fishWin:   ()=>{ [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>sfxTone(f,'sine',0.22,0.02,0.3),i*90)); },
+
+  // Nexus Invaders
+  invShoot:       ()=>{ sfxTone(620,'square',0.10,0.005,0.10,1400); },
+  invHit:         ()=>{ sfxNoise(0.18,0.10,2400); sfxTone(220,'square',0.10,0.001,0.06); },
+  invUfoHit:      ()=>{ [880,659,523].forEach((f,i)=>setTimeout(()=>sfxTone(f,'square',0.15,0.005,0.12),i*40)); sfxNoise(0.12,0.18,1800); },
+  invPlayerDie:   ()=>{ sfxTone(330,'sawtooth',0.22,0.01,0.45,60); sfxNoise(0.25,0.5,400); },
+  invBunkerChip:  ()=>{ sfxNoise(0.08,0.05,1600); },
+  invWaveClear:   ()=>{ [392,523,659,784].forEach((f,i)=>setTimeout(()=>sfxTone(f,'square',0.18,0.02,0.18),i*80)); },
+  // The iconic four-tone Space Invaders march — pitches descend, played in sequence
+  invMarch1:      ()=>{ sfxTone(110,'square',0.18,0.005,0.10); },
+  invMarch2:      ()=>{ sfxTone( 98,'square',0.18,0.005,0.10); },
+  invMarch3:      ()=>{ sfxTone( 87,'square',0.18,0.005,0.10); },
+  invMarch4:      ()=>{ sfxTone( 78,'square',0.18,0.005,0.10); },
 };
 
 // Throttle repeated sounds so they don't stack
