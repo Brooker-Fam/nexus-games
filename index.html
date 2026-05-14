@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="css/rts.css">
 <link rel="stylesheet" href="css/snake.css">
 <link rel="stylesheet" href="css/fish.css">
+<link rel="stylesheet" href="css/space-invaders.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -66,6 +67,7 @@
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
     <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
     <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
+    <button class="tab" id="tab-btn-si">⌬ SPACE INVADERS</button>
     <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
@@ -409,6 +411,46 @@
       </div>
     </div>
   </div>
+
+  <!-- SPACE INVADERS -->
+  <div id="tab-si" class="tab-content">
+    <div class="game-header">
+      <div>
+        <div class="game-title">SPACE <span>INVADERS</span></div>
+      </div>
+      <div class="game-stats">
+        <div class="stat-box"><div class="stat-label">SCORE</div><div class="stat-val cyan" id="siScore">0</div></div>
+        <div class="stat-box"><div class="stat-label">LIVES</div><div class="stat-val pink" id="siLives">3</div></div>
+        <div class="stat-box"><div class="stat-label">WAVE</div><div class="stat-val purple" id="siWave">1</div></div>
+      </div>
+    </div>
+
+    <div class="game-area">
+      <div class="canvas-wrap">
+        <canvas id="siCanvas" width="800" height="600"></canvas>
+      </div>
+
+      <div class="sidebar">
+        <div class="panel">
+          <div class="panel-title">▸ CONTROLS</div>
+          <div class="si-hint">
+            <b>← →</b> MOVE<br>
+            <b>SPACE</b> FIRE<br>
+            DEFEND THE LINE
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ STATUS</div>
+          <div class="si-hint">
+            SCAFFOLD BUILD<br>
+            GAMEPLAY ARRIVING<br>
+            IN FOLLOW-UP PR
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Shared -->
@@ -450,6 +492,9 @@
 
 <!-- Fish Frenzy -->
 <script src="js/fish/game.js"></script>
+
+<!-- Space Invaders -->
+<script src="js/space-invaders/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>
