@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/td.css">
 <link rel="stylesheet" href="css/rts.css">
+<link rel="stylesheet" href="css/snake.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -62,6 +63,7 @@
   <div class="tabs">
     <button class="tab active" id="tab-btn-td">⬡ TOWER DEFENSE</button>
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
+    <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
   </div>
 </header>
 
@@ -295,6 +297,60 @@
 
     </div>
   </div>
+
+  <!-- NEXUS SNAKE -->
+  <div id="tab-snake" class="tab-content">
+    <div class="game-header">
+      <div>
+        <div class="game-title">NEXUS <span>SNAKE</span></div>
+      </div>
+      <div class="game-stats">
+        <div class="stat-box"><div class="stat-label">SCORE</div><div class="stat-val cyan" id="snakeScore">0</div></div>
+        <div class="stat-box"><div class="stat-label">LENGTH</div><div class="stat-val purple" id="snakeLen">3</div></div>
+        <div class="stat-box"><div class="stat-label">BEST</div><div class="stat-val gold" id="snakeBest">0</div></div>
+      </div>
+    </div>
+
+    <div class="game-area">
+      <div class="canvas-wrap">
+        <canvas id="snakeCanvas" width="720" height="480"></canvas>
+        <div class="overlay" id="snakeOverlay">
+          <div class="overlay-title" id="snakeOverlayTitle">GAME OVER</div>
+          <div class="overlay-sub" id="snakeOverlaySub">SCORE: 0</div>
+          <button class="overlay-btn" id="btn-snake-reset">⟳ RESTART</button>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <div class="panel">
+          <div class="panel-title">▸ CONTROLS</div>
+          <div class="snake-hint">
+            <b>ARROWS</b> / <b>WASD</b><br>
+            EAT THE GLOW<br>
+            AVOID THE WALLS
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title speed">▸ SPEED</div>
+          <div class="speed-btns snake-speed-btns">
+            <button class="speed-btn active" data-speed="1">1×</button>
+            <button class="speed-btn" data-speed="2">2×</button>
+            <button class="speed-btn" data-speed="3">3×</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ RULES</div>
+          <div class="snake-hint">
+            EACH FOOD +1 LENGTH<br>
+            SNAKE SPEEDS UP<br>
+            BONUS PER 10 SEGMENTS
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Shared -->
@@ -330,6 +386,9 @@
 <script src="js/rts/warriors.js"></script>
 <script src="js/rts/elites.js"></script>
 <script src="js/rts/cinematic.js"></script>
+
+<!-- Nexus Snake -->
+<script src="js/snake/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>

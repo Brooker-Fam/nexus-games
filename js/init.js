@@ -84,6 +84,18 @@ document.getElementById('tab-btn-cs').onclick=function(){
   const dsoCount = document.getElementById('dso-player-count');
   if (dsoCount) dsoCount.textContent = '0';
 };
+document.getElementById('tab-btn-snake').onclick=function(){
+  switchTab('snake', this);
+  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'snake' });
+};
+
+// Snake controls
+document.getElementById('btn-snake-reset').onclick=function(){ snakeReset(); };
+document.querySelector('.snake-speed-btns').onclick=function(e){
+  const btn=e.target.closest('.speed-btn');
+  if(!btn) return;
+  snakeSetSpeed(parseInt(btn.dataset.speed)||1, btn);
+};
 
 // TD controls
 document.getElementById('btn-reset').onclick=resetGame;

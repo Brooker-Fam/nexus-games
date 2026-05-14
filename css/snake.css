@@ -1,0 +1,24 @@
+  /* ── NEXUS SNAKE ── */
+  #snakeCanvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 720px;
+    margin: 0 auto;
+    border: 1px solid var(--panel-border);
+    box-shadow: 0 0 30px rgba(0,245,255,0.12), inset 0 0 60px rgba(0,0,0,0.5);
+    background: #020810;
+  }
+  .snake-hint {
+    font-size: 11px;
+    line-height: 1.6;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+  .snake-hint b {
+    color: var(--neon-cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
