@@ -97,6 +97,7 @@ document.getElementById('tab-btn-si').onclick=function(){
   if(window.posthog) posthog.capture('game_tab_switched', { tab: 'space_invaders' });
 };
 document.getElementById('btn-fish-reset').onclick=function(){ fishReset(); };
+document.getElementById('btn-si-reset').onclick=function(){ siResetGame(); };
 document.getElementById('tab-btn-exc').onclick=function(){
   const id = new Date().toISOString() + '-' + Math.random().toString(36).slice(2, 10);
   throw new TypeError("Cannot read properties of undefined (reading 'entities') at GameState.tick [session " + id + ']');

@@ -75,6 +75,12 @@ const SFX={
   snakeEat:  ()=>{ sfxTone(880,'sine',0.18,0.005,0.1,1320); sfxTone(1320,'sine',0.08,0.01,0.08); },
   snakeDie:  ()=>{ sfxTone(220,'sawtooth',0.2,0.01,0.35,80); sfxNoise(0.15,0.2,500); },
 
+  // Space Invaders
+  siShoot:     ()=>{ sfxTone(900,'square',0.08,0.005,0.08,200); },
+  siKill:      ()=>{ sfxNoise(0.18,0.12,1400); sfxTone(180,'square',0.08,0.005,0.1,80); },
+  siPlayerDie: ()=>{ sfxTone(140,'sawtooth',0.22,0.01,0.5,40); sfxNoise(0.2,0.4,400); },
+  siWin:       ()=>{ [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>sfxTone(f,'square',0.2,0.02,0.25),i*100)); },
+
   // Fish Frenzy
   fishEat:   ()=>{ sfxTone(560,'sine',0.18,0.005,0.12,920); sfxNoise(0.04,0.05,1200); },
   fishBonus: ()=>{ [880,1175,1568].forEach((f,i)=>setTimeout(()=>sfxTone(f,'sine',0.18,0.01,0.14),i*60)); },

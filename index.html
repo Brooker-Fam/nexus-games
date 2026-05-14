@@ -420,7 +420,7 @@
       </div>
       <div class="game-stats">
         <div class="stat-box"><div class="stat-label">SCORE</div><div class="stat-val cyan" id="siScore">0</div></div>
-        <div class="stat-box"><div class="stat-label">LIVES</div><div class="stat-val pink" id="siLives">3</div></div>
+        <div class="stat-box"><div class="stat-label">LIVES</div><div class="stat-val pink" id="siLives">1</div></div>
         <div class="stat-box"><div class="stat-label">WAVE</div><div class="stat-val purple" id="siWave">1</div></div>
       </div>
     </div>
@@ -428,6 +428,11 @@
     <div class="game-area">
       <div class="canvas-wrap">
         <canvas id="siCanvas" width="800" height="600"></canvas>
+        <div class="overlay" id="siOverlay">
+          <div class="overlay-title" id="siOverlayTitle">GAME OVER</div>
+          <div class="overlay-sub" id="siOverlaySub">THE INVADERS HAVE BREACHED EARTH</div>
+          <button class="overlay-btn" id="btn-si-reset">⟳ RESTART</button>
+        </div>
       </div>
 
       <div class="sidebar">
@@ -441,11 +446,20 @@
         </div>
 
         <div class="panel">
-          <div class="panel-title">▸ STATUS</div>
+          <div class="panel-title">▸ RULES</div>
           <div class="si-hint">
-            SCAFFOLD BUILD<br>
-            GAMEPLAY ARRIVING<br>
-            IN FOLLOW-UP PR
+            CLEAR THE WAVE TO WIN<br>
+            DON'T LET THEM LAND<br>
+            ONE HIT ENDS THE RUN
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ TIPS</div>
+          <div class="si-hint">
+            FEWER LEFT = FASTER<br>
+            DODGE THE FALLING SHOTS<br>
+            FIRE COOLS DOWN
           </div>
         </div>
       </div>
