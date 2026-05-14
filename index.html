@@ -428,6 +428,7 @@
     <div class="game-area">
       <div class="canvas-wrap doom-canvas-wrap">
         <canvas id="doomCanvas" width="800" height="500" tabindex="0"></canvas>
+        <canvas id="doomHudCanvas" width="800" height="500" class="doom-hud-canvas"></canvas>
         <div class="doom-overlay" id="doomOverlay">
           <div class="doom-overlay-title" id="doomOverlayTitle">PAUSED</div>
           <div class="doom-overlay-sub" id="doomOverlaySub">Press ESC to resume</div>
@@ -441,18 +442,23 @@
             <b>W A S D</b> MOVE / STRAFE<br>
             <b>← →</b> TURN<br>
             <b>MOUSE</b> LOOK (CLICK CANVAS)<br>
-            <b>SPACE</b> / <b>CTRL</b> FIRE<br>
+            <b>LMB</b> / <b>SPACE</b> / <b>CTRL</b> FIRE<br>
+            <b>1 – 5</b> SELECT WEAPON<br>
+            <b>WHEEL</b> CYCLE WEAPON · <b>Q</b> LAST<br>
+            <b>R</b> RESTART (WHEN DEAD)<br>
             <b>ESC</b> PAUSE
           </div>
         </div>
 
         <div class="panel">
-          <div class="panel-title">▸ BUILD</div>
+          <div class="panel-title">▸ ARSENAL</div>
           <div class="doom-hint">
-            CORE ENGINE v0.1<br>
-            RAYCASTER + DDA<br>
-            SPRITE Z-BUFFER<br>
-            AWAITING LEVELS &amp; AI
+            <b>1</b> FIST · melee<br>
+            <b>2</b> PISTOL · clip<br>
+            <b>3</b> SHOTGUN · shells<br>
+            <b>4</b> CHAINGUN · clip<br>
+            <b>5</b> ROCKET LAUNCHER<br>
+            FIND WEAPONS &amp; AMMO ON THE FLOOR
           </div>
         </div>
       </div>
@@ -503,6 +509,9 @@
 <!-- Doom -->
 <script src="js/doom/textures.js"></script>
 <script src="js/doom/raycaster.js"></script>
+<script src="js/doom/weapons.js"></script>
+<script src="js/doom/combat.js"></script>
+<script src="js/doom/hud.js"></script>
 <script src="js/doom/game.js"></script>
 
 <!-- Init -->
