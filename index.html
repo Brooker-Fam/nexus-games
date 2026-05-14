@@ -420,17 +420,21 @@
       </div>
       <div class="game-stats">
         <div class="stat-box"><div class="stat-label">FPS</div><div class="stat-val cyan" id="doomFps">--</div></div>
-        <div class="stat-box"><div class="stat-label">POS</div><div class="stat-val purple" id="doomPos">0,0</div></div>
-        <div class="stat-box"><div class="stat-label">STATE</div><div class="stat-val gold" id="doomState">--</div></div>
+        <div class="stat-box"><div class="stat-label">HP</div><div class="stat-val pink" id="doomHp">100</div></div>
+        <div class="stat-box"><div class="stat-label">KILLS</div><div class="stat-val gold" id="doomKills">0</div></div>
+        <div class="stat-box"><div class="stat-label">STATE</div><div class="stat-val purple" id="doomState">--</div></div>
       </div>
     </div>
 
     <div class="game-area">
       <div class="canvas-wrap doom-canvas-wrap">
         <canvas id="doomCanvas" width="800" height="500" tabindex="0"></canvas>
+        <div class="doom-damage-flash" id="doomDamageFlash"></div>
+        <div class="doom-crosshair" id="doomCrosshair">+</div>
         <div class="doom-overlay" id="doomOverlay">
           <div class="doom-overlay-title" id="doomOverlayTitle">PAUSED</div>
           <div class="doom-overlay-sub" id="doomOverlaySub">Press ESC to resume</div>
+          <button class="doom-restart-btn" id="btn-doom-restart" style="display:none">⟳ RESTART</button>
         </div>
       </div>
 
@@ -447,12 +451,11 @@
         </div>
 
         <div class="panel">
-          <div class="panel-title">▸ BUILD</div>
+          <div class="panel-title">▸ THREATS</div>
           <div class="doom-hint">
-            CORE ENGINE v0.1<br>
-            RAYCASTER + DDA<br>
-            SPRITE Z-BUFFER<br>
-            AWAITING LEVELS &amp; AI
+            <b style="color:#b73a22">IMP</b> — fireball lobber<br>
+            <b style="color:#9aa86a">ZOMBIE</b> — hitscan rifle<br>
+            <b style="color:#d68aa8">PINKY</b> — fast melee bruiser
           </div>
         </div>
       </div>
@@ -503,7 +506,9 @@
 <!-- Doom -->
 <script src="js/doom/textures.js"></script>
 <script src="js/doom/raycaster.js"></script>
+<script src="js/doom/sprites.js"></script>
 <script src="js/doom/game.js"></script>
+<script src="js/doom/enemies.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>

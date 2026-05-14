@@ -57,3 +57,45 @@
   font-weight: 700;
   letter-spacing: 2px;
 }
+
+/* damage flash — red vignette pulsed on player hit */
+.doom-damage-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center,
+              rgba(255, 30, 30, 0) 35%,
+              rgba(255, 30, 30, 0.55) 100%);
+  opacity: 0;
+  transition: opacity 0.12s linear;
+  mix-blend-mode: screen;
+}
+.doom-damage-flash.show { opacity: 1; }
+.doom-damage-flash.die { opacity: 0.85; background: rgba(110, 0, 0, 0.65); }
+
+.doom-crosshair {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -55%);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px;
+  color: rgba(255, 240, 240, 0.55);
+  text-shadow: 0 0 6px rgba(255, 0, 100, 0.6);
+  pointer-events: none;
+  user-select: none;
+}
+
+.doom-restart-btn {
+  margin-top: 18px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  letter-spacing: 4px;
+  padding: 10px 28px;
+  background: rgba(255, 0, 136, 0.18);
+  border: 1px solid var(--neon-pink);
+  color: var(--neon-pink);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 0.15s ease;
+}
+.doom-restart-btn:hover { background: rgba(255, 0, 136, 0.4); }
