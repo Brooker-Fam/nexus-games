@@ -201,3 +201,115 @@
   .pong-sidebar { flex-direction: column; }
   .pong-sidebar .panel { min-width: unset; }
 }
+
+.pong-survey-container {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: min(340px, calc(100% - 32px));
+  z-index: 12;
+  pointer-events: none;
+}
+
+.pong-survey-card {
+  position: relative;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.7);
+  background: rgba(0,0,0,0.93);
+  color: #fff;
+  box-shadow: 0 0 26px rgba(255,255,255,0.16);
+  font-family: 'Courier New', monospace;
+  pointer-events: auto;
+}
+
+.pong-survey-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: 0;
+  background: transparent;
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+.pong-survey-close:hover,
+.pong-survey-close:focus-visible { color: #fff; outline: none; }
+
+.pong-survey-kicker {
+  margin-bottom: 8px;
+  color: rgba(255,255,255,0.56);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.pong-survey-title {
+  margin-right: 20px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.35;
+  letter-spacing: 1px;
+}
+
+.pong-survey-form { display: grid; gap: 10px; }
+
+.pong-survey-rating-row,
+.pong-survey-choice-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pong-survey-rating,
+.pong-survey-choice,
+.pong-survey-submit {
+  border: 1px solid rgba(255,255,255,0.76);
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-weight: 900;
+  letter-spacing: 1px;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.12s ease;
+}
+
+.pong-survey-rating {
+  width: 42px;
+  height: 38px;
+}
+
+.pong-survey-choice,
+.pong-survey-submit {
+  padding: 10px 12px;
+  text-transform: uppercase;
+}
+
+.pong-survey-rating:hover,
+.pong-survey-rating:focus-visible,
+.pong-survey-rating.selected,
+.pong-survey-choice:hover,
+.pong-survey-choice:focus-visible,
+.pong-survey-submit:hover,
+.pong-survey-submit:focus-visible {
+  background: #fff;
+  color: #000;
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.pong-survey-textarea {
+  width: 100%;
+  resize: vertical;
+  box-sizing: border-box;
+  border: 1px solid rgba(255,255,255,0.48);
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  padding: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.pong-survey-textarea:focus { border-color: #fff; outline: none; }
