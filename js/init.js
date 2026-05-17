@@ -94,6 +94,7 @@ document.getElementById('tab-btn-fish').onclick=function(){
 };
 document.getElementById('tab-btn-pong').onclick=function(){
   switchTab('pong', this);
+  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'pong' });
 };
 document.getElementById('btn-fish-reset').onclick=function(){ fishReset(); };
 document.getElementById('tab-btn-exc').onclick=function(){

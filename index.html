@@ -36,6 +36,9 @@
         window.__errorBuffer=null;
       }
     });
+  } else {
+    posthog.capture=function(){};
+    posthog.captureException=function(){};
   }
 </script>
 </head>
@@ -67,7 +70,7 @@
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
     <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
     <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
-    <button class="tab" id="tab-btn-pong">◫ PONG</button>
+    <button class="tab" id="tab-btn-pong" title="Classic Atari-style Pong. Single-player vs AI (Easy/Medium/Hard) or local two-player.">◫ PONG</button>
     <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
