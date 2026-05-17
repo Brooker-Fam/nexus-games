@@ -108,6 +108,33 @@ function pongDispatchEvent(type, payload){
   window.dispatchEvent(new CustomEvent('pong:event', { detail }));
 }
 
+function pongCapture(event, properties){
+  if(window.posthog) posthog.capture(event, properties || {});
+}
+
+function pongAnalyticsMode(mode){
+  return mode === '1p' ? 'single_player' : 'two_player';
+}
+
+function pongAnalyticsStateProperties(mode, difficulty){
+  const analyticsMode = pongAnalyticsMode(mode || pongState.mode);
+  const analyticsDifficulty = difficulty || pongState.difficulty;
+  const properties = {
+    mode: analyticsMode,
+  };
+  if(analyticsMode === 'single_player' && analyticsDifficulty){
+    properties.difficulty = analyticsDifficulty;
+  }
+  return properties;
+}
+
+function pongAnalyticsScore(){
+  return {
+    left: pongState.leftScore,
+    right: pongState.rightScore,
+  };
+}
+
 function pongCheckFirstVisit(){
   let shouldDispatch = false;
   try {
@@ -268,6 +295,9 @@ function pongSelectMode(mode){
   pongState.mode = mode;
   pongState.difficulty = null;
   pongDispatchEvent('mode_selected', { mode });
+  pongCapture('pong_mode_selected', {
+    mode: pongAnalyticsMode(mode),
+  });
   if(mode === '1p'){
     pongShowMenuScreen('difficulty');
   } else {
@@ -276,6 +306,10 @@ function pongSelectMode(mode){
 }
 
 function pongSelectDifficulty(difficulty){
+  pongCapture('pong_difficulty_selected', {
+    mode: 'single_player',
+    difficulty,
+  });
   pongStartGame('1p', difficulty);
 }
 
@@ -291,6 +325,7 @@ function pongStartGame(mode, difficulty){
   pongHideOverlay();
   pongUpdateHUD();
   pongEls().status.textContent = mode === '1p' ? 'PLAYER VS AI' : 'LOCAL 2 PLAYER';
+  pongCapture('pong_game_started', pongAnalyticsStateProperties(mode, pongState.difficulty));
 }
 
 function pongPlayAgain(){
@@ -317,10 +352,18 @@ function pongTogglePause(){
   if(pongState.screen === 'playing'){
     pongShowPause();
     pongDispatchEvent('pause_or_idle', { reason: 'pause' });
+    pongCapture('pong_game_paused', Object.assign(
+      pongAnalyticsStateProperties(),
+      { score: pongAnalyticsScore() }
+    ));
   } else if(pongState.screen === 'paused'){
     pongState.screen = 'playing';
     pongHideOverlay();
     pongEls().status.textContent = pongState.mode === '1p' ? 'PLAYER VS AI' : 'LOCAL 2 PLAYER';
+    pongCapture('pong_game_resumed', Object.assign(
+      pongAnalyticsStateProperties(),
+      { score: pongAnalyticsScore() }
+    ));
   }
 }
 
@@ -337,6 +380,13 @@ function pongEndGame(winner){
   if(pongState.mode === '1p') payload.difficulty = pongState.difficulty;
   pongShowMenuScreen('gameover');
   pongDispatchEvent('game_over', payload);
+  pongCapture('pong_game_ended', Object.assign(
+    pongAnalyticsStateProperties(),
+    {
+      winner,
+      score,
+    }
+  ));
 }
 
 function pongScore(side){
@@ -637,6 +687,7 @@ registerGame('pong', {
     pongLastTime = performance.now();
     pongAccum = 0;
     if(!pongRaf) pongRaf = requestAnimationFrame(pongGameLoop);
+    pongCapture('pong_game_opened', {});
   },
   cleanup(){
     pongDetachInput();
