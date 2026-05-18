@@ -1,32 +1,37 @@
 # Insight Wars
 
-## Overview
-
-Insight Wars is a single-player, turn-based card game being added to Nexus Games in layers. This foundation layer owns the pure game-state contract only: cards, decks, hero resources, turn flow, deterministic shuffling, win checks, and stubbed extension points for future card effects, minion combat, and AI.
-
-Both sides start at 20 HP. The player begins turn 1 with 1/1 Events, while the AI starts at 0/0 Events until its first turn begins. Each side uses the same fixed 22-card deck and draws a 3-card opening hand from its independently shuffled deck.
+Insight Wars is a single-player, turn-based card game in the Nexus Games arcade. Max the Hedgehog (the player) duels the Dark Funnel PM (AI) with product-analytics themed cards, Events as mana, and small minions that can pressure the opposing hero.
 
 ## How to Run
 
-<!-- TODO: UI hoglet -->
+This repo is a vanilla JavaScript frontend served by Vercel dev tooling.
+
+```bash
+npm install
+npm run dev
+```
+
+Open the local Vercel URL, then choose the **Insight Wars** tab. The UI is mounted at the existing `#insight-wars-root` tab entry; no PostHog SDK, persistence, backend, card art, sound, or animation libraries are used.
+
+## UI Layer
+
+- `game.js` mounts the vanilla DOM GameBoard and wires New Game, card play, targeting, minion attacks, End Turn, AI turn pacing, Escape-to-cancel, and cleanup.
+- `components.js` contains the named UI components: `GameBoard`, `HeroPanel`, `MinionCard`, `HandCard`, `ManaCounter`, `EndTurnButton`, and `WinLoseScreen`.
+- `view-model.js` adapts Pawel's foundation state shape for rendering without owning game rules.
+- `styles.css` provides the PostHog-inspired orange/yellow player side and muted grey AI side.
+
+Game rules remain owned by `game-state.js` and Julian's effects/AI module when it lands.
 
 ## Card Reference
 
-| Card ID | Name | Cost | Effect |
-|---|---|---:|---|
-| `feature_flag` | Feature Flag | 1 | Disable one enemy minion's next attack. |
-| `session_replay` | Session Replay | 2 | Reveal the AI hand for the current turn. |
-| `ab_test` | A/B Test | 3 | 50/50: deal 5 damage to the enemy hero or heal 5 HP. |
-| `funnel` | Funnel | 4 | Deal 2 damage to the enemy hero and 1 damage to each enemy minion. |
-| `cohort` | Cohort | 3 | Summon a 2/3 Cohort minion. |
-| `insight` | Insight | 1 | Draw a card. |
-| `surveys` | Surveys | 2 | Heal 4 HP. |
-| `heatmap` | Heatmap | 3 | Deal 4 damage to a single target. |
-| `experiment` | Experiment | 5 | Summon a 5/5 Experiment minion. |
-
-## Architecture
-
-- `game-state.js` is the contract module. It exports JSDoc-documented types, `CARD_CATALOG`, `DECK_COMPOSITION`, `buildDeck()`, deterministic `shuffle()`, initial state creation, draw/turn/win helpers, and stubs for `canPlayCard()`, `playCard()`, `attackWith()`, and `runAiTurn()`.
-- `game.js` is a minimal vanilla DOM placeholder that registers the Insight Wars tab and renders `Insight Wars (foundation only)`. The UI hoglet should replace this layer without moving game rules into the DOM.
-- `game-state.test.js` covers only the foundation behavior implemented here. It uses seeded RNG injection so future tests can reproduce deck order and A/B randomness.
-
+| Name | Cost | Effect | Copies per deck |
+|---|---:|---|---:|
+| Feature Flag | 1 | Disable one enemy minion's next attack. | 3 |
+| Session Replay | 2 | Reveal the AI hand for the current turn. | 2 |
+| A/B Test | 3 | 50/50: deal 5 damage to the enemy hero or heal 5 HP. | 2 |
+| Funnel | 4 | Deal 2 damage to the enemy hero and 1 damage to each enemy minion. | 2 |
+| Cohort | 3 | Summon a 2/3 Cohort minion. | 3 |
+| Insight | 1 | Draw a card. | 3 |
+| Surveys | 2 | Heal 4 HP. | 2 |
+| Heatmap | 3 | Deal 4 damage to a single enemy target. | 3 |
+| Experiment | 5 | Summon a 5/5 Experiment minion. | 2 |
