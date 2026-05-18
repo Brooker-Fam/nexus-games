@@ -96,6 +96,15 @@ document.getElementById('tab-btn-pong').onclick=function(){
   switchTab('pong', this);
   if(window.posthog) posthog.capture('game_tab_switched', { tab: 'pong' });
 };
+document.getElementById('tab-btn-dune').onclick=function(){
+  switchTab('dune', this);
+  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'dune' });
+};
+const duneResetBtn = document.getElementById('btn-dune-reset');
+if(duneResetBtn) duneResetBtn.onclick=function(){
+  if(typeof resetDuneState === 'function'){ resetDuneState(); }
+  if(window.posthog) posthog.capture('dune_restarted');
+};
 document.getElementById('btn-fish-reset').onclick=function(){ fishReset(); };
 document.getElementById('tab-btn-exc').onclick=function(){
   const id = new Date().toISOString() + '-' + Math.random().toString(36).slice(2, 10);

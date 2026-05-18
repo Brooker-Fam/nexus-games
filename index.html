@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="css/snake.css">
 <link rel="stylesheet" href="css/fish.css">
 <link rel="stylesheet" href="css/pong.css">
+<link rel="stylesheet" href="css/dune.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -80,6 +81,7 @@
     <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
     <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
     <button class="tab" id="tab-btn-pong" title="Classic Atari-style Pong. Single-player vs AI (Easy/Medium/Hard) or local two-player.">◫ PONG</button>
+    <button class="tab" id="tab-btn-dune" title="Dune II clone — units, pathfinding, harvesting, combat.">⌬ ARRAKIS OPS</button>
     <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
@@ -503,6 +505,33 @@
       </div>
     </div>
   </div>
+
+  <!-- DUNE: ARRAKIS OPS -->
+  <div id="tab-dune" class="tab-content">
+    <div class="game-header">
+      <div>
+        <div class="game-title">ARRAKIS <span>OPS</span></div>
+      </div>
+      <div class="game-stats">
+        <div class="stat-box"><div class="stat-label">UNITS</div><div class="stat-val cyan" id="duneStatUnits">0</div></div>
+        <div class="stat-box"><div class="stat-label">SPICE</div><div class="stat-val gold" id="duneStatSpice">0</div></div>
+        <div class="stat-box"><div class="stat-label">ENEMY</div><div class="stat-val pink" id="duneStatEnemies">0</div></div>
+      </div>
+    </div>
+
+    <div id="dune-wrapper">
+      <div class="dune-canvas-wrap">
+        <canvas id="duneCanvas" width="864" height="528"></canvas>
+      </div>
+      <div class="dune-controls">
+        <button class="dune-reset-btn" id="btn-dune-reset">⟳ RESTART SKIRMISH</button>
+      </div>
+      <div class="dune-hint">
+        <kbd>LEFT-CLICK</kbd> select unit · <kbd>SHIFT+CLICK</kbd> add to selection · <kbd>RIGHT-CLICK</kbd> move / attack / harvest spice ·
+        Harvesters auto-haul spice to your refinery (top-left).
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Shared -->
@@ -550,6 +579,15 @@
 
 <!-- Atari Pong -->
 <script src="js/pong/game.js"></script>
+
+<!-- Arrakis Ops (Dune II clone) — units, pathfinding, combat -->
+<script src="js/dune/terrain.js"></script>
+<script src="js/dune/units-config.js"></script>
+<script src="js/dune/pathfinding.js"></script>
+<script src="js/dune/units.js"></script>
+<script src="js/dune/input.js"></script>
+<script src="js/dune/rendering.js"></script>
+<script src="js/dune/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>
