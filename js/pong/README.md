@@ -2,35 +2,18 @@
 
 Core browser implementation lives in `js/pong/game.js`, with scoped styles in `css/pong.css` and tab integration in `index.html` / `js/init.js`.
 
-Survey hook points are documented in the comment block at the top of `js/pong/game.js`. `js/pong/surveys.js` loads before the game script so it can catch the first-visit event emitted during game startup.
+Survey hook points are documented in the comment block at the top of `js/pong/game.js`. Programmatic PostHog survey modals live in `js/pong/surveys.js` and capture `survey shown`, `survey dismissed`, and `survey sent` events.
 
 See `docs/pong/DISCOVERY.md` for the repo/game structure notes.
 
-## PostHog Surveys
+## PostHog surveys
 
-`js/pong/surveys.js` listens for the core game contract:
-
-```js
-window.dispatchEvent(new CustomEvent('pong:event', {
-  detail: { type: 'game_over' } // plus any event-specific fields below
-}))
-```
-
-The surveys module is silent unless `POSTHOG_TOKEN` is present in `js/posthog-config.js` and `window.posthog` is initialized. Missing PostHog env vars should produce no Pong survey UI and no runtime errors.
-
-Create these five surveys in PostHog as active **API/custom surveys**. Use the stable key as the survey name, or include it in the survey name/description so the runtime can match it. Do not add PostHog event-trigger display conditions for these surveys; the Pong DOM events below are the trigger source. URL/device/feature-flag targeting is fine.
-
-| Survey | Stable survey key/name | Pong trigger | Question schema |
+| Survey | `survey_id` | Trigger | Response |
 | --- | --- | --- | --- |
-| Post-game enjoyment | `pong_post_game_enjoyment` | `pong:event` with `detail.type === "game_over"` | Q1 rating, 1–5: “How much did you enjoy that match?”; Q2 optional open text: “Anything you want to add?” |
-| First-visit discovery | `pong_first_visit_discovery` | `pong:event` with `detail.type === "first_visit"` | Single choice: “How did you find this game?” Choices: `friend`, `social`, `search`, `other` |
-| Mode preference reason | `pong_mode_preference_reason` | `pong:event` with `detail.type === "mode_selected"` and optional `mode`/`player_mode`/`playerMode` | Short text: “Why did you choose {1P/2P}?” |
-| Difficulty satisfaction | `pong_difficulty_satisfaction` | `pong:event` with `detail.type === "returned_to_menu"` and `rounds_played >= 2` (or `roundsPlayed >= 2`) | Single choice: “How was the difficulty?” Choices: `too_easy`, `just_right`, `too_hard` |
-| General feedback | `pong_general_feedback` | `pong:event` with `detail.type === "pause_or_idle"` | Long text: “Any feedback or feature requests?” |
+| Post-game enjoyment | `survey_pong_postgame_enjoyment` | Game-over screen after every completed Pong game | Rating 1–5 |
+| First-visit discovery | `survey_pong_first_visit_discovery` | Welcome/mode-select screen the first time a player visits Pong, guarded by `localStorage.pong_visited` | Single choice: GitHub, Friend, Search, Other |
+| Mode preference reason | `survey_pong_mode_preference` | Immediately after selecting single-player or two-player mode, once per browser session | Open text |
+| Difficulty satisfaction | `survey_pong_difficulty_satisfaction` | After 3+ completed single-player games in a browser session, tracked with `sessionStorage.pong_single_player_games_completed` | Rating 1–5 plus optional comment |
+| General feedback / feature requests | `survey_pong_general_feedback` | Once per browser session when idle on a Pong menu for 60+ seconds or when pausing gameplay | Open text |
 
-Runtime behavior:
-
-- Surveys render as a small bottom-right toast with close and “Not now” buttons, so gameplay is not blocked.
-- Only one Pong survey is shown at a time; additional trigger events queue behind the current toast.
-- Dismissing or submitting a survey captures PostHog’s standard `survey dismissed` / `survey sent` events with `$survey_id`, `$survey_name`, `$survey_questions`, and `pong_survey_key`.
-- For local testing, set `POSTHOG_TOKEN` and `POSTHOG_HOST`, run `npm run build` to regenerate `js/posthog-config.js`, then dispatch the `pong:event` examples above from the browser console.
+The site initializes PostHog from `window.POSTHOG_TOKEN` / `window.POSTHOG_KEY` with a placeholder fallback (`posthog_project_api_key_placeholder`) and `api_host: 'https://us.i.posthog.com'`. Replace the placeholder through the generated `js/posthog-config.js` or another runtime config before production use.

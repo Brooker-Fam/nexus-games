@@ -10,7 +10,7 @@
   - { type: 'mode_selected', mode: '1p' | '2p' } when a player chooses the mode.
   - { type: 'game_over', winner, mode, difficulty?, score } when a round reaches the win score.
   - { type: 'returned_to_menu', rounds_played } when the user backs out to the Pong menu.
-  - { type: 'pause_or_idle', reason } after 30s of pause or idle on a Pong menu screen.
+  - { type: 'pause_or_idle', reason } after 60s idle on a Pong menu screen or when gameplay is paused.
 */
 
 const pongCanvas = document.getElementById('pongCanvas');
@@ -20,7 +20,7 @@ const PONG_H = pongCanvas.height;
 
 const PONG_WIN_SCORE = 7;
 const PONG_TARGET_MS = 1000 / 60;
-const PONG_IDLE_MS = 30000;
+const PONG_IDLE_MS = 60000;
 
 const PONG_CONFIG = {
   paddleW: 14,
@@ -145,10 +145,18 @@ function pongClearTimers(){
   if(pongPauseTimer){ clearTimeout(pongPauseTimer); pongPauseTimer = null; }
 }
 
+function pongIsMenuScreen(){
+  return pongState.screen === 'mode' || pongState.screen === 'difficulty' || pongState.screen === 'gameover';
+}
+
+function pongNoteMenuInput(){
+  if(pongIsMenuScreen()) pongArmMenuIdleTimer();
+}
+
 function pongArmMenuIdleTimer(){
   if(pongIdleTimer) clearTimeout(pongIdleTimer);
   pongIdleTimer = setTimeout(function(){
-    if(pongState.screen === 'mode' || pongState.screen === 'difficulty' || pongState.screen === 'gameover'){
+    if(pongIsMenuScreen()){
       pongDispatchEvent('pause_or_idle', { reason: 'menu_idle' });
     }
   }, PONG_IDLE_MS);
@@ -308,6 +316,7 @@ function pongReturnToMenu(){
 function pongTogglePause(){
   if(pongState.screen === 'playing'){
     pongShowPause();
+    pongDispatchEvent('pause_or_idle', { reason: 'pause' });
   } else if(pongState.screen === 'paused'){
     pongState.screen = 'playing';
     pongHideOverlay();
@@ -326,8 +335,8 @@ function pongEndGame(winner){
     score,
   };
   if(pongState.mode === '1p') payload.difficulty = pongState.difficulty;
-  pongDispatchEvent('game_over', payload);
   pongShowMenuScreen('gameover');
+  pongDispatchEvent('game_over', payload);
 }
 
 function pongScore(side){
@@ -525,6 +534,7 @@ function pongGameLoop(ts){
 }
 
 function pongOnKey(e){
+  if(e.type === 'keydown') pongNoteMenuInput();
   if(e.key === 'p' || e.key === 'P'){
     if(pongState.screen === 'playing' || pongState.screen === 'paused'){
       pongTogglePause();
@@ -569,6 +579,7 @@ function pongOnKey(e){
 }
 
 function pongOnOverlayClick(e){
+  pongNoteMenuInput();
   const modeBtn = e.target.closest('[data-pong-mode]');
   if(modeBtn){
     pongSelectMode(modeBtn.dataset.pongMode);
@@ -588,13 +599,17 @@ function pongOnOverlayClick(e){
 function pongAttachInput(){
   document.addEventListener('keydown', pongOnKey);
   document.addEventListener('keyup', pongOnKey);
-  document.getElementById('pongOverlay').addEventListener('click', pongOnOverlayClick);
+  const overlay = document.getElementById('pongOverlay');
+  overlay.addEventListener('click', pongOnOverlayClick);
+  overlay.addEventListener('mousemove', pongNoteMenuInput);
 }
 
 function pongDetachInput(){
   document.removeEventListener('keydown', pongOnKey);
   document.removeEventListener('keyup', pongOnKey);
-  document.getElementById('pongOverlay').removeEventListener('click', pongOnOverlayClick);
+  const overlay = document.getElementById('pongOverlay');
+  overlay.removeEventListener('click', pongOnOverlayClick);
+  overlay.removeEventListener('mousemove', pongNoteMenuInput);
 }
 
 function pongInitState(){
@@ -610,9 +625,9 @@ function pongInitState(){
   pongResetPositions();
   pongServe(1);
   pongShowMenuScreen('mode');
+  pongCheckFirstVisit();
 }
 
-pongCheckFirstVisit();
 pongDraw();
 
 registerGame('pong', {
