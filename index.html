@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="css/snake.css">
 <link rel="stylesheet" href="css/fish.css">
 <link rel="stylesheet" href="css/pong.css">
+<link rel="stylesheet" href="css/dune.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -80,6 +81,7 @@
     <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
     <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
     <button class="tab" id="tab-btn-pong" title="Classic Atari-style Pong. Single-player vs AI (Easy/Medium/Hard) or local two-player.">◫ PONG</button>
+    <button class="tab" id="tab-btn-dune" title="Dune II clone — terrain & map system (work in progress).">⌬ DUNE WARS</button>
     <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
@@ -504,6 +506,56 @@
     </div>
   </div>
 
+  <!-- DUNE WARS -->
+  <div id="tab-dune" class="tab-content">
+    <div class="game-header">
+      <div>
+        <div class="game-title">DUNE <span>WARS</span></div>
+      </div>
+      <div class="game-stats">
+        <div class="stat-box"><div class="stat-label">MAP</div><div class="stat-val cyan" id="duneMapName">—</div></div>
+        <div class="stat-box"><div class="stat-label">SIZE</div><div class="stat-val purple" id="duneMapSize">—</div></div>
+      </div>
+    </div>
+
+    <div class="game-area">
+      <div class="canvas-wrap">
+        <canvas id="duneCanvas" width="960" height="600"></canvas>
+      </div>
+
+      <div class="sidebar">
+        <div class="panel">
+          <div class="panel-title">▸ CAMERA</div>
+          <div class="dune-hint">
+            PAN <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> / <kbd>WASD</kbd><br>
+            EDGE-SCROLL WITH MOUSE
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ TERRAIN</div>
+          <div class="dune-legend">
+            <div class="swatch sand"></div><div>SAND</div>
+            <div class="swatch dune"></div><div>DUNE — SLOW</div>
+            <div class="swatch rock"></div><div>ROCK — BUILDABLE</div>
+            <div class="swatch mountain"></div><div>MOUNTAIN — IMPASSABLE</div>
+            <div class="swatch spice"></div><div>SPICE</div>
+            <div class="swatch spice_blow"></div><div>SPICE BLOW</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ MAP</div>
+          <div class="dune-mapinfo">
+            FOG OF WAR <b>ON</b><br>
+            CENTER REVEALED
+          </div>
+          <button class="dune-btn" id="btn-dune-test">▣ LOAD TEST MAP</button>
+          <button class="dune-btn" id="btn-dune-regen">⟳ REGENERATE</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Shared -->
@@ -551,6 +603,16 @@
 
 <!-- Atari Pong -->
 <script src="js/pong/game.js"></script>
+
+<!-- Dune Wars (terrain & map system) -->
+<script src="js/dune/tiles.js"></script>
+<script src="js/dune/coords.js"></script>
+<script src="js/dune/map.js"></script>
+<script src="js/dune/mapgen.js"></script>
+<script src="js/dune/fog.js"></script>
+<script src="js/dune/camera.js"></script>
+<script src="js/dune/rendering.js"></script>
+<script src="js/dune/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>
