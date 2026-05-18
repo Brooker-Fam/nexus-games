@@ -78,6 +78,16 @@ js/
     warriors.js                — Warrior + basic projectile drawing
     elites.js                  — Elite unit variants per faction
     cinematic.js               — Faction reveal animation
+  dune/                        — Dune II clone, terrain & map system
+    tiles.js                   — terrain types + per-terrain properties
+    coords.js                  — world / screen / tile conversions
+    map.js                     — DuneMap class, JSON load/save, test map
+    mapgen.js                  — procedural Arrakis-style generator
+    fog.js                     — fog of war (unexplored / explored / visible)
+    camera.js                  — DuneCamera (keys + edge-scroll, clamped)
+    rendering.js               — duneDrawMap, duneDrawMinimap
+    game.js                    — DUNE namespace, lifecycle, render loop
+    README.md                  — public API surface for sibling hoglets
 
 docs/
   architecture.md              — This file

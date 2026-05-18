@@ -96,6 +96,10 @@ document.getElementById('tab-btn-pong').onclick=function(){
   switchTab('pong', this);
   if(window.posthog) posthog.capture('game_tab_switched', { tab: 'pong' });
 };
+document.getElementById('tab-btn-dune').onclick=function(){
+  switchTab('dune', this);
+  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'dune' });
+};
 document.getElementById('btn-fish-reset').onclick=function(){ fishReset(); };
 document.getElementById('tab-btn-exc').onclick=function(){
   const id = new Date().toISOString() + '-' + Math.random().toString(36).slice(2, 10);
@@ -184,6 +188,12 @@ document.getElementById('btn-mp-join').onclick=async function(){
     status.className='mp-status error'; status.textContent='Failed: '+e.message;
   }
 };
+
+// Dune Wars controls
+const _btnDuneTest = document.getElementById('btn-dune-test');
+if(_btnDuneTest) _btnDuneTest.onclick = function(){ if(typeof duneLoadTestMap === 'function') duneLoadTestMap(); };
+const _btnDuneRegen = document.getElementById('btn-dune-regen');
+if(_btnDuneRegen) _btnDuneRegen.onclick = function(){ if(typeof duneRegenerate === 'function') duneRegenerate(); };
 
 // RTS controls
 document.getElementById('btn-attack').onclick=function(e){ e.preventDefault(); rtsOrderAttack(); this.blur(); };

@@ -1,0 +1,87 @@
+  /* ── DUNE WARS ── */
+  #duneCanvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 960px;
+    margin: 0 auto;
+    background: #1a1208;
+    border: 1px solid var(--panel-border);
+    box-shadow:
+      0 0 30px rgba(0,245,255,0.12),
+      inset 0 0 60px rgba(0,0,0,0.45);
+    cursor: crosshair;
+  }
+
+  .dune-hint {
+    font-size: 11px;
+    line-height: 1.6;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+  .dune-hint b {
+    color: var(--neon-cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+  .dune-hint kbd {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    padding: 2px 5px;
+    border: 1px solid var(--panel-border);
+    background: rgba(0, 245, 255, 0.05);
+    color: var(--neon-cyan);
+    margin: 0 1px;
+  }
+
+  .dune-legend {
+    display: grid;
+    grid-template-columns: 14px auto;
+    column-gap: 8px;
+    row-gap: 6px;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+  .dune-legend .swatch {
+    width: 14px; height: 14px;
+    border: 1px solid rgba(0, 0, 0, 0.5);
+  }
+  .swatch.sand       { background: #d8a55a; }
+  .swatch.dune       { background: #b8853a; }
+  .swatch.rock       { background: #6e5a44; }
+  .swatch.mountain   { background: #3a2a1a; }
+  .swatch.spice      { background: #e8b94a; }
+  .swatch.spice_blow { background: #ff9e2b; }
+
+  .dune-mapinfo {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+  }
+  .dune-mapinfo b {
+    color: var(--neon-cyan);
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+  }
+
+  .dune-btn {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 6px 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--neon-cyan);
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .dune-btn:hover {
+    background: rgba(0, 245, 255, 0.08);
+    box-shadow: 0 0 10px rgba(0, 245, 255, 0.25);
+  }
