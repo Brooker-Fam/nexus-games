@@ -1,0 +1,261 @@
+/* ── SPICE WARS (Dune II clone) ─── */
+
+:root {
+  --dune-sand: #c89b5c;
+  --dune-sand-dark: #8a6a3a;
+  --dune-rock: #5a5044;
+  --dune-rock-light: #6f6354;
+  --dune-spice: #d96c2e;
+  --dune-spice-bright: #ff924a;
+  --dune-player: #4ec0ff;
+  --dune-enemy: #ff5a5a;
+  --dune-panel: rgba(20,14,6,0.9);
+  --dune-border: rgba(216,155,92,0.35);
+}
+
+.dune-canvas-wrap {
+  position: relative;
+}
+
+#duneCanvas {
+  display: block;
+  background: var(--dune-sand-dark);
+  border: 1px solid var(--dune-border);
+  cursor: crosshair;
+  image-rendering: pixelated;
+}
+
+.dune-status-bar {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  border-top: 1px solid var(--dune-border);
+  color: var(--text-bright);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  padding: 6px 12px;
+  pointer-events: none;
+}
+
+.dune-sidebar {
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.dune-sidebar .panel {
+  background: var(--dune-panel);
+  border-color: var(--dune-border);
+}
+
+.dune-sidebar .panel-title {
+  color: var(--dune-spice);
+  text-shadow: 0 0 6px rgba(217,108,46,0.5);
+}
+
+/* Build grid */
+.dune-build-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.dune-build-btn {
+  position: relative;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--dune-border);
+  color: var(--text-bright);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 8px 6px 22px 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.1s, border-color 0.1s, transform 0.05s;
+}
+
+.dune-build-btn:hover:not(:disabled) {
+  background: rgba(216,155,92,0.15);
+  border-color: var(--dune-spice);
+}
+
+.dune-build-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.dune-build-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dune-build-btn.locked {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.dune-build-btn.queued {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 6px rgba(0,245,255,0.4);
+}
+
+.dune-build-btn.ready {
+  border-color: var(--neon-green);
+  box-shadow: 0 0 8px rgba(0,255,136,0.5);
+  animation: dune-ready-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes dune-ready-pulse {
+  0%,100% { box-shadow: 0 0 6px rgba(0,255,136,0.5); }
+  50%     { box-shadow: 0 0 14px rgba(0,255,136,0.9); }
+}
+
+.dune-build-name {
+  display: block;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 1.2;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.dune-build-cost {
+  display: block;
+  color: var(--gold, #ffd060);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+}
+
+.dune-build-progress {
+  position: absolute;
+  left: 0; bottom: 0;
+  height: 4px;
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.dune-build-progress-bar {
+  height: 100%;
+  background: var(--neon-cyan);
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+.dune-build-status {
+  position: absolute;
+  left: 0; right: 0; bottom: 5px;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  color: var(--neon-cyan);
+  font-family: 'Orbitron', sans-serif;
+  text-align: center;
+  pointer-events: none;
+}
+
+.dune-build-status.ready { color: var(--neon-green); }
+
+/* Queue panel */
+.dune-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 110px;
+  overflow-y: auto;
+}
+
+.dune-queue-empty {
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 1px;
+  font-family: 'Orbitron', sans-serif;
+  text-align: center;
+  padding: 6px 0;
+}
+
+.dune-queue-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--dune-border);
+  padding: 5px 8px;
+  font-size: 11px;
+}
+
+.dune-queue-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.dune-queue-progress {
+  width: 70px;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.dune-queue-progress-bar {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: var(--neon-cyan);
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+.dune-queue-item.paused .dune-queue-progress-bar { background: var(--dune-spice); }
+.dune-queue-item.ready  .dune-queue-progress-bar { background: var(--neon-green); }
+
+.dune-queue-tag {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  font-family: 'Orbitron', sans-serif;
+}
+
+.dune-queue-item.paused .dune-queue-tag { color: var(--dune-spice); }
+.dune-queue-item.ready  .dune-queue-tag { color: var(--neon-green); }
+
+/* Speed buttons reuse the shared .speed-btn styles */
+
+/* Place hint */
+.dune-sidebar .place-hint {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 6px;
+  min-height: 14px;
+}
+
+/* Combat log */
+.dune-sidebar .log-box {
+  font-size: 11px;
+  max-height: 130px;
+  overflow-y: auto;
+}
+
+.dune-log-line {
+  padding: 2px 0;
+  color: var(--text-bright);
+  opacity: 0.85;
+}
+
+.dune-log-line.warn  { color: var(--dune-spice); }
+.dune-log-line.bad   { color: var(--dune-enemy); }
+.dune-log-line.good  { color: var(--neon-green); }
+
+/* Game over overlay */
+.dune-overlay {
+  background: rgba(0,0,0,0.85);
+}
+
+.dune-overlay .overlay-title {
+  color: var(--dune-spice-bright);
+  text-shadow: 0 0 18px var(--dune-spice);
+}
+
+.dune-overlay.defeat .overlay-title {
+  color: var(--dune-enemy);
+  text-shadow: 0 0 18px rgba(255,90,90,0.6);
+}
