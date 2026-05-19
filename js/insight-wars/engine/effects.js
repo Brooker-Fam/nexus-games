@@ -19,9 +19,25 @@ export function healHeroState(state, player, amount){
   };
 }
 
+export function checkWinCondition(state){
+  if(state.status === 'ended' || state.winner) return state;
+
+  const playerDefeated = state.players.player.hero.hp <= 0;
+  const aiDefeated = state.players.ai.hero.hp <= 0;
+
+  if(!playerDefeated && !aiDefeated) return state;
+
+  const winner = aiDefeated ? 'player' : 'ai';
+  return {
+    ...state,
+    status: 'ended',
+    winner,
+  };
+}
+
 export function damageHeroState(state, player, amount){
   const hero = state.players[player].hero;
-  return {
+  const damaged = {
     ...state,
     players: {
       ...state.players,
@@ -34,6 +50,8 @@ export function damageHeroState(state, player, amount){
       },
     },
   };
+
+  return checkWinCondition(damaged);
 }
 
 export function mapMinion(state, player, minionId, mapper){
