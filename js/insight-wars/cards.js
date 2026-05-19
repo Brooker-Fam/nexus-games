@@ -16,7 +16,6 @@
  * @property {string} emoji
  * @property {string} description
  * @property {CardType} type
- * @property {(state: GameState, owner: Owner) => GameState} resolve
  */
 
 /** @type {Record<string, number>} */
@@ -32,50 +31,24 @@ export const CARD_COSTS = Object.freeze({
   dashboard: 6,
 });
 
+export const CARD_EFFECTS = Object.freeze({
+  'feature-flag': Object.freeze({ stunTurns: 1 }),
+  'session-replay': Object.freeze({ revealAiHand: true }),
+  'ab-test': Object.freeze({ heroDamage: 5, heroHeal: 5 }),
+  funnel: Object.freeze({ enemyBoardDamage: 2 }),
+  cohort: Object.freeze({ attack: 2, hp: 4 }),
+  insight: Object.freeze({ drawCards: 2 }),
+  experiment: Object.freeze({ attack: 4, hp: 3 }),
+  heatmap: Object.freeze({ damage: 4 }),
+  dashboard: Object.freeze({ attack: 5, hp: 7 }),
+});
+
 /**
- * Stub resolver used by every card in the foundation pass. It pays the card's
- * mana cost and appends a log entry, but intentionally applies no gameplay
- * effect yet.
- *
  * @param {Card} card
- * @returns {(state: GameState, owner: Owner) => GameState}
- */
-function createStubResolver(card){
-  return (state, owner) => {
-    const side = state[owner];
-    if(side.currentMana < card.cost){
-      throw new Error(`${sideLabel(owner)} does not have enough mana for ${card.name}.`);
-    }
-
-    return {
-      ...state,
-      [owner]: {
-        ...side,
-        currentMana: side.currentMana - card.cost,
-      },
-      log: [
-        ...state.log,
-        `${sideLabel(owner)} played ${card.emoji} ${card.name}. Effect pending.`,
-      ],
-    };
-  };
-}
-
-/**
- * @param {Owner} owner
- */
-function sideLabel(owner){
-  return owner === 'player' ? 'Player' : 'AI';
-}
-
-/**
- * @param {Omit<Card, 'resolve'>} card
  * @returns {Card}
  */
 function defineCard(card){
-  const fullCard = /** @type {Card} */ ({ ...card, resolve: undefined });
-  fullCard.resolve = createStubResolver(fullCard);
-  return Object.freeze(fullCard);
+  return Object.freeze({ ...card });
 }
 
 /** @type {readonly Card[]} */
@@ -85,7 +58,7 @@ export const CARD_CATALOG = Object.freeze([
     name: 'Feature Flag',
     cost: CARD_COSTS['feature-flag'],
     emoji: '🚩',
-    description: 'Stub: toggle a rollout lever. Future effect will modify the next play.',
+    description: 'Stun an enemy minion for its next turn.',
     type: 'spell',
   }),
   defineCard({
@@ -93,7 +66,7 @@ export const CARD_CATALOG = Object.freeze([
     name: 'Session Replay',
     cost: CARD_COSTS['session-replay'],
     emoji: '🎥',
-    description: 'Stub: review the previous move. Future effect will reveal and copy information.',
+    description: 'Player: reveal the AI hand this turn. AI: no effect.',
     type: 'spell',
   }),
   defineCard({
@@ -101,15 +74,15 @@ export const CARD_CATALOG = Object.freeze([
     name: 'A/B Test',
     cost: CARD_COSTS['ab-test'],
     emoji: '🧪',
-    description: 'Stub minion: compare variants before shipping a stronger result.',
-    type: 'minion',
+    description: 'Randomly deal 5 damage to the enemy hero or heal your hero for 5.',
+    type: 'spell',
   }),
   defineCard({
     id: 'funnel',
     name: 'Funnel',
     cost: CARD_COSTS.funnel,
     emoji: '🔻',
-    description: 'Stub: pressure enemy conversion paths. Future effect will damage or filter targets.',
+    description: 'Deal 2 damage to each enemy minion.',
     type: 'spell',
   }),
   defineCard({
@@ -117,7 +90,7 @@ export const CARD_CATALOG = Object.freeze([
     name: 'Cohort',
     cost: CARD_COSTS.cohort,
     emoji: '👥',
-    description: 'Stub minion: gather matching users into a durable board presence.',
+    description: 'Summon a 2/4 minion.',
     type: 'minion',
   }),
   defineCard({
@@ -125,7 +98,7 @@ export const CARD_CATALOG = Object.freeze([
     name: 'Insight',
     cost: CARD_COSTS.insight,
     emoji: '💡',
-    description: 'Stub: turn evidence into advantage. Future effect will draw or discover cards.',
+    description: 'Draw 2 cards.',
     type: 'spell',
   }),
   defineCard({
@@ -133,7 +106,7 @@ export const CARD_CATALOG = Object.freeze([
     name: 'Experiment',
     cost: CARD_COSTS.experiment,
     emoji: '⚗️',
-    description: 'Stub minion: run a hypothesis on the board until results are significant.',
+    description: 'Summon a 4/3 minion.',
     type: 'minion',
   }),
   defineCard({
@@ -141,7 +114,7 @@ export const CARD_CATALOG = Object.freeze([
     name: 'Heatmap',
     cost: CARD_COSTS.heatmap,
     emoji: '🔥',
-    description: 'Stub: expose hot zones. Future effect will affect multiple enemies.',
+    description: 'Deal 4 damage to a target; defaults to the enemy hero.',
     type: 'spell',
   }),
   defineCard({
@@ -149,7 +122,7 @@ export const CARD_CATALOG = Object.freeze([
     name: 'Dashboard',
     cost: CARD_COSTS.dashboard,
     emoji: '📊',
-    description: 'Stub minion: consolidate metrics into a late-game threat.',
+    description: 'Summon a 5/7 minion.',
     type: 'minion',
   }),
 ]);

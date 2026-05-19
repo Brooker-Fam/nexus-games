@@ -13,6 +13,7 @@
  * @property {number} hp
  * @property {number} maxHp
  * @property {boolean} canAttack
+ * @property {boolean} [stunnedNextTurn]
  * @property {string} sourceCardId
  *
  * @typedef {object} SideState
@@ -30,6 +31,9 @@
  * @property {Owner} activePlayer
  * @property {GamePhase} phase
  * @property {string[]} log
+ * @property {number} nextMinionId
+ * @property {boolean} revealedAiHand
+ * @property {import('./rng.js').Rng} rng
  */
 
 /** @type {20} */

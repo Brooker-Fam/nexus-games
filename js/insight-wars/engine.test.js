@@ -30,7 +30,8 @@ test('new game initializes player, AI, opening hands, shuffled decks, and player
 });
 
 test('mana ramps with the turn number and caps at 10', () => {
-  for(const [turn, expectedMana] of [[1, 1], [5, 5], [10, 10], [11, 10], [15, 10]]){
+  for(const turn of Array.from({ length: 12 }, (_, index) => index + 1)){
+    const expectedMana = Math.min(turn, 10);
     const state = {
       player: createSide(buildStarterDeck({ rng: createSeededRng(`mana-${turn}`) })),
       ai: createSide(buildStarterDeck({ rng: createSeededRng(`ai-${turn}`) })),
