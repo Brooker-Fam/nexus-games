@@ -1,5 +1,19 @@
 import { HERO_MAX_HP, MAX_MANA } from './types.js';
-import { createDeck, drawCards, getCardDefinition } from './deck.js';
+import {
+  cardRequiresTarget,
+  createDeck,
+  drawCards,
+  getCardDefinition,
+  isValidCardTarget,
+} from './deck.js';
+import {
+  damageHeroState,
+  findMinion,
+  healHeroState,
+  isHeroTarget,
+  isMinionTarget,
+  removeDeadMinions,
+} from './effects.js';
 
 const OPENING_HAND_SIZE = 3;
 
@@ -19,6 +33,37 @@ function createPlayerState(deck){
   };
 }
 
+function clearEndOfTurnFlags(state, player){
+  return {
+    ...state,
+    players: {
+      ...state.players,
+      [player]: {
+        ...state.players[player],
+        board: state.players[player].board.map((minion) => ({
+          ...minion,
+          disabled: false,
+        })),
+      },
+    },
+  };
+}
+
+function markAttackerUsed(state, player, attackerId){
+  return {
+    ...state,
+    players: {
+      ...state.players,
+      [player]: {
+        ...state.players[player],
+        board: state.players[player].board.map((minion) => (
+          minion.id === attackerId ? { ...minion, hasAttacked: true } : minion
+        )),
+      },
+    },
+  };
+}
+
 export function createInitialState(options = {}){
   const rng = options.rng || Math.random;
   const player = drawCards(createPlayerState(createDeck(rng)), OPENING_HAND_SIZE);
@@ -31,6 +76,10 @@ export function createInitialState(options = {}){
     players: {
       player: { ...player, maxMana: 1, mana: 1 },
       ai,
+    },
+    revealedHands: {
+      ai: false,
+      player: false,
     },
     log: ['New game started. Player turn 1 begins with 1 event.'],
   };
@@ -50,7 +99,11 @@ export function startTurn(state, player){
         ...afterDraw,
         maxMana,
         mana: maxMana,
-        board: afterDraw.board.map((minion) => ({ ...minion, summoningSick: false })),
+        board: afterDraw.board.map((minion) => ({
+          ...minion,
+          summoningSick: false,
+          hasAttacked: false,
+        })),
       },
     },
     log: [...state.log, `${player === 'player' ? 'Player' : 'AI'} starts turn ${state.turnNumber}.`],
@@ -58,48 +111,27 @@ export function startTurn(state, player){
 }
 
 export function endTurn(state){
-  const nextPlayer = otherPlayer(state.activePlayer);
+  const endingPlayer = state.activePlayer;
+  const nextPlayer = otherPlayer(endingPlayer);
+  const clearedState = clearEndOfTurnFlags(state, endingPlayer);
   const nextState = {
-    ...state,
-    turnNumber: state.turnNumber + 1,
+    ...clearedState,
+    turnNumber: clearedState.turnNumber + 1,
     activePlayer: nextPlayer,
-    log: [...state.log, `${state.activePlayer === 'player' ? 'Player' : 'AI'} ended the turn.`],
+    revealedHands: endingPlayer === 'player'
+      ? { ...(clearedState.revealedHands || {}), ai: false }
+      : (clearedState.revealedHands || { ai: false, player: false }),
+    log: [...clearedState.log, `${endingPlayer === 'player' ? 'Player' : 'AI'} ended the turn.`],
   };
   return startTurn(nextState, nextPlayer);
 }
 
 export function healHero(state, player, amount){
-  const hero = state.players[player].hero;
-  return {
-    ...state,
-    players: {
-      ...state.players,
-      [player]: {
-        ...state.players[player],
-        hero: {
-          ...hero,
-          hp: Math.min(hero.maxHp, hero.hp + Math.max(0, amount)),
-        },
-      },
-    },
-  };
+  return healHeroState(state, player, amount);
 }
 
 export function damageHero(state, player, amount){
-  const hero = state.players[player].hero;
-  return {
-    ...state,
-    players: {
-      ...state.players,
-      [player]: {
-        ...state.players[player],
-        hero: {
-          ...hero,
-          hp: Math.max(0, hero.hp - Math.max(0, amount)),
-        },
-      },
-    },
-  };
+  return damageHeroState(state, player, amount);
 }
 
 export function playCard(state, player, cardId, target){
@@ -112,6 +144,8 @@ export function playCard(state, player, cardId, target){
 
   const definition = getCardDefinition(card.definitionKey);
   if(!definition) return state;
+
+  if(cardRequiresTarget(card) && !isValidCardTarget(state, player, card, target)) return state;
 
   const nextHand = [
     ...playerState.hand.slice(0, handIndex),
@@ -145,6 +179,62 @@ export function playCard(state, player, cardId, target){
     },
     log: [...workingState.log, `${player === 'player' ? 'Player' : 'AI'} played ${card.name}.`],
   };
+}
+
+export function attackWithMinion(state, player, attackerId, target){
+  if(state.activePlayer !== player) return state;
+
+  const attacker = findMinion(state, player, attackerId);
+  if(!attacker || attacker.summoningSick || attacker.disabled || attacker.hasAttacked) return state;
+
+  const enemy = otherPlayer(player);
+  if(isHeroTarget(target)){
+    if(target.player !== enemy) return state;
+
+    const damaged = damageHeroState(state, enemy, attacker.attack);
+    const marked = markAttackerUsed(damaged, player, attackerId);
+    return {
+      ...marked,
+      log: [...marked.log, `${attacker.name} attacked the ${enemy === 'ai' ? 'AI' : 'Player'} hero for ${attacker.attack}.`],
+    };
+  }
+
+  if(isMinionTarget(target)){
+    if(target.player !== enemy) return state;
+    const defender = findMinion(state, enemy, target.minionId);
+    if(!defender) return state;
+
+    const battled = {
+      ...state,
+      players: {
+        ...state.players,
+        [player]: {
+          ...state.players[player],
+          board: state.players[player].board.map((minion) => (
+            minion.id === attackerId
+              ? { ...minion, hp: minion.hp - defender.attack, hasAttacked: true }
+              : minion
+          )),
+        },
+        [enemy]: {
+          ...state.players[enemy],
+          board: state.players[enemy].board.map((minion) => (
+            minion.id === defender.id
+              ? { ...minion, hp: minion.hp - attacker.attack }
+              : minion
+          )),
+        },
+      },
+    };
+
+    const cleaned = removeDeadMinions(battled);
+    return {
+      ...cleaned,
+      log: [...cleaned.log, `${attacker.name} attacked ${defender.name}.`],
+    };
+  }
+
+  return state;
 }
 
 export { otherPlayer };

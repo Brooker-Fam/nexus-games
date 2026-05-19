@@ -1,4 +1,11 @@
-import { createInitialState, endTurn, playCard } from '../engine/index.js';
+import {
+  attackWithMinion,
+  cardRequiresTarget,
+  createInitialState,
+  endTurn,
+  isValidCardTarget,
+  playCard,
+} from '../engine/index.js';
 import { renderHeroPanel } from './HeroPanel.js';
 import { renderManaBar } from './ManaBar.js';
 import { renderEndTurnButton } from './EndTurnButton.js';
@@ -8,6 +15,8 @@ import { renderBoardView } from './BoardView.js';
 export function mountInsightWarsGame(root){
   let state = createInitialState();
   let aiTimer = null;
+  let pendingCardId = null;
+  let selectedAttackerId = null;
 
   function setState(nextState){
     state = nextState;
@@ -17,15 +26,69 @@ export function mountInsightWarsGame(root){
   function newGame(){
     if(aiTimer) clearTimeout(aiTimer);
     aiTimer = null;
+    pendingCardId = null;
+    selectedAttackerId = null;
     setState(createInitialState());
   }
 
   function endCurrentTurn(){
+    pendingCardId = null;
+    selectedAttackerId = null;
     setState(endTurn(state));
   }
 
+  function getPendingCard(){
+    if(!pendingCardId) return null;
+    return state.players.player.hand.find((card) => card.id === pendingCardId) || null;
+  }
+
   function playPlayerCard(cardId){
+    const card = state.players.player.hand.find((handCard) => handCard.id === cardId);
+    if(!card) return;
+
+    selectedAttackerId = null;
+    if(cardRequiresTarget(card)){
+      pendingCardId = pendingCardId === cardId ? null : cardId;
+      render();
+      return;
+    }
+
+    pendingCardId = null;
     setState(playCard(state, 'player', cardId));
+  }
+
+  function chooseTarget(target){
+    const pendingCard = getPendingCard();
+    if(pendingCard){
+      if(!isValidCardTarget(state, 'player', pendingCard, target)) return;
+      pendingCardId = null;
+      selectedAttackerId = null;
+      setState(playCard(state, 'player', pendingCard.id, target));
+      return;
+    }
+
+    if(!selectedAttackerId) return;
+    const nextState = attackWithMinion(state, 'player', selectedAttackerId, target);
+    selectedAttackerId = null;
+    setState(nextState);
+  }
+
+  function chooseAttacker(minionId){
+    if(state.activePlayer !== 'player') return;
+    const minion = state.players.player.board.find((boardMinion) => boardMinion.id === minionId);
+    if(!minion || minion.summoningSick || minion.disabled || minion.hasAttacked) return;
+
+    pendingCardId = null;
+    selectedAttackerId = selectedAttackerId === minionId ? null : minionId;
+    render();
+  }
+
+  function aiHandRevealMarkup(){
+    if(!state.revealedHands?.ai) return '';
+    const cards = state.players.ai.hand.length > 0
+      ? state.players.ai.hand.map((card) => `<span class="iw-revealed-card">${card.name}</span>`).join('')
+      : '<span class="iw-empty">AI hand is empty.</span>';
+    return `<div class="iw-revealed-hand"><strong>Session Replay:</strong> ${cards}</div>`;
   }
 
   function maybeRunAiPlaceholder(){
@@ -37,14 +100,41 @@ export function mountInsightWarsGame(root){
     aiTimer = setTimeout(() => setState(endTurn(state)), 450);
   }
 
+  function attachTargetHandlers(){
+    root.querySelectorAll('[data-iw-hero-owner]').forEach((hero) => {
+      hero.addEventListener('click', () => {
+        chooseTarget({ type: 'hero', player: hero.dataset.iwHeroOwner });
+      });
+    });
+
+    root.querySelectorAll('[data-iw-minion-id]').forEach((minionEl) => {
+      minionEl.addEventListener('click', () => {
+        const owner = minionEl.dataset.iwOwner;
+        const minionId = minionEl.dataset.iwMinionId;
+        if(owner === 'player' && !pendingCardId){
+          chooseAttacker(minionId);
+          return;
+        }
+        chooseTarget({ type: 'minion', player: owner, minionId });
+      });
+    });
+  }
+
   function render(){
     const activeLabel = state.activePlayer === 'player' ? 'Player turn' : 'AI placeholder turn';
+    const pendingCard = getPendingCard();
+    const prompt = pendingCard
+      ? `${pendingCard.name}: choose ${pendingCard.definitionKey === 'feature-flag' ? 'an enemy minion to disable' : 'a minion or hero to damage'}.`
+      : selectedAttackerId
+        ? 'Choose an enemy minion or the AI hero to attack.'
+        : 'Click a ready player minion to attack, or play a card.';
+
     root.innerHTML = `
       <div class="iw-shell">
         <div class="iw-title-wrap">
           <div class="iw-pre">SINGLE PLAYER CARD DUEL</div>
           <div class="game-title">INSIGHT <span>WARS</span></div>
-          <div class="iw-sub">Foundation scaffold: engine, deck, turn flow, and route entry only.</div>
+          <div class="iw-sub">Turn-based card combat with PostHog-inspired spells and minions.</div>
         </div>
 
         <div class="iw-topbar">
@@ -54,15 +144,16 @@ export function mountInsightWarsGame(root){
         </div>
 
         <div class="iw-hero-grid">
-          ${renderHeroPanel('AI Hero', state.players.ai.hero, 'iw-ai')}
+          ${renderHeroPanel('AI Hero', state.players.ai.hero, 'iw-ai', 'ai')}
           <div class="iw-center-panel">
             ${renderManaBar(state.players.player)}
-            <div class="iw-ai-note">AI does nothing yet and auto-ends its turn. TODO(next-hoglet): implement AI.</div>
+            <div class="iw-ai-note">${prompt}</div>
+            ${aiHandRevealMarkup()}
           </div>
-          ${renderHeroPanel('Player Hero', state.players.player.hero, 'iw-player')}
+          ${renderHeroPanel('Player Hero', state.players.player.hero, 'iw-player', 'player')}
         </div>
 
-        ${renderBoardView(state)}
+        ${renderBoardView(state, { selectedAttackerId })}
         <div id="iw-hand-slot"></div>
 
         <section class="panel iw-log-panel">
@@ -74,7 +165,8 @@ export function mountInsightWarsGame(root){
 
     root.querySelector('#iw-new-game').addEventListener('click', newGame);
     root.querySelector('#iw-end-turn').addEventListener('click', endCurrentTurn);
-    root.querySelector('#iw-hand-slot').appendChild(renderHandView({ state, onPlayCard: playPlayerCard }));
+    root.querySelector('#iw-hand-slot').appendChild(renderHandView({ state, onPlayCard: playPlayerCard, pendingCardId }));
+    attachTargetHandlers();
 
     maybeRunAiPlaceholder();
   }
