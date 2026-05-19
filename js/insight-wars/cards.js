@@ -6,7 +6,7 @@
  * - 2x Session Replay, A/B Test, Funnel, Cohort, Heatmap, Experiment
  *
  * @typedef {'feature-flag'|'session-replay'|'ab-test'|'funnel'|'cohort'|'insight'|'surveys'|'heatmap'|'experiment'} CardId
- * @typedef {'disableMinion'|'revealHand'|'coinFlip'|'aoeDamage'|'summon'|'draw'|'heal'|'damageTarget'} EffectType
+ * @typedef {'disableMinion'|'revealHand'|'summon'|'heal'|'damageTarget'} EffectType
  * @typedef {{ attack: number, hp: number, name: string }} SummonEffect
  * @typedef {{ amount?: number, heroDamage?: number, minionDamage?: number, summon?: SummonEffect }} CardEffect
  * @typedef {{ id: CardId, name: string, cost: number, effectType: EffectType, text: string, effect: CardEffect }} Card
@@ -34,33 +34,33 @@ export const CARDS = Object.freeze({
     id: 'ab-test',
     name: 'A/B Test',
     cost: 3,
-    effectType: 'coinFlip',
-    text: '50/50: deal 5 damage to the enemy hero OR heal your hero 5.',
-    effect: { amount: 5 },
+    effectType: 'summon',
+    text: 'Summon a 2/3 experiment variant.',
+    effect: { summon: { name: 'A/B Test Variant', attack: 2, hp: 3 } },
   }),
   funnel: Object.freeze({
     id: 'funnel',
     name: 'Funnel',
     cost: 4,
-    effectType: 'aoeDamage',
-    text: 'Deal 2 damage to the enemy hero and 1 damage to each enemy minion.',
-    effect: { heroDamage: 2, minionDamage: 1 },
+    effectType: 'summon',
+    text: 'Summon a 4/4 Funnel minion.',
+    effect: { summon: { name: 'Funnel', attack: 4, hp: 4 } },
   }),
   cohort: Object.freeze({
     id: 'cohort',
     name: 'Cohort',
     cost: 3,
     effectType: 'summon',
-    text: 'Summon a 2/3 Cohort minion.',
-    effect: { summon: { name: 'Cohort', attack: 2, hp: 3 } },
+    text: 'Summon a 3/2 Cohort minion.',
+    effect: { summon: { name: 'Cohort', attack: 3, hp: 2 } },
   }),
   insight: Object.freeze({
     id: 'insight',
     name: 'Insight',
     cost: 1,
-    effectType: 'draw',
-    text: 'Draw a card.',
-    effect: { amount: 1 },
+    effectType: 'damageTarget',
+    text: 'Deal 2 damage to an enemy target.',
+    effect: { amount: 2 },
   }),
   surveys: Object.freeze({
     id: 'surveys',
@@ -83,8 +83,8 @@ export const CARDS = Object.freeze({
     name: 'Experiment',
     cost: 5,
     effectType: 'summon',
-    text: 'Summon a 4/4 Experiment minion.',
-    effect: { summon: { name: 'Experiment', attack: 4, hp: 4 } },
+    text: 'Summon a 5/5 Experiment minion.',
+    effect: { summon: { name: 'Experiment', attack: 5, hp: 5 } },
   }),
 });
 

@@ -8,7 +8,7 @@
     "migrate": "node scripts/migrate.js",
     "build": "node scripts/generate-posthog-config.cjs && node scripts/generate-sourcemaps.cjs && node scripts/migrate.js",
     "dev": "node scripts/dev-server.js",
-    "test": "vitest run"
+    "test": "node --test js/insight-wars/*.test.js"
   },
   "dependencies": {
     "@better-auth/passkey": "^1.6.8",

@@ -13,7 +13,7 @@ export const OPENING_HAND_SIZE = 3;
  * @typedef {'hero'|'minion'} TargetType
  * @typedef {{ type: TargetType, owner: PlayerId, minionId?: string }} Target
  * @typedef {{ name: string, hp: number, maxHp: number }} Hero
- * @typedef {{ id: string, cardId: CardId, attack: number, hp: number, summonedOnTurn: number, disabledUntilTurn?: number }} Minion
+ * @typedef {{ id: string, cardId: CardId, attack: number, hp: number, summonedOnTurn: number, summonedThisTurn: boolean, disabledUntilTurn?: number }} Minion
  * @typedef {{ current: number, max: number }} ManaPool
  * @typedef {{
  *   heroes: { player: Hero, ai: Hero },
@@ -162,10 +162,14 @@ export function drawCard(state, player, count = 1){
 export function startTurn(state){
   if(state.phase !== 'playing') return state;
   state.turn += 1;
+  clearStartOfTurnStatuses(state, state.activePlayer);
   const mana = manaFor(state, state.activePlayer);
   mana.max = Math.min(MAX_MANA, mana.max + 1);
   mana.current = mana.max;
   drawCard(state, state.activePlayer);
+  if(state.activePlayer === 'player' && state.aiHandRevealedUntilTurn && state.aiHandRevealedUntilTurn < state.turn){
+    delete state.aiHandRevealedUntilTurn;
+  }
   checkWin(state);
   return state;
 }
@@ -208,10 +212,25 @@ export function summonMinion(state, owner, cardId, attack, hp){
     attack,
     hp,
     summonedOnTurn: state.turn,
+    summonedThisTurn: true,
   };
   state.nextMinionId += 1;
   state.boards[owner].push(minion);
   return minion;
+}
+
+/**
+ * Clear statuses that expire as a player's turn begins.
+ * @param {GameState} state
+ * @param {PlayerId} player
+ */
+export function clearStartOfTurnStatuses(state, player){
+  state.boards[player].forEach((minion) => {
+    minion.summonedThisTurn = false;
+    if(minion.disabledUntilTurn && minion.disabledUntilTurn < state.turn){
+      delete minion.disabledUntilTurn;
+    }
+  });
 }
 
 /**
@@ -231,7 +250,7 @@ function removeFirstCardFromHand(state, player, card){
 }
 
 /**
- * Data-driven resolver foundation. Effects marked TODO are playable now but need fuller target/UI behavior later.
+ * Data-driven resolver for all Insight Wars cards.
  * @param {GameState} state
  * @param {Card} card
  * @param {PlayerId} caster
@@ -251,79 +270,148 @@ export function resolveCard(state, card, caster, target){
   mana.current -= card.cost;
   removeFirstCardFromHand(state, caster, card);
 
-  const opponent = opponentOf(caster);
-  switch(card.effectType){
-    case 'summon': {
-      const summon = card.effect.summon;
-      if(summon){
-        summonMinion(state, caster, card.id, summon.attack, summon.hp);
-        state.log.push(`${card.name} summoned a ${summon.attack}/${summon.hp}.`);
-      }
-      break;
-    }
-    case 'heal': {
-      healHero(state, caster, card.effect.amount || 0);
-      state.log.push(`${card.name} healed ${caster === 'player' ? 'you' : 'AI'} for ${card.effect.amount || 0}.`);
-      break;
-    }
-    case 'draw': {
-      drawCard(state, caster, card.effect.amount || 1);
-      state.log.push(`${card.name} drew a card.`);
-      break;
-    }
-    case 'aoeDamage': {
-      damageHero(state, opponent, card.effect.heroDamage || 0);
-      state.boards[opponent].forEach((minion) => { minion.hp -= card.effect.minionDamage || 0; });
-      removeDeadMinions(state);
-      state.log.push(`${card.name} pushed damage through the enemy funnel.`);
-      break;
-    }
-    case 'coinFlip': {
-      // TODO(insight-wars): expose the coin-flip result in polished UI and AI planning.
-      if(randomFromState(state) < 0.5){
-        damageHero(state, opponent, card.effect.amount || 0);
-        state.log.push(`${card.name} variant A dealt ${card.effect.amount || 0} damage.`);
-      } else {
-        healHero(state, caster, card.effect.amount || 0);
-        state.log.push(`${card.name} variant B healed ${card.effect.amount || 0}.`);
-      }
-      break;
-    }
-    case 'revealHand': {
-      // TODO(insight-wars): the current skeleton reveals hand text only for the player; AI usage remains a no-op.
-      if(caster === 'player'){
-        state.aiHandRevealedUntilTurn = state.turn + (card.effect.amount || 1);
-        state.log.push(`${card.name} revealed the AI hand.`);
-      } else {
-        state.log.push(`${card.name} has no AI effect yet.`);
-      }
-      break;
-    }
-    case 'disableMinion': {
-      // TODO(insight-wars): add proper target selection UI. Without a target, disable the first enemy minion.
-      const targetMinion = findTargetMinion(state, target) || state.boards[opponent][0];
-      if(targetMinion){
-        targetMinion.disabledUntilTurn = state.turn + 1;
-        state.log.push(`${card.name} disabled an enemy minion next turn.`);
-      } else {
-        state.log.push(`${card.name} found no minion to disable.`);
-      }
-      break;
-    }
-    case 'damageTarget': {
-      // TODO(insight-wars): player target picking is rudimentary; UI currently defaults to enemy hero unless a target is supplied.
-      const actualTarget = target || { type: 'hero', owner: opponent };
-      damageTarget(state, actualTarget, card.effect.amount || 0);
-      state.log.push(`${card.name} dealt ${card.effect.amount || 0} damage.`);
-      break;
-    }
-    default:
-      state.log.push(`${card.name} resolved with no effect.`);
-  }
+  const resolver = CARD_RESOLVERS[card.id];
+  if(resolver) resolver(state, card, caster, target);
+  else state.log.push(`${card.name} resolved with no effect.`);
 
   checkWin(state);
   return { ok: true };
 }
+
+/**
+ * @param {GameState} state
+ * @param {Card} card
+ * @param {PlayerId} caster
+ * @param {Target=} target
+ */
+export function resolveFeatureFlag(state, card, caster, target){
+  const opponent = opponentOf(caster);
+  const targetedMinion = target?.type === 'minion' && target.owner === opponent ? findTargetMinion(state, target) : undefined;
+  const targetMinion = targetedMinion || state.boards[opponent][0];
+  if(targetMinion){
+    targetMinion.disabledUntilTurn = state.turn + 1;
+    state.log.push(`${card.name} disabled an enemy minion next turn.`);
+  } else {
+    state.log.push(`${card.name} found no enemy minion to disable.`);
+  }
+}
+
+/**
+ * Player-cast Session Replay reveals the AI hand until the start of the player's next turn.
+ * AI-cast Session Replay intentionally spends mana and resolves as a no-op.
+ * @param {GameState} state
+ * @param {Card} card
+ * @param {PlayerId} caster
+ */
+export function resolveSessionReplay(state, card, caster){
+  if(caster === 'player'){
+    state.aiHandRevealedUntilTurn = state.turn + (card.effect.amount || 1);
+    state.log.push(`${card.name} revealed the AI hand.`);
+  } else {
+    state.log.push(`${card.name} is an intentional no-op for AI.`);
+  }
+}
+
+/**
+ * @param {GameState} state
+ * @param {Card} card
+ * @param {PlayerId} caster
+ */
+export function resolveSummonCard(state, card, caster){
+  const summon = card.effect.summon;
+  if(!summon){
+    state.log.push(`${card.name} had no minion to summon.`);
+    return;
+  }
+  const minion = summonMinion(state, caster, card.id, summon.attack, summon.hp);
+  if(minion) state.log.push(`${card.name} summoned a ${summon.attack}/${summon.hp}.`);
+}
+
+/**
+ * @param {GameState} state
+ * @param {Card} card
+ * @param {PlayerId} caster
+ */
+export function resolveAbTest(state, card, caster){
+  resolveSummonCard(state, card, caster);
+}
+
+/**
+ * @param {GameState} state
+ * @param {Card} card
+ * @param {PlayerId} caster
+ */
+export function resolveFunnel(state, card, caster){
+  resolveSummonCard(state, card, caster);
+}
+
+/**
+ * @param {GameState} state
+ * @param {Card} card
+ * @param {PlayerId} caster
+ */
+export function resolveCohort(state, card, caster){
+  resolveSummonCard(state, card, caster);
+}
+
+/**
+ * @param {GameState} state
+ * @param {Card} card
+ * @param {PlayerId} caster
+ */
+export function resolveSurveys(state, card, caster){
+  healHero(state, caster, card.effect.amount || 0);
+  state.log.push(`${card.name} healed ${caster === 'player' ? 'you' : 'AI'} for ${card.effect.amount || 0}.`);
+}
+
+/**
+ * Insight can only damage the enemy hero or an enemy minion; without a supplied target it defaults to the enemy hero.
+ * @param {GameState} state
+ * @param {Card} card
+ * @param {PlayerId} caster
+ * @param {Target=} target
+ */
+export function resolveInsight(state, card, caster, target){
+  const opponent = opponentOf(caster);
+  const actualTarget = target && target.owner === opponent ? target : { type: 'hero', owner: opponent };
+  damageTarget(state, actualTarget, card.effect.amount || 0);
+  state.log.push(`${card.name} dealt ${card.effect.amount || 0} damage.`);
+}
+
+/**
+ * Heatmap damages any target; AI defaults to the player hero when no target is supplied.
+ * @param {GameState} state
+ * @param {Card} card
+ * @param {PlayerId} caster
+ * @param {Target=} target
+ */
+export function resolveHeatmap(state, card, caster, target){
+  const actualTarget = target || { type: 'hero', owner: opponentOf(caster) };
+  damageTarget(state, actualTarget, card.effect.amount || 0);
+  state.log.push(`${card.name} dealt ${card.effect.amount || 0} damage.`);
+}
+
+/**
+ * @param {GameState} state
+ * @param {Card} card
+ * @param {PlayerId} caster
+ */
+export function resolveExperiment(state, card, caster){
+  resolveSummonCard(state, card, caster);
+}
+
+/** @type {Record<CardId, (state: GameState, card: Card, caster: PlayerId, target?: Target) => void>} */
+export const CARD_RESOLVERS = Object.freeze({
+  'feature-flag': resolveFeatureFlag,
+  'session-replay': resolveSessionReplay,
+  'ab-test': resolveAbTest,
+  funnel: resolveFunnel,
+  cohort: resolveCohort,
+  insight: resolveInsight,
+  surveys: resolveSurveys,
+  heatmap: resolveHeatmap,
+  experiment: resolveExperiment,
+});
 
 /**
  * @param {GameState} state
@@ -390,6 +478,7 @@ export function removeDeadMinions(state){
  */
 export function canMinionAttack(state, minion){
   if(state.phase !== 'playing') return false;
+  if(minion.summonedThisTurn) return false;
   if(minion.summonedOnTurn >= state.turn) return false;
   if(minion.disabledUntilTurn && minion.disabledUntilTurn >= state.turn) return false;
   return true;

@@ -18,6 +18,8 @@ Run tests with:
 
 ```bash
 npm test
+# or directly:
+node --test js/insight-wars/*.test.js
 ```
 
 ## Renderer and repo fit
@@ -29,9 +31,11 @@ This repo is a vanilla JavaScript/Vercel app, not React/Vite. Existing games are
 - Heroes: player and AI start at 20 HP.
 - Opening hand size: 3 cards per side.
 - Mana: player starts at 1/1; each started turn ramps max mana by 1, capped at 10, then refills.
-- Board cap: 7 minions per side. Summons beyond the cap are rejected gracefully and the card still resolves/spends mana in this foundation.
+- Board cap: 7 minions per side. Summons beyond the cap fizzle gracefully and the card still resolves/spends mana.
 - Empty deck: drawing from an empty deck does nothing. Fatigue damage is out of scope.
 - AI: placeholder only; it currently ends its turn without playing cards.
+- Summoning sickness: minions created during a turn cannot attack until the start of their owner's next turn.
+- Session Replay: player-cast reveals the AI hand through the AI's next turn; AI-cast intentionally spends events and does nothing.
 
 ## Deck composition
 
@@ -51,24 +55,23 @@ Both players use the same deterministic 21-card deck list before shuffling:
 
 ## Card definitions
 
-| Card | Cost | Foundation effect text |
+| Card | Cost | Implemented effect text |
 | --- | ---: | --- |
 | Feature Flag | 1 | Disable one enemy minion next turn. |
 | Session Replay | 2 | Reveal AI hand for 1 turn when played by the player; no-op for AI. |
-| A/B Test | 3 | 50/50: deal 5 damage to enemy hero OR heal own hero 5. |
-| Funnel | 4 | Deal 2 damage to enemy hero + 1 damage to each enemy minion. |
-| Cohort | 3 | Summon a 2/3 Cohort minion. |
-| Insight | 1 | Draw a card. |
+| A/B Test | 3 | Summon a 2/3 A/B Test Variant minion. |
+| Funnel | 4 | Summon a 4/4 Funnel minion. |
+| Cohort | 3 | Summon a 3/2 Cohort minion. |
+| Insight | 1 | Deal 2 damage to an enemy hero or enemy minion. |
 | Surveys | 2 | Heal own hero 4, capped at 20. |
 | Heatmap | 3 | Deal 3 damage to a target; AI auto-targets enemy hero. |
-| Experiment | 5 | Summon a 4/4 Experiment minion. |
+| Experiment | 5 | Summon a 5/5 Experiment minion. |
 
 ## Follow-up TODOs
 
 Search for `TODO(insight-wars)` in `gameState.js` and `ui.js`. Known extension points:
 
 - Replace the placeholder AI turn with greedy card play and attacks.
-- Add complete target-picking UI for Feature Flag and Heatmap.
-- Improve Session Replay presentation and AI behavior.
-- Polish A/B Test result messaging and animation.
+- Add complete target-picking UI for Feature Flag, Insight, and Heatmap.
+- Improve Session Replay presentation.
 - Add once-per-turn attack tracking if desired by the final ruleset.
