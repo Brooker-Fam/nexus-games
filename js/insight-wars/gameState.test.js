@@ -17,8 +17,8 @@ describe('Insight Wars game state', () => {
     const state = createInitialState(1234);
     const sameSeed = createInitialState(1234);
 
-    expect(state.heroes.player).toEqual({ name: 'Analyst', hp: HERO_MAX_HP, maxHp: HERO_MAX_HP });
-    expect(state.heroes.ai).toEqual({ name: 'HogBot', hp: HERO_MAX_HP, maxHp: HERO_MAX_HP });
+    expect(state.heroes.player).toEqual({ name: 'Max', hp: HERO_MAX_HP, maxHp: HERO_MAX_HP });
+    expect(state.heroes.ai).toEqual({ name: 'Dark Funnel PM', hp: HERO_MAX_HP, maxHp: HERO_MAX_HP });
     expect(state.boards.player).toEqual([]);
     expect(state.boards.ai).toEqual([]);
     expect(state.hands.player).toHaveLength(OPENING_HAND_SIZE);
@@ -46,14 +46,22 @@ describe('Insight Wars game state', () => {
 
   it('sets phase to won or lost when a hero reaches 0 HP', () => {
     const wonState = createInitialState(2);
-    wonState.heroes.ai.hp = 0;
-    checkWin(wonState);
-    expect(wonState.phase).toBe('won');
+    wonState.heroes.ai.hp = -3;
+    expect(checkWin(wonState).phase).toBe('won');
+    expect(wonState.heroes.ai.hp).toBe(0);
 
     const lostState = createInitialState(3);
-    lostState.heroes.player.hp = 0;
-    checkWin(lostState);
-    expect(lostState.phase).toBe('lost');
+    lostState.heroes.player.hp = -2;
+    expect(checkWin(lostState).phase).toBe('lost');
+    expect(lostState.heroes.player.hp).toBe(0);
+  });
+
+  it('keeps the match playing when both heroes still have HP', () => {
+    const state = createInitialState(33);
+    state.heroes.player.hp = 1;
+    state.heroes.ai.hp = 1;
+
+    expect(checkWin(state).phase).toBe('playing');
   });
 
   it('prevents minions from attacking on the turn they were summoned', () => {

@@ -58,16 +58,34 @@ function visibleAiHand(game){
   return `${game.hands.ai.length} hidden card${game.hands.ai.length === 1 ? '' : 's'}`;
 }
 
+function clampHp(hero){
+  return Math.max(0, Math.min(hero.maxHp, hero.hp));
+}
+
+function renderHpPill(owner){
+  const game = ensureState();
+  const hero = game.heroes[owner];
+  const isAi = owner === 'ai';
+  return `
+    <div class="iw-hp-pill ${isAi ? 'ai' : 'player'}" aria-label="${isAi ? 'AI' : 'Player'} HP">
+      <span>${isAi ? 'Dark Funnel PM' : 'Max'}</span>
+      <strong>❤️ ${clampHp(hero)}/${hero.maxHp}</strong>
+    </div>
+  `;
+}
+
 function renderHero(owner){
   const game = ensureState();
   const hero = game.heroes[owner];
   const isAi = owner === 'ai';
-  const attackable = isAi && selectedMinionId && game.activePlayer === 'player';
+  const attackable = isAi && selectedMinionId && game.phase === 'playing' && game.activePlayer === 'player';
+  const hpPercent = Math.max(0, Math.min(100, (clampHp(hero) / hero.maxHp) * 100));
   return `
     <button class="iw-hero ${isAi ? 'ai' : 'player'} ${attackable ? 'targetable' : ''}" data-owner="${owner}" data-hero-target="${owner}" ${attackable ? '' : 'disabled'}>
       <span class="iw-hero-label">${isAi ? 'AI' : 'You'}</span>
       <strong>${hero.name}</strong>
-      <span>❤️ ${hero.hp}/${hero.maxHp}</span>
+      <span class="iw-hero-hp">❤️ ${clampHp(hero)}/${hero.maxHp}</span>
+      <span class="iw-hp-meter" aria-hidden="true"><span style="width: ${hpPercent}%"></span></span>
     </button>
   `;
 }
@@ -81,13 +99,14 @@ function renderBoard(owner){
   }
 
   return minions.map((minion) => {
-    const canAttack = isPlayer && game.activePlayer === 'player' && canMinionAttack(game, minion);
+    const canAttack = isPlayer && game.phase === 'playing' && game.activePlayer === 'player' && canMinionAttack(game, minion);
     const isSelected = selectedMinionId === minion.id;
-    const targetable = !isPlayer && selectedMinionId;
+    const targetable = !isPlayer && game.phase === 'playing' && selectedMinionId;
     const status = minion.disabledUntilTurn && minion.disabledUntilTurn >= game.turn ? '<span class="iw-status">disabled</span>' : '';
+    const disabled = game.phase !== 'playing' || (isPlayer ? game.activePlayer !== 'player' : !targetable);
     return `
       <button class="iw-minion ${isPlayer ? 'player' : 'ai'} ${canAttack ? 'can-attack' : ''} ${isSelected ? 'selected' : ''} ${targetable ? 'targetable' : ''}"
-        data-minion-id="${minion.id}" data-owner="${owner}">
+        data-minion-id="${minion.id}" data-owner="${owner}" ${disabled ? 'disabled' : ''}>
         <span class="iw-minion-name">${minionName(minion)}</span>
         <span class="iw-minion-stats">⚔ ${minion.attack} · ❤️ ${minion.hp}</span>
         ${status}
@@ -101,8 +120,9 @@ function renderHand(){
   const mana = manaFor(game, 'player');
   return game.hands.player.map((card, index) => {
     const playable = game.phase === 'playing' && game.activePlayer === 'player' && mana.current >= card.cost;
+    const disabled = game.phase !== 'playing' || game.activePlayer !== 'player';
     return `
-      <button class="iw-card ${playable ? 'playable' : ''}" data-card-index="${index}">
+      <button class="iw-card ${playable ? 'playable' : ''}" data-card-index="${index}" ${disabled ? 'disabled' : ''}>
         <span class="iw-card-cost">${card.cost}</span>
         <span class="iw-card-emoji">${cardEmoji(card)}</span>
         <strong>${card.name}</strong>
@@ -117,10 +137,9 @@ function renderOverlay(){
   if(game.phase === 'playing') return '';
   const won = game.phase === 'won';
   return `
-    <div class="iw-overlay">
-      <div class="iw-overlay-card">
-        <div class="iw-overlay-title">${won ? 'Victory!' : 'Defeat'}</div>
-        <p>${won ? 'Your insights outmaneuvered HogBot.' : 'HogBot optimized the battlefield.'}</p>
+    <div class="iw-overlay" role="dialog" aria-modal="true" aria-labelledby="iw-end-title">
+      <div class="iw-overlay-card ${won ? 'won' : 'lost'}">
+        <div id="iw-end-title" class="iw-overlay-title">${won ? 'You won! Max defeated Dark Funnel PM.' : 'You lost. Dark Funnel PM wins this funnel.'}</div>
         <button class="iw-primary" data-action="new-game">New Game</button>
       </div>
     </div>
@@ -131,9 +150,10 @@ export function renderInsightWars(){
   const root = byId(rootId);
   if(!root) return;
   const game = ensureState();
-  const mana = manaFor(game, 'player');
+  const activeMana = manaFor(game, game.activePlayer);
+  const isPlayerTurn = game.phase === 'playing' && game.activePlayer === 'player';
   root.innerHTML = `
-    <section class="iw-shell">
+    <section class="iw-shell ${game.phase !== 'playing' ? 'game-over' : ''}">
       <div class="iw-topline">
         <div>
           <div class="iw-kicker">Single-player card prototype</div>
@@ -141,14 +161,16 @@ export function renderInsightWars(){
         </div>
         <div class="iw-actions">
           <button class="iw-secondary" data-action="new-game">New Game</button>
-          <button class="iw-primary" data-action="end-turn" ${game.phase !== 'playing' || game.activePlayer !== 'player' ? 'disabled' : ''}>End Turn</button>
+          <button class="iw-primary" data-action="end-turn" ${isPlayerTurn ? '' : 'disabled'}>End Turn</button>
         </div>
       </div>
 
       <div class="iw-statusbar">
-        <div>Turn <strong>${game.turn}</strong></div>
-        <div>Active: <strong>${game.activePlayer === 'player' ? 'Player' : 'AI'}</strong></div>
-        <div>Mana: <strong>${mana.current}/${mana.max}</strong></div>
+        ${renderHpPill('player')}
+        ${renderHpPill('ai')}
+        <div class="iw-status-item">Turn <strong>${game.turn}</strong></div>
+        <div class="iw-status-item">Active: <strong>${game.activePlayer === 'player' ? 'Player' : 'AI'}</strong></div>
+        <div class="iw-status-item">Mana/events: <strong>${activeMana.current}/${activeMana.max}</strong></div>
         <div>AI hand: <strong>${visibleAiHand(game)}</strong></div>
       </div>
 
@@ -194,6 +216,7 @@ function takeAiTurn(){
 
 function handleEndTurn(){
   const game = ensureState();
+  if(game.phase !== 'playing' || game.activePlayer !== 'player') return;
   selectedMinionId = null;
   endTurn(game);
   startTurn(game);
@@ -217,6 +240,11 @@ function handleClick(event){
     renderInsightWars();
     return;
   }
+
+  if(game.phase !== 'playing'){
+    return;
+  }
+
   if(action === 'end-turn'){
     handleEndTurn();
     return;

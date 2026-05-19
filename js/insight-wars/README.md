@@ -1,6 +1,6 @@
-# Insight Wars foundation
+# Insight Wars
 
-Insight Wars is a single-player, turn-based card game skeleton for Nexus Games. This foundation PR sets up the game directory, deterministic state helpers, cards, an MVP tab UI, and unit tests so follow-up hoglets can add complete card effects, AI, UI polish, and broader coverage.
+Insight Wars is a single-player, turn-based card game for Nexus Games. Max battles Dark Funnel PM using PostHog-flavored cards, deterministic state helpers, and a vanilla JavaScript renderer mounted into the existing Nexus Games tab UI.
 
 ## How to run
 
@@ -26,12 +26,22 @@ This repo is a vanilla JavaScript/Vercel app, not React/Vite. Existing games are
 
 ## Starting rules
 
-- Heroes: player and AI start at 20 HP.
+- Click **New Game** in the header at any time to start over. This resets both heroes to 20 HP, reshuffles both decks, redraws opening hands, clears boards, and returns the match to turn 1 with 1/1 mana.
+- Heroes: Max (player) and Dark Funnel PM (AI) start at 20 HP.
 - Opening hand size: 3 cards per side.
-- Mana: player starts at 1/1; each started turn ramps max mana by 1, capped at 10, then refills.
+- Draw-per-turn: the active player draws 1 card at the start of each turn after the opening hands are dealt.
+- Mana/events: player starts at 1/1; each started turn ramps max mana by 1, capped at 10, then refills. The UI shows the active player's `current/max` counter.
 - Board cap: 7 minions per side. Summons beyond the cap are rejected gracefully and the card still resolves/spends mana in this foundation.
 - Empty deck: drawing from an empty deck does nothing. Fatigue damage is out of scope.
 - AI: placeholder only; it currently ends its turn without playing cards.
+
+## Match UI and end screens
+
+- Persistent status counters show Max HP, Dark Funnel PM HP, turn number, active side, active-side mana/events, and AI hand visibility.
+- The **End Turn** button is enabled only during the player's turn. It remains visible but disabled during the AI turn and after the match ends.
+- When Dark Funnel PM reaches 0 HP, interactions are blocked and a victory overlay appears: **"You won! Max defeated Dark Funnel PM."**
+- When Max reaches 0 HP, interactions are blocked and a defeat overlay appears: **"You lost. Dark Funnel PM wins this funnel."**
+- The overlay **New Game** button fully resets state and dismisses the end screen.
 
 ## Deck composition
 

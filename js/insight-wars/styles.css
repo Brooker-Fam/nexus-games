@@ -61,11 +61,37 @@
 .iw-statusbar {
   flex-wrap: wrap;
   justify-content: space-between;
+  align-items: center;
   padding: 12px 14px;
   margin-bottom: 18px;
   border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.04);
   color: #d8d8d8;
+}
+
+.iw-status-item,
+.iw-hp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iw-hp-pill {
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(10, 12, 18, 0.58);
+  white-space: nowrap;
+}
+
+.iw-hp-pill.player {
+  border-color: rgba(255, 204, 51, 0.45);
+  color: #ffcc33;
+}
+
+.iw-hp-pill.ai {
+  border-color: rgba(170, 180, 196, 0.32);
+  color: #c7ceda;
 }
 
 .iw-battlefield {
@@ -118,6 +144,23 @@
 .iw-hero.player { border-color: rgba(255, 204, 51, 0.38); }
 .iw-hero.ai { border-color: rgba(170, 180, 196, 0.28); }
 .iw-hero-label, .iw-section-title { color: #9aa3b2; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.16em; }
+.iw-hero-hp { font-weight: 800; color: #ffcc33; }
+.iw-hero.ai .iw-hero-hp { color: #c7ceda; }
+.iw-hp-meter {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+}
+.iw-hp-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff8800, #ffcc33);
+}
+.iw-hero.ai .iw-hp-meter span {
+  background: linear-gradient(90deg, #6d7483, #b8beca);
+}
 
 .iw-board {
   flex: 1;
@@ -166,6 +209,12 @@
 
 .iw-card.playable { border-color: rgba(255, 204, 51, 0.55); }
 .iw-card:hover { transform: translateY(-3px); }
+.iw-card:disabled,
+.iw-minion:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+.iw-card:disabled:hover { transform: none; }
 .iw-card-cost {
   position: absolute;
   top: 8px;
@@ -214,6 +263,7 @@
   place-items: center;
   background: rgba(0,0,0,0.68);
   z-index: 3;
+  pointer-events: auto;
 }
 .iw-overlay-card {
   width: min(420px, 90vw);
@@ -222,11 +272,20 @@
   border: 1px solid rgba(255, 204, 51, 0.45);
   border-radius: 18px;
   background: #10131c;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 36px rgba(255, 136, 0, 0.16);
 }
+.iw-overlay-card.lost { border-color: rgba(170, 180, 196, 0.45); }
 .iw-overlay-title {
   color: #ffcc33;
   font-family: Orbitron, sans-serif;
   font-size: 2rem;
+  line-height: 1.15;
+  margin-bottom: 18px;
+}
+.iw-overlay-card.lost .iw-overlay-title { color: #d4d8e0; }
+.iw-shell.game-over .iw-battlefield,
+.iw-shell.game-over .iw-hand-wrap {
+  filter: grayscale(0.25);
 }
 
 @media (max-width: 800px) {

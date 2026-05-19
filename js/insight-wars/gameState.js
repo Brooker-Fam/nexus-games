@@ -115,8 +115,8 @@ export function createInitialState(seed = Date.now()){
   /** @type {GameState} */
   const state = {
     heroes: {
-      player: { name: 'Analyst', hp: HERO_MAX_HP, maxHp: HERO_MAX_HP },
-      ai: { name: 'HogBot', hp: HERO_MAX_HP, maxHp: HERO_MAX_HP },
+      player: { name: 'Max', hp: HERO_MAX_HP, maxHp: HERO_MAX_HP },
+      ai: { name: 'Dark Funnel PM', hp: HERO_MAX_HP, maxHp: HERO_MAX_HP },
     },
     boards: { player: [], ai: [] },
     hands: { player: [], ai: [] },
@@ -430,10 +430,10 @@ export function attackTarget(state, attackerId, target){
  */
 export function checkWin(state){
   if(state.heroes.ai.hp <= 0){
-    state.heroes.ai.hp = Math.min(state.heroes.ai.hp, 0);
+    state.heroes.ai.hp = 0;
     state.phase = 'won';
   } else if(state.heroes.player.hp <= 0){
-    state.heroes.player.hp = Math.min(state.heroes.player.hp, 0);
+    state.heroes.player.hp = 0;
     state.phase = 'lost';
   }
   return state;
