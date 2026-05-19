@@ -1,5 +1,6 @@
 import {
   attackWithMinion,
+  canMinionAttack,
   cardRequiresTarget,
   createInitialState,
   endTurn,
@@ -14,9 +15,12 @@ import { renderBoardView } from './BoardView.js';
 
 export function mountInsightWarsGame(root){
   let state = createInitialState();
-  let aiTimer = null;
   let pendingCardId = null;
   let selectedAttackerId = null;
+
+  function isGameOver(){
+    return state.status === 'ended' || Boolean(state.winner);
+  }
 
   function setState(nextState){
     state = nextState;
@@ -24,14 +28,14 @@ export function mountInsightWarsGame(root){
   }
 
   function newGame(){
-    if(aiTimer) clearTimeout(aiTimer);
-    aiTimer = null;
     pendingCardId = null;
     selectedAttackerId = null;
+    if(location.pathname !== '/insight-wars') history.pushState({ game: 'insight-wars' }, '', '/insight-wars');
     setState(createInitialState());
   }
 
   function endCurrentTurn(){
+    if(isGameOver()) return;
     pendingCardId = null;
     selectedAttackerId = null;
     setState(endTurn(state));
@@ -43,6 +47,8 @@ export function mountInsightWarsGame(root){
   }
 
   function playPlayerCard(cardId){
+    if(isGameOver()) return;
+
     const card = state.players.player.hand.find((handCard) => handCard.id === cardId);
     if(!card) return;
 
@@ -58,6 +64,8 @@ export function mountInsightWarsGame(root){
   }
 
   function chooseTarget(target){
+    if(isGameOver()) return;
+
     const pendingCard = getPendingCard();
     if(pendingCard){
       if(!isValidCardTarget(state, 'player', pendingCard, target)) return;
@@ -74,9 +82,10 @@ export function mountInsightWarsGame(root){
   }
 
   function chooseAttacker(minionId){
+    if(isGameOver()) return;
     if(state.activePlayer !== 'player') return;
     const minion = state.players.player.board.find((boardMinion) => boardMinion.id === minionId);
-    if(!minion || minion.summoningSick || minion.disabled || minion.hasAttacked) return;
+    if(!minion || !canMinionAttack(state, 'player', minion)) return;
 
     pendingCardId = null;
     selectedAttackerId = selectedAttackerId === minionId ? null : minionId;
@@ -91,16 +100,9 @@ export function mountInsightWarsGame(root){
     return `<div class="iw-revealed-hand"><strong>Session Replay:</strong> ${cards}</div>`;
   }
 
-  function maybeRunAiPlaceholder(){
-    if(aiTimer) clearTimeout(aiTimer);
-    aiTimer = null;
-    if(state.activePlayer !== 'ai') return;
-
-    // TODO(next-hoglet): Replace this one-line placeholder with a real AI controller.
-    aiTimer = setTimeout(() => setState(endTurn(state)), 450);
-  }
-
   function attachTargetHandlers(){
+    if(isGameOver()) return;
+
     root.querySelectorAll('[data-iw-hero-owner]').forEach((hero) => {
       hero.addEventListener('click', () => {
         chooseTarget({ type: 'hero', player: hero.dataset.iwHeroOwner });
@@ -120,37 +122,59 @@ export function mountInsightWarsGame(root){
     });
   }
 
+  function gameOverOverlayMarkup(){
+    if(!isGameOver()) return '';
+
+    const isPlayerWin = state.winner === 'player';
+    const isDraw = state.winner === 'draw';
+    return `
+      <div class="iw-game-over" role="dialog" aria-modal="true" aria-labelledby="iw-game-over-title">
+        <div class="iw-game-over-card">
+          <div class="iw-pre">${isPlayerWin ? 'INSIGHTS LANDED' : isDraw ? 'STALEMATE' : 'FUNNEL COLLAPSED'}</div>
+          <h2 id="iw-game-over-title" class="${isPlayerWin ? 'win' : 'lose'}">${isPlayerWin ? 'You Win!' : isDraw ? 'Draw' : 'You Lose'}</h2>
+          <p>${isPlayerWin ? 'Your product intuition beat the Dark Funnel PM.' : isDraw ? 'Both roadmaps ran out of signal.' : 'The Dark Funnel PM out-optimized your roadmap.'}</p>
+          <button class="overlay-btn iw-game-over-new-game" id="iw-game-over-new-game">⟳ New Game</button>
+        </div>
+      </div>
+    `;
+  }
+
   function render(){
-    const activeLabel = state.activePlayer === 'player' ? 'Player turn' : 'AI placeholder turn';
+    const gameOver = isGameOver();
+    const activeLabel = gameOver
+      ? state.winner === 'player' ? 'Game over · Player victory' : state.winner === 'draw' ? 'Game over · Draw' : 'Game over · AI victory'
+      : state.activePlayer === 'player' ? 'Player turn' : 'AI turn';
     const pendingCard = getPendingCard();
-    const prompt = pendingCard
+    const prompt = gameOver
+      ? 'Game over. Start a new game to play again.'
+      : pendingCard
       ? `${pendingCard.name}: choose ${pendingCard.definitionKey === 'feature-flag' ? 'an enemy minion to disable' : 'a minion or hero to damage'}.`
       : selectedAttackerId
         ? 'Choose an enemy minion or the AI hero to attack.'
-        : 'Click a ready player minion to attack, or play a card.';
+        : 'Click a ready player minion to attack, or play a card. Dark Funnel PM responds greedily when you end turn.';
 
     root.innerHTML = `
-      <div class="iw-shell">
+      <div class="iw-shell${gameOver ? ' is-game-over' : ''}">
         <div class="iw-title-wrap">
           <div class="iw-pre">SINGLE PLAYER CARD DUEL</div>
           <div class="game-title">INSIGHT <span>WARS</span></div>
-          <div class="iw-sub">Turn-based card combat with PostHog-inspired spells and minions.</div>
+          <div class="iw-sub">Duel the greedy Dark Funnel PM with PostHog-inspired spells and minions.</div>
         </div>
 
         <div class="iw-topbar">
           <button class="overlay-btn iw-new-game" id="iw-new-game">⟳ New Game</button>
           <div class="iw-status">${activeLabel} · Turn ${state.turnNumber}</div>
-          ${renderEndTurnButton(state.activePlayer !== 'player')}
+          ${renderEndTurnButton(gameOver || state.activePlayer !== 'player')}
         </div>
 
         <div class="iw-hero-grid">
-          ${renderHeroPanel('AI Hero', state.players.ai.hero, 'iw-ai', 'ai')}
+          ${renderHeroPanel('AI Hero', state.players.ai.hero, 'iw-ai', 'ai', gameOver)}
           <div class="iw-center-panel">
             ${renderManaBar(state.players.player)}
             <div class="iw-ai-note">${prompt}</div>
             ${aiHandRevealMarkup()}
           </div>
-          ${renderHeroPanel('Player Hero', state.players.player.hero, 'iw-player', 'player')}
+          ${renderHeroPanel('Player Hero', state.players.player.hero, 'iw-player', 'player', gameOver)}
         </div>
 
         ${renderBoardView(state, { selectedAttackerId })}
@@ -160,21 +184,20 @@ export function mountInsightWarsGame(root){
           <div class="panel-title">▸ Battle Log</div>
           <div class="iw-log">${state.log.slice(-5).map((line) => `<div>${line}</div>`).join('')}</div>
         </section>
+        ${gameOverOverlayMarkup()}
       </div>
     `;
 
     root.querySelector('#iw-new-game').addEventListener('click', newGame);
     root.querySelector('#iw-end-turn').addEventListener('click', endCurrentTurn);
+    root.querySelector('#iw-game-over-new-game')?.addEventListener('click', newGame);
     root.querySelector('#iw-hand-slot').appendChild(renderHandView({ state, onPlayCard: playPlayerCard, pendingCardId }));
     attachTargetHandlers();
-
-    maybeRunAiPlaceholder();
   }
 
   render();
 
   return function cleanup(){
-    if(aiTimer) clearTimeout(aiTimer);
-    aiTimer = null;
+    state = null;
   };
 }

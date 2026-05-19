@@ -1,9 +1,25 @@
 import { cardRequiresTarget } from '../engine/index.js';
 
-function cardLabel(card){
-  const typeIcon = card.type === 'minion' ? '🛡️' : '✨';
-  const stats = card.minionStats ? ` · ${card.minionStats.attack}/${card.minionStats.hp}` : '';
-  return `${typeIcon} ${card.name} · ${card.cost} event${card.cost === 1 ? '' : 's'}${stats}`;
+function cardIcon(card){
+  return card.type === 'minion' ? '🐹' : '✨';
+}
+
+function cardStats(card){
+  return card.minionStats ? `<span class="iw-card-stats">${card.minionStats.attack}/${card.minionStats.hp}</span>` : '';
+}
+
+function cardMarkup(card){
+  return `
+    <span class="iw-card-header">
+      <span class="iw-card-name">${cardIcon(card)} ${card.name}</span>
+      <span class="iw-card-cost">${card.cost}⚡</span>
+    </span>
+    <span class="iw-card-meta">
+      <span>${card.type === 'minion' ? 'Minion' : 'Spell'}</span>
+      ${cardStats(card)}
+    </span>
+    <span class="iw-card-effect">${card.effectText || 'No effect text.'}</span>
+  `;
 }
 
 export function renderHandView({ state, onPlayCard, pendingCardId }){
@@ -24,9 +40,9 @@ export function renderHandView({ state, onPlayCard, pendingCardId }){
   for(const card of playerState.hand){
     const button = document.createElement('button');
     button.className = `iw-card${pendingCardId === card.id ? ' selected' : ''}`;
-    button.textContent = cardLabel(card);
-    button.disabled = state.activePlayer !== 'player' || playerState.mana < card.cost;
-    button.title = state.activePlayer === 'player'
+    button.innerHTML = cardMarkup(card);
+    button.disabled = state.status === 'ended' || Boolean(state.winner) || state.activePlayer !== 'player' || playerState.mana < card.cost;
+    button.title = state.activePlayer === 'player' && state.status !== 'ended'
       ? cardRequiresTarget(card) ? 'Play this card, then choose a glowing target' : 'Play this card'
       : 'Cards can only be played on the player turn';
     button.addEventListener('click', () => onPlayCard(card.id));

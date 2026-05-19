@@ -2,6 +2,7 @@
 // Plain JavaScript project: these JSDoc typedefs are the source of truth for follow-up hoglets.
 
 /** @typedef {'player' | 'ai'} Player */
+/** @typedef {Player | 'draw'} Winner */
 /** @typedef {'spell' | 'minion'} CardType */
 
 /**
@@ -31,6 +32,7 @@
  * @property {number} cost
  * @property {CardType} type
  * @property {number} count
+ * @property {string} [effectText]
  * @property {MinionStats} [minionStats]
  * @property {(state: GameState, ctx: CardResolveContext) => GameState} resolve
  */
@@ -42,6 +44,7 @@
  * @property {string} name
  * @property {number} cost
  * @property {CardType} type
+ * @property {string} [effectText]
  * @property {MinionStats} [minionStats]
  */
 
@@ -55,7 +58,9 @@
  * @property {number} maxHp
  * @property {boolean} summoningSick
  * @property {boolean} [hasAttacked]
+ * @property {boolean} [attackedThisTurn]
  * @property {boolean} [disabled]
+ * @property {number} [disabledUntilTurn]
  */
 
 /**
@@ -76,6 +81,9 @@
  * @property {number} turnNumber
  * @property {Player} activePlayer
  * @property {number} nextId
+ * @property {'playing' | 'ended'} status
+ * @property {Winner | null} winner
+ * @property {() => number} rng
  * @property {{ player: PlayerState, ai: PlayerState }} players
  * @property {{ ai: boolean, player: boolean }} [revealedHands]
  * @property {string[]} log

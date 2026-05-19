@@ -1,4 +1,3 @@
-import { HERO_MAX_HP, MAX_MANA } from './types.js';
 import {
   cardRequiresTarget,
   createDeck,
@@ -6,24 +5,35 @@ import {
   getCardDefinition,
   isValidCardTarget,
 } from './deck.js';
+import { findMinion, isHeroTarget, isMinionTarget, removeDeadMinions } from './effects.js';
 import {
-  damageHeroState,
-  findMinion,
-  healHeroState,
-  isHeroTarget,
-  isMinionTarget,
-  removeDeadMinions,
-} from './effects.js';
+  canMinionAttack,
+  checkWinCondition,
+  createHero,
+  damageHero as applyHeroDamage,
+  healHero as applyHeroHeal,
+  isGameOver,
+  otherPlayer,
+  playerLabel,
+  readyBoardForTurn,
+} from './rules.js';
+import { MAX_MANA } from './types.js';
 
 const OPENING_HAND_SIZE = 3;
 
-function otherPlayer(player){
-  return player === 'player' ? 'ai' : 'player';
+export function createSeededRng(seed = 1){
+  let value = Number.isFinite(seed) ? seed >>> 0 : 1;
+  if(value === 0) value = 1;
+
+  return function seededRng(){
+    value = (value * 1664525 + 1013904223) >>> 0;
+    return value / 0x100000000;
+  };
 }
 
 function createPlayerState(deck){
   return {
-    hero: { hp: HERO_MAX_HP, maxHp: HERO_MAX_HP },
+    hero: createHero(),
     maxMana: 0,
     mana: 0,
     deck,
@@ -40,10 +50,11 @@ function clearEndOfTurnFlags(state, player){
       ...state.players,
       [player]: {
         ...state.players[player],
-        board: state.players[player].board.map((minion) => ({
-          ...minion,
-          disabled: false,
-        })),
+        board: state.players[player].board.map((minion) => {
+          const nextMinion = { ...minion, disabled: false };
+          delete nextMinion.disabledUntilTurn;
+          return nextMinion;
+        }),
       },
     },
   };
@@ -57,7 +68,9 @@ function markAttackerUsed(state, player, attackerId){
       [player]: {
         ...state.players[player],
         board: state.players[player].board.map((minion) => (
-          minion.id === attackerId ? { ...minion, hasAttacked: true } : minion
+          minion.id === attackerId
+            ? { ...minion, hasAttacked: true, attackedThisTurn: true }
+            : minion
         )),
       },
     },
@@ -65,7 +78,7 @@ function markAttackerUsed(state, player, attackerId){
 }
 
 export function createInitialState(options = {}){
-  const rng = options.rng || Math.random;
+  const rng = options.rng || createSeededRng(options.seed ?? Date.now());
   const player = drawCards(createPlayerState(createDeck(rng)), OPENING_HAND_SIZE);
   const ai = drawCards(createPlayerState(createDeck(rng)), OPENING_HAND_SIZE);
 
@@ -73,6 +86,9 @@ export function createInitialState(options = {}){
     turnNumber: 1,
     activePlayer: 'player',
     nextId: 1,
+    status: 'playing',
+    winner: null,
+    rng,
     players: {
       player: { ...player, maxMana: 1, mana: 1 },
       ai,
@@ -86,6 +102,7 @@ export function createInitialState(options = {}){
 }
 
 export function startTurn(state, player){
+  if(isGameOver(state)) return state;
   const maxMana = Math.min(state.turnNumber, MAX_MANA);
   const currentPlayer = state.players[player];
   const afterDraw = drawCards(currentPlayer, 1);
@@ -99,18 +116,15 @@ export function startTurn(state, player){
         ...afterDraw,
         maxMana,
         mana: maxMana,
-        board: afterDraw.board.map((minion) => ({
-          ...minion,
-          summoningSick: false,
-          hasAttacked: false,
-        })),
+        board: readyBoardForTurn(afterDraw.board, state.turnNumber),
       },
     },
-    log: [...state.log, `${player === 'player' ? 'Player' : 'AI'} starts turn ${state.turnNumber}.`],
+    log: [...state.log, `${playerLabel(player)} starts turn ${state.turnNumber}.`],
   };
 }
 
 export function endTurn(state){
+  if(isGameOver(state)) return state;
   const endingPlayer = state.activePlayer;
   const nextPlayer = otherPlayer(endingPlayer);
   const clearedState = clearEndOfTurnFlags(state, endingPlayer);
@@ -121,20 +135,21 @@ export function endTurn(state){
     revealedHands: endingPlayer === 'player'
       ? { ...(clearedState.revealedHands || {}), ai: false }
       : (clearedState.revealedHands || { ai: false, player: false }),
-    log: [...clearedState.log, `${endingPlayer === 'player' ? 'Player' : 'AI'} ended the turn.`],
+    log: [...clearedState.log, `${playerLabel(endingPlayer)} ended the turn.`],
   };
   return startTurn(nextState, nextPlayer);
 }
 
 export function healHero(state, player, amount){
-  return healHeroState(state, player, amount);
+  return applyHeroHeal(state, player, amount);
 }
 
 export function damageHero(state, player, amount){
-  return damageHeroState(state, player, amount);
+  return applyHeroDamage(state, player, amount);
 }
 
 export function playCard(state, player, cardId, target){
+  if(isGameOver(state)) return state;
   const playerState = state.players[player];
   const handIndex = playerState.hand.findIndex((card) => card.id === cardId);
   if(handIndex < 0) return state;
@@ -168,7 +183,7 @@ export function playCard(state, player, cardId, target){
 
   workingState = definition.resolve(workingState, { player, card, target, minionId });
 
-  return {
+  return checkWinCondition({
     ...workingState,
     players: {
       ...workingState.players,
@@ -177,25 +192,26 @@ export function playCard(state, player, cardId, target){
         discard: [...workingState.players[player].discard, card],
       },
     },
-    log: [...workingState.log, `${player === 'player' ? 'Player' : 'AI'} played ${card.name}.`],
-  };
+    log: [...workingState.log, `${playerLabel(player)} played ${card.name}.`],
+  });
 }
 
 export function attackWithMinion(state, player, attackerId, target){
+  if(isGameOver(state)) return state;
   if(state.activePlayer !== player) return state;
 
   const attacker = findMinion(state, player, attackerId);
-  if(!attacker || attacker.summoningSick || attacker.disabled || attacker.hasAttacked) return state;
+  if(!attacker || !canMinionAttack(state, player, attacker)) return state;
 
   const enemy = otherPlayer(player);
   if(isHeroTarget(target)){
     if(target.player !== enemy) return state;
 
-    const damaged = damageHeroState(state, enemy, attacker.attack);
-    const marked = markAttackerUsed(damaged, player, attackerId);
+    const marked = markAttackerUsed(state, player, attackerId);
+    const damaged = applyHeroDamage(marked, enemy, attacker.attack);
     return {
-      ...marked,
-      log: [...marked.log, `${attacker.name} attacked the ${enemy === 'ai' ? 'AI' : 'Player'} hero for ${attacker.attack}.`],
+      ...damaged,
+      log: [...damaged.log, `${attacker.name} attacked the ${playerLabel(enemy)} hero for ${attacker.attack}.`],
     };
   }
 
@@ -212,7 +228,7 @@ export function attackWithMinion(state, player, attackerId, target){
           ...state.players[player],
           board: state.players[player].board.map((minion) => (
             minion.id === attackerId
-              ? { ...minion, hp: minion.hp - defender.attack, hasAttacked: true }
+              ? { ...minion, hp: minion.hp - defender.attack, hasAttacked: true, attackedThisTurn: true }
               : minion
           )),
         },
@@ -228,13 +244,17 @@ export function attackWithMinion(state, player, attackerId, target){
     };
 
     const cleaned = removeDeadMinions(battled);
-    return {
+    return checkWinCondition({
       ...cleaned,
       log: [...cleaned.log, `${attacker.name} attacked ${defender.name}.`],
-    };
+    });
   }
 
   return state;
 }
 
-export { otherPlayer };
+export function attackHero(state, attackerPlayer, minionId, defenderPlayer = otherPlayer(attackerPlayer)){
+  return attackWithMinion(state, attackerPlayer, minionId, { type: 'hero', player: defenderPlayer });
+}
+
+export { canMinionAttack, checkWinCondition, isGameOver, otherPlayer };

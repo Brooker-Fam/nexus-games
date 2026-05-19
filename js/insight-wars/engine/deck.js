@@ -1,29 +1,14 @@
 import { HERO_MAX_HP } from './types.js';
 import {
-  damageHeroState,
-  damageMinionState,
-  findMinion,
-  healHeroState,
-  isHeroTarget,
-  isMinionTarget,
-  mapMinion,
-  removeDeadMinions,
-} from './effects.js';
-
-function otherPlayer(player){
-  return player === 'player' ? 'ai' : 'player';
-}
-
-function featureFlagResolve(state, ctx){
-  if(!isMinionTarget(ctx.target)) return state;
-  const enemy = otherPlayer(ctx.player);
-  if(ctx.target.player !== enemy || !findMinion(state, enemy, ctx.target.minionId)) return state;
-
-  return mapMinion(state, enemy, ctx.target.minionId, (minion) => ({
-    ...minion,
-    disabled: true,
-  }));
-}
+  damageAllMinions,
+  damageHero,
+  damageMinion,
+  disableMinionUntilTurn,
+  healHero,
+  isGameOver,
+  otherPlayer,
+} from './rules.js';
+import { findMinion, isHeroTarget, isMinionTarget } from './effects.js';
 
 function sessionReplayResolve(state, ctx){
   if(ctx.player !== 'player') return state;
@@ -38,30 +23,36 @@ function sessionReplayResolve(state, ctx){
 }
 
 function abTestResolve(state, ctx){
-  const roll = Math.random();
-  if(roll < 0.5){
-    return damageHeroState(state, otherPlayer(ctx.player), 5);
-  }
-  return healHeroState(state, ctx.player, 5);
+  const didDamage = Math.random() < 0.5;
+  const nextState = didDamage
+    ? damageHero(state, otherPlayer(ctx.player), 5)
+    : healHero(state, ctx.player, 5);
+
+  return {
+    ...nextState,
+    log: [
+      ...nextState.log,
+      didDamage
+        ? `${ctx.card.name} variant shipped damage.`
+        : `${ctx.card.name} variant shipped healing.`,
+    ],
+  };
 }
 
 function funnelResolve(state, ctx){
   const enemy = otherPlayer(ctx.player);
-  let nextState = damageHeroState(state, enemy, 2);
-  nextState = {
-    ...nextState,
-    players: {
-      ...nextState.players,
-      [enemy]: {
-        ...nextState.players[enemy],
-        board: nextState.players[enemy].board.map((minion) => ({
-          ...minion,
-          hp: minion.hp - 1,
-        })),
-      },
-    },
-  };
-  return removeDeadMinions(nextState);
+  let nextState = damageHero(state, enemy, 2);
+  if(isGameOver(nextState)) return nextState;
+  nextState = damageAllMinions(nextState, enemy, 1);
+  return nextState;
+}
+
+function featureFlagResolve(state, ctx){
+  if(!isMinionTarget(ctx.target)) return state;
+  const enemy = otherPlayer(ctx.player);
+  if(ctx.target.player !== enemy || !findMinion(state, enemy, ctx.target.minionId)) return state;
+
+  return disableMinionUntilTurn(state, enemy, ctx.target.minionId, state.turnNumber + 1);
 }
 
 function summonMinionResolve(state, ctx){
@@ -77,6 +68,7 @@ function summonMinionResolve(state, ctx){
     maxHp: Math.min(stats.hp, HERO_MAX_HP),
     summoningSick: true,
     hasAttacked: false,
+    attackedThisTurn: false,
     disabled: false,
   };
 
@@ -103,16 +95,16 @@ function insightResolve(state, ctx){
 }
 
 function surveysResolve(state, ctx){
-  return healHeroState(state, ctx.player, 4);
+  return healHero(state, ctx.player, 4);
 }
 
 function heatmapResolve(state, ctx){
   if(isHeroTarget(ctx.target)){
-    return damageHeroState(state, ctx.target.player, 4);
+    return damageHero(state, ctx.target.player, 4);
   }
 
   if(isMinionTarget(ctx.target) && findMinion(state, ctx.target.player, ctx.target.minionId)){
-    return damageMinionState(state, ctx.target.player, ctx.target.minionId, 4);
+    return damageMinion(state, ctx.target.player, ctx.target.minionId, 4);
   }
 
   return state;
@@ -120,24 +112,25 @@ function heatmapResolve(state, ctx){
 
 /** @type {import('./types.js').CardDefinition[]} */
 export const CARD_DEFINITIONS = [
-  { key: 'feature-flag', name: 'Feature Flag', cost: 1, type: 'spell', count: 3, resolve: featureFlagResolve },
-  { key: 'session-replay', name: 'Session Replay', cost: 2, type: 'spell', count: 2, resolve: sessionReplayResolve },
-  { key: 'ab-test', name: 'A/B Test', cost: 3, type: 'spell', count: 2, resolve: abTestResolve },
-  { key: 'funnel', name: 'Funnel', cost: 4, type: 'spell', count: 2, resolve: funnelResolve },
-  { key: 'cohort', name: 'Cohort', cost: 3, type: 'minion', count: 3, minionStats: { attack: 2, hp: 3 }, resolve: summonMinionResolve },
-  { key: 'insight', name: 'Insight', cost: 1, type: 'spell', count: 3, resolve: insightResolve },
-  { key: 'surveys', name: 'Surveys', cost: 2, type: 'spell', count: 2, resolve: surveysResolve },
-  { key: 'heatmap', name: 'Heatmap', cost: 3, type: 'spell', count: 2, resolve: heatmapResolve },
-  { key: 'experiment', name: 'Experiment', cost: 5, type: 'minion', count: 2, minionStats: { attack: 5, hp: 5 }, resolve: summonMinionResolve },
+  { key: 'feature-flag', name: 'Feature Flag', cost: 1, type: 'spell', count: 3, effectText: 'Disable an enemy minion for its next turn.', resolve: featureFlagResolve },
+  { key: 'session-replay', name: 'Session Replay', cost: 2, type: 'spell', count: 2, effectText: 'Reveal the AI hand this turn. AI gets no benefit.', resolve: sessionReplayResolve },
+  { key: 'ab-test', name: 'A/B Test', cost: 3, type: 'spell', count: 2, effectText: '50/50: deal 5 to the enemy hero or heal your hero for 5.', resolve: abTestResolve },
+  { key: 'funnel', name: 'Funnel', cost: 4, type: 'spell', count: 2, effectText: 'Deal 2 to the enemy hero and 1 to all enemy minions.', resolve: funnelResolve },
+  { key: 'cohort', name: 'Cohort', cost: 3, type: 'minion', count: 3, minionStats: { attack: 2, hp: 3 }, effectText: 'Summon a 2/3 minion.', resolve: summonMinionResolve },
+  { key: 'insight', name: 'Insight', cost: 1, type: 'spell', count: 3, effectText: 'Draw 1 card.', resolve: insightResolve },
+  { key: 'surveys', name: 'Surveys', cost: 2, type: 'spell', count: 2, effectText: 'Heal your hero for 4 HP.', resolve: surveysResolve },
+  { key: 'heatmap', name: 'Heatmap', cost: 3, type: 'spell', count: 2, effectText: 'Deal 4 damage to any chosen target.', resolve: heatmapResolve },
+  { key: 'experiment', name: 'Experiment', cost: 5, type: 'minion', count: 2, minionStats: { attack: 5, hp: 5 }, effectText: 'Summon a 5/5 minion.', resolve: summonMinionResolve },
 ];
 
 export function getDeckComposition(){
-  return CARD_DEFINITIONS.map(({ key, name, cost, type, count, minionStats }) => ({
+  return CARD_DEFINITIONS.map(({ key, name, cost, type, count, minionStats, effectText }) => ({
     key,
     name,
     cost,
     type,
     count,
+    effectText,
     ...(minionStats ? { minionStats: { ...minionStats } } : {}),
   }));
 }
@@ -178,6 +171,7 @@ export function createDeck(rng = Math.random){
         name: definition.name,
         cost: definition.cost,
         type: definition.type,
+        effectText: definition.effectText,
         ...(definition.minionStats ? { minionStats: { ...definition.minionStats } } : {}),
       });
     }
