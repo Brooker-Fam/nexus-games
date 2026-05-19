@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  advanceTurn,
   attackWithMinion,
   createInitialState,
   endTurn,
@@ -88,10 +89,10 @@ describe('Insight Wars card resolves', () => {
 
     expect(next.players.ai.board[0].disabled).toBe(true);
 
-    const aiTurn = endTurn(next);
+    const aiTurn = advanceTurn(next);
     expect(aiTurn.players.ai.board[0].disabled).toBe(true);
 
-    const playerTurn = endTurn(aiTurn);
+    const playerTurn = advanceTurn(aiTurn);
     expect(playerTurn.players.ai.board[0].disabled).toBe(false);
   });
 
@@ -216,8 +217,8 @@ describe('Insight Wars minion combat', () => {
 
     expect(attackWithMinion(summoned, 'player', summonedMinionId, { type: 'hero', player: 'ai' })).toBe(summoned);
 
-    const aiTurn = endTurn(summoned);
-    const playerTurn = endTurn(aiTurn);
+    const aiTurn = advanceTurn(summoned);
+    const playerTurn = advanceTurn(aiTurn);
     const attacked = attackWithMinion(playerTurn, 'player', summonedMinionId, { type: 'hero', player: 'ai' });
 
     expect(attacked.players.ai.hero.hp).toBe(18);

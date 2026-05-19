@@ -182,7 +182,7 @@ describe('Insight Wars greedy AI opponent', () => {
 
     const next = runAiTurn(state);
 
-    expect(next.players.player.hero.hp).toBe(18);
+    expect(next.players.player.hero.hp).toBe(16);
     expect(next.players.ai.hero.hp).toBe(20);
   });
 

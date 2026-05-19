@@ -1,40 +1,33 @@
 # Insight Wars
 
-Single-player turn-based card game foundation for Nexus Games.
+Single-player turn-based card duel for Nexus Games. Play against the greedy **Dark Funnel PM** with PostHog-inspired spells and minions.
 
-## Local run
+## Local setup
 
-This repo is a vanilla JS/Vercel app. From the repo root:
-
-```sh
-npm install
-npm run dev
-```
-
-Navigate to `/insight-wars`.
-
-Engine tests are game-local because the root repo had no test runner:
+From the repo root:
 
 ```sh
 npm install --prefix js/insight-wars
 npm test --prefix js/insight-wars
+npm run build --prefix js/insight-wars
+npm run dev --prefix js/insight-wars
 ```
 
-No PostHog SDK is wired in.
+Then open `/insight-wars` on the printed local server URL. The root app also exposes the game as the Insight Wars tab/route.
 
-## Current scope
+No PostHog SDK is imported or initialized by this game package.
 
-Done in this foundation slice:
+## Implemented scope
 
 - route/tab entry for `/insight-wars`
-- framework-free engine state, deck, turn flow, draw, play-card, discard, and minion summoning infrastructure
-- placeholder vanilla JS UI with New Game, End Turn, hero HP, mana, hand, boards, and log
-- greedy AI opponent that automatically takes the Dark Funnel PM turn
-
-Intentionally left for follow-up hoglets:
-
-- TODO(next-hoglet): win/lose screen
-- TODO(next-hoglet): UI polish, art, animations, and audio
+- framework-free engine state, deck, turn flow, draw, play-card, discard, targeting, and minion summoning
+- mana/events ramp to `min(turnNumber, 10)` with a hard cap at 10
+- 9 unique card definitions with implemented effects and effect text
+- minion combat with summoning sickness, one attack per turn, reciprocal minion damage, and Feature Flag disables
+- greedy AI opponent wired into `endTurn()` through the Dark Funnel PM controller
+- AI Heatmap targets the player hero, AI Session Replay is a no-op, and AI turns are guarded to avoid hanging
+- win/lose detection on damage resolution plus a New Game win/lose overlay
+- PostHog orange/yellow and dark gray themed UI polish
 
 ## Greedy AI behavior
 
@@ -42,18 +35,16 @@ The Dark Funnel PM plays the highest-cost affordable card first (ties use hand o
 
 ## Deck composition
 
-Cards are defined in `engine/deck.js`. Costs, counts, and initial card effects are implemented in the local engine.
+Cards are defined in `engine/deck.js`. Each deck has 21 cards total.
 
-| Card | Cost | Type | Count | Stats |
+| Card | Cost | Type | Count | Effect |
 | --- | ---: | --- | ---: | --- |
-| Feature Flag | 1 | Spell | 3 | — |
-| Session Replay | 2 | Spell | 2 | — |
-| A/B Test | 3 | Spell | 2 | — |
-| Funnel | 4 | Spell | 2 | — |
-| Cohort | 3 | Minion | 3 | 2/3 |
-| Insight | 1 | Spell | 3 | — |
-| Surveys | 2 | Spell | 2 | — |
-| Heatmap | 3 | Spell | 2 | — |
-| Experiment | 5 | Minion | 2 | 5/5 |
-
-Total: 21 cards per deck.
+| Feature Flag | 1 | Spell | 3 | Disable an enemy minion for its next turn. |
+| Session Replay | 2 | Spell | 2 | Reveal the AI hand this turn; AI gets no benefit. |
+| A/B Test | 3 | Spell | 2 | 50/50: deal 5 to the enemy hero or heal your hero for 5. |
+| Funnel | 4 | Spell | 2 | Deal 2 to the enemy hero and 1 to all enemy minions. |
+| Cohort | 3 | Minion | 3 | Summon a 2/3 minion with summoning sickness. |
+| Insight | 1 | Spell | 3 | Draw 1 card. |
+| Surveys | 2 | Spell | 2 | Heal your hero for 4 HP. |
+| Heatmap | 3 | Spell | 2 | Deal 4 damage to any chosen target. |
+| Experiment | 5 | Minion | 2 | Summon a 5/5 minion with summoning sickness. |

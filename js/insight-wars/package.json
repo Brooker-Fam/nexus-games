@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "build": "node scripts/build-check.js",
+    "dev": "node scripts/dev-server.js"
   },
   "devDependencies": {
     "vitest": "^3.2.4"
