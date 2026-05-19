@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="css/snake.css">
 <link rel="stylesheet" href="css/fish.css">
 <link rel="stylesheet" href="css/pong.css">
+<link rel="stylesheet" href="js/insight-wars/styles.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -80,6 +81,7 @@
     <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
     <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
     <button class="tab" id="tab-btn-pong" title="Classic Atari-style Pong. Single-player vs AI (Easy/Medium/Hard) or local two-player.">◫ PONG</button>
+    <button class="tab" id="tab-btn-insight-wars" title="Single-player turn-based card game foundation.">⚡ INSIGHT WARS</button>
     <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
@@ -503,6 +505,11 @@
       </div>
     </div>
   </div>
+
+  <!-- INSIGHT WARS -->
+  <div id="tab-insight-wars" class="tab-content">
+    <div id="insight-wars-root"></div>
+  </div>
 </main>
 
 <!-- Shared -->
@@ -553,5 +560,8 @@
 
 <!-- Init -->
 <script src="js/init.js"></script>
+
+<!-- Insight Wars route entry (loads after init so /insight-wars can activate its tab) -->
+<script type="module" src="js/insight-wars/index.js"></script>
 </body>
 </html>
