@@ -18,7 +18,7 @@ npm test
 
 ## Stack
 
-This repo is a vanilla JavaScript + HTML/CSS app hosted on Vercel. Local development uses the repo's lightweight static Node server via `npm run dev`. Existing games mount through `js/shared/game-registry.js`; Insight Wars follows that pattern under `js/insight-wars/`.
+This repo is a vanilla JavaScript + HTML/CSS app served by Vercel. Existing games mount through `js/shared/game-registry.js`; Insight Wars follows that pattern under `js/insight-wars/`.
 
 ## Foundation scope
 
