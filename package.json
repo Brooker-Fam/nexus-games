@@ -7,7 +7,8 @@
   "scripts": {
     "migrate": "node scripts/migrate.js",
     "build": "node scripts/generate-posthog-config.cjs && node scripts/generate-sourcemaps.cjs && node scripts/migrate.js",
-    "dev": "vercel dev"
+    "dev": "node scripts/dev-server.mjs",
+    "test": "node --test js/insight-wars/*.test.mjs"
   },
   "dependencies": {
     "@better-auth/passkey": "^1.6.8",

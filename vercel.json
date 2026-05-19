@@ -3,7 +3,14 @@
   "outputDirectory": ".",
   "cleanUrls": false,
   "rewrites": [
-    { "source": "/api/auth/:path*", "destination": "/api/auth" }
+    {
+      "source": "/insight-wars",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/api/auth/:path*",
+      "destination": "/api/auth"
+    }
   ],
   "headers": [
     {
