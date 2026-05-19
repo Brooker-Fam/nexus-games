@@ -20,7 +20,7 @@
  * @typedef {object} CardResolveContext
  * @property {Player} player
  * @property {Card} card
- * @property {unknown} [target]
+ * @property {CardTarget} [target]
  * @property {string} [minionId]
  */
 
@@ -54,6 +54,8 @@
  * @property {number} hp
  * @property {number} maxHp
  * @property {boolean} summoningSick
+ * @property {boolean} [hasAttacked]
+ * @property {boolean} [disabled]
  */
 
 /**
@@ -67,12 +69,15 @@
  * @property {Card[]} discard
  */
 
+/** @typedef {{ type: 'hero', player: Player } | { type: 'minion', player: Player, minionId: string }} CardTarget */
+
 /**
  * @typedef {object} GameState
  * @property {number} turnNumber
  * @property {Player} activePlayer
  * @property {number} nextId
  * @property {{ player: PlayerState, ai: PlayerState }} players
+ * @property {{ ai: boolean, player: boolean }} [revealedHands]
  * @property {string[]} log
  */
 

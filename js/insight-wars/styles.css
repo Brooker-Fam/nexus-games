@@ -52,3 +52,8 @@
 @media (max-width: 900px) {
   .iw-topbar, .iw-hero-grid { grid-template-columns: 1fr; }
 }
+.iw-hero { width: 100%; color: var(--text-bright); text-align: left; cursor: pointer; font: inherit; }
+.iw-hero:hover, .iw-minion:hover { border-color: var(--neon-cyan); box-shadow: 0 0 14px rgba(0,245,255,0.14); }
+.iw-card.selected, .iw-minion.selected { border-color: var(--neon-green); box-shadow: 0 0 16px rgba(0,255,136,0.18); }
+.iw-revealed-hand { color: var(--text-bright); font-size: 12px; line-height: 1.5; letter-spacing: 1px; margin-top: 8px; }
+.iw-revealed-card { display: inline-block; margin: 4px 4px 0 0; padding: 3px 7px; border: 1px solid rgba(0,245,255,0.2); background: rgba(0,20,40,0.65); }

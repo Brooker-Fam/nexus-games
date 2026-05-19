@@ -1,10 +1,12 @@
+import { cardRequiresTarget } from '../engine/index.js';
+
 function cardLabel(card){
   const typeIcon = card.type === 'minion' ? '🛡️' : '✨';
   const stats = card.minionStats ? ` · ${card.minionStats.attack}/${card.minionStats.hp}` : '';
   return `${typeIcon} ${card.name} · ${card.cost} event${card.cost === 1 ? '' : 's'}${stats}`;
 }
 
-export function renderHandView({ state, onPlayCard }){
+export function renderHandView({ state, onPlayCard, pendingCardId }){
   const wrap = document.createElement('section');
   wrap.className = 'iw-hand panel';
   wrap.innerHTML = `
@@ -21,11 +23,11 @@ export function renderHandView({ state, onPlayCard }){
 
   for(const card of playerState.hand){
     const button = document.createElement('button');
-    button.className = 'iw-card';
+    button.className = `iw-card${pendingCardId === card.id ? ' selected' : ''}`;
     button.textContent = cardLabel(card);
     button.disabled = state.activePlayer !== 'player' || playerState.mana < card.cost;
     button.title = state.activePlayer === 'player'
-      ? 'Play this placeholder card'
+      ? cardRequiresTarget(card) ? 'Play this card, then choose a glowing target' : 'Play this card'
       : 'Cards can only be played on the player turn';
     button.addEventListener('click', () => onPlayCard(card.id));
     list.appendChild(button);
