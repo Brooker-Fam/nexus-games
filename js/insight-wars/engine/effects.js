@@ -19,9 +19,25 @@ export function healHeroState(state, player, amount){
   };
 }
 
+export function checkWinCondition(state){
+  if(state.winner) return state;
+
+  const playerDefeated = state.players.player.hero.hp <= 0;
+  const aiDefeated = state.players.ai.hero.hp <= 0;
+
+  if(!playerDefeated && !aiDefeated) return state;
+
+  // Player-favorable tie-break: if both heroes hit 0 HP at the same time,
+  // award the game to the player so simultaneous lethal resolves as "You Win!".
+  return {
+    ...state,
+    winner: aiDefeated ? 'player' : 'opponent',
+  };
+}
+
 export function damageHeroState(state, player, amount){
   const hero = state.players[player].hero;
-  return {
+  const damaged = {
     ...state,
     players: {
       ...state.players,
@@ -34,6 +50,8 @@ export function damageHeroState(state, player, amount){
       },
     },
   };
+
+  return checkWinCondition(damaged);
 }
 
 export function mapMinion(state, player, minionId, mapper){

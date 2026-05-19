@@ -7,6 +7,7 @@ import {
   isValidCardTarget,
 } from './deck.js';
 import {
+  checkWinCondition,
   damageHeroState,
   findMinion,
   healHeroState,
@@ -81,11 +82,14 @@ export function createInitialState(options = {}){
       ai: false,
       player: false,
     },
+    winner: null,
     log: ['New game started. Player turn 1 begins with 1 event.'],
   };
 }
 
 export function startTurn(state, player){
+  if(state.winner) return state;
+
   const maxMana = Math.min(state.turnNumber, MAX_MANA);
   const currentPlayer = state.players[player];
   const afterDraw = drawCards(currentPlayer, 1);
@@ -111,6 +115,8 @@ export function startTurn(state, player){
 }
 
 export function endTurn(state){
+  if(state.winner) return state;
+
   const endingPlayer = state.activePlayer;
   const nextPlayer = otherPlayer(endingPlayer);
   const clearedState = clearEndOfTurnFlags(state, endingPlayer);
@@ -135,6 +141,8 @@ export function damageHero(state, player, amount){
 }
 
 export function playCard(state, player, cardId, target){
+  if(state.winner) return state;
+
   const playerState = state.players[player];
   const handIndex = playerState.hand.findIndex((card) => card.id === cardId);
   if(handIndex < 0) return state;
@@ -182,6 +190,7 @@ export function playCard(state, player, cardId, target){
 }
 
 export function attackWithMinion(state, player, attackerId, target){
+  if(state.winner) return state;
   if(state.activePlayer !== player) return state;
 
   const attacker = findMinion(state, player, attackerId);
@@ -237,4 +246,4 @@ export function attackWithMinion(state, player, attackerId, target){
   return state;
 }
 
-export { otherPlayer };
+export { checkWinCondition, otherPlayer };

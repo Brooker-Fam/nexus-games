@@ -120,24 +120,25 @@ function heatmapResolve(state, ctx){
 
 /** @type {import('./types.js').CardDefinition[]} */
 export const CARD_DEFINITIONS = [
-  { key: 'feature-flag', name: 'Feature Flag', cost: 1, type: 'spell', count: 3, resolve: featureFlagResolve },
-  { key: 'session-replay', name: 'Session Replay', cost: 2, type: 'spell', count: 2, resolve: sessionReplayResolve },
-  { key: 'ab-test', name: 'A/B Test', cost: 3, type: 'spell', count: 2, resolve: abTestResolve },
-  { key: 'funnel', name: 'Funnel', cost: 4, type: 'spell', count: 2, resolve: funnelResolve },
-  { key: 'cohort', name: 'Cohort', cost: 3, type: 'minion', count: 3, minionStats: { attack: 2, hp: 3 }, resolve: summonMinionResolve },
-  { key: 'insight', name: 'Insight', cost: 1, type: 'spell', count: 3, resolve: insightResolve },
-  { key: 'surveys', name: 'Surveys', cost: 2, type: 'spell', count: 2, resolve: surveysResolve },
-  { key: 'heatmap', name: 'Heatmap', cost: 3, type: 'spell', count: 2, resolve: heatmapResolve },
-  { key: 'experiment', name: 'Experiment', cost: 5, type: 'minion', count: 2, minionStats: { attack: 5, hp: 5 }, resolve: summonMinionResolve },
+  { key: 'feature-flag', name: 'Feature Flag', cost: 1, type: 'spell', count: 3, effectText: 'Disable an enemy minion next turn.', resolve: featureFlagResolve },
+  { key: 'session-replay', name: 'Session Replay', cost: 2, type: 'spell', count: 2, effectText: 'Reveal the AI hand this turn.', resolve: sessionReplayResolve },
+  { key: 'ab-test', name: 'A/B Test', cost: 3, type: 'spell', count: 2, effectText: '50/50: deal 5 damage or heal 5.', resolve: abTestResolve },
+  { key: 'funnel', name: 'Funnel', cost: 4, type: 'spell', count: 2, effectText: 'Deal 2 to hero and 1 to all minions.', resolve: funnelResolve },
+  { key: 'cohort', name: 'Cohort', cost: 3, type: 'minion', count: 3, minionStats: { attack: 2, hp: 3 }, effectText: 'Summon a 2/3 minion.', resolve: summonMinionResolve },
+  { key: 'insight', name: 'Insight', cost: 1, type: 'spell', count: 3, effectText: 'Draw 1 card.', resolve: insightResolve },
+  { key: 'surveys', name: 'Surveys', cost: 2, type: 'spell', count: 2, effectText: 'Heal your hero for 4 HP.', resolve: surveysResolve },
+  { key: 'heatmap', name: 'Heatmap', cost: 3, type: 'spell', count: 2, effectText: 'Deal 4 damage to any target.', resolve: heatmapResolve },
+  { key: 'experiment', name: 'Experiment', cost: 5, type: 'minion', count: 2, minionStats: { attack: 5, hp: 5 }, effectText: 'Summon a 5/5 minion.', resolve: summonMinionResolve },
 ];
 
 export function getDeckComposition(){
-  return CARD_DEFINITIONS.map(({ key, name, cost, type, count, minionStats }) => ({
+  return CARD_DEFINITIONS.map(({ key, name, cost, type, count, minionStats, effectText }) => ({
     key,
     name,
     cost,
     type,
     count,
+    effectText,
     ...(minionStats ? { minionStats: { ...minionStats } } : {}),
   }));
 }
@@ -178,6 +179,7 @@ export function createDeck(rng = Math.random){
         name: definition.name,
         cost: definition.cost,
         type: definition.type,
+        effectText: definition.effectText,
         ...(definition.minionStats ? { minionStats: { ...definition.minionStats } } : {}),
       });
     }

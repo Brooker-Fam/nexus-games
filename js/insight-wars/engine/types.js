@@ -32,6 +32,7 @@
  * @property {CardType} type
  * @property {number} count
  * @property {MinionStats} [minionStats]
+ * @property {string} effectText
  * @property {(state: GameState, ctx: CardResolveContext) => GameState} resolve
  */
 
@@ -43,6 +44,7 @@
  * @property {number} cost
  * @property {CardType} type
  * @property {MinionStats} [minionStats]
+ * @property {string} effectText
  */
 
 /**
@@ -78,6 +80,7 @@
  * @property {number} nextId
  * @property {{ player: PlayerState, ai: PlayerState }} players
  * @property {{ ai: boolean, player: boolean }} [revealedHands]
+ * @property {'player' | 'opponent' | null} [winner]
  * @property {string[]} log
  */
 
