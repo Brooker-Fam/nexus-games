@@ -1,4 +1,5 @@
 import { CARDS } from './cards.js';
+import { runAiTurn } from './aiController.js';
 import {
   attackTarget,
   canMinionAttack,
@@ -184,9 +185,8 @@ export function renderInsightWars(){
 
 function takeAiTurn(){
   if(!state || state.phase !== 'playing' || state.activePlayer !== 'ai') return;
-  // Foundation-only AI: later hoglets will replace this with greedy card play and attacks.
-  showToast('AI is thinking… and ends its turn.');
-  endTurn(state);
+  showToast('AI is optimizing…');
+  runAiTurn(state, 'ai');
   startTurn(state);
   selectedMinionId = null;
   renderInsightWars();
