@@ -7,7 +7,6 @@ import { renderBoardView } from './BoardView.js';
 
 export function mountInsightWarsGame(root){
   let state = createInitialState();
-  let aiTimer = null;
 
   function setState(nextState){
     state = nextState;
@@ -15,8 +14,6 @@ export function mountInsightWarsGame(root){
   }
 
   function newGame(){
-    if(aiTimer) clearTimeout(aiTimer);
-    aiTimer = null;
     setState(createInitialState());
   }
 
@@ -28,36 +25,29 @@ export function mountInsightWarsGame(root){
     setState(playCard(state, 'player', cardId));
   }
 
-  function maybeRunAiPlaceholder(){
-    if(aiTimer) clearTimeout(aiTimer);
-    aiTimer = null;
-    if(state.activePlayer !== 'ai') return;
-
-    // TODO(next-hoglet): Replace this one-line placeholder with a real AI controller.
-    aiTimer = setTimeout(() => setState(endTurn(state)), 450);
-  }
-
   function render(){
-    const activeLabel = state.activePlayer === 'player' ? 'Player turn' : 'AI placeholder turn';
+    const activeLabel = state.status === 'ended'
+      ? `${state.winner === 'draw' ? 'Draw' : `${state.winner === 'player' ? 'Player' : 'AI'} wins`}`
+      : (state.activePlayer === 'player' ? 'Player turn' : 'AI turn');
     root.innerHTML = `
       <div class="iw-shell">
         <div class="iw-title-wrap">
           <div class="iw-pre">SINGLE PLAYER CARD DUEL</div>
           <div class="game-title">INSIGHT <span>WARS</span></div>
-          <div class="iw-sub">Foundation scaffold: engine, deck, turn flow, and route entry only.</div>
+          <div class="iw-sub">Duel the greedy Dark Funnel PM before the roadmap consumes all events.</div>
         </div>
 
         <div class="iw-topbar">
           <button class="overlay-btn iw-new-game" id="iw-new-game">⟳ New Game</button>
           <div class="iw-status">${activeLabel} · Turn ${state.turnNumber}</div>
-          ${renderEndTurnButton(state.activePlayer !== 'player')}
+          ${renderEndTurnButton(state.activePlayer !== 'player' || state.status === 'ended')}
         </div>
 
         <div class="iw-hero-grid">
           ${renderHeroPanel('AI Hero', state.players.ai.hero, 'iw-ai')}
           <div class="iw-center-panel">
             ${renderManaBar(state.players.player)}
-            <div class="iw-ai-note">AI does nothing yet and auto-ends its turn. TODO(next-hoglet): implement AI.</div>
+            <div class="iw-ai-note">Dark Funnel PM greedily plays the priciest affordable cards, then sends every ready minion face.</div>
           </div>
           ${renderHeroPanel('Player Hero', state.players.player.hero, 'iw-player')}
         </div>
@@ -75,14 +65,11 @@ export function mountInsightWarsGame(root){
     root.querySelector('#iw-new-game').addEventListener('click', newGame);
     root.querySelector('#iw-end-turn').addEventListener('click', endCurrentTurn);
     root.querySelector('#iw-hand-slot').appendChild(renderHandView({ state, onPlayCard: playPlayerCard }));
-
-    maybeRunAiPlaceholder();
   }
 
   render();
 
   return function cleanup(){
-    if(aiTimer) clearTimeout(aiTimer);
-    aiTimer = null;
+    state = null;
   };
 }

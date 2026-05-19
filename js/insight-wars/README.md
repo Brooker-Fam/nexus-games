@@ -29,18 +29,20 @@ Done in this foundation slice:
 - route/tab entry for `/insight-wars`
 - framework-free engine state, deck, turn flow, draw, play-card, discard, and minion summoning infrastructure
 - placeholder vanilla JS UI with New Game, End Turn, hero HP, mana, hand, boards, and log
-- AI placeholder that auto-ends its turn
+- greedy AI opponent that automatically takes the Dark Funnel PM turn
 
 Intentionally left for follow-up hoglets:
 
-- TODO(next-hoglet): real card resolve effects
-- TODO(next-hoglet): AI controller
 - TODO(next-hoglet): win/lose screen
 - TODO(next-hoglet): UI polish, art, animations, and audio
 
-## Placeholder deck composition
+## Greedy AI behavior
 
-Cards are defined in `engine/deck.js`. Costs and counts are final for this scaffold; spell effects are TODO no-ops.
+The Dark Funnel PM plays the highest-cost affordable card first (ties use hand order), picks deterministic targets, treats Session Replay as a no-op, then attacks the player hero with every eligible minion. AI turns are synchronous and guarded to complete within 2 seconds.
+
+## Deck composition
+
+Cards are defined in `engine/deck.js`. Costs, counts, and initial card effects are implemented in the local engine.
 
 | Card | Cost | Type | Count | Stats |
 | --- | ---: | --- | ---: | --- |

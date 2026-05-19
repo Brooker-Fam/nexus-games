@@ -2,6 +2,7 @@
 // Plain JavaScript project: these JSDoc typedefs are the source of truth for follow-up hoglets.
 
 /** @typedef {'player' | 'ai'} Player */
+/** @typedef {Player | 'draw'} Winner */
 /** @typedef {'spell' | 'minion'} CardType */
 
 /**
@@ -54,6 +55,8 @@
  * @property {number} hp
  * @property {number} maxHp
  * @property {boolean} summoningSick
+ * @property {boolean} [attackedThisTurn]
+ * @property {number} [disabledUntilTurn]
  */
 
 /**
@@ -72,6 +75,9 @@
  * @property {number} turnNumber
  * @property {Player} activePlayer
  * @property {number} nextId
+ * @property {'playing' | 'ended'} status
+ * @property {Winner | null} winner
+ * @property {() => number} rng
  * @property {{ player: PlayerState, ai: PlayerState }} players
  * @property {string[]} log
  */

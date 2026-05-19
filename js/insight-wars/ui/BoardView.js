@@ -4,7 +4,7 @@ function renderMinions(minions){
     <div class="iw-minion">
       <strong>🛡️ ${minion.name}</strong>
       <span>${minion.attack}/${minion.hp}</span>
-      ${minion.summoningSick ? '<em>Summoning sick</em>' : '<em>Ready</em>'}
+      ${minion.disabledUntilTurn ? '<em>Feature flagged</em>' : (minion.summoningSick ? '<em>Summoning sick</em>' : '<em>Ready</em>')}
     </div>
   `).join('');
 }

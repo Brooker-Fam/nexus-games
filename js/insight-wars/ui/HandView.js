@@ -23,8 +23,8 @@ export function renderHandView({ state, onPlayCard }){
     const button = document.createElement('button');
     button.className = 'iw-card';
     button.textContent = cardLabel(card);
-    button.disabled = state.activePlayer !== 'player' || playerState.mana < card.cost;
-    button.title = state.activePlayer === 'player'
+    button.disabled = state.status === 'ended' || state.activePlayer !== 'player' || playerState.mana < card.cost;
+    button.title = state.activePlayer === 'player' && state.status !== 'ended'
       ? 'Play this placeholder card'
       : 'Cards can only be played on the player turn';
     button.addEventListener('click', () => onPlayCard(card.id));
