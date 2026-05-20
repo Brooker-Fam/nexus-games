@@ -74,12 +74,14 @@ function _clearArea(map, cx, cy, r){
 }
 
 function _spawnWorkers(world, side, col, row, count){
+  const supply = ISO_STATS[ISO_TYPE.WORKER].supply;
   for (let i = 0; i < count; i++){
     const angle = (i / count) * Math.PI * 2;
     const w = tileToWorld(col, row);
     const x = w.x + Math.cos(angle) * 26;
     const y = w.y + Math.sin(angle) * 26;
     isoMakeUnit(world, side, ISO_TYPE.WORKER, x, y);
+    side.supplyUsed += supply;
   }
 }
 

@@ -64,6 +64,10 @@ function isoMakeBuilding(world, side, type, col, row, opts){
 }
 
 // ── Unit factory ───────────────────────────────────
+// NOTE: This does NOT touch supplyUsed. The caller is responsible —
+// isoCmdTrain reserves supply at queue time so that two units can't
+// race past the cap. spawn.js increments supplyUsed for its initial
+// units explicitly. This split keeps a single source of truth.
 function isoMakeUnit(world, side, type, x, y){
   const st = ISO_STATS[type];
   const ent = new Entity({ type, x, y });
@@ -92,7 +96,6 @@ function isoMakeUnit(world, side, type, x, y){
     homeBuildingId: null,            // worker drop-off (HQ)
   };
   ent.components.render = _renderUnit;
-  side.supplyUsed += st.supply;
   world.add(ent);
   return ent;
 }
