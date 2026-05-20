@@ -25,13 +25,13 @@ const isoHudSystem = {
     const p = ISO_HUD.player;
     if (!p) return;
 
-    const minerals = document.getElementById('iso-minerals');
-    if (minerals) minerals.textContent = String(p.gold | 0);
+    const gold = document.getElementById('iso-gold') || document.getElementById('iso-minerals');
+    if (gold) gold.textContent = String(p.gold | 0);
 
-    // Foundation HUD has a GAS slot reserved for a future resource (e.g.
-    // Roboto OIL). Leave it blank until that lands.
-    const gas = document.getElementById('iso-gas');
-    if (gas && gas.textContent !== '0') gas.textContent = '0';
+    // OIL slot is reserved for a second resource (Roboto faction). Leave it
+    // at 0 until a follow-up hoglet wires it.
+    const oil = document.getElementById('iso-oil') || document.getElementById('iso-gas');
+    if (oil && oil.textContent !== '0') oil.textContent = '0';
 
     const supply = document.getElementById('iso-supply');
     if (supply) supply.textContent = p.supplyUsed + '/' + p.supplyMax;
