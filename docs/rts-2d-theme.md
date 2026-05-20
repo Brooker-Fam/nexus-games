@@ -240,6 +240,154 @@ Don't reuse `rts-*` — those belong to Deep Space Ops.
 
 ---
 
+## 7b. Units, Selection, Pathfinding (hoglet #2)
+
+Files added on top of the foundation. Same `js/iso/` directory, same
+"no build step, vanilla `<script>` tags" convention.
+
+```
+js/iso/pathfinding.js      — A* on the tile grid
+js/iso/units.js            — Unit data model, spawn / despawn, hit-test
+js/iso/units-render.js     — drawUnit, drag-box overlay
+js/iso/selection.js        — selection state + HUD panel update
+js/iso/movement.js         — MovementSystem, CombatSystem, command API
+js/iso/input.js            — mouse handlers (selection + commands)
+js/iso/iso-init.js         — wraps isoStart/Stop, pushes systems, spawns demo units
+```
+
+Script load order in `index.html` (after the foundation block):
+`pathfinding → units-render → units → selection → movement → input → iso-init`.
+
+### Unit data model
+
+`spawnUnit(type, col, row, owner)` returns a foundation `Entity` with
+these extra fields tacked on directly (not nested under `.components`):
+
+| Field             | Type                       | Notes                                              |
+|-------------------|----------------------------|----------------------------------------------------|
+| `unitType`        | `'worker' \| 'warrior'`    | key into `UNIT_TYPES`                              |
+| `owner`           | `'shadow'\|'prism'\|'roboto'` | matches `FACTION_CFG` ids                       |
+| `hp`, `maxHp`     | number                     | mutated by combat                                  |
+| `attack`          | number                     | damage per swing                                   |
+| `attackRange`     | number (tiles, Chebyshev)  | 1 = adjacent                                       |
+| `attackCooldown`  | ms                         | min interval between auto-attacks                  |
+| `speed`           | px / sec                   | world-space, used by `MovementSystem`              |
+| `visionRange`     | tiles                      | informational; AI / fog hoglet consumes            |
+| `radius`          | px                         | visual + click hit-test                            |
+| `state`           | `'idle'\|'moving'\|'attacking'\|'dead'` | finite-state tag                      |
+| `facing`          | radians                    | atan2 of last motion                               |
+| `path`            | `{x,y}[] \| null`          | world-space waypoints (tile centers)               |
+| `pathIndex`       | number                     | next waypoint                                      |
+| `moveTarget`      | `{x,y} \| null`            | original click target (informational)              |
+| `attackTarget`    | `Entity \| null`           | combat aggro target                                |
+| `lastAttackMs`    | number                     | `world.timeMs` of last damage tick                 |
+| `attackFlashMs`, `hitFlashMs`, `attackLineMs` | ms | visual timers (handled by render) |
+| `attackLineTo`    | `{x,y} \| null`            | last-attack tracer endpoint                        |
+| `isUnit`          | `true`                     | quick predicate for filtering `world.entities`     |
+
+`despawnUnit(unit)` is the only correct way to remove a unit — it also
+clears the registry and selection. Don't `world.remove()` directly.
+
+Constants:
+- `UNIT_TYPES` — `{ worker, warrior }`. Production hoglet adds more.
+- `ISO_FACTIONS` — `{ shadow, prism, roboto }`, each `{ primary, accent,
+  worker, warrior, name }`. Pulled to match `FACTION_CFG`; if you need
+  the lore name, use `ISO_FACTIONS[owner].name`.
+- `ISO_UNITS.list` / `ISO_UNITS.byId` — registry. Read freely; mutate via
+  the spawn/despawn API.
+
+### Pathfinding (`pathfinding.js`)
+
+- `findPath(map, sc, sr, gc, gr, opts?) → tile[] | null`
+  - 8-direction A* with octile heuristic, no diagonal corner-cutting.
+  - Path excludes the start, includes the goal.
+  - `null` when unreachable; `[]` when start === goal.
+  - If goal is impassable, auto-snaps to nearest passable tile.
+- `nearestPassableTile(map, col, row, maxRadius=6) → {col,row} | null`
+
+Treat HIGHGROUND as passable (per the foundation note). If the combat
+hoglet adds ramps / climb costs, extend this file with a cost table —
+don't fork.
+
+### Selection (`selection.js`)
+
+- `getSelectedUnits() → Entity[]` — current selection minus dead entries.
+- `selectUnits(units)` — replace selection.
+- `addToSelection(unit)` — for shift-click semantics.
+- `clearSelection()`, `clearUnitFromSelection(unit)`.
+- `isSelected(unit)`, `isFriendly(unit)`.
+- `setLocalPlayer(owner)` — change which faction counts as "friendly".
+  AI hoglet should call this once when picking sides.
+- `ISO_SELECTION` — selection state + drag rectangle data. Read-only
+  for downstream hoglets; mutate via the API.
+
+The HUD panel `.iso-hud-info` is updated automatically when selection
+changes. Production hoglet's command-panel can overwrite the render
+function (`_renderSelectionHud`) once it has portraits.
+
+### Commands (`movement.js`)
+
+All three accept any iterable of units (typically `getSelectedUnits()`).
+Safe to call with `[]`. Call from input handlers, command-panel buttons,
+or AI controllers — same surface.
+
+- `commandMove(units, worldX, worldY)` — issue Move to (`worldX`,
+  `worldY`) in world-space pixels. Use `tileToWorld()` if you have tile
+  coords. Auto-snaps to nearest passable tile if needed.
+- `commandAttack(units, target)` — issue Attack on a target `Entity`.
+  Units chase + auto-attack on cooldown; CombatSystem handles re-paths.
+- `commandStop(units)` — cancel orders, return to `idle`.
+
+Both systems are pushed onto `world.systems` by `iso-init.js`:
+`[MovementSystem, CombatSystem]`. AI hoglet should append after these,
+not splice in front, so commands settle each frame before AI reacts.
+
+### Input (`input.js`)
+
+`attachIsoInput(canvasEl)` wires:
+- Left-click on unit → select
+- Left-click empty → clear selection
+- Shift + left-click → add to selection
+- Left-drag (> 6 px) → box-select friendly units in screen-space rect
+- Right-click enemy unit → `commandAttack`
+- Right-click terrain → `commandMove`
+
+The handlers consume mouse events on the canvas; the foundation camera
+already handles keys + edge-scroll on the same canvas and they don't
+conflict. `detachIsoInput()` removes everything; the `iso-init.js`
+lifecycle wrapper calls it on tab cleanup.
+
+### Render integration
+
+`spawnUnit` sets `entity.components.render = drawUnit`, so foundation's
+back-to-front `drawWorld` picks units up automatically. Drag-box overlay
+is drawn after the world by a one-time wrapper around `window.isoRender`
+(also installed by `iso-init.js`). Selection rings, HP bars, attack
+tracers, and hit/attack flashes are all rendered inside `drawUnit`.
+
+Production hoglet can swap `drawUnit` for higher-fidelity sprites — just
+keep the selection-ring + HP-bar passes (or re-implement them) so the
+UX stays consistent.
+
+### Lifecycle wrapping (`iso-init.js`)
+
+The init wraps `window.isoStart` / `isoStop` and re-registers the tab
+with `registerGame('iso', ...)`. On every `isoStart`:
+1. Foundation builds world + camera.
+2. Wrapper pushes Movement + Combat systems onto `world.systems`.
+3. Wrapper resets the unit registry and clears selection.
+4. Wrapper spawns the demo squads (Shadow friendly NW pocket, Prism
+   enemy garrison roughly mid-map).
+5. Wrapper attaches mouse input.
+
+`isoStop` detaches input, runs the foundation teardown, then resets the
+registry. Re-entering the tab gets a fresh roster.
+
+Other hoglets that want their own startup work should wrap likewise
+(don't fork `iso-init.js` — keep it focused on units/selection setup).
+
+---
+
 ## 8. Rules of engagement for follow-up hoglets
 
 - **Don't touch Deep Space Ops** (`#tab-cs`, `js/rts/*`, `css/rts.css`).
