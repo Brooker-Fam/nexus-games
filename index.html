@@ -545,8 +545,11 @@
       </div>
 
       <div class="iso-hint">
-        FOUNDATION SCAFFOLD · PAN WITH <kbd>WASD</kbd> / <kbd>↑↓←→</kbd> / MOUSE EDGES
+        LEFT-CLICK SELECT · <kbd>SHIFT</kbd> ADD · RIGHT-CLICK MOVE/ATTACK · <kbd>WASD</kbd> PAN
       </div>
+
+      <!-- Reserved overlay slot for the AI/win-loss hoglet. -->
+      <div class="iso-gameover" id="iso-gameover" aria-hidden="true"></div>
     </div>
   </div>
 
@@ -605,6 +608,14 @@
 <script src="js/iso/camera.js"></script>
 <script src="js/iso/render.js"></script>
 <script src="js/iso/game.js"></script>
+
+<!-- Citadel Ops (2.5D Isometric RTS — production + combat + HUD) -->
+<script src="js/iso/api.js"></script>
+<script src="js/iso/entities-stub.js"></script>
+<script src="js/iso/production.js"></script>
+<script src="js/iso/combat.js"></script>
+<script src="js/iso/hud.js"></script>
+<script src="js/iso/integration.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>
