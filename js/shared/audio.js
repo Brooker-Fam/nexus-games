@@ -91,6 +91,9 @@ const SFX={
   doomMedkit:    ()=>{ sfxTone(660,'sine',0.16,0.005,0.1,990); sfxTone(990,'sine',0.1,0.01,0.12); },
   doomDie:       ()=>{ sfxTone(220,'sawtooth',0.22,0.01,0.4,60); sfxNoise(0.2,0.4,400); },
   doomVictory:   ()=>{ [392,523,659,784,1047].forEach((f,i)=>setTimeout(()=>sfxTone(f,'square',0.18,0.02,0.32),i*110)); },
+  doomImpFire:   ()=>{ sfxTone(220,'sawtooth',0.14,0.005,0.18,520); sfxNoise(0.08,0.1,800); },
+  doomImpactWall:()=>{ sfxNoise(0.18,0.12,600); sfxTone(140,'sawtooth',0.1,0.001,0.1,60); },
+  doomRifle:     ()=>{ sfxNoise(0.22,0.09,2200); sfxTone(180,'square',0.12,0.001,0.06,80); },
 };
 
 // Throttle repeated sounds so they don't stack

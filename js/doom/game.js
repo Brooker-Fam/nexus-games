@@ -22,23 +22,25 @@ const DOOM_MINI_H = doomMini.height;
 //  . = empty floor
 //  A = ammo pickup spawn
 //  M = medkit pickup spawn
-//  E = enemy spawn
+//  E = demon spawn  (melee)
+//  I = imp spawn    (projectile)
+//  Z = zombieman spawn (hitscan)
 //  P = player spawn
 const DOOM_MAP_SRC = [
   '1111111111111111',
   '1P.....1.......1',
-  '1......1...M...1',
+  '1......1...M.Z.1',
   '1..222.1.......1',
   '1..2.2.1.E..A..1',
   '1..2.2.........1',
   '1..2.2.111.....1',
   '1..222...3.....1',
-  '1........3..E..1',
+  '1.I......3..I..1',
   '1.E......3.....1',
   '1........3.A...1',
   '1..1111111.....1',
   '1.......1......1',
-  '1...M...1...E..1',
+  '1...M.Z.1...E..1',
   '1.......1.....91',
   '1111111111111111',
 ];
@@ -65,7 +67,9 @@ for(let y = 0; y < DOOM_MAP_H; y++){
     else {
       row.push(0);
       if(c === 'P') Object.assign(DOOM_PLAYER_SPAWN, { x: x + 0.5, y: y + 0.5 });
-      else if(c === 'E') DOOM_ENEMY_SPAWNS.push({ x: x + 0.5, y: y + 0.5 });
+      else if(c === 'E') DOOM_ENEMY_SPAWNS.push({ x: x + 0.5, y: y + 0.5, type: 'demon' });
+      else if(c === 'I') DOOM_ENEMY_SPAWNS.push({ x: x + 0.5, y: y + 0.5, type: 'imp' });
+      else if(c === 'Z') DOOM_ENEMY_SPAWNS.push({ x: x + 0.5, y: y + 0.5, type: 'zombieman' });
       else if(c === 'A') DOOM_AMMO_SPAWNS.push({ x: x + 0.5, y: y + 0.5 });
       else if(c === 'M') DOOM_MEDKIT_SPAWNS.push({ x: x + 0.5, y: y + 0.5 });
     }
@@ -222,68 +226,10 @@ const DOOM_TEX = [
 ];
 
 // ── ENEMY SPRITE (billboard) ──
-const DOOM_ENEMY_SPRITE_SIZE = 64;
-
-function doomMakeDemonSprite(){
-  const c = document.createElement('canvas');
-  c.width = c.height = DOOM_ENEMY_SPRITE_SIZE;
-  const ctx = c.getContext('2d');
-  // transparent background — we use magenta key replaced by transparency below
-  ctx.clearRect(0, 0, DOOM_ENEMY_SPRITE_SIZE, DOOM_ENEMY_SPRITE_SIZE);
-  // body
-  ctx.fillStyle = '#5a1810';
-  ctx.beginPath();
-  ctx.ellipse(32, 44, 13, 16, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // belly highlight
-  ctx.fillStyle = '#8a2820';
-  ctx.beginPath();
-  ctx.ellipse(32, 46, 8, 10, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // head
-  ctx.fillStyle = '#722010';
-  ctx.beginPath();
-  ctx.arc(32, 22, 11, 0, Math.PI * 2);
-  ctx.fill();
-  // horns
-  ctx.fillStyle = '#1a0a04';
-  ctx.beginPath();
-  ctx.moveTo(24, 14); ctx.lineTo(20, 4); ctx.lineTo(27, 13); ctx.closePath();
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(40, 14); ctx.lineTo(44, 4); ctx.lineTo(37, 13); ctx.closePath();
-  ctx.fill();
-  // glowing eyes
-  ctx.fillStyle = '#fff200';
-  ctx.fillRect(26, 21, 4, 3);
-  ctx.fillRect(34, 21, 4, 3);
-  ctx.fillStyle = '#ff8800';
-  ctx.fillRect(27, 22, 2, 1);
-  ctx.fillRect(35, 22, 2, 1);
-  // teeth
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(28, 27, 1, 2);
-  ctx.fillRect(31, 27, 1, 2);
-  ctx.fillRect(34, 27, 1, 2);
-  // claws
-  ctx.fillStyle = '#1a0a04';
-  ctx.fillRect(18, 50, 3, 6);
-  ctx.fillRect(43, 50, 3, 6);
-  return c;
-}
-
-function doomMakeDemonHurtSprite(){
-  // tint the base sprite red for hurt flash
-  const base = doomMakeDemonSprite();
-  const c = document.createElement('canvas');
-  c.width = c.height = DOOM_ENEMY_SPRITE_SIZE;
-  const ctx = c.getContext('2d');
-  ctx.drawImage(base, 0, 0);
-  ctx.globalCompositeOperation = 'source-atop';
-  ctx.fillStyle = 'rgba(255,80,40,0.6)';
-  ctx.fillRect(0, 0, DOOM_ENEMY_SPRITE_SIZE, DOOM_ENEMY_SPRITE_SIZE);
-  return c;
-}
+// Enemy / projectile sprites and AI now live in js/doom/enemies.js
+// (exposed via window.DoomEnemies). game.js only knows about pickups
+// and the billboard projection pipeline.
+const DOOM_ENEMY_SPRITE_SIZE = DoomEnemies.SPRITE_SIZE;
 
 function doomMakeAmmoSprite(){
   const c = document.createElement('canvas');
@@ -317,8 +263,6 @@ function doomMakeMedkitSprite(){
   return c;
 }
 
-const DOOM_SPR_DEMON = doomMakeDemonSprite();
-const DOOM_SPR_DEMON_HURT = doomMakeDemonHurtSprite();
 const DOOM_SPR_AMMO = doomMakeAmmoSprite();
 const DOOM_SPR_MEDKIT = doomMakeMedkitSprite();
 
@@ -386,14 +330,8 @@ const DOOM_DEFAULTS = () => ({
     maxAmmo: 99,
     kills: 0,
   },
-  enemies: DOOM_ENEMY_SPAWNS.map(s => ({
-    x: s.x, y: s.y,
-    hp: 50,
-    state: 'alive',     // alive | dying | dead
-    cooldown: 0,        // seconds before next attack
-    hurt: 0,            // hurt-flash timer
-    deathTimer: 0,
-  })),
+  enemies: DoomEnemies.spawnFrom(DOOM_ENEMY_SPAWNS),
+  projectiles: [],
   pickups: [
     ...DOOM_AMMO_SPAWNS.map(s => ({ x: s.x, y: s.y, type: 'ammo', taken: false })),
     ...DOOM_MEDKIT_SPAWNS.map(s => ({ x: s.x, y: s.y, type: 'medkit', taken: false })),
@@ -505,7 +443,7 @@ function doomRender(){
     }
   }
 
-  // ── Sprites (enemies + pickups) sorted back-to-front ──
+  // ── Sprites (enemies + pickups + projectiles) sorted back-to-front ──
   const sprites = [];
   for(const e of doomState.enemies){
     if(e.state === 'dead') continue;
@@ -516,6 +454,11 @@ function doomRender(){
     if(k.taken) continue;
     const dx = k.x - p.x, dy = k.y - p.y;
     sprites.push({ kind: 'pickup', ref: k, dist: dx * dx + dy * dy });
+  }
+  for(const pr of doomState.projectiles){
+    if(pr.dead) continue;
+    const dx = pr.x - p.x, dy = pr.y - p.y;
+    sprites.push({ kind: 'projectile', ref: pr, dist: dx * dx + dy * dy });
   }
   sprites.sort((a, b) => b.dist - a.dist);
 
@@ -536,23 +479,32 @@ function doomRender(){
       spriteH = (spriteH * 0.6) | 0;
       spriteW = spriteH;
       vOffset = spriteH * 0.4;
+    } else if(s.kind === 'enemy' && ref.def){
+      spriteH = (spriteH * ref.def.bodyHeight) | 0;
+      spriteW = spriteH;
+    } else if(s.kind === 'projectile'){
+      // small glowing orb, floating roughly at chest height
+      spriteH = (spriteH * 0.4) | 0;
+      spriteW = spriteH;
+      vOffset = spriteH * 0.15;
     }
     const drawStartY = (-spriteH / 2 + DOOM_H / 2 + vOffset) | 0;
     const drawStartX = ((-spriteW / 2 + spriteScreenX)) | 0;
-    const drawEndX = ((spriteW / 2 + spriteScreenX)) | 0;
 
     let img;
     if(s.kind === 'enemy'){
+      img = DoomEnemies.pickSprite(ref);
+      if(!img) continue;
       if(ref.state === 'dying'){
-        // squish toward floor
+        // squish toward floor as the corpse settles
         const t = Math.min(1, ref.deathTimer / 0.5);
         const sh = (spriteH * (1 - t * 0.6)) | 0;
         const sy0 = drawStartY + (spriteH - sh);
-        doomDrawSpriteColumns(ref.hurt > 0 ? DOOM_SPR_DEMON_HURT : DOOM_SPR_DEMON,
-          drawStartX, sy0, spriteW, sh, transformY);
+        doomDrawSpriteColumns(img, drawStartX, sy0, spriteW, sh, transformY);
         continue;
       }
-      img = ref.hurt > 0 ? DOOM_SPR_DEMON_HURT : DOOM_SPR_DEMON;
+    } else if(s.kind === 'projectile'){
+      img = DoomEnemies.FIREBALL_SPRITE;
     } else {
       img = ref.type === 'ammo' ? DOOM_SPR_AMMO : DOOM_SPR_MEDKIT;
     }
@@ -637,12 +589,28 @@ function doomRenderMinimap(){
     ctx.moveTo(0, y * cellH); ctx.lineTo(DOOM_MINI_W, y * cellH);
   }
   ctx.stroke();
-  // enemies
+  // enemies — color by type
   for(const e of doomState.enemies){
     if(e.state === 'dead') continue;
-    ctx.fillStyle = e.state === 'dying' ? 'rgba(200,80,40,0.6)' : '#ff3322';
+    if(e.state === 'dying'){
+      ctx.fillStyle = 'rgba(140,80,40,0.45)';
+    } else if(e.type === 'imp'){
+      ctx.fillStyle = '#ff8822';
+    } else if(e.type === 'zombieman'){
+      ctx.fillStyle = '#88dd44';
+    } else {
+      ctx.fillStyle = '#ff3322';
+    }
     ctx.beginPath();
     ctx.arc(e.x * cellW, e.y * cellH, cellW * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // projectiles
+  for(const pr of doomState.projectiles){
+    if(pr.dead) continue;
+    ctx.fillStyle = '#ffaa22';
+    ctx.beginPath();
+    ctx.arc(pr.x * cellW, pr.y * cellH, cellW * 0.12, 0, Math.PI * 2);
     ctx.fill();
   }
   // pickups
@@ -717,42 +685,39 @@ function doomShoot(){
   doomState.muzzleTimer = 0.08;
   sfx('doomShoot');
 
-  // Hitscan: ray straight ahead. Find nearest alive enemy within angle
-  // tolerance whose distance is < the wall distance straight ahead.
-  const p = doomState.player;
-  const wallDist = doomZBuffer[DOOM_W >> 1] || 999;
-  let bestIdx = -1, bestDist = Infinity;
-  const HIT_HALF_WIDTH = 0.35; // ~enemy radius in world units
-  for(let i = 0; i < doomState.enemies.length; i++){
-    const e = doomState.enemies[i];
-    if(e.state !== 'alive') continue;
-    const dx = e.x - p.x, dy = e.y - p.y;
-    // Distance along player direction
-    const forward = dx * p.dirX + dy * p.dirY;
-    if(forward <= 0) continue;
-    // Perpendicular offset from the ray
-    const perp = Math.abs(dx * p.dirY - dy * p.dirX);
-    if(perp > HIT_HALF_WIDTH) continue;
-    if(forward >= wallDist) continue;
-    if(forward < bestDist){
-      bestDist = forward;
-      bestIdx = i;
-    }
-  }
-  if(bestIdx >= 0){
-    const e = doomState.enemies[bestIdx];
-    e.hp -= 28;
-    e.hurt = 0.12;
-    sfx('doomEnemyHurt');
-    if(e.hp <= 0){
-      e.state = 'dying';
-      e.deathTimer = 0;
-      doomState.player.kills++;
-      sfx('doomEnemyDie');
-      doomCheckWin();
-    }
+  const env = doomMakeEnv();
+  env.wallDistAhead = doomZBuffer[DOOM_W >> 1] || 999;
+  const result = DoomEnemies.applyHitscan(doomState, env, 28, 0.35);
+  if(result && result.killed){
+    doomState.player.kills++;
+    doomCheckWin();
   }
   doomUpdateHUD();
+}
+
+// Build the host-supplied `env` interface for the enemies module.
+// All cross-cutting concerns (wall lookups, LOS, sfx, player damage)
+// flow through this object so enemies.js never touches game.js globals.
+function doomMakeEnv(){
+  return {
+    player: doomState.player,
+    dt: 0,
+    mapW: DOOM_MAP_W,
+    mapH: DOOM_MAP_H,
+    cell: doomCell,
+    isWall: doomIsWall,
+    sfx: sfx,
+    spawnProjectile(pr){ doomState.projectiles.push(pr); },
+    hurtPlayer(amount){
+      if(doomState.gameOver) return;
+      doomState.player.hp = Math.max(0, doomState.player.hp - amount);
+      doomState.hurtFlash = Math.min(0.7, 0.3 + amount / 30);
+      sfx('doomBite', 90);
+      if(doomState.player.hp <= 0) doomEnd(false);
+      doomUpdateHUD();
+    },
+    wallDistAhead: 999,
+  };
 }
 
 // ── MOVEMENT ──
@@ -809,65 +774,12 @@ function doomRotate(angle){
 }
 
 // ── ENEMY AI ──
+// All per-enemy AI / pathing / attacks live in the DoomEnemies module
+// (js/doom/enemies.js). This wrapper just provides the env object.
 function doomUpdateEnemies(dt){
-  const p = doomState.player;
-  for(const e of doomState.enemies){
-    if(e.hurt > 0) e.hurt = Math.max(0, e.hurt - dt);
-    if(e.state === 'dying'){
-      e.deathTimer += dt;
-      if(e.deathTimer > 0.7) e.state = 'dead';
-      continue;
-    }
-    if(e.state !== 'alive') continue;
-    const dx = p.x - e.x;
-    const dy = p.y - e.y;
-    const dist = Math.hypot(dx, dy);
-    if(dist < 0.001) continue;
-    const ndx = dx / dist, ndy = dy / dist;
-
-    const sees = doomHasLineOfSight(e.x, e.y, p.x, p.y);
-    if(sees && dist > 0.9){
-      // chase
-      const sp = 1.4 * dt;
-      const nx = e.x + ndx * sp;
-      const ny = e.y + ndy * sp;
-      // basic collision: don't enter walls or other enemies
-      if(!doomIsWall(nx, e.y) && !doomEnemyBlocked(nx, e.y, e)) e.x = nx;
-      if(!doomIsWall(e.x, ny) && !doomEnemyBlocked(e.x, ny, e)) e.y = ny;
-    }
-    e.cooldown -= dt;
-    if(sees && dist < 1.4 && e.cooldown <= 0){
-      doomState.player.hp -= 8;
-      doomState.hurtFlash = 0.5;
-      sfx('doomBite');
-      e.cooldown = 0.9;
-      if(doomState.player.hp <= 0){
-        doomEnd(false);
-      }
-      doomUpdateHUD();
-    }
-  }
-}
-
-function doomEnemyBlocked(x, y, self){
-  for(const e of doomState.enemies){
-    if(e === self || e.state !== 'alive') continue;
-    if(Math.hypot(e.x - x, e.y - y) < 0.55) return true;
-  }
-  return false;
-}
-
-function doomHasLineOfSight(x0, y0, x1, y1){
-  // Step along the segment in 0.1-unit increments; if any sample
-  // is inside a wall, no line of sight.
-  const dx = x1 - x0, dy = y1 - y0;
-  const dist = Math.hypot(dx, dy);
-  const steps = Math.ceil(dist / 0.1);
-  for(let i = 1; i < steps; i++){
-    const t = i / steps;
-    if(doomIsWall(x0 + dx * t, y0 + dy * t)) return false;
-  }
-  return true;
+  const env = doomMakeEnv();
+  env.dt = dt;
+  DoomEnemies.update(doomState, env);
 }
 
 // ── PICKUPS ──
@@ -897,7 +809,7 @@ function doomCheckWin(){
     doomEnd(true);
     return;
   }
-  if(doomState.enemies.every(e => e.state !== 'alive')){
+  if(DoomEnemies.aliveCount(doomState) === 0){
     doomEnd(true);
   }
 }
