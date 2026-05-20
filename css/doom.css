@@ -69,6 +69,8 @@
   }
   .doom-legend-dot.you { background: var(--neon-cyan); box-shadow: 0 0 6px var(--neon-cyan); }
   .doom-legend-dot.demon { background: #ff3322; box-shadow: 0 0 6px #ff3322; }
+  .doom-legend-dot.imp { background: #ff8822; box-shadow: 0 0 6px #ff8822; }
+  .doom-legend-dot.zombie { background: #88dd44; box-shadow: 0 0 6px #88dd44; }
   .doom-legend-dot.exit { background: var(--neon-green); box-shadow: 0 0 6px var(--neon-green); }
 
   @media (max-width: 600px) {

@@ -5,15 +5,19 @@ DDA raycaster. Pure HTML5 Canvas + vanilla JS, no dependencies.
 
 ## Files
 
-- `js/doom/game.js` — game logic, raycaster, sprite billboarding, AI, HUD.
+- `js/doom/game.js` — game logic, raycaster, sprite billboarding, player,
+  pickups, HUD.
+- `js/doom/enemies.js` — enemy archetypes, finite-state AI, BFS
+  pathfinding, projectiles, hitscan damage routing. Exposed as
+  `window.DoomEnemies`.
 - `css/doom.css` — styling for the canvas, minimap, hint, and HUD panels.
 - The game registers under tab id `doom` and is launched from the **▼ DOOM**
   tab in the main hub (`/index.html`).
 
-All textures (brick / metal / stone / exit portal), sprites (demon / ammo /
-medkit / gun + muzzle flash), and sound effects (shoot / hurt / pickup /
-victory) are generated procedurally — nothing is loaded from disk and nothing
-copyrighted is shipped.
+All textures (brick / metal / stone / exit portal), sprites (demon / imp /
+zombieman / fireball / ammo / medkit / gun + muzzle flash), and sound effects
+(shoot / hurt / pickup / victory / rifle / fireball) are generated
+procedurally — nothing is loaded from disk and nothing copyrighted is shipped.
 
 ## How to play
 
@@ -64,14 +68,51 @@ project onto the screen. Each vertical stripe is drawn only if its
 
 ### Enemies
 
-`doomUpdateEnemies` runs simple AI per demon:
+`game.js` delegates all enemy behavior to `enemies.js`
+(`window.DoomEnemies`). Three archetypes are shipped:
 
-- Line-of-sight check by stepping along the segment to the player; any wall
-  cell blocks vision.
-- If they see the player and are farther than `0.9` units, they walk toward
-  the player at `1.4 u/s` with axis-separated collision.
-- When within `1.4` units they bite for `8` HP on a `0.9` s cooldown.
-- Demons have `50` HP. Pistol does `28` damage per shot — two-shot kills.
+| Type | HP | Speed | Range | Attack | Damage |
+|---|---|---|---|---|---|
+| **demon** (`E`) | 60 | 1.6 | 1.3 (melee) | claw bite | 10 |
+| **imp** (`I`) | 35 | 1.1 | 7.0 (projectile) | fireball (lobbed, 4.5 u/s) | 12 |
+| **zombieman** (`Z`) | 25 | 0.9 | 10 (hitscan) | rifle, 65 % accuracy w/ falloff | 6 |
+
+Every enemy runs the same finite-state machine:
+
+```
+        ┌────────────────────────────┐
+        ▼                            │
+   ┌─ IDLE ──[LOS + range]──► CHASE ─┤
+   │                  │              │
+   │                  ▼              │
+   │              ATTACK ─[fire]─────┤
+   │                                 │
+[hit dmg] (pain chance)              │
+   │                                 │
+   └──► PAIN ─[stun ends]────────────┘
+                                     │
+                  [hp ≤ 0]           │
+                     │               │
+                     ▼               │
+                  DYING ──[0.7 s]──► DEAD
+```
+
+- **Line of sight** is checked by stepping the segment between the enemy
+  and the player in 0.1-unit increments; any wall cell blocks vision.
+- **Pathfinding** uses a bounded BFS over walkable grid cells (refreshed
+  roughly twice per second per enemy) to find the next tile to walk to
+  when the player is not visible — keeps enemies from wedging on
+  corners. With LOS, the enemy chases the player directly (and backs off
+  to its `preferredRange` if a ranged unit gets too close).
+- **Damage routing** is one-way: `DoomEnemies.applyHitscan(state, env,
+  damage, halfWidth)` is called by the player's gun; enemies hurt the
+  player through the `env.hurtPlayer(amount, kind)` callback that
+  `game.js` supplies — `enemies.js` never touches the host's globals
+  directly. Pistol does 28 damage / shot so it's a one-shot zombie, two
+  shots on an imp, three on a demon.
+- **Projectiles** (imp fireballs) live in `doomState.projectiles`; each
+  tick they advance, collide with walls (and disappear with an impact
+  sound), and check player proximity for damage.
 
 ### Shooting
 
@@ -89,7 +130,9 @@ The level is defined in `DOOM_MAP_SRC` as a 16×16 ASCII grid:
 - `9` — exit tile (the only "wall" you can walk through; standing on it
   triggers victory)
 - `P` — player spawn
-- `E` — enemy spawn
+- `E` — demon spawn (melee)
+- `I` — imp spawn (projectile)
+- `Z` — zombieman spawn (hitscan)
 - `A` — ammo crate pickup (+12 ammo)
 - `M` — medkit pickup (+25 HP)
 - `.` — empty floor
