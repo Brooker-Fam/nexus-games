@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="css/snake.css">
 <link rel="stylesheet" href="css/fish.css">
 <link rel="stylesheet" href="css/pong.css">
+<link rel="stylesheet" href="css/dune.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -80,6 +81,7 @@
     <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
     <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
     <button class="tab" id="tab-btn-pong" title="Classic Atari-style Pong. Single-player vs AI (Easy/Medium/Hard) or local two-player.">◫ PONG</button>
+    <button class="tab" id="tab-btn-dune" title="Dune II clone — terrain, units, combat, base building, and economy.">☼ SPICE WARS</button>
     <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
@@ -504,6 +506,72 @@
     </div>
   </div>
 
+  <!-- SPICE WARS (Dune II integration) -->
+  <div id="tab-dune" class="tab-content">
+    <div class="game-header">
+      <div>
+        <div class="game-title">SPICE <span>WARS</span></div>
+      </div>
+      <div class="game-stats">
+        <div class="stat-box"><div class="stat-label">CREDITS</div><div class="stat-val gold" id="dune-credits">0</div></div>
+        <div class="stat-box"><div class="stat-label">POWER</div><div class="stat-val cyan" id="dune-power">0 / 0</div></div>
+        <div class="stat-box"><div class="stat-label">SPICE CAP</div><div class="stat-val purple" id="dune-storage">0 / 0</div></div>
+      </div>
+    </div>
+
+    <div class="game-area">
+      <div class="canvas-wrap dune-canvas-wrap">
+        <canvas id="duneCanvas" width="768" height="528"></canvas>
+        <div class="dune-status-bar" id="dune-status-bar">
+          <span id="dune-status">Right-click to give orders. Build on rock. Destroy the red base to win.</span>
+        </div>
+        <div class="overlay dune-overlay" id="duneOverlay" style="display:none">
+          <div class="overlay-title" id="duneOverlayTitle">VICTORY</div>
+          <div class="overlay-sub" id="duneOverlaySub">The Harkonnen base lies in ruins.</div>
+          <button class="overlay-btn" id="btn-dune-reset">⟳ NEW BATTLE</button>
+        </div>
+      </div>
+
+      <div class="sidebar dune-sidebar">
+        <div class="panel">
+          <div class="panel-title">▸ CONSTRUCTION</div>
+          <div class="dune-build-grid" id="dune-build-grid"></div>
+          <div class="place-hint" id="dune-place-hint">CLICK A STRUCTURE TO BUILD</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ UNITS</div>
+          <div class="dune-build-grid dune-unit-grid" id="dune-unit-grid"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ SELECTED</div>
+          <div class="dune-selected" id="dune-selected">
+            <div class="dune-selected-empty">No selection. LEFT-CLICK units, RIGHT-CLICK to give orders.</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ BUILD QUEUE</div>
+          <div class="dune-queue" id="dune-queue"><div class="dune-queue-empty">Idle</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title speed">▸ SPEED</div>
+          <div class="speed-btns dune-speed-btns">
+            <button class="speed-btn active" data-dune-speed="1">1×</button>
+            <button class="speed-btn" data-dune-speed="2">2×</button>
+            <button class="speed-btn" data-dune-speed="3">3×</button>
+          </div>
+        </div>
+
+        <div class="panel flex">
+          <div class="panel-title">▸ COMBAT LOG</div>
+          <div class="log-box" id="dune-log"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Shared -->
@@ -551,6 +619,21 @@
 
 <!-- Atari Pong -->
 <script src="js/pong/game.js"></script>
+
+<!-- Spice Wars (Dune II clone — integrated terrain + units + buildings) -->
+<script src="js/dune/state.js"></script>
+<script src="js/dune/config.js"></script>
+<script src="js/dune/terrain.js"></script>
+<script src="js/dune/pathfinding.js"></script>
+<script src="js/dune/units-config.js"></script>
+<script src="js/dune/units.js"></script>
+<script src="js/dune/input.js"></script>
+<script src="js/dune/economy.js"></script>
+<script src="js/dune/buildings.js"></script>
+<script src="js/dune/hud.js"></script>
+<script src="js/dune/rendering.js"></script>
+<script src="js/dune/game.js"></script>
+<script src="js/dune/init.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>

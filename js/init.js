@@ -96,6 +96,10 @@ document.getElementById('tab-btn-pong').onclick=function(){
   switchTab('pong', this);
   if(window.posthog) posthog.capture('game_tab_switched', { tab: 'pong' });
 };
+document.getElementById('tab-btn-dune').onclick=function(){
+  switchTab('dune', this);
+  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'spice_wars' });
+};
 document.getElementById('btn-fish-reset').onclick=function(){ fishReset(); };
 document.getElementById('tab-btn-exc').onclick=function(){
   const id = new Date().toISOString() + '-' + Math.random().toString(36).slice(2, 10);
@@ -184,6 +188,10 @@ document.getElementById('btn-mp-join').onclick=async function(){
     status.className='mp-status error'; status.textContent='Failed: '+e.message;
   }
 };
+
+// Spice Wars: reset wiring lives in js/dune/hud.js (bindReset). The
+// game-registry init/cleanup hook calls DuneGame.startNew()/stop() so we
+// don't need anything else here.
 
 // RTS controls
 document.getElementById('btn-attack').onclick=function(e){ e.preventDefault(); rtsOrderAttack(); this.blur(); };
