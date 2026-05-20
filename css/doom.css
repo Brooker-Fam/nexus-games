@@ -75,3 +75,171 @@
     #doomMinimap { width: 110px; height: 110px; }
     .doom-start-hint { font-size: 9px; letter-spacing: 2px; padding: 4px 10px; }
   }
+
+  /* ── DOOM flow overlays (title / briefing / death / victory) ── */
+  .doom-flow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 8;
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--text-bright, #d6f1ff);
+  }
+  .doom-flow.doom-flow-active {
+    pointer-events: auto;
+  }
+  .doom-flow > [data-phase] {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: radial-gradient(ellipse at center, rgba(8,2,4,0.78) 0%, rgba(2,1,2,0.94) 100%);
+    padding: 18px;
+    box-sizing: border-box;
+  }
+  .doom-flow > [data-phase].show { display: flex; }
+
+  .doom-flow-logo {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 44px;
+    letter-spacing: 8px;
+    color: #ff3322;
+    text-shadow: 0 0 18px rgba(255, 60, 30, 0.55), 0 0 2px rgba(255, 200, 160, 0.8);
+  }
+  .doom-flow-logo span { color: #ffcc44; }
+  .doom-flow-tag {
+    font-size: 11px;
+    letter-spacing: 5px;
+    color: var(--neon-cyan, #00f5ff);
+    margin-top: 6px;
+    margin-bottom: 22px;
+    opacity: 0.85;
+  }
+  .doom-flow-hint {
+    margin-top: 16px;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--text-dim, #93a8b8);
+    opacity: 0.8;
+  }
+  .doom-flow-levels {
+    display: flex;
+    gap: 12px;
+    margin: 4px 0 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .doom-flow-level {
+    background: rgba(20, 10, 14, 0.85);
+    border: 1px solid rgba(255, 60, 30, 0.4);
+    color: var(--text-bright, #d6f1ff);
+    padding: 10px 16px;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  }
+  .doom-flow-level:hover { transform: translateY(-2px); border-color: rgba(255, 200, 80, 0.7); }
+  .doom-flow-level.active {
+    background: rgba(60, 14, 14, 0.92);
+    border-color: #ffcc44;
+    box-shadow: 0 0 18px rgba(255, 200, 80, 0.35);
+  }
+  .doom-flow-level-num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--neon-cyan, #00f5ff);
+  }
+  .doom-flow-level-name {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: #ff8844;
+  }
+  .doom-flow-level-sub {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dim, #93a8b8);
+  }
+  .doom-flow-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .doom-flow .overlay-btn {
+    pointer-events: auto;
+  }
+  .doom-flow .overlay-btn.ghost {
+    background: transparent;
+    border-color: rgba(0, 245, 255, 0.45);
+    color: var(--neon-cyan, #00f5ff);
+  }
+
+  .doom-flow-brief-num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    letter-spacing: 6px;
+    color: var(--neon-cyan, #00f5ff);
+    margin-bottom: 8px;
+  }
+  .doom-flow-brief-name {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 36px;
+    letter-spacing: 6px;
+    color: #ffcc44;
+    text-shadow: 0 0 14px rgba(255, 200, 80, 0.5);
+  }
+  .doom-flow-brief-sub {
+    margin-top: 8px;
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: var(--text-dim, #93a8b8);
+  }
+
+  .doom-flow-end-title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 48px;
+    letter-spacing: 8px;
+  }
+  .doom-flow-end-title.lose {
+    color: #ff3322;
+    text-shadow: 0 0 16px rgba(255, 60, 30, 0.6);
+  }
+  .doom-flow-end-title.win {
+    color: #44ff88;
+    text-shadow: 0 0 16px rgba(70, 255, 140, 0.6);
+  }
+  .doom-flow-end-sub {
+    margin: 8px 0 18px;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--text-dim, #93a8b8);
+  }
+  .doom-flow-end-stats {
+    margin-bottom: 18px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--neon-cyan, #00f5ff);
+  }
+
+  @media (max-width: 600px){
+    .doom-flow-logo { font-size: 28px; letter-spacing: 5px; }
+    .doom-flow-brief-name { font-size: 24px; letter-spacing: 4px; }
+    .doom-flow-end-title { font-size: 32px; letter-spacing: 5px; }
+    .doom-flow-level { min-width: 100px; padding: 8px 10px; }
+  }
