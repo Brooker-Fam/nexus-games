@@ -139,3 +139,78 @@
     }
     .iso-hud-cmd { grid-column: 1 / -1; }
   }
+
+  /* ── END-GAME OVERLAY (victory / defeat) ─────────────
+     Full-stage overlay shown when one side is wiped out. */
+  .iso-endgame {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(2,8,16,0.65) 0%, rgba(2,8,16,0.92) 70%, rgba(2,8,16,0.96) 100%);
+    z-index: 50;
+    pointer-events: auto;
+    --iso-end-accent: var(--neon-cyan);
+  }
+  .iso-endgame.show { display: flex; }
+
+  .iso-endgame-panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--iso-end-accent);
+    padding: 32px 48px;
+    text-align: center;
+    box-shadow:
+      0 0 40px color-mix(in srgb, var(--iso-end-accent) 35%, transparent),
+      inset 0 0 60px rgba(0,0,0,0.55);
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+    max-width: 480px;
+  }
+  .iso-endgame-panel[data-outcome="defeat"]   { --iso-end-accent: var(--neon-pink); }
+  .iso-endgame-panel[data-outcome="victory"]  { --iso-end-accent: var(--neon-cyan); }
+
+  .iso-endgame-eyebrow {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--iso-end-accent);
+    margin-bottom: 12px;
+    opacity: 0.85;
+    text-transform: uppercase;
+  }
+  .iso-endgame-title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 56px;
+    letter-spacing: 12px;
+    color: var(--iso-end-accent);
+    text-shadow: 0 0 24px color-mix(in srgb, var(--iso-end-accent) 60%, transparent);
+    margin-bottom: 14px;
+  }
+  .iso-endgame-tagline {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+    line-height: 1.45;
+  }
+  .iso-endgame-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--iso-end-accent);
+    background: rgba(0,20,40,0.5);
+    border: 1px solid var(--iso-end-accent);
+    padding: 12px 26px;
+    cursor: pointer;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    transition: background 120ms ease, box-shadow 120ms ease, transform 80ms ease;
+  }
+  .iso-endgame-btn:hover {
+    background: color-mix(in srgb, var(--iso-end-accent) 16%, rgba(0,20,40,0.5));
+    box-shadow: 0 0 18px color-mix(in srgb, var(--iso-end-accent) 60%, transparent);
+  }
+  .iso-endgame-btn:active { transform: translateY(1px); }
+
