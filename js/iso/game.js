@@ -69,6 +69,12 @@ function isoStart(){
   isoHudInit(ISO_GAME.player, ISO_GAME.ai);
   ISO_GAME.world.systems.push(isoHudSystem);
 
+  // Fog of war — installs a FogOfWar system that reveals based on
+  // player-owned entity vision footprints (P2 success criterion).
+  if (typeof isoInstallFog === 'function'){
+    isoInstallFog(ISO_GAME.world, ISO_GAME.player);
+  }
+
   // Player input
   isoInputAttach(canvas, ISO_GAME.player);
 

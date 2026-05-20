@@ -252,156 +252,42 @@ window.isoRender = function fogAwareIsoRender(ctx, world, cam){
   }
 };
 
-// Re-register the iso game so we can install the FogOfWar system on
-// start and (until other hoglets land entity spawning) seed demo
-// friendlies + enemies. registerGame() just overwrites the entry; the
-// old init/cleanup are equivalent to plain isoStart()/isoStop().
-registerGame('iso', {
-  init(){
-    isoStart();
-    const w = ISO_GAME && ISO_GAME.world;
-    if (!w || w._fog) return;
-    if (!w.playerFaction) w.playerFaction = 'prism';
-    const fog = new FogOfWar(w.map);
-    w._fog = fog;
-    w.systems.push(fog);
-    if (w.entities.length === 0) _fogDemoSpawn(w);
-    fog.recompute(w);
-  },
-  cleanup(){ isoStop(); },
-});
-
 // ──────────────────────────────────────────────────────
-//  DEMO ENTITIES
+//  INSTALLER — called by game.js after isoSpawnMatch
 // ──────────────────────────────────────────────────────
 //
-// Visible until the units / structures hoglets land their own spawning.
-// Once any entity is added at start, this is skipped (see init() above).
-
-function _fogDemoSpawn(world){
-  // Friendly HQ (Prism armada) — large vision, near spawn pocket.
-  const hqTile = tileToWorld(2, 2);
-  world.add(new Entity({
-    type: 'hq',
-    x: hqTile.x, y: hqTile.y,
-    components: {
-      faction: 'prism',
-      owner: 'player',
-      visionRange: 8,
-      render: _drawDemoStructure,
-      _label: 'HQ',
-    },
-  }));
-
-  // Friendly scout — smaller vision, a bit out into the field.
-  const scoutTile = tileToWorld(4, 4);
-  world.add(new Entity({
-    type: 'scout',
-    x: scoutTile.x, y: scoutTile.y,
-    components: {
-      faction: 'prism',
-      owner: 'player',
-      visionRange: 5,
-      render: _drawDemoUnit,
-    },
-  }));
-
-  // Enemy units far away — should be hidden behind unexplored fog.
-  const e1 = tileToWorld(28, 30);
-  world.add(new Entity({
-    type: 'enemy',
-    x: e1.x, y: e1.y,
-    components: {
-      faction: 'shadow',
-      owner: 'ai',
-      visionRange: 0,
-      render: _drawDemoEnemy,
-    },
-  }));
-  const e2 = tileToWorld(35, 18);
-  world.add(new Entity({
-    type: 'enemy',
-    x: e2.x, y: e2.y,
-    components: {
-      faction: 'shadow',
-      owner: 'ai',
-      visionRange: 0,
-      render: _drawDemoEnemy,
-    },
-  }));
-
-  // Click-to-move on the friendly scout so the demo is interactive:
-  // moving the scout into unexplored territory clears the fog.
-  _wireDemoScoutMovement(world);
-}
-
-function _drawDemoStructure(ctx, ent, cam){
-  const s = worldToScreen(ent.x, ent.y, cam);
-  ctx.save();
-  ctx.fillStyle   = '#00ddff';
-  ctx.strokeStyle = '#aaffff';
-  ctx.lineWidth   = 2;
-  ctx.beginPath();
-  ctx.rect(s.x - 12, s.y - 16, 24, 20);
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = '#020810';
-  ctx.font      = '700 9px Orbitron, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('HQ', s.x, s.y - 2);
-  ctx.restore();
-}
-
-function _drawDemoUnit(ctx, ent, cam){
-  const s = worldToScreen(ent.x, ent.y, cam);
-  ctx.save();
-  ctx.fillStyle   = '#88ccff';
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth   = 1.5;
-  ctx.beginPath();
-  ctx.arc(s.x, s.y - 4, 7, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
-}
-
-function _drawDemoEnemy(ctx, ent, cam){
-  const s = worldToScreen(ent.x, ent.y, cam);
-  ctx.save();
-  ctx.fillStyle   = '#9922ff';
-  ctx.strokeStyle = '#dd88ff';
-  ctx.lineWidth   = 1.5;
-  ctx.beginPath();
-  ctx.arc(s.x, s.y - 4, 7, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
-}
-
-// Minimal click-to-move so reviewers can drive the scout around and
-// watch fog clear. Once the units / pathfinding hoglets land, they'll
-// own input and this can be deleted.
-function _wireDemoScoutMovement(world){
-  const canvas = document.getElementById('iso-canvas');
-  if (!canvas || canvas._fogDemoWired) return;
-  canvas._fogDemoWired = true;
-  canvas.addEventListener('click', (e) => {
-    if (!ISO_GAME.running) return;
-    const w2 = ISO_GAME.world;
-    if (!w2) return;
-    const scout = w2.entities.find(en => en.type === 'scout');
-    if (!scout) return;
-    const rect = canvas.getBoundingClientRect();
-    const sx = (e.clientX - rect.left) * (canvas.width  / rect.width);
-    const sy = (e.clientY - rect.top)  * (canvas.height / rect.height);
-    const { col, row } = screenToTile(sx, sy, ISO_GAME.camera);
-    if (!w2.map.inBounds(col, row)) return;
-    if (!w2.map.isPassable(col, row)) return;
-    const p = tileToWorld(col, row);
-    scout.x = p.x;
-    scout.y = p.y;
-    if (w2._fog) w2._fog.markDirty();
+// Integration with Christian's entity model:
+//   ent.side?.id === 'player'  → friendly
+//   ent.kind === 'building'    → wide stationary vision
+//   ent.kind === 'unit'        → per-type vision range
+function isoInstallFog(world, playerSide){
+  if (!world || world._fog) return world && world._fog;
+  const fog = new FogOfWar(world.map);
+  fog.setFriendlyPredicate((ent) => {
+    if (!ent || !ent.side) return false;
+    return ent.side === playerSide || ent.side.id === 'player';
   });
+  // Christian's entities don't carry visionRange themselves — derive one.
+  const origRecompute = fog.recompute.bind(fog);
+  fog.recompute = function(w){
+    const ents = w.entities;
+    for (let i = 0; i < ents.length; i++){
+      const e = ents[i];
+      if (!e.components) e.components = {};
+      if (e.components.visionRange != null) continue;
+      if (e.kind === 'building'){
+        e.components.visionRange = e.type === ISO_TYPE.HQ ? 9 : 6;
+        e.components.visionShape = 'circle';
+      } else if (e.kind === 'unit'){
+        e.components.visionRange = e.type === ISO_TYPE.WORKER ? 5 : 7;
+      }
+    }
+    origRecompute(w);
+  };
+  world._fog = fog;
+  world.systems.push(fog);
+  fog.recompute(world);
+  return fog;
 }
 
 // ──────────────────────────────────────────────────────
@@ -411,3 +297,4 @@ window.FOG             = FOG;
 window.FOG_STYLE       = FOG_STYLE;
 window.FogOfWar        = FogOfWar;
 window.drawFogOverlay  = drawFogOverlay;
+window.isoInstallFog   = isoInstallFog;
