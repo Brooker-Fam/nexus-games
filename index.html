@@ -513,10 +513,10 @@
         <div class="game-title">CITADEL <span>OPS</span></div>
       </div>
       <div class="game-stats">
-        <div class="stat-box"><div class="stat-label">MINERALS</div><div class="stat-val cyan" id="iso-minerals">—</div></div>
-        <div class="stat-box"><div class="stat-label">GAS</div><div class="stat-val green" id="iso-gas">—</div></div>
+        <div class="stat-box"><div class="stat-label">GOLD</div><div class="stat-val gold" id="iso-gold">—</div></div>
+        <div class="stat-box"><div class="stat-label">OIL</div><div class="stat-val cyan" id="iso-oil">—</div></div>
         <div class="stat-box"><div class="stat-label">SUPPLY</div><div class="stat-val purple" id="iso-supply">—</div></div>
-        <div class="stat-box"><div class="stat-label">PERF</div><div class="stat-val gold" id="iso-fps">— FPS</div></div>
+        <div class="stat-box"><div class="stat-label">PERF</div><div class="stat-val green" id="iso-fps">— FPS</div></div>
       </div>
     </div>
 
@@ -524,8 +524,8 @@
       <canvas id="iso-canvas" width="1200" height="600"></canvas>
 
       <!-- HUD overlay frame — placeholders for follow-up hoglets -->
-      <div class="iso-hud" aria-hidden="true">
-        <div class="iso-hud-minimap">
+      <div class="iso-hud">
+        <div class="iso-hud-minimap" aria-hidden="true">
           <div class="iso-hud-label">MINIMAP</div>
           <div class="iso-hud-placeholder"></div>
         </div>
@@ -545,7 +545,7 @@
       </div>
 
       <div class="iso-hint">
-        FOUNDATION SCAFFOLD · PAN WITH <kbd>WASD</kbd> / <kbd>↑↓←→</kbd> / MOUSE EDGES
+        LEFT-CLICK WORKER · RIGHT-CLICK TO COMMAND · PAN WITH <kbd>WASD</kbd> / EDGES
       </div>
     </div>
   </div>
@@ -605,6 +605,12 @@
 <script src="js/iso/camera.js"></script>
 <script src="js/iso/render.js"></script>
 <script src="js/iso/game.js"></script>
+
+<!-- Citadel Ops — Resources, buildings, workers, economy -->
+<script src="js/iso/resources.js"></script>
+<script src="js/iso/buildings.js"></script>
+<script src="js/iso/workers.js"></script>
+<script src="js/iso/economy.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>
