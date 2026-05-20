@@ -69,15 +69,40 @@
       </div>
     </section>
 
-    <!-- Placeholder: the incubator hoglet will render incubator slots here. -->
+    <!-- Bird variety / stats reference. -->
+    <section class="panel">
+      <h2>Birds</h2>
+      <div id="bird-stats-list" class="bird-stats-list" aria-label="Bird stats reference"></div>
+    </section>
+
+    <!-- Incubator slots + place-egg controls. -->
     <section class="panel">
       <h2>Incubators</h2>
-      <div id="incubator-panel" class="placeholder" aria-label="Incubator panel placeholder">
-        <p>🥚 Incubator UI goes here.</p>
-        <p class="placeholder-sub">Reserved for the incubator/upgrade hoglet.</p>
+      <div id="incubator-panel" aria-label="Incubator panel">
+        <div id="incubator-place-buttons" class="place-buttons" aria-label="Place egg controls"></div>
+        <div id="incubator-slots" class="incubator-slots" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- Upgrades. -->
+    <section class="panel">
+      <h2>Upgrades</h2>
+      <div id="upgrades-panel" aria-label="Upgrades">
+        <div id="upgrades-list" class="upgrades-list"></div>
+      </div>
+    </section>
+
+    <!-- Milestones. -->
+    <section class="panel">
+      <h2>Flock Goals</h2>
+      <div id="milestones-panel" aria-label="Flock milestones">
+        <p id="flock-progress" class="flock-progress"></p>
+        <div id="milestones-list" class="milestones-list"></div>
       </div>
     </section>
   </main>
+
+  <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
 
   <script type="module" src="src/main.js"></script>
 </body>

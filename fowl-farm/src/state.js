@@ -62,10 +62,17 @@ export function createNewGame() {
     birds,
     eggs: zeroByType(),
     pendingEggs: zeroByType(),
-    incubators: [null, null], // 2 empty slots
+    // Incubator slots. Length == incubatorSlots. `null` means empty.
+    // Non-null slot shape: { type: 'chicken'|'goose', startedAt, hatchTimeMs }
+    incubators: [null, null],
     coopCapacity: 6,
     incubatorSlots: 2,
     incubatorSpeedMultiplier: 1,
+    // Upgrade levels — separate from the derived multipliers/capacities so
+    // costs can scale by level and the UI can show current level.
+    upgrades: { coopCapacity: 0, incubatorSpeed: 0 },
+    // Hatch-counter milestones consume this; bumped each hatch.
+    totalHatched: 0,
     lastTickAt: Date.now(),
     resources: { coins: 0 },
     // Internal: fractional egg progress per bird type. Not persisted across
@@ -142,6 +149,8 @@ function serialize(state) {
     coopCapacity: state.coopCapacity,
     incubatorSlots: state.incubatorSlots,
     incubatorSpeedMultiplier: state.incubatorSpeedMultiplier,
+    upgrades: state.upgrades,
+    totalHatched: state.totalHatched,
     resources: state.resources,
     // lastTickAt is intentionally omitted; we reset it on load.
   };
@@ -155,11 +164,19 @@ function hydrate(parsed) {
     eggs: { ...fresh.eggs, ...(parsed.eggs || {}) },
     pendingEggs: { ...fresh.pendingEggs, ...(parsed.pendingEggs || {}) },
     resources: { ...fresh.resources, ...(parsed.resources || {}) },
+    upgrades: { ...fresh.upgrades, ...(parsed.upgrades || {}) },
     incubators: Array.isArray(parsed.incubators) ? parsed.incubators : fresh.incubators,
     birds: Array.isArray(parsed.birds) && parsed.birds.length ? parsed.birds : fresh.birds,
+    totalHatched: Number.isFinite(parsed.totalHatched) ? parsed.totalHatched : fresh.totalHatched,
     lastTickAt: Date.now(), // v1: no offline catch-up
     _eggProgress: zeroByType(),
   };
+  // Make sure the incubators array matches incubatorSlots in length so the UI
+  // can iterate without bounds-checking after an upgrade is applied.
+  while (merged.incubators.length < merged.incubatorSlots) merged.incubators.push(null);
+  if (merged.incubators.length > merged.incubatorSlots) {
+    merged.incubators = merged.incubators.slice(0, merged.incubatorSlots);
+  }
   return merged;
 }
 
