@@ -12,16 +12,18 @@ import { loadState, scheduleAutoSave, flushSave, createNewGame } from './state.j
 import { startLoop } from './loop.js';
 import { produceEggs } from './eggs.js';
 import { initUI, renderHUD } from './ui.js';
+import { initFarmView, rebindFarmView, tickFarmView, _debugFarmView } from './farmView.js';
 
 let state = loadState();
 let loopHandle = null;
 
-function onTick(s, dt) {
+function onTick(s, dt, now) {
   const result = produceEggs(s, dt);
   if (result.changed) {
     renderHUD(s);
     scheduleAutoSave(s);
   }
+  tickFarmView(s, dt, now);
 }
 
 function onStateChange() {
@@ -35,12 +37,14 @@ function onReset() {
   // callback closes over the right object.
   if (loopHandle) loopHandle.stop();
   initUI({ state, onStateChange, onReset });
+  rebindFarmView(state);
   loopHandle = startLoop(state, onTick);
   flushSave(state);
 }
 
 function boot() {
   initUI({ state, onStateChange, onReset });
+  initFarmView({ state, onEggCollected: () => { renderHUD(state); scheduleAutoSave(state); } });
   loopHandle = startLoop(state, onTick);
 
   window.addEventListener('beforeunload', () => flushSave(state));
@@ -62,5 +66,6 @@ if (typeof window !== 'undefined') {
   window.__fowlFarm = {
     getState: () => state,
     forceSave: () => flushSave(state),
+    _debugFarmView,
   };
 }
