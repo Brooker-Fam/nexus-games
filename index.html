@@ -545,7 +545,7 @@
       </div>
 
       <div class="iso-hint">
-        LEFT-CLICK SELECT · <kbd>SHIFT</kbd> ADD · BOX-SELECT · RIGHT-CLICK COMMAND · <kbd>WASD</kbd>/EDGES PAN
+        <kbd>LMB</kbd> SELECT · <kbd>SHIFT</kbd> ADD · BOX-SELECT · <kbd>RMB</kbd> COMMAND · <kbd>WASD</kbd>/EDGES PAN
       </div>
 
       <!-- Reserved overlay slot for the AI/win-loss hoglet. -->
@@ -601,35 +601,23 @@
 <!-- Atari Pong -->
 <script src="js/pong/game.js"></script>
 
-<!-- Citadel Ops (2.5D Isometric RTS — foundation) -->
+<!-- Citadel Ops (2.5D Isometric RTS) -->
 <script src="js/iso/coords.js"></script>
 <script src="js/iso/map.js"></script>
 <script src="js/iso/world.js"></script>
 <script src="js/iso/camera.js"></script>
 <script src="js/iso/render.js"></script>
-<script src="js/iso/game.js"></script>
-<!-- Citadel Ops — units, selection, pathfinding (hoglet #2) -->
-<script src="js/iso/pathfinding.js"></script>
-<script src="js/iso/units-render.js"></script>
-<script src="js/iso/units.js"></script>
-<script src="js/iso/selection.js"></script>
-<script src="js/iso/movement.js"></script>
+<script src="js/iso/factions.js"></script>
+<script src="js/iso/state.js"></script>
+<script src="js/iso/entities.js"></script>
+<script src="js/iso/commands.js"></script>
+<script src="js/iso/systems.js"></script>
+<script src="js/iso/spawn.js"></script>
 <script src="js/iso/input.js"></script>
-<script src="js/iso/iso-init.js"></script>
-
-<!-- Citadel Ops — Resources, buildings, workers, economy -->
-<script src="js/iso/resources.js"></script>
-<script src="js/iso/buildings.js"></script>
-<script src="js/iso/workers.js"></script>
-<script src="js/iso/economy.js"></script>
-
-<!-- Citadel Ops (2.5D Isometric RTS — production + combat + HUD) -->
-<script src="js/iso/api.js"></script>
-<script src="js/iso/entities-stub.js"></script>
-<script src="js/iso/production.js"></script>
-<script src="js/iso/combat.js"></script>
 <script src="js/iso/hud.js"></script>
-<script src="js/iso/integration.js"></script>
+<script src="js/iso/ai/ai-opponent.js"></script>
+<script src="js/iso/game/win-loss.js"></script>
+<script src="js/iso/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>
