@@ -139,14 +139,41 @@
     window.DuneEconomy.recalcStorage(owner);
     // Auto-spawn benefit (refinery → free harvester).
     if(cfg.spawnsOnComplete && cfg.spawnsOnComplete.unit && window.DuneUnits){
-      const sx = x + w + 1, sy = y;
-      window.DuneUnits.spawnUnit(cfg.spawnsOnComplete.unit, sx, sy, owner);
-      window.DuneState.pushLog('Free harvester deployed.', 'good');
+      const spot = _findPassableNear(x, y, w, h);
+      if(spot){
+        window.DuneUnits.spawnUnit(cfg.spawnsOnComplete.unit, spot.x, spot.y, owner);
+        if(owner === 'player'){
+          window.DuneState.pushLog('Free harvester deployed.', 'good');
+        }
+      }
+    }
+    // Refresh harvester drop-off whenever a refinery lands.
+    if(type === 'refinery' && window.DuneUnits && window.DuneUnits.refreshDropOff){
+      window.DuneUnits.refreshDropOff();
     }
     if(opts.builtImmediately && owner === 'player'){
       window.DuneState.pushLog(cfg.name + ' deployed.', 'good');
     }
     return b;
+  }
+
+  function _findPassableNear(x, y, w, h){
+    if(!window.DuneTerrain) return null;
+    for(let r = 1; r <= 4; r++){
+      for(let dy = -r; dy <= h + r - 1; dy++){
+        for(const dx of [-r, w + r - 1]){
+          const tx = x + dx, ty = y + dy;
+          if(window.DuneTerrain.isPassable(tx, ty)) return { x: tx, y: ty };
+        }
+      }
+      for(let dx = -r; dx <= w + r - 1; dx++){
+        for(const dy of [-r, h + r - 1]){
+          const tx = x + dx, ty = y + dy;
+          if(window.DuneTerrain.isPassable(tx, ty)) return { x: tx, y: ty };
+        }
+      }
+    }
+    return null;
   }
 
   function damage(id, amount, attacker){
@@ -161,6 +188,9 @@
     S().buildings = S().buildings.filter(x => x.id !== b.id);
     window.DuneEconomy.recalcPower(b.owner);
     window.DuneEconomy.recalcStorage(b.owner);
+    if(b.type === 'refinery' && window.DuneUnits && window.DuneUnits.refreshDropOff){
+      window.DuneUnits.refreshDropOff();
+    }
     const cfg = CFG()[b.type];
     const tag = (b.owner === 'player' ? 'OUR' : 'ENEMY') + ' ' + cfg.name.toUpperCase();
     window.DuneState.pushLog(tag + ' destroyed.', b.owner === 'player' ? 'bad' : 'good');

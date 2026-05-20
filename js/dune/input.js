@@ -25,6 +25,10 @@ function duneInstallInput(canvas, state){
 
   canvas.addEventListener('mousedown', e => {
     const { tx, ty, px, py } = _duneCanvasToWorld(canvas, state, e);
+    // While a building is awaiting placement, the HUD owns clicks (place /
+    // cancel) — don't also try to select or order units.
+    if(state.placement && state.placement.player) return;
+    if(state.over) return;
     if(e.button === 0){
       _duneSelectClick(state, tx, ty, px, py, e.shiftKey);
     } else if(e.button === 2){
@@ -82,11 +86,24 @@ function _duneOrderClick(state, tx, ty){
   const enemy = state.units.find(u =>
     !u.dead && u.owner !== 'player' && u.tx === tx && u.ty === ty
   );
+  // Or an enemy building overlapping the clicked tile.
+  let enemyBuilding = null;
+  if(!enemy && window.DuneBuildings){
+    for(const b of window.DuneBuildings.all()){
+      if(b.owner === 'player') continue;
+      if(tx >= b.x && tx < b.x + b.w && ty >= b.y && ty < b.y + b.h){
+        enemyBuilding = b;
+        break;
+      }
+    }
+  }
   const onSpice = state.terrain.isSpice(tx, ty);
 
   for(const u of state.selected){
     if(enemy && DUNE_UNITS[u.type].attack > 0){
       duneIssueOrder(state, u, { kind: 'attack', targetId: enemy.id, persistent: true });
+    } else if(enemyBuilding && DUNE_UNITS[u.type].attack > 0){
+      duneIssueOrder(state, u, { kind: 'attack', targetId: 'b' + enemyBuilding.id, persistent: true });
     } else if(onSpice && DUNE_UNITS[u.type].harvester){
       duneIssueOrder(state, u, { kind: 'harvest', tx, ty });
     } else {
@@ -108,6 +125,6 @@ function _duneOrderClick(state, tx, ty){
     x: tx * state.tileSize + state.tileSize / 2,
     y: ty * state.tileSize + state.tileSize / 2,
     life: 18, maxLife: 18,
-    color: enemy ? '#ff5566' : '#9bf0ff',
+    color: (enemy || enemyBuilding) ? '#ff5566' : '#9bf0ff',
   });
 }

@@ -218,6 +218,12 @@
       queueEl.innerHTML = html;
     }
 
+    // Unit production grid (rebuilt when the set of buildable units changes)
+    updateUnitGrid(S);
+
+    // Selected unit info
+    updateSelectedPanel(S);
+
     // Log
     if(S.log.length !== lastLogLen){
       lastLogLen = S.log.length;
@@ -238,6 +244,97 @@
         : 'Your forces have been swept from Arrakis.';
     } else {
       overlay.style.display = 'none';
+    }
+  }
+
+  // ── Unit production ─────────────────────────────────────────────────
+  let lastUnitTypes = '';
+  let unitButtons = {};
+  function updateUnitGrid(S){
+    if(!window.DuneUnits || !window.DuneUnits.buildableUnitsFor) return;
+    const grid = $('dune-unit-grid');
+    if(!grid) return;
+    const available = window.DuneUnits.buildableUnitsFor('player');
+    const key = available.join(',');
+    if(key !== lastUnitTypes){
+      lastUnitTypes = key;
+      grid.innerHTML = '';
+      unitButtons = {};
+      for(const t of available){
+        const cfg = (typeof DUNE_UNITS !== 'undefined') ? DUNE_UNITS[t] : null;
+        if(!cfg) continue;
+        const btn = document.createElement('button');
+        btn.className = 'dune-build-btn dune-unit-btn';
+        btn.dataset.type = t;
+        btn.innerHTML =
+          '<span class="dune-build-name">' + cfg.name.toUpperCase() + '</span>' +
+          '<span class="dune-build-cost">' + cfg.cost + 'c</span>' +
+          '<span class="dune-build-status" data-role="status"></span>' +
+          '<div class="dune-build-progress"><div class="dune-build-progress-bar" data-role="bar"></div></div>';
+        btn.onclick = () => {
+          const res = window.DuneUnits.queueUnit(t, 'player');
+          if(!res.ok){ setStatus(res.reason || 'cannot produce'); }
+          else { setStatus('Producing ' + cfg.name + '…'); }
+        };
+        grid.appendChild(btn);
+        unitButtons[t] = btn;
+      }
+    }
+    // Update progress
+    const queues = window.DuneUnits.queues('player');
+    const inProgress = queues[0];
+    for(const t of Object.keys(unitButtons)){
+      const btn = unitButtons[t];
+      btn.classList.remove('queued');
+      const bar = btn.querySelector('[data-role="bar"]');
+      const stat = btn.querySelector('[data-role="status"]');
+      bar.style.width = '0%';
+      stat.textContent = '';
+      if(inProgress && inProgress.type === t){
+        btn.classList.add('queued');
+        const pct = Math.min(100, Math.floor(100 * inProgress.progress / inProgress.total));
+        bar.style.width = pct + '%';
+        stat.textContent = pct + '%';
+      }
+      const cfg = DUNE_UNITS[t];
+      const canAfford = window.DuneEconomy.canAfford('player', cfg.cost);
+      btn.disabled = !canAfford || (inProgress && inProgress.type === t);
+      if(!canAfford && !(inProgress && inProgress.type === t)){
+        btn.title = 'insufficient credits';
+      } else {
+        btn.title = '';
+      }
+    }
+  }
+
+  function updateSelectedPanel(S){
+    const el = $('dune-selected');
+    if(!el) return;
+    const sel = (window.DuneUnits && window.DuneUnits.selected()) || [];
+    if(sel.length === 0){
+      el.innerHTML = '<div class="dune-selected-empty">No selection. LEFT-CLICK units, RIGHT-CLICK to give orders.</div>';
+      return;
+    }
+    if(sel.length === 1){
+      const u = sel[0];
+      const cfg = DUNE_UNITS[u.type];
+      const pct = Math.floor(100 * u.hp / u.maxHp);
+      el.innerHTML =
+        '<div class="dune-sel-name">' + cfg.name + '</div>' +
+        '<div class="dune-sel-stat">HP: <b>' + Math.max(0, Math.ceil(u.hp)) + '/' + u.maxHp + '</b> (' + pct + '%)</div>' +
+        '<div class="dune-sel-stat">Order: ' + u.order.kind + '</div>' +
+        (cfg.harvester ? '<div class="dune-sel-stat">Spice: ' + u.spiceLoad + '/' + cfg.spiceCap + '</div>' : '') +
+        '<div class="dune-sel-stat">Attack: ' + cfg.attack + ' · Range: ' + cfg.range + '</div>';
+    } else {
+      // Group by type
+      const counts = {};
+      for(const u of sel){ counts[u.type] = (counts[u.type] || 0) + 1; }
+      const parts = [];
+      for(const t of Object.keys(counts)){
+        parts.push(counts[t] + '× ' + DUNE_UNITS[t].name);
+      }
+      el.innerHTML = '<div class="dune-sel-name">' + sel.length + ' UNITS</div>' +
+        '<div class="dune-sel-stat">' + parts.join('<br>') + '</div>';
     }
   }
 
