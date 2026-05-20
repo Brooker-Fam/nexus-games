@@ -1,0 +1,425 @@
+  /* ── CITADEL OPS (2.5D ISOMETRIC RTS) ──
+     Foundation scaffold. Visual language matches Deep Space Ops:
+     - clipped-corner panels via clip-path
+     - cyan neon accents, dark panel fill
+     - Orbitron headings, Rajdhani body
+     Theme reference: docs/rts-2d-theme.md
+  */
+
+  .iso-stage {
+    position: relative;
+    background: #020810;
+    border: 1px solid var(--panel-border);
+    box-shadow: 0 0 30px rgba(0,245,255,0.08), inset 0 0 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+  }
+
+  #iso-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #020810;
+    cursor: crosshair;
+  }
+
+  /* HUD overlay frame — placeholder boxes for follow-up hoglets. */
+  .iso-hud {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    display: grid;
+    grid-template-columns: 220px 1fr 260px;
+    gap: 8px;
+    padding: 8px;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent 0%, rgba(2,8,16,0.65) 60%, rgba(2,8,16,0.92) 100%);
+  }
+
+  .iso-hud > div {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    padding: 8px 10px;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+
+  .iso-hud-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--neon-cyan);
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(0,245,255,0.18);
+    text-transform: uppercase;
+  }
+
+  /* Minimap placeholder — bottom-left */
+  .iso-hud-minimap { min-height: 130px; }
+  .iso-hud-minimap .iso-hud-placeholder {
+    width: 100%;
+    height: 100px;
+    background:
+      linear-gradient(135deg, rgba(0,245,255,0.06) 0%, rgba(0,0,0,0) 60%),
+      repeating-linear-gradient(45deg, rgba(0,245,255,0.04) 0 4px, transparent 4px 8px),
+      #061830;
+    border: 1px dashed rgba(0,245,255,0.18);
+  }
+
+  /* Selection / portrait placeholder — bottom-center */
+  .iso-hud-center {
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .iso-hud-portrait {
+    width: 100%;
+    flex: 1;
+    min-height: 70px;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 40%, rgba(136,0,255,0.18) 0%, transparent 70%),
+      #060e1a;
+    border: 1px dashed rgba(136,0,255,0.20);
+  }
+  .iso-hud-info {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  /* Command grid (live build menu — see js/iso/economy.js) */
+  .iso-hud-cmd { min-height: 130px; }
+  .iso-hud-cmd-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+  .iso-cmd-slot {
+    aspect-ratio: 1;
+    background: rgba(0,20,40,0.6);
+    border: 1px solid rgba(0,245,255,0.15);
+    clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px));
+  }
+  .iso-cmd-btn {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--neon-cyan);
+    background: rgba(0,20,40,0.75);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+    font-family: 'Orbitron', sans-serif;
+    padding: 4px 2px;
+  }
+  .iso-cmd-btn:hover {
+    background: rgba(0,40,80,0.85);
+    border-color: rgba(0,245,255,0.55);
+    box-shadow: 0 0 12px rgba(0,245,255,0.25);
+  }
+  .iso-cmd-btn.active {
+    background: rgba(0,80,40,0.85);
+    border-color: var(--neon-green);
+    box-shadow: 0 0 14px rgba(0,255,136,0.35);
+    color: var(--neon-green);
+  }
+  .iso-cmd-key {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: rgba(0,245,255,0.5);
+  }
+  .iso-cmd-btn.active .iso-cmd-key { color: rgba(0,255,136,0.8); }
+  .iso-cmd-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    line-height: 1.1;
+  }
+  .iso-cmd-cost {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: rgba(232,244,255,0.55);
+    margin-top: 2px;
+  }
+
+  /* On-screen hint at the very top of the stage. */
+  .iso-hint {
+    position: absolute;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    background: rgba(2,8,16,0.7);
+    padding: 6px 14px;
+    border: 1px solid var(--panel-border);
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    pointer-events: none;
+  }
+  .iso-hint kbd {
+    display: inline-block;
+    padding: 1px 5px;
+    margin: 0 2px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px;
+    background: rgba(0,245,255,0.08);
+    border: 1px solid rgba(0,245,255,0.25);
+    color: var(--neon-cyan);
+    letter-spacing: 1px;
+    border-radius: 2px;
+  }
+
+  /* ── HUD frame becomes interactive (was pointer-events:none). ── */
+  .iso-hud { pointer-events: none; }
+  .iso-hud > div { pointer-events: auto; }
+
+  /* ── Selection / portrait — populated by js/iso/hud.js ── */
+  .iso-hud-portrait { padding: 4px; display: flex; }
+  .iso-portrait-single {
+    display: flex; gap: 8px; flex: 1; align-items: stretch;
+  }
+  .iso-portrait-art {
+    width: 70px;
+    border: 1px solid rgba(0,245,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    background: #060e1a;
+  }
+  .iso-portrait-glyph {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 32px; font-weight: 900;
+    text-shadow: 0 0 12px currentColor;
+  }
+  .iso-portrait-meta {
+    flex: 1;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .iso-portrait-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px; letter-spacing: 2px; font-weight: 700;
+    color: var(--text-bright);
+  }
+  .iso-portrait-fac {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px; letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .iso-hp-row { display: flex; align-items: center; gap: 6px; }
+  .iso-hp-bar {
+    flex: 1; height: 8px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(0,245,255,0.25);
+    overflow: hidden;
+  }
+  .iso-hp-fill {
+    height: 100%; width: 100%;
+    background: var(--neon-green);
+    transition: width 0.12s linear, background 0.2s;
+  }
+  .iso-hp-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px; letter-spacing: 1px;
+    color: var(--text-dim);
+    min-width: 60px; text-align: right;
+  }
+  /* Multi-select grid of mini-icons */
+  .iso-portrait-grid { padding: 4px; }
+  .iso-portrait-multi {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 3px;
+    width: 100%;
+  }
+  .iso-portrait-cell {
+    aspect-ratio: 1;
+    background: rgba(0,20,40,0.7);
+    border: 1px solid;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer;
+    padding: 2px;
+    clip-path: polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 3px 100%, 0 calc(100% - 3px));
+  }
+  .iso-portrait-cell:hover { box-shadow: 0 0 8px rgba(0,245,255,0.4); }
+  .iso-portrait-cell-glyph {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px; font-weight: 900;
+    text-shadow: 0 0 6px currentColor;
+  }
+  .iso-mini-hp {
+    width: 100%; height: 2px;
+    background: rgba(0,0,0,0.6);
+    margin-top: 2px;
+  }
+  .iso-mini-hp-fill { height: 100%; background: var(--neon-green); }
+
+  /* ── Command panel buttons ── */
+  .iso-cmd-btn {
+    cursor: pointer;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 4px 2px;
+    font-family: 'Orbitron', sans-serif;
+    color: var(--text-bright);
+    transition: all 0.12s;
+    border: 1px solid rgba(0,245,255,0.25);
+    background: rgba(0,30,60,0.7);
+    text-align: center;
+    overflow: hidden;
+  }
+  .iso-cmd-btn:hover {
+    background: rgba(0,245,255,0.12);
+    box-shadow: 0 0 8px rgba(0,245,255,0.35);
+    border-color: var(--neon-cyan);
+  }
+  .iso-cmd-btn:active { transform: translateY(1px); }
+  .iso-cmd-btn:focus { outline: none; }
+  .iso-cmd-glyph {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 8px var(--neon-cyan);
+    line-height: 1;
+  }
+  .iso-cmd-label {
+    font-size: 8px; letter-spacing: 1.5px;
+    margin-top: 2px;
+    color: var(--text-bright);
+  }
+  .iso-cmd-hint {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 8px; letter-spacing: 0.5px;
+    color: var(--text-dim);
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .iso-cmd-unaffordable {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: auto;
+  }
+  .iso-cmd-unaffordable:hover {
+    background: rgba(60,0,30,0.55);
+    box-shadow: 0 0 8px rgba(255,0,136,0.35);
+    border-color: var(--neon-pink);
+  }
+  .iso-cmd-cancel .iso-cmd-glyph { color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); }
+  .iso-cmd-cancel:hover { box-shadow: 0 0 8px rgba(255,0,136,0.4); border-color: var(--neon-pink); }
+
+  /* ── Hint flash (replaces "FOUNDATION SCAFFOLD" line during play) ── */
+  .iso-hint-flash {
+    animation: isoHintFlash 0.4s ease-out;
+    color: var(--neon-cyan);
+    border-color: var(--neon-cyan);
+  }
+  @keyframes isoHintFlash {
+    0%   { transform: translateX(-50%) scale(1.06); box-shadow: 0 0 12px rgba(0,245,255,0.6); }
+    100% { transform: translateX(-50%) scale(1);    box-shadow: 0 0 4px  rgba(0,245,255,0.2); }
+  }
+
+  /* ── Game-over overlay slot (reserved for the AI/win-loss hoglet) ── */
+  .iso-gameover {
+    position: absolute; inset: 0;
+    display: none;
+    align-items: center; justify-content: center;
+    background: rgba(2,8,16,0.85);
+    z-index: 10;
+    font-family: 'Orbitron', sans-serif;
+    pointer-events: auto;
+  }
+  .iso-gameover.active { display: flex; }
+
+  /* Responsive: collapse the bottom-bar grid on narrow screens. */
+  @media (max-width: 900px){
+    .iso-hud {
+      grid-template-columns: 1fr 1fr;
+    }
+    .iso-hud-cmd { grid-column: 1 / -1; }
+    .iso-portrait-multi { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  /* ── END-GAME OVERLAY (victory / defeat) ─────────────
+     Full-stage overlay shown when one side is wiped out. */
+  .iso-endgame {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(2,8,16,0.65) 0%, rgba(2,8,16,0.92) 70%, rgba(2,8,16,0.96) 100%);
+    z-index: 50;
+    pointer-events: auto;
+    --iso-end-accent: var(--neon-cyan);
+  }
+  .iso-endgame.show { display: flex; }
+
+  .iso-endgame-panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--iso-end-accent);
+    padding: 32px 48px;
+    text-align: center;
+    box-shadow:
+      0 0 40px color-mix(in srgb, var(--iso-end-accent) 35%, transparent),
+      inset 0 0 60px rgba(0,0,0,0.55);
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+    max-width: 480px;
+  }
+  .iso-endgame-panel[data-outcome="defeat"]   { --iso-end-accent: var(--neon-pink); }
+  .iso-endgame-panel[data-outcome="victory"]  { --iso-end-accent: var(--neon-cyan); }
+
+  .iso-endgame-eyebrow {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--iso-end-accent);
+    margin-bottom: 12px;
+    opacity: 0.85;
+    text-transform: uppercase;
+  }
+  .iso-endgame-title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 56px;
+    letter-spacing: 12px;
+    color: var(--iso-end-accent);
+    text-shadow: 0 0 24px color-mix(in srgb, var(--iso-end-accent) 60%, transparent);
+    margin-bottom: 14px;
+  }
+  .iso-endgame-tagline {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+    line-height: 1.45;
+  }
+  .iso-endgame-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--iso-end-accent);
+    background: rgba(0,20,40,0.5);
+    border: 1px solid var(--iso-end-accent);
+    padding: 12px 26px;
+    cursor: pointer;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    transition: background 120ms ease, box-shadow 120ms ease, transform 80ms ease;
+  }
+  .iso-endgame-btn:hover {
+    background: color-mix(in srgb, var(--iso-end-accent) 16%, rgba(0,20,40,0.5));
+    box-shadow: 0 0 18px color-mix(in srgb, var(--iso-end-accent) 60%, transparent);
+  }
+  .iso-endgame-btn:active { transform: translateY(1px); }
+
