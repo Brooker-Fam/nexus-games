@@ -119,11 +119,12 @@ js/iso/
   camera.js   — IsoCamera (edge-scroll + WASD + arrow keys, clamped pan)
   render.js   — drawIsoMap, drawWorld, full-frame render(ctx, world, cam)
   game.js     — registerGame('iso', ...), RAF loop, init/cleanup
+  fog.js      — FogOfWar system + drawFogOverlay (P2 — fog of war)
 docs/rts-2d-theme.md               — this file
 ```
 
 Scripts are loaded as plain `<script>` tags from `index.html` in dependency
-order (coords → map → world → camera → render → game).
+order (coords → map → world → camera → render → game → fog).
 
 ---
 
@@ -187,6 +188,46 @@ Other hoglets MUST use these instead of inventing parallel utilities.
 - `isoStart()` / `isoStop()` — public, idempotent. The game loop runs at
   `requestAnimationFrame` cadence with a `dt` (ms) delta passed to every
   system.
+
+### Fog of War (`js/iso/fog.js`)
+- `FOG` — numeric state constants `{ UNEXPLORED: 0, EXPLORED: 1, VISIBLE: 2 }`.
+- `class FogOfWar`:
+  - `new FogOfWar(map)` — grid sized to `map.cols × map.rows`, all `UNEXPLORED`.
+  - Implements the system interface: `.update(dt, world)` recomputes vision
+    on a throttle (`setRecomputeInterval(ms)`, default 100ms / 10 Hz).
+  - `.recompute(world)` — force a recompute now.
+  - `.stateAt(col, row) → 0|1|2`
+  - `.isVisible(col, row) → boolean`
+  - `.isExplored(col, row) → boolean` (true for both EXPLORED and VISIBLE)
+  - `.isVisibleWorld(wx, wy) → boolean` — convenience for world-space.
+  - `.markDirty()` — force a recompute on the next system tick (e.g. after
+    a teleport, or any vision-affecting effect).
+  - `.setFriendlyPredicate(fn)` — override what counts as "friendly". The
+    default convention is below.
+- `drawFogOverlay(ctx, world, cam, fog)` — paints the dark overlay. Already
+  wired into `isoRender`; other hoglets shouldn't need to call it directly.
+- The `isoRender` and `drawWorld` globals are **wrapped** by fog.js. After
+  load, calling them still works as before, plus:
+  - `isoRender` paints `drawFogOverlay(world._fog)` after entities.
+  - `drawWorld` filters out entities whose `components.hidden === true`
+    (set automatically by the fog system on enemies in non-VISIBLE tiles).
+  If you wrap them yourself, preserve these behaviors.
+- The active world's fog grid is exposed at `world._fog` (a `FogOfWar`).
+  Read-only for everyone except the fog system itself.
+
+**Vision-source convention** (units, buildings — please follow):
+
+| Component                  | Effect                                                  |
+|----------------------------|---------------------------------------------------------|
+| `components.visionRange`   | tiles of vision (e.g. 4–6 for combat, 8–10 for HQ/scout)|
+| `components.visionShape`   | `'circle'` (default, Euclidean) \| `'diamond'` (Manhattan) |
+| `components.faction`       | matches `world.playerFaction` → friendly                |
+| `components.owner`         | `'player'` → friendly (fallback when faction is unset)  |
+| `components.hidden`        | set by fog system; `true` skips render. Don't write it. |
+
+Entities with neither `faction` nor `owner` set are treated as friendly
+(fail-open) so placeholder entities from other hoglets don't vanish into
+the fog before they wire ownership up.
 
 ### Coordinate-system conventions
 - **Tile-space**: integer `(col, row)`. `col` grows east-southeast, `row`
