@@ -15,16 +15,20 @@ const DOOM_MINI_W = doomMini.width;
 const DOOM_MINI_H = doomMini.height;
 
 // ── MAP ──
-//  1 = brick wall
-//  2 = metal wall
-//  3 = stone wall
-//  9 = exit (glowing portal)
-//  . = empty floor
-//  A = ammo pickup spawn
-//  M = medkit pickup spawn
-//  E = enemy spawn
-//  P = player spawn
-const DOOM_MAP_SRC = [
+//  Tile glyphs (extended in js/doom/levels.js):
+//    1 = brick wall   2 = metal wall   3 = stone wall
+//    9 = exit (glowing portal — passable)
+//    . = empty floor
+//    P = player spawn
+//    E = enemy (demon) spawn
+//    A = ammo pickup        M = medkit pickup
+//    S = shotgun pickup     C = chaingun pickup
+//    R = rocket pickup      K = armor pickup
+//
+//  The default 16×16 map is kept here so this file remains usable
+//  on its own; level data and the multi-level catalog live in
+//  js/doom/levels.js. Call doomLoadLevel(index) to swap.
+const DOOM_DEFAULT_MAP_SRC = [
   '1111111111111111',
   '1P.....1.......1',
   '1......1...M...1',
@@ -43,35 +47,68 @@ const DOOM_MAP_SRC = [
   '1111111111111111',
 ];
 
-const DOOM_MAP_H = DOOM_MAP_SRC.length;
-const DOOM_MAP_W = DOOM_MAP_SRC[0].length;
-
-// parse map into pure walls (0 or wall id) and spawn lists
-const DOOM_MAP = [];
-const DOOM_PLAYER_SPAWN = { x: 1.5, y: 1.5 };
-const DOOM_ENEMY_SPAWNS = [];
-const DOOM_AMMO_SPAWNS = [];
-const DOOM_MEDKIT_SPAWNS = [];
+// Mutable level-scoped state — re-populated by doomLoadLevel().
+let DOOM_MAP_SRC = DOOM_DEFAULT_MAP_SRC;
+let DOOM_MAP_H = DOOM_MAP_SRC.length;
+let DOOM_MAP_W = DOOM_MAP_SRC[0].length;
+let DOOM_MAP = [];
+let DOOM_PLAYER_SPAWN = { x: 1.5, y: 1.5 };
+let DOOM_ENEMY_SPAWNS = [];
+let DOOM_AMMO_SPAWNS = [];
+let DOOM_MEDKIT_SPAWNS = [];
+let DOOM_EXTRA_PICKUP_SPAWNS = [];
 let DOOM_EXIT = { x: 0, y: 0 };
+let DOOM_CURRENT_LEVEL_INDEX = 0;
 
-for(let y = 0; y < DOOM_MAP_H; y++){
-  const row = [];
-  for(let x = 0; x < DOOM_MAP_W; x++){
-    const c = DOOM_MAP_SRC[y][x];
-    if(c === '1') row.push(1);
-    else if(c === '2') row.push(2);
-    else if(c === '3') row.push(3);
-    else if(c === '9'){ row.push(9); DOOM_EXIT = { x: x + 0.5, y: y + 0.5 }; }
-    else {
-      row.push(0);
-      if(c === 'P') Object.assign(DOOM_PLAYER_SPAWN, { x: x + 0.5, y: y + 0.5 });
-      else if(c === 'E') DOOM_ENEMY_SPAWNS.push({ x: x + 0.5, y: y + 0.5 });
-      else if(c === 'A') DOOM_AMMO_SPAWNS.push({ x: x + 0.5, y: y + 0.5 });
-      else if(c === 'M') DOOM_MEDKIT_SPAWNS.push({ x: x + 0.5, y: y + 0.5 });
+function doomParseMap(src){
+  DOOM_MAP_SRC = src;
+  DOOM_MAP_H = src.length;
+  DOOM_MAP_W = src[0].length;
+  DOOM_MAP = [];
+  DOOM_PLAYER_SPAWN = { x: 1.5, y: 1.5 };
+  DOOM_ENEMY_SPAWNS = [];
+  DOOM_AMMO_SPAWNS = [];
+  DOOM_MEDKIT_SPAWNS = [];
+  DOOM_EXTRA_PICKUP_SPAWNS = [];
+  DOOM_EXIT = { x: 0, y: 0 };
+  const extras = (window.DOOM_EXTRA_PICKUPS) || {};
+  for(let y = 0; y < DOOM_MAP_H; y++){
+    const row = [];
+    for(let x = 0; x < DOOM_MAP_W; x++){
+      const c = src[y][x];
+      if(c === '1') row.push(1);
+      else if(c === '2') row.push(2);
+      else if(c === '3') row.push(3);
+      else if(c === '9'){ row.push(9); DOOM_EXIT = { x: x + 0.5, y: y + 0.5 }; }
+      else {
+        row.push(0);
+        if(c === 'P') DOOM_PLAYER_SPAWN = { x: x + 0.5, y: y + 0.5 };
+        else if(c === 'E') DOOM_ENEMY_SPAWNS.push({ x: x + 0.5, y: y + 0.5 });
+        else if(c === 'A') DOOM_AMMO_SPAWNS.push({ x: x + 0.5, y: y + 0.5 });
+        else if(c === 'M') DOOM_MEDKIT_SPAWNS.push({ x: x + 0.5, y: y + 0.5 });
+        else if(extras[c]) DOOM_EXTRA_PICKUP_SPAWNS.push({ x: x + 0.5, y: y + 0.5, glyph: c, ...extras[c] });
+      }
     }
+    DOOM_MAP.push(row);
   }
-  DOOM_MAP.push(row);
 }
+
+// Public: swap to a level from window.DOOM_LEVELS (defined in levels.js).
+// Falls back to the embedded default if the catalog is absent.
+function doomLoadLevel(index){
+  const cat = window.DOOM_LEVELS;
+  if(cat && cat[index]){
+    DOOM_CURRENT_LEVEL_INDEX = index;
+    doomParseMap(cat[index].map);
+    return cat[index];
+  }
+  DOOM_CURRENT_LEVEL_INDEX = 0;
+  doomParseMap(DOOM_DEFAULT_MAP_SRC);
+  return { id: 'default', name: 'CITADEL', subtitle: '', music: 'doomMusicHangar' };
+}
+
+// Initial parse — used until flow.js calls doomLoadLevel() with a real level.
+doomParseMap(DOOM_DEFAULT_MAP_SRC);
 
 function doomCell(x, y){
   if(x < 0 || y < 0 || x >= DOOM_MAP_W || y >= DOOM_MAP_H) return 1;
@@ -397,6 +434,12 @@ const DOOM_DEFAULTS = () => ({
   pickups: [
     ...DOOM_AMMO_SPAWNS.map(s => ({ x: s.x, y: s.y, type: 'ammo', taken: false })),
     ...DOOM_MEDKIT_SPAWNS.map(s => ({ x: s.x, y: s.y, type: 'medkit', taken: false })),
+    ...DOOM_EXTRA_PICKUP_SPAWNS.map(s => ({
+      x: s.x, y: s.y,
+      type: s.type,           // 'shotgun' | 'chaingun' | 'rocket' | 'armor'
+      ammoBonus: s.ammoBonus, hpBonus: s.hpBonus, label: s.label,
+      taken: false,
+    })),
   ],
   keys: Object.create(null),
   mouseDX: 0,
@@ -882,6 +925,17 @@ function doomUpdatePickups(){
       } else if(k.type === 'medkit'){
         p.hp = Math.min(p.maxHp, p.hp + 25);
         sfx('doomMedkit');
+      } else if(k.type === 'shotgun' || k.type === 'chaingun' || k.type === 'rocket'){
+        // Forward-compat weapon pickup: gives ammo + a small hp bonus.
+        // Once the weapons branch lands, this hook is where the player's
+        // weapon inventory should be updated.
+        p.ammo = Math.min(p.maxAmmo, p.ammo + (k.ammoBonus || 0));
+        if(k.hpBonus) p.hp = Math.min(p.maxHp, p.hp + k.hpBonus);
+        sfx('doomWeapon');
+        if(window.posthog) posthog.capture('doom_weapon_pickup', { weapon: k.type });
+      } else if(k.type === 'armor'){
+        p.hp = Math.min(p.maxHp, p.hp + (k.hpBonus || 35));
+        sfx('doomArmor');
       }
       k.taken = true;
       doomUpdateHUD();
@@ -906,20 +960,31 @@ function doomEnd(won){
   if(doomState.gameOver) return;
   doomState.gameOver = true;
   doomState.won = won;
-  const ov = document.getElementById('doomOverlay');
-  const ot = document.getElementById('doomOverlayTitle');
-  const os = document.getElementById('doomOverlaySub');
-  ov.classList.add('show');
-  ot.className = 'overlay-title ' + (won ? 'win' : 'lose');
-  ot.textContent = won ? 'VICTORY' : 'YOU DIED';
-  os.textContent = won
-    ? `${doomState.player.kills} KILLS · HP ${Math.max(0, doomState.player.hp | 0)}`
-    : 'THE CITADEL CLAIMED YOU';
-  if(won) sfx('doomVictory'); else sfx('doomDie');
   if(document.pointerLockElement) document.exitPointerLock();
   if(window.posthog) posthog.capture('doom_game_ended', {
     won, kills: doomState.player.kills, hp: doomState.player.hp,
+    level: DOOM_CURRENT_LEVEL_INDEX,
   });
+  // If a flow manager is installed (js/doom/flow.js), let it decide
+  // whether the player advances to the next level, sees the final
+  // win screen, or hits a death screen. Otherwise fall back to the
+  // simple in-canvas overlay so this file remains self-sufficient.
+  if(typeof doomOnLevelEnd === 'function'){
+    doomOnLevelEnd(won);
+    return;
+  }
+  const ov = document.getElementById('doomOverlay');
+  const ot = document.getElementById('doomOverlayTitle');
+  const os = document.getElementById('doomOverlaySub');
+  if(ov && ot && os){
+    ov.classList.add('show');
+    ot.className = 'overlay-title ' + (won ? 'win' : 'lose');
+    ot.textContent = won ? 'VICTORY' : 'YOU DIED';
+    os.textContent = won
+      ? `${doomState.player.kills} KILLS · HP ${Math.max(0, doomState.player.hp | 0)}`
+      : 'THE CITADEL CLAIMED YOU';
+  }
+  if(won) sfx('doomVictory'); else sfx('doomDie');
 }
 
 // ── HUD ──
@@ -948,12 +1013,27 @@ function doomLoop(ts){
 }
 
 // ── RESET ──
+// Restart the current level. If a flow manager is installed, defer to
+// it so it can re-show the title screen on full "new game" requests.
 function doomReset(){
+  if(typeof doomOnReset === 'function'){
+    doomOnReset();
+    return;
+  }
   doomState = DOOM_DEFAULTS();
-  document.getElementById('doomOverlay').classList.remove('show');
+  const ov = document.getElementById('doomOverlay');
+  if(ov) ov.classList.remove('show');
   doomUpdateHUD();
   doomLastTime = performance.now();
   if(window.posthog) posthog.capture('doom_game_restarted', {});
+}
+
+// Re-initialise gameplay state for the currently loaded level — used by
+// flow.js to advance levels or to restart after a death.
+function doomRestartCurrentLevel(){
+  doomState = DOOM_DEFAULTS();
+  doomUpdateHUD();
+  doomLastTime = performance.now();
 }
 
 // ── LIFECYCLE ──

@@ -83,15 +83,59 @@ hit.
 
 ### Map
 
-The level is defined in `DOOM_MAP_SRC` as a 16×16 ASCII grid:
+Levels are ASCII grids defined in `js/doom/levels.js` (`DOOM_LEVELS`).
+`doomLoadLevel(index)` swaps the active grid and rebuilds spawn lists.
+
+Tile glyphs:
 
 - `1`/`2`/`3` — brick / metal / stone wall types
 - `9` — exit tile (the only "wall" you can walk through; standing on it
-  triggers victory)
+  triggers level end)
 - `P` — player spawn
 - `E` — enemy spawn
 - `A` — ammo crate pickup (+12 ammo)
 - `M` — medkit pickup (+25 HP)
+- `S` — shotgun pickup    (forward-compat with the weapons branch; +20 ammo here)
+- `C` — chaingun pickup   (forward-compat; +30 ammo here)
+- `R` — rocket pickup     (forward-compat; +10 ammo +25 HP here)
+- `K` — armor pickup      (forward-compat; +35 HP here)
 - `.` — empty floor
 
-Edit `DOOM_MAP_SRC` in `js/doom/game.js` to change the layout.
+All rows in a level must be the same length. The engine treats
+out-of-bounds reads as solid walls.
+
+## Game flow
+
+`js/doom/flow.js` adds a state machine that wraps the registered game:
+
+```
+title  → briefing → playing → death  → (restart) ↺
+                            \→ victory (final level)
+```
+
+* **Title** — list of floors, "ENTER THE CITADEL" button, music toggle.
+  Enter / Space to start, arrows to select floor.
+* **Briefing** — 1.1s "FLOOR n / NAME / SUBTITLE" card.
+* **Playing** — normal gameplay loop. Reaching the exit tile fires
+  `doomEnd(true)` → flow advances to the next level.
+* **Death** — "YOU DIED" card with **RESTART FLOOR** and **MAIN MENU**.
+  `R` or Enter restarts; Esc returns to title.
+* **Victory** — shown after the last floor with kill / HP / time stats.
+  **NEW GAME** restarts from floor 1.
+
+## Audio
+
+* Per-level procedural music loop (`js/doom/audio.js`), started by
+  `doomMusicStart(trackId)` and stopped on death / level transition /
+  cleanup. Tracks: `doomMusicHangar`, `doomMusicPit`, `doomMusicSanctum`.
+* SFX (synthesised in `js/shared/audio.js`):
+  - `doomShoot`, `doomEmpty` — weapon fire / dry-click
+  - `doomEnemyHurt`, `doomEnemyDie`, `doomBite` — combat
+  - `doomPickup`, `doomMedkit`, `doomWeapon`, `doomArmor` — pickups
+  - `doomDoor`, `doomDoorClose`, `doomExit` — doors / level switch
+  - `doomLevelStart`, `doomMenuMove`, `doomMenuPick` — flow
+
+Asset hooks (no files required to run, but real audio can drop in):
+
+* `assets/doom/music/{e1m1,arena,sanctum}.ogg` — looping music tracks
+* `assets/doom/sfx/{door_open,door_close,exit_switch}.wav` — SFX
