@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="css/snake.css">
 <link rel="stylesheet" href="css/fish.css">
 <link rel="stylesheet" href="css/pong.css">
+<link rel="stylesheet" href="css/iso.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -80,6 +81,7 @@
     <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
     <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
     <button class="tab" id="tab-btn-pong" title="Classic Atari-style Pong. Single-player vs AI (Easy/Medium/Hard) or local two-player.">◫ PONG</button>
+    <button class="tab" id="tab-btn-iso" title="Isometric 2.5D RTS — foundation scaffold. Pan with WASD / arrow keys / mouse edges.">◆ CITADEL OPS</button>
     <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
@@ -504,6 +506,50 @@
     </div>
   </div>
 
+  <!-- CITADEL OPS (2.5D ISOMETRIC RTS) -->
+  <div id="tab-iso" class="tab-content">
+    <div class="game-header">
+      <div>
+        <div class="game-title">CITADEL <span>OPS</span></div>
+      </div>
+      <div class="game-stats">
+        <div class="stat-box"><div class="stat-label">MINERALS</div><div class="stat-val cyan" id="iso-minerals">—</div></div>
+        <div class="stat-box"><div class="stat-label">GAS</div><div class="stat-val green" id="iso-gas">—</div></div>
+        <div class="stat-box"><div class="stat-label">SUPPLY</div><div class="stat-val purple" id="iso-supply">—</div></div>
+        <div class="stat-box"><div class="stat-label">PERF</div><div class="stat-val gold" id="iso-fps">— FPS</div></div>
+      </div>
+    </div>
+
+    <div class="iso-stage">
+      <canvas id="iso-canvas" width="1200" height="600"></canvas>
+
+      <!-- HUD overlay frame — placeholders for follow-up hoglets -->
+      <div class="iso-hud" aria-hidden="true">
+        <div class="iso-hud-minimap">
+          <div class="iso-hud-label">MINIMAP</div>
+          <div class="iso-hud-placeholder"></div>
+        </div>
+        <div class="iso-hud-center">
+          <div class="iso-hud-label">SELECTION</div>
+          <div class="iso-hud-portrait"></div>
+          <div class="iso-hud-info">No unit selected</div>
+        </div>
+        <div class="iso-hud-cmd">
+          <div class="iso-hud-label">COMMANDS</div>
+          <div class="iso-hud-cmd-grid">
+            <div class="iso-cmd-slot"></div><div class="iso-cmd-slot"></div><div class="iso-cmd-slot"></div>
+            <div class="iso-cmd-slot"></div><div class="iso-cmd-slot"></div><div class="iso-cmd-slot"></div>
+            <div class="iso-cmd-slot"></div><div class="iso-cmd-slot"></div><div class="iso-cmd-slot"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="iso-hint">
+        FOUNDATION SCAFFOLD · PAN WITH <kbd>WASD</kbd> / <kbd>↑↓←→</kbd> / MOUSE EDGES
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <!-- Shared -->
@@ -551,6 +597,14 @@
 
 <!-- Atari Pong -->
 <script src="js/pong/game.js"></script>
+
+<!-- Citadel Ops (2.5D Isometric RTS — foundation) -->
+<script src="js/iso/coords.js"></script>
+<script src="js/iso/map.js"></script>
+<script src="js/iso/world.js"></script>
+<script src="js/iso/camera.js"></script>
+<script src="js/iso/render.js"></script>
+<script src="js/iso/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>
