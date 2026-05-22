@@ -17,9 +17,6 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/td.css">
 <link rel="stylesheet" href="css/rts.css">
-<link rel="stylesheet" href="css/snake.css">
-<link rel="stylesheet" href="css/fish.css">
-<link rel="stylesheet" href="css/pong.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -53,6 +50,25 @@
 </head>
 <body>
 
+<!-- LOGIN SCREEN OVERLAY -->
+<div id="login-screen">
+  <div class="login-panel">
+    <div class="login-logo">NEXUS GAMES</div>
+    <div class="login-tagline">ARCADE · STRATEGY · BEYOND</div>
+    <div class="login-sub">SIGN IN TO SAVE YOUR SCORES & COMPETE</div>
+    <div class="login-btns" id="login-btns">
+      <button class="login-action-btn login-google-btn" id="login-btn-google">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+        SIGN IN WITH GOOGLE
+      </button>
+      <button class="login-action-btn login-mail-btn" id="login-btn-mail">✉ SIGN IN WITH EMAIL LINK</button>
+      <button class="login-action-btn login-passkey-btn" id="login-btn-passkey" style="display:none">🔑 SIGN IN WITH PASSKEY</button>
+    </div>
+    <div id="login-msg" class="login-msg"></div>
+    <button class="login-skip-btn" id="btn-skip-login">SKIP — PLAY AS GUEST</button>
+  </div>
+</div>
+
 <!-- BACKGROUND -->
 <div class="bg-layer">
   <div class="bg-grid"></div>
@@ -77,10 +93,6 @@
   <div class="tabs">
     <button class="tab active" id="tab-btn-td">⬡ TOWER DEFENSE</button>
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
-    <button class="tab" id="tab-btn-snake">▣ SNAKE</button>
-    <button class="tab" id="tab-btn-fish">≋ FISH FRENZY</button>
-    <button class="tab" id="tab-btn-pong" title="Classic Atari-style Pong. Single-player vs AI (Easy/Medium/Hard) or local two-player.">◫ PONG</button>
-    <button class="tab" id="tab-btn-exc">⚠ MAKE EXCEPTION</button>
   </div>
 </header>
 
@@ -315,194 +327,6 @@
     </div>
   </div>
 
-  <!-- NEXUS SNAKE -->
-  <div id="tab-snake" class="tab-content">
-    <div class="game-header">
-      <div>
-        <div class="game-title">NEXUS <span>SNAKE</span></div>
-      </div>
-      <div class="game-stats">
-        <div class="stat-box"><div class="stat-label">SCORE</div><div class="stat-val cyan" id="snakeScore">0</div></div>
-        <div class="stat-box"><div class="stat-label">LENGTH</div><div class="stat-val purple" id="snakeLen">3</div></div>
-        <div class="stat-box"><div class="stat-label">BEST</div><div class="stat-val gold" id="snakeBest">0</div></div>
-      </div>
-    </div>
-
-    <div class="game-area">
-      <div class="canvas-wrap">
-        <canvas id="snakeCanvas" width="720" height="480"></canvas>
-        <div class="overlay" id="snakeOverlay">
-          <div class="overlay-title" id="snakeOverlayTitle">GAME OVER</div>
-          <div class="overlay-sub" id="snakeOverlaySub">SCORE: 0</div>
-          <button class="overlay-btn" id="btn-snake-reset">⟳ RESTART</button>
-        </div>
-      </div>
-
-      <div class="sidebar">
-        <div class="panel">
-          <div class="panel-title">▸ CONTROLS</div>
-          <div class="snake-hint">
-            <b>ARROWS</b> / <b>WASD</b><br>
-            EAT THE GLOW<br>
-            AVOID THE WALLS
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-title speed">▸ SPEED</div>
-          <div class="speed-btns snake-speed-btns">
-            <button class="speed-btn active" data-speed="1">1×</button>
-            <button class="speed-btn" data-speed="2">2×</button>
-            <button class="speed-btn" data-speed="3">3×</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-title">▸ RULES</div>
-          <div class="snake-hint">
-            EACH FOOD +1 LENGTH<br>
-            SNAKE SPEEDS UP<br>
-            BONUS PER 10 SEGMENTS
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- FISH FRENZY -->
-  <div id="tab-fish" class="tab-content">
-    <div class="game-header">
-      <div>
-        <div class="game-title">FISH <span>FRENZY</span></div>
-      </div>
-      <div class="game-stats">
-        <div class="stat-box"><div class="stat-label">SCORE</div><div class="stat-val cyan" id="fishScore">0</div></div>
-        <div class="stat-box"><div class="stat-label">SIZE</div><div class="stat-val purple" id="fishSize">14</div></div>
-        <div class="stat-box"><div class="stat-label">BEST</div><div class="stat-val gold" id="fishBest">0</div></div>
-      </div>
-    </div>
-
-    <div class="fish-area">
-      <div class="fish-canvas-wrap">
-        <canvas id="fishCanvas" width="900" height="520"></canvas>
-        <div class="fish-overlay" id="fishOverlay">
-          <div class="fish-over-title" id="fishOverTitle">EATEN</div>
-          <div class="fish-over-sub" id="fishOverSub">SOMETHING BIGGER WAS HUNGRY</div>
-          <div class="fish-over-stats">
-            <div class="fish-over-stat"><div class="l">SCORE</div><div class="v" id="fishOverScore">0</div></div>
-            <div class="fish-over-stat"><div class="l">SIZE</div><div class="v" id="fishOverSize">0</div></div>
-            <div class="fish-over-stat"><div class="l">EATEN</div><div class="v" id="fishOverEaten">0</div></div>
-          </div>
-          <button class="fish-restart-btn" id="btn-fish-reset">⟳ RESTART</button>
-        </div>
-      </div>
-
-      <div class="fish-sidebar">
-        <div class="panel">
-          <div class="panel-title">▸ GROWTH</div>
-          <div class="fish-meter">
-            <div class="fish-meter-label"><span>FRY</span><span>APEX</span></div>
-            <div class="fish-meter-bar"><div class="fish-meter-fill" id="fishMeterFill"></div></div>
-          </div>
-          <div class="fish-legend">
-            <div class="fish-legend-row"><span class="fish-legend-dot green"></span> SMALLER — EAT IT</div>
-            <div class="fish-legend-row"><span class="fish-legend-dot red"></span> BIGGER — RUN</div>
-            <div class="fish-legend-row"><span class="fish-legend-dot gold"></span> BONUS — +50</div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-title">▸ CONTROLS</div>
-          <div class="fish-controls">
-            MOVE <kbd>MOUSE</kbd> TO SWIM<br>
-            EAT FISH SMALLER THAN YOU<br>
-            AVOID THE BIG ONES<br>
-            FILL THE METER TO WIN
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ATARI PONG -->
-  <div id="tab-pong" class="tab-content">
-    <div class="game-header">
-      <div>
-        <div class="game-title">ATARI <span>PONG</span></div>
-      </div>
-      <div class="game-stats">
-        <div class="stat-box"><div class="stat-label">P1</div><div class="stat-val cyan" id="pongLeftScore">0</div></div>
-        <div class="stat-box"><div class="stat-label">P2 / AI</div><div class="stat-val purple" id="pongRightScore">0</div></div>
-        <div class="stat-box"><div class="stat-label">MODE</div><div class="stat-val gold" id="pongModeStat">—</div></div>
-        <div class="stat-box"><div class="stat-label">AI</div><div class="stat-val green" id="pongDifficultyStat">—</div></div>
-      </div>
-    </div>
-
-    <div class="pong-area">
-      <div class="pong-canvas-wrap">
-        <canvas id="pongCanvas" width="900" height="520"></canvas>
-        <div class="pong-overlay show" id="pongOverlay">
-          <div class="pong-overlay-title" id="pongOverlayTitle">PONG</div>
-          <div class="pong-overlay-sub" id="pongOverlaySub">SELECT MODE</div>
-
-          <div class="pong-menu" id="pongModeMenu">
-            <button class="pong-menu-btn" data-pong-mode="1p">1 PLAYER</button>
-            <button class="pong-menu-btn" data-pong-mode="2p">2 PLAYER</button>
-            <div class="pong-menu-note">1P uses W/S against AI · 2P uses W/S and ArrowUp/ArrowDown</div>
-          </div>
-
-          <div class="pong-menu hidden" id="pongDifficultyMenu">
-            <button class="pong-menu-btn" data-pong-difficulty="easy">Easy</button>
-            <button class="pong-menu-btn" data-pong-difficulty="medium">Medium</button>
-            <button class="pong-menu-btn" data-pong-difficulty="hard">Hard</button>
-            <button class="pong-menu-btn secondary" data-pong-action="menu">Back</button>
-            <div class="pong-menu-note">Easy misses often · Medium tracks fairly · Hard reacts fast</div>
-          </div>
-
-          <div class="pong-menu hidden" id="pongGameOverMenu">
-            <button class="pong-menu-btn" data-pong-action="play-again">Play Again</button>
-            <button class="pong-menu-btn secondary" data-pong-action="menu">Back to Menu</button>
-            <div class="pong-menu-note">Press Enter to replay · Escape for menu</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="pong-sidebar">
-        <div class="panel">
-          <div class="panel-title">▸ STATUS</div>
-          <div class="pong-status-line" id="pongStatusLine">MENU</div>
-          <div class="pong-hint">FIRST TO <b>7</b> WINS</div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-title">▸ CONTROLS</div>
-          <div class="pong-hint">
-            PLAYER 1 <kbd>W</kbd> <kbd>S</kbd><br>
-            PLAYER 2 <kbd>↑</kbd> <kbd>↓</kbd><br>
-            PAUSE <kbd>P</kbd>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-title">▸ AI TIERS</div>
-          <div class="pong-difficulty-list">
-            <div class="pong-difficulty-row">
-              <div class="pong-difficulty-name">EASY</div>
-              <div class="pong-difficulty-copy">Slow reaction, high tracking error, frequent misses.</div>
-            </div>
-            <div class="pong-difficulty-row">
-              <div class="pong-difficulty-name">MEDIUM</div>
-              <div class="pong-difficulty-copy">Moderate speed, smaller errors, occasional misses.</div>
-            </div>
-            <div class="pong-difficulty-row">
-              <div class="pong-difficulty-name">HARD</div>
-              <div class="pong-difficulty-copy">Fast reaction, low jitter, rare mistakes.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
 </main>
 
@@ -539,18 +363,6 @@
 <script src="js/rts/warriors.js"></script>
 <script src="js/rts/elites.js"></script>
 <script src="js/rts/cinematic.js"></script>
-
-<!-- Nexus Snake -->
-<script src="js/snake/game.js"></script>
-
-<!-- Fish Frenzy -->
-<script src="js/fish/game.js"></script>
-
-<!-- Atari Pong Surveys (load before game to catch first_visit event) -->
-<script src="js/pong/surveys.js"></script>
-
-<!-- Atari Pong -->
-<script src="js/pong/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>

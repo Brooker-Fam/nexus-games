@@ -84,31 +84,6 @@ document.getElementById('tab-btn-cs').onclick=function(){
   const dsoCount = document.getElementById('dso-player-count');
   if (dsoCount) dsoCount.textContent = '0';
 };
-document.getElementById('tab-btn-snake').onclick=function(){
-  switchTab('snake', this);
-  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'snake' });
-};
-document.getElementById('tab-btn-fish').onclick=function(){
-  switchTab('fish', this);
-  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'fish' });
-};
-document.getElementById('tab-btn-pong').onclick=function(){
-  switchTab('pong', this);
-  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'pong' });
-};
-document.getElementById('btn-fish-reset').onclick=function(){ fishReset(); };
-document.getElementById('tab-btn-exc').onclick=function(){
-  const id = new Date().toISOString() + '-' + Math.random().toString(36).slice(2, 10);
-  throw new TypeError("Cannot read properties of undefined (reading 'entities') at GameState.tick [session " + id + ']');
-};
-
-// Snake controls
-document.getElementById('btn-snake-reset').onclick=function(){ snakeReset(); };
-document.querySelector('.snake-speed-btns').onclick=function(e){
-  const btn=e.target.closest('.speed-btn');
-  if(!btn) return;
-  snakeSetSpeed(parseInt(btn.dataset.speed)||1, btn);
-};
 
 // TD controls
 document.getElementById('btn-reset').onclick=resetGame;

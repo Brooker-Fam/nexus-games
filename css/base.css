@@ -24,6 +24,86 @@
     overflow-x: hidden;
   }
 
+  /* ── LOGIN SCREEN OVERLAY ── */
+  #login-screen {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(2,8,16,0.92);
+    backdrop-filter: blur(6px);
+    transition: opacity 0.4s ease;
+  }
+  #login-screen.hidden {
+    opacity: 0; pointer-events: none;
+  }
+  .login-panel {
+    position: relative;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    box-shadow: 0 0 60px rgba(0,245,255,0.12), 0 0 120px rgba(136,0,255,0.08);
+    padding: 48px 52px 40px;
+    max-width: 440px; width: 90%;
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+  }
+  .login-logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 30px; font-weight: 900;
+    letter-spacing: 6px;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-blue), var(--neon-purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+  .login-tagline {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px; letter-spacing: 8px;
+    color: var(--neon-cyan); opacity: 0.65;
+    margin-bottom: 24px;
+  }
+  .login-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px; letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 28px; text-align: center;
+  }
+  .login-btns {
+    display: flex; flex-direction: column; gap: 10px;
+    width: 100%; margin-bottom: 14px;
+  }
+  .login-action-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 13px 20px;
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    color: var(--text-bright);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .login-action-btn:hover {
+    background: rgba(0,245,255,0.08);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 14px rgba(0,245,255,0.25);
+    color: var(--neon-cyan);
+  }
+  .login-google-btn:hover { border-color: #4285F4; box-shadow: 0 0 14px rgba(66,133,244,0.3); color: #4285F4; }
+  .login-msg {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px; letter-spacing: 1px;
+    color: var(--neon-green); min-height: 20px;
+    text-align: center; margin-bottom: 8px;
+  }
+  .login-msg.error { color: var(--neon-pink); }
+  .login-skip-btn {
+    background: transparent; border: none;
+    color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px; letter-spacing: 3px;
+    cursor: pointer; padding: 8px 16px;
+    transition: color 0.15s;
+    margin-top: 10px;
+  }
+  .login-skip-btn:hover { color: var(--text-bright); }
+
   /* ── AUTH CHIP ── */
   .auth-slot { display: inline-flex; align-items: center; margin-right: 12px; }
   .auth-btn {
