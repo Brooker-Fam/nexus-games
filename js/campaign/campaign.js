@@ -8,22 +8,23 @@ const CAMPAIGN_MISSIONS = {
     faction: 'shadow',
     enemyFaction: 'prism',
     duration: 180,    // seconds
-    startGold: 200,
-    goldPerSec: 3,
+    startGold: 150,
+    goldPerSec: 0,    // workers provide income naturally
   },
 };
 
-// Waves: `at` = elapsed seconds when the wave spawns
+// Waves: `at` = elapsed seconds when the wave spawns.
+// Units spawn at PLAYER_BASE_X+900, so add ~21s travel time for first contact.
 // All attackers are Prism Armada — Witches (makeWarrior), Oracles (makeElite), Wizards (makeWizard)
 const CAMPAIGN_WAVES = [
-  { at: 12,  squads: [{ fn:'makeWarrior', faction:'prism', n:3 }] },
-  { at: 30,  squads: [{ fn:'makeWarrior', faction:'prism', n:5 }] },
-  { at: 50,  squads: [{ fn:'makeWarrior', faction:'prism', n:6 }] },
-  { at: 70,  squads: [{ fn:'makeWarrior', faction:'prism', n:5 }, { fn:'makeElite',   faction:'prism', n:2 }] },
-  { at: 90,  squads: [{ fn:'makeWarrior', faction:'prism', n:6 }, { fn:'makeElite',   faction:'prism', n:2 }] },
-  { at: 110, squads: [{ fn:'makeWarrior', faction:'prism', n:6 }, { fn:'makeElite',   faction:'prism', n:3 }] },
-  { at: 130, squads: [{ fn:'makeWarrior', faction:'prism', n:8 }, { fn:'makeElite',   faction:'prism', n:2 }, { fn:'makeWizard', faction:'prism', n:2 }] },
-  { at: 155, squads: [{ fn:'makeWarrior', faction:'prism', n:10}, { fn:'makeElite',   faction:'prism', n:3 }, { fn:'makeWizard', faction:'prism', n:3 }] },
+  { at: 40,  squads: [{ fn:'makeWarrior', faction:'prism', n:3 }] },
+  { at: 63,  squads: [{ fn:'makeWarrior', faction:'prism', n:5 }] },
+  { at: 84,  squads: [{ fn:'makeWarrior', faction:'prism', n:6 }] },
+  { at: 103, squads: [{ fn:'makeWarrior', faction:'prism', n:5 }, { fn:'makeElite',   faction:'prism', n:2 }] },
+  { at: 118, squads: [{ fn:'makeWarrior', faction:'prism', n:6 }, { fn:'makeElite',   faction:'prism', n:2 }] },
+  { at: 133, squads: [{ fn:'makeWarrior', faction:'prism', n:6 }, { fn:'makeElite',   faction:'prism', n:3 }] },
+  { at: 148, squads: [{ fn:'makeWarrior', faction:'prism', n:8 }, { fn:'makeElite',   faction:'prism', n:2 }, { fn:'makeWizard', faction:'prism', n:2 }] },
+  { at: 160, squads: [{ fn:'makeWarrior', faction:'prism', n:10}, { fn:'makeElite',   faction:'prism', n:3 }, { fn:'makeWizard', faction:'prism', n:3 }] },
 ];
 
 const _waveFn = { makeWarrior, makeElite, makeWizard };
@@ -68,6 +69,9 @@ function startCampaignMission(faction) {
   // 3 starting Swordsmen
   for (let i = 0; i < 3; i++) S.entities.push(makeWarrior('player', faction));
 
+  // 5 starting Workers — they mine gold naturally; no passive trickle needed
+  for (let i = 0; i < 5; i++) S.entities.push(makeWorker('player', faction));
+
   makeGoldNodes();
   S.gold.player = mission.startGold;
   S.gold.enemy  = 0;
@@ -85,7 +89,7 @@ function startCampaignMission(faction) {
   const timerBar = document.getElementById('campaign-timer-bar');
   if (timerBar) timerBar.style.display = '';
 
-  rtsSetLog('The Prism Armada attacks! Survive 3 minutes — train Swordsmen from the Training Field.');
+  rtsSetLog('The Prism Armada attacks! Mine gold with your Shades, train Swordsmen — no Bloodhounds.');
   initCamera(faction);
 
   if (S.raf) cancelAnimationFrame(S.raf);
