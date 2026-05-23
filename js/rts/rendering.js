@@ -42,6 +42,28 @@ function rtsDraw(){
 
   rc.restore();
 
+  // Drag-select marquee (screen space)
+  if(dragSelActive){
+    const canvas=document.getElementById('rts-canvas');
+    if(canvas){
+      const rect=canvas.getBoundingClientRect();
+      const scX=canvas.width/rect.width, scY=canvas.height/rect.height;
+      const x1=(Math.min(dragSelStartCX,dragSelCurCX)-rect.left)*scX;
+      const y1=(Math.min(dragSelStartCY,dragSelCurCY)-rect.top)*scY;
+      const bw=Math.abs(dragSelCurCX-dragSelStartCX)*scX;
+      const bh=Math.abs(dragSelCurCY-dragSelStartCY)*scY;
+      rc.save();
+      rc.fillStyle='rgba(0,245,255,0.07)';
+      rc.fillRect(x1,y1,bw,bh);
+      rc.strokeStyle='rgba(0,245,255,0.85)';
+      rc.lineWidth=1.5;
+      rc.setLineDash([5,3]);
+      rc.strokeRect(x1,y1,bw,bh);
+      rc.setLineDash([]);
+      rc.restore();
+    }
+  }
+
   // minimap (drawn in screen space, no camera transform)
   drawMinimap();
 }

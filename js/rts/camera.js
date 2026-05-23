@@ -48,6 +48,7 @@ function resetRtsState(){
 
 // ── CAMERA ──
 let camDragging=false, camDragActive=false, camDragStartX=0, camDragStartY=0, camDragCamX=0, camDragCamY=0;
+let dragSelActive=false, dragSelStartCX=0, dragSelStartCY=0, dragSelCurCX=0, dragSelCurCY=0;
 const CAM_SPEED=14;
 const keysHeld={};
 
@@ -85,21 +86,19 @@ function setupCameraControls(){
 
   wrap.addEventListener('mousedown', e=>{
     if(e.button !== 0) return;
-    camDragging=false; // reset
+    camDragging=false;
     camDragActive=true;
     camDragStartX=e.clientX; camDragStartY=e.clientY;
-    camDragCamX=S.camX; camDragCamY=S.camY;
+    dragSelActive=false;
+    dragSelStartCX=e.clientX; dragSelStartCY=e.clientY;
+    dragSelCurCX=e.clientX;   dragSelCurCY=e.clientY;
   });
   window.addEventListener('mousemove', e=>{
     const moved=Math.hypot(e.clientX-camDragStartX, e.clientY-camDragStartY);
-    if(camDragActive && moved>6 && (e.buttons&1)){
+    if(camDragActive && moved>6 && (e.buttons&1) && !S.buildStructureMode){
       camDragging=true;
-      const c2=document.getElementById('rts-canvas');
-      const r2=c2?c2.getBoundingClientRect():{width:VW,height:VH};
-      const sx=c2?c2.width/r2.width:1, sy2=c2?c2.height/r2.height:1;
-      S.camX = camDragCamX - (e.clientX - camDragStartX)*sx;
-      S.camY = camDragCamY - (e.clientY - camDragStartY)*sy2;
-      clampCam();
+      dragSelActive=true;
+      dragSelCurCX=e.clientX; dragSelCurCY=e.clientY;
     }
     // track mouse in world coords for placement preview
     const canvas2=document.getElementById('rts-canvas');
@@ -113,9 +112,14 @@ function setupCameraControls(){
     }
     // update cursor style
     const wrap2=document.getElementById('rts-viewport-wrap');
-    if(wrap2) wrap2.style.cursor=S.buildStructureMode?'crosshair':camDragging?'grabbing':'grab';
+    if(wrap2) wrap2.style.cursor=S.buildStructureMode?'crosshair':dragSelActive?'crosshair':'default';
   });
-  window.addEventListener('mouseup', ()=>{ camDragActive=false; setTimeout(()=>camDragging=false, 50); });
+  window.addEventListener('mouseup', ()=>{
+    camDragActive=false;
+    if(dragSelActive) _applyDragSelect();
+    dragSelActive=false;
+    setTimeout(()=>camDragging=false, 50);
+  });
 
   // Touch drag
   wrap.addEventListener('touchstart', e=>{
@@ -161,6 +165,39 @@ function tickCamera(){
   if(keysHeld['ArrowUp']||keysHeld['w']||keysHeld['W']) S.camY-=CAM_SPEED;
   if(keysHeld['ArrowDown']||keysHeld['s']||keysHeld['S']) S.camY+=CAM_SPEED;
   clampCam();
+}
+
+function _applyDragSelect(){
+  if(S.gameOver) return;
+  const canvas=document.getElementById('rts-canvas');
+  if(!canvas) return;
+  const rect=canvas.getBoundingClientRect();
+  const scX=canvas.width/rect.width, scY=canvas.height/rect.height;
+
+  // Convert client coords to world coords
+  const wx1=(Math.min(dragSelStartCX,dragSelCurCX)-rect.left)*scX+S.camX;
+  const wy1=(Math.min(dragSelStartCY,dragSelCurCY)-rect.top )*scY+S.camY;
+  const wx2=(Math.max(dragSelStartCX,dragSelCurCX)-rect.left)*scX+S.camX;
+  const wy2=(Math.max(dragSelStartCY,dragSelCurCY)-rect.top )*scY+S.camY;
+
+  const side=mySide();
+  for(const ent of S.entities) ent.selected=false;
+  S.selected=[];
+
+  for(const ent of S.entities){
+    if(ent.side!==side) continue;
+    if(ent.type!=='warrior'&&ent.type!=='worker') continue;
+    if(ent.x>=wx1&&ent.x<=wx2&&ent.y>=wy1&&ent.y<=wy2){
+      ent.selected=true;
+      S.selected.push(ent);
+    }
+  }
+
+  if(S.buildPopupOpen) closeBuildPopup();
+  if(S.selected.length>0){
+    const n=S.selected.length;
+    rtsSetLog(n+' unit'+(n>1?'s':'')+' selected');
+  }
 }
 
 
