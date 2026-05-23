@@ -134,13 +134,15 @@ function campaignTick() {
 }
 
 function _spawnWave(wave, waveNum) {
-  const eb = S.enemyBase;
-  if (!eb) return;
+  // Spawn close to the player so waves arrive in ~20s, not 88s.
+  // PLAYER_BASE_X + 900 gives ~21s travel time at Witch speed (0.7 px/tick @ 60fps).
+  const spawnX = PLAYER_BASE_X + 900;
+  const spawnY = BASE_Y;
   for (const sq of wave.squads) {
     const factory = _waveFn[sq.fn];
     if (!factory) continue;
     for (let i = 0; i < sq.n; i++) {
-      const unit = factory('enemy', sq.faction, eb.x, eb.y + (rtsRand() - 0.5) * 360);
+      const unit = factory('enemy', sq.faction, spawnX, spawnY + (rtsRand() - 0.5) * 400);
       unit.state = 'march';
       S.entities.push(unit);
     }
