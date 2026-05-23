@@ -41,6 +41,9 @@ function resetRtsState(){
   S.aiTimer=0;
   S.stats={ kills:0, deaths:0, goldEarned:0, unitsBuilt:0 };
   S.camX=0; S.camY=RH/2-VH/2; S.mouseWorld=null;
+  // Campaign state — always clear so a leftover campaign session can't corrupt a fresh DSO game
+  S.campaignMode=null; S.fromCampaign=null;
+  S.campaignTimer=0; S.campaignGoldTimer=0; S.campaignWaveIdx=0;
 }
 
 // ── CAMERA ──
