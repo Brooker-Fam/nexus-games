@@ -221,7 +221,7 @@ function rtsTick(){
   S.frame++;
   processCommands();
   tickCamera();
-  aiTick();
+  if(S.campaignMode) campaignTick(); else aiTick();
 
   const playerBase = S.playerBase;
   const enemyBase  = S.enemyBase;
@@ -281,9 +281,10 @@ function rtsTick(){
   if(playerBase.hp<=0){
     S.baseHP=0;
     console.log('[GAME OVER] player base destroyed. frame=',S.frame,'hp=',playerBase.hp);
-    endRTS(mySide()==='player' ? false : true); return;
+    if(S.campaignMode){ endCampaign(false); } else { endRTS(mySide()==='player' ? false : true); }
+    return;
   }
-  if(enemyBase.hp<=0){
+  if(!S.campaignMode && enemyBase.hp<=0){
     S.enemyBaseHP=0;
     console.log('[GAME OVER] enemy base destroyed. frame=',S.frame,'hp=',enemyBase.hp);
     endRTS(mySide()==='player' ? true : false); return;

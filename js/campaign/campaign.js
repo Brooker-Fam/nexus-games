@@ -1,0 +1,190 @@
+// ── CAMPAIGN MODE ──
+// Self-contained mission logic. Reuses the RTS engine (rts-canvas, S state,
+// entity factories, rendering) but bypasses AI economy and win/loss flow.
+
+const CAMPAIGN_MISSIONS = {
+  shadow: {
+    id: 'shadow_survival',
+    faction: 'shadow',
+    enemyFaction: 'prism',
+    duration: 180,    // seconds
+    startGold: 200,
+    goldPerSec: 3,
+  },
+};
+
+// Waves: `at` = elapsed seconds when the wave spawns
+const CAMPAIGN_WAVES = [
+  { at: 15,  squads: [{ fn:'makeWarrior', faction:'prism',  n:3 }] },
+  { at: 35,  squads: [{ fn:'makeWarrior', faction:'prism',  n:5 }] },
+  { at: 55,  squads: [{ fn:'makeWarrior', faction:'roboto', n:4 }] },
+  { at: 75,  squads: [{ fn:'makeWarrior', faction:'prism',  n:4 }, { fn:'makeWarrior', faction:'roboto', n:2 }] },
+  { at: 95,  squads: [{ fn:'makeWarrior', faction:'prism',  n:5 }, { fn:'makeElite',   faction:'prism',  n:1 }] },
+  { at: 115, squads: [{ fn:'makeWarrior', faction:'roboto', n:5 }, { fn:'makeElite',   faction:'prism',  n:2 }] },
+  { at: 135, squads: [{ fn:'makeWarrior', faction:'prism',  n:7 }, { fn:'makeElite',   faction:'prism',  n:2 }] },
+  { at: 155, squads: [{ fn:'makeWarrior', faction:'prism',  n:8 }, { fn:'makeElite',   faction:'prism',  n:3 }] },
+];
+
+const _waveFn = { makeWarrior, makeElite };
+
+// ── START ──
+
+function startCampaignMission(faction) {
+  const mission = CAMPAIGN_MISSIONS[faction];
+  if (!mission) return;
+
+  resetRtsState();
+  S.playerFaction = faction;
+  S.enemyFaction  = mission.enemyFaction;
+  S.campaignMode  = mission;
+  S.fromCampaign  = faction;
+  S.campaignTimer     = 0;
+  S.campaignGoldTimer = 0;
+  S.campaignWaveIdx   = 0;
+
+  _nextEntityId = 1;
+  rtsRandSeed(42);
+  if (typeof rtsCommandQueue !== 'undefined') rtsCommandQueue.length = 0;
+  if (typeof _pendingChains  !== 'undefined') _pendingChains.length  = 0;
+  if (typeof deadSwordsmenPool !== 'undefined') deadSwordsmenPool.length = 0;
+  closeBuildPopup && closeBuildPopup();
+
+  // Player base
+  S.playerBase = makeBase('player', faction);
+  S.entities.push(S.playerBase);
+
+  // Enemy base — very high HP so it's never destroyed (not the win condition)
+  S.enemyBase = makeBase('enemy', mission.enemyFaction);
+  S.enemyBase.hp = S.enemyBase.maxHp = 9999;
+  S.entities.push(S.enemyBase);
+
+  // Pre-built Training Field (skip construction)
+  const tf = makeBarracks('player', faction, PLAYER_BASE_X + 200, BASE_Y + 110);
+  tf.underConstruction = false;
+  tf.buildProgress = tf.buildTime;
+  S.entities.push(tf);
+
+  // 3 starting Swordsmen
+  for (let i = 0; i < 3; i++) S.entities.push(makeWarrior('player', faction));
+
+  makeGoldNodes();
+  S.gold.player = mission.startGold;
+  S.gold.enemy  = 0;
+
+  // HUD
+  const pCfg = FACTION_CFG[faction];
+  document.getElementById('rts-faction-badge').textContent = pCfg.barracksName + ' ARMADA';
+  document.getElementById('rts-faction-badge').style.color = pCfg.color;
+  document.getElementById('hud-building-name').textContent = pCfg.barracksName;
+  document.getElementById('rts-enemy-faction').textContent = 'ENEMY FORCES';
+  document.getElementById('rts-enemy-faction').style.color = '#ff4444';
+  const diffEl = document.getElementById('rts-difficulty');
+  if (diffEl) diffEl.textContent = '—';
+
+  const timerBar = document.getElementById('campaign-timer-bar');
+  if (timerBar) timerBar.style.display = '';
+
+  rtsSetLog('Survive ' + (mission.duration / 60) + ' minutes! Train Swordsmen from the Training Field.');
+  initCamera(faction);
+
+  if (S.raf) cancelAnimationFrame(S.raf);
+  rtsLastTime = performance.now();
+  rtsAccum = 0;
+  S.raf = requestAnimationFrame(rtsLoop);
+}
+
+// ── TICK (called from rtsTick instead of aiTick when S.campaignMode is set) ──
+
+function campaignTick() {
+  const mission = S.campaignMode;
+  if (!mission) return;
+
+  S.campaignTimer++;
+
+  // Passive gold trickle
+  S.campaignGoldTimer++;
+  if (S.campaignGoldTimer >= 60) {
+    S.campaignGoldTimer = 0;
+    S.gold.player += mission.goldPerSec;
+  }
+
+  // Spawn waves
+  const elapsed = S.campaignTimer / 60;
+  while (S.campaignWaveIdx < CAMPAIGN_WAVES.length &&
+         elapsed >= CAMPAIGN_WAVES[S.campaignWaveIdx].at) {
+    _spawnWave(CAMPAIGN_WAVES[S.campaignWaveIdx], S.campaignWaveIdx + 1);
+    S.campaignWaveIdx++;
+  }
+
+  // Update timer HUD
+  const remaining = Math.max(0, mission.duration - elapsed);
+  const timerEl = document.getElementById('campaign-timer');
+  if (timerEl) {
+    const m = Math.floor(remaining / 60);
+    const s = Math.floor(remaining % 60);
+    timerEl.textContent = m + ':' + String(s).padStart(2, '0');
+    timerEl.style.color = remaining < 30 ? '#ff4444' : remaining < 60 ? '#ffaa00' : '#00f5ff';
+  }
+
+  // Victory condition
+  if (S.campaignTimer >= mission.duration * 60) {
+    endCampaign(true);
+  }
+}
+
+function _spawnWave(wave, waveNum) {
+  const eb = S.enemyBase;
+  if (!eb) return;
+  for (const sq of wave.squads) {
+    const factory = _waveFn[sq.fn];
+    if (!factory) continue;
+    for (let i = 0; i < sq.n; i++) {
+      const unit = factory('enemy', sq.faction, eb.x, eb.y + (rtsRand() - 0.5) * 360);
+      unit.state = 'march';
+      S.entities.push(unit);
+    }
+  }
+  rtsSetLog('⚠ Wave ' + waveNum + ' incoming!');
+}
+
+// ── END ──
+
+function endCampaign(won) {
+  S.gameOver = true;
+  const ov    = document.getElementById('rts-gameover-overlay');
+  const title = document.getElementById('rts-over-title');
+  const sub   = document.getElementById('rts-over-sub');
+  const ratingEl = document.getElementById('rts-over-rating');
+  if (ratingEl) ratingEl.style.display = 'none';
+  ov.style.display = 'flex';
+  if (won) {
+    title.textContent  = 'MISSION COMPLETE';
+    title.className    = 'rts-over-title win';
+    sub.textContent    = 'You held the void for 3 minutes. The Shadow Armada stands!';
+  } else {
+    title.textContent  = 'MISSION FAILED';
+    title.className    = 'rts-over-title lose';
+    sub.textContent    = 'Your base has fallen. The void claims another soul.';
+  }
+  if (window.posthog) posthog.capture('campaign_mission_ended', {
+    faction: S.playerFaction,
+    outcome: won ? 'victory' : 'defeat',
+    wave_reached: S.campaignWaveIdx,
+    seconds_survived: Math.floor((S.campaignTimer || 0) / 60),
+  });
+}
+
+// ── REGISTRATION ──
+
+document.addEventListener('DOMContentLoaded', function () {
+  registerGame('campaign', {
+    init()    { document.getElementById('campaign-select').style.display = ''; },
+    cleanup() {},
+  });
+
+  document.getElementById('cc-shadow').addEventListener('click', function () {
+    S.fromCampaign = 'shadow';
+    switchTab('cs', document.getElementById('tab-btn-cs'));
+    startCampaignMission('shadow');
+  });
+});
