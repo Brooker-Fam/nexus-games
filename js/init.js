@@ -70,6 +70,8 @@ registerGame('cs', {
       document.getElementById('dso-game').style.display='block';
       return;
     }
+    const tb=document.getElementById('campaign-timer-bar');
+    if(tb) tb.style.display='none';
     initFactionCards();
     document.getElementById('dso-select').style.display='';
     document.getElementById('dso-reveal').style.display='none';
