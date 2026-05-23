@@ -93,6 +93,7 @@
   <div class="tabs">
     <button class="tab active" id="tab-btn-td">⬡ TOWER DEFENSE</button>
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
+    <button class="tab" id="tab-btn-campaign">▶ CAMPAIGN</button>
   </div>
 </header>
 
@@ -308,6 +309,11 @@
           <canvas id="rts-canvas" width="1200" height="580"></canvas>
           <canvas id="rts-minimap" width="240" height="98"></canvas>
           <div id="rts-scroll-hint">Click your base to build · Right-click to move/attack</div>
+          <!-- Campaign survival timer -->
+          <div id="campaign-timer-bar" style="display:none">
+            <div class="cti-label">SURVIVE</div>
+            <div class="cti-time" id="campaign-timer">3:00</div>
+          </div>
           <!-- BUILD POPUP MENU -->
           <div id="rts-build-popup" style="display:none">
             <div class="rbp-title" id="rbp-title">TEMPLE</div>
@@ -327,6 +333,55 @@
     </div>
   </div>
 
+
+  <!-- CAMPAIGN -->
+  <div id="tab-campaign" class="tab-content">
+    <div id="campaign-select">
+      <div class="campaign-header">
+        <div class="campaign-pre">STORY MISSIONS</div>
+        <div class="campaign-title">CAMPAIGN</div>
+        <div class="campaign-sub">Lead your armada through tactical story missions.</div>
+      </div>
+      <div class="campaign-cards">
+
+        <!-- Shadow Armada — unlocked -->
+        <div class="campaign-card" id="cc-shadow">
+          <div class="cm-faction" style="color:#9922ff">SHADOW ARMADA</div>
+          <div class="cm-name">SURVIVE THE VOID</div>
+          <div class="cm-desc">Hold your base against relentless enemy waves for 3 minutes. You start with a Training Field and three Swordsmen — build more Swordsmen, nothing else.</div>
+          <div class="cm-tags">
+            <span class="cm-tag">⏱ 3 MINUTES</span>
+            <span class="cm-tag">⚔ SWORDSMEN ONLY</span>
+            <span class="cm-tag">🛡 SURVIVE</span>
+          </div>
+          <div class="cm-btn">BEGIN MISSION ▸</div>
+        </div>
+
+        <!-- Prism Armada — locked -->
+        <div class="campaign-card cm-locked" id="cc-prism">
+          <div class="cm-faction" style="color:#00ddff">PRISM ARMADA</div>
+          <div class="cm-name">COMING SOON</div>
+          <div class="cm-desc">The White Witch's campaign mission is in development.</div>
+          <div class="cm-tags">
+            <span class="cm-tag">🔒 LOCKED</span>
+          </div>
+          <div class="cm-btn cm-btn-locked">LOCKED</div>
+        </div>
+
+        <!-- Roboto Armada — locked -->
+        <div class="campaign-card cm-locked" id="cc-roboto">
+          <div class="cm-faction" style="color:#ff8800">ROBOTO ARMADA</div>
+          <div class="cm-name">COMING SOON</div>
+          <div class="cm-desc">The Gunbot's campaign mission is in development.</div>
+          <div class="cm-tags">
+            <span class="cm-tag">🔒 LOCKED</span>
+          </div>
+          <div class="cm-btn cm-btn-locked">LOCKED</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
 </main>
 
@@ -363,6 +418,9 @@
 <script src="js/rts/warriors.js"></script>
 <script src="js/rts/elites.js"></script>
 <script src="js/rts/cinematic.js"></script>
+
+<!-- Campaign -->
+<script src="js/campaign/campaign.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>

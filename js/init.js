@@ -35,7 +35,16 @@ function dsoPlay(){
 function rtsMenuBack(){
   cancelAnimationFrame(S.raf); S.raf=null;
   mpDisconnect();
+  const fromCampaign = S.fromCampaign;
+  S.fromCampaign = null;
+  S.campaignMode = null;
+  const timerBar = document.getElementById('campaign-timer-bar');
+  if(timerBar) timerBar.style.display='none';
   document.getElementById('dso-game').style.display='none';
+  if(fromCampaign){
+    switchTab('campaign', document.getElementById('tab-btn-campaign'));
+    return;
+  }
   document.getElementById('dso-select').style.display='block';
   document.getElementById('mp-status').textContent='';
   initFactionCards();
@@ -54,6 +63,13 @@ function initFactionCards(){
 // Register Deep Space Ops lifecycle
 registerGame('cs', {
   init(){
+    if(S.fromCampaign){
+      // Campaign is about to start — show game area, skip DSO select
+      document.getElementById('dso-select').style.display='none';
+      document.getElementById('dso-reveal').style.display='none';
+      document.getElementById('dso-game').style.display='block';
+      return;
+    }
     initFactionCards();
     document.getElementById('dso-select').style.display='';
     document.getElementById('dso-reveal').style.display='none';
@@ -74,6 +90,10 @@ activateGame('td');
 // ── EVENT HANDLERS (moved from inline HTML) ──
 
 // Tabs
+document.getElementById('tab-btn-campaign').onclick=function(){
+  switchTab('campaign', this);
+  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'campaign' });
+};
 document.getElementById('tab-btn-td').onclick=function(){
   switchTab('td', this);
   if(window.posthog) posthog.capture('game_tab_switched', { tab: 'tower_defense' });

@@ -44,6 +44,7 @@ function openBuildPopup(screenX, screenY, context){
   }
 
   if(context==='base'){
+    if(S.campaignMode){ closeBuildPopup(); return; }
     title.textContent = cfg.buildingName;
     const sel=S.selected[0];
     addOpt(cfg.workerIcon, cfg.workerLabel, 'Gathers gold from mines', cfg.workerCost,
