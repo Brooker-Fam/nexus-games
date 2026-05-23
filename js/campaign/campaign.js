@@ -14,18 +14,19 @@ const CAMPAIGN_MISSIONS = {
 };
 
 // Waves: `at` = elapsed seconds when the wave spawns
+// All attackers are Prism Armada — Witches (makeWarrior), Oracles (makeElite), Wizards (makeWizard)
 const CAMPAIGN_WAVES = [
-  { at: 15,  squads: [{ fn:'makeWarrior', faction:'prism',  n:3 }] },
-  { at: 35,  squads: [{ fn:'makeWarrior', faction:'prism',  n:5 }] },
-  { at: 55,  squads: [{ fn:'makeWarrior', faction:'roboto', n:4 }] },
-  { at: 75,  squads: [{ fn:'makeWarrior', faction:'prism',  n:4 }, { fn:'makeWarrior', faction:'roboto', n:2 }] },
-  { at: 95,  squads: [{ fn:'makeWarrior', faction:'prism',  n:5 }, { fn:'makeElite',   faction:'prism',  n:1 }] },
-  { at: 115, squads: [{ fn:'makeWarrior', faction:'roboto', n:5 }, { fn:'makeElite',   faction:'prism',  n:2 }] },
-  { at: 135, squads: [{ fn:'makeWarrior', faction:'prism',  n:7 }, { fn:'makeElite',   faction:'prism',  n:2 }] },
-  { at: 155, squads: [{ fn:'makeWarrior', faction:'prism',  n:8 }, { fn:'makeElite',   faction:'prism',  n:3 }] },
+  { at: 12,  squads: [{ fn:'makeWarrior', faction:'prism', n:3 }] },
+  { at: 30,  squads: [{ fn:'makeWarrior', faction:'prism', n:5 }] },
+  { at: 50,  squads: [{ fn:'makeWarrior', faction:'prism', n:6 }] },
+  { at: 70,  squads: [{ fn:'makeWarrior', faction:'prism', n:5 }, { fn:'makeElite',   faction:'prism', n:2 }] },
+  { at: 90,  squads: [{ fn:'makeWarrior', faction:'prism', n:6 }, { fn:'makeElite',   faction:'prism', n:2 }] },
+  { at: 110, squads: [{ fn:'makeWarrior', faction:'prism', n:6 }, { fn:'makeElite',   faction:'prism', n:3 }] },
+  { at: 130, squads: [{ fn:'makeWarrior', faction:'prism', n:8 }, { fn:'makeElite',   faction:'prism', n:2 }, { fn:'makeWizard', faction:'prism', n:2 }] },
+  { at: 155, squads: [{ fn:'makeWarrior', faction:'prism', n:10}, { fn:'makeElite',   faction:'prism', n:3 }, { fn:'makeWizard', faction:'prism', n:3 }] },
 ];
 
-const _waveFn = { makeWarrior, makeElite };
+const _waveFn = { makeWarrior, makeElite, makeWizard };
 
 // ── START ──
 
@@ -76,15 +77,15 @@ function startCampaignMission(faction) {
   document.getElementById('rts-faction-badge').textContent = pCfg.barracksName + ' ARMADA';
   document.getElementById('rts-faction-badge').style.color = pCfg.color;
   document.getElementById('hud-building-name').textContent = pCfg.barracksName;
-  document.getElementById('rts-enemy-faction').textContent = 'ENEMY FORCES';
-  document.getElementById('rts-enemy-faction').style.color = '#ff4444';
+  document.getElementById('rts-enemy-faction').textContent = 'PRISM ARMADA';
+  document.getElementById('rts-enemy-faction').style.color = FACTION_CFG['prism'].color;
   const diffEl = document.getElementById('rts-difficulty');
   if (diffEl) diffEl.textContent = '—';
 
   const timerBar = document.getElementById('campaign-timer-bar');
   if (timerBar) timerBar.style.display = '';
 
-  rtsSetLog('Survive ' + (mission.duration / 60) + ' minutes! Train Swordsmen from the Training Field.');
+  rtsSetLog('The Prism Armada attacks! Survive 3 minutes — train Swordsmen from the Training Field.');
   initCamera(faction);
 
   if (S.raf) cancelAnimationFrame(S.raf);
