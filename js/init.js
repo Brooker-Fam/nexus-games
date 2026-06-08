@@ -82,6 +82,8 @@ registerGame('cs', {
     if(S.raf){ cancelAnimationFrame(S.raf); S.raf=null; }
     if(dsoRevealRAF){ cancelAnimationFrame(dsoRevealRAF); dsoRevealRAF=null; }
     if(dsoPreviewRAF){ cancelAnimationFrame(dsoPreviewRAF); dsoPreviewRAF=null; }
+    S.fromCampaign = null;
+    S.campaignMode = null;
     closeBuildPopup();
   },
 });
