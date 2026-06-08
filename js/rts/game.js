@@ -222,6 +222,7 @@ function rtsTick(){
   processCommands();
   tickCamera();
   if(S.campaignMode) campaignTick(); else aiTick();
+  if(S.gameOver) return; // campaign victory may have just fired — don't also check base HP
 
   const playerBase = S.playerBase;
   const enemyBase  = S.enemyBase;
