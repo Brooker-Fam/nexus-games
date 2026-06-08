@@ -42,7 +42,8 @@ function rtsMenuBack(){
   if(timerBar) timerBar.style.display='none';
   document.getElementById('dso-game').style.display='none';
   if(fromCampaign){
-    switchTab('campaign', document.getElementById('tab-btn-campaign'));
+    // Already on campaign tab — just restore the mission select screen
+    document.getElementById('campaign-select').style.display='';
     return;
   }
   document.getElementById('dso-select').style.display='block';
@@ -63,27 +64,22 @@ function initFactionCards(){
 // Register Deep Space Ops lifecycle
 registerGame('cs', {
   init(){
-    if(S.fromCampaign){
-      // Campaign is about to start — show game area, skip DSO select
-      document.getElementById('dso-select').style.display='none';
-      document.getElementById('dso-reveal').style.display='none';
-      document.getElementById('dso-game').style.display='block';
-      return;
-    }
+    // Move dso-game into the DSO tab wrapper (it may be in campaign tab)
+    const dsoWrapper = document.getElementById('dso-wrapper');
+    const dsoGame = document.getElementById('dso-game');
+    if(dsoGame.parentNode !== dsoWrapper) dsoWrapper.appendChild(dsoGame);
     const tb=document.getElementById('campaign-timer-bar');
     if(tb) tb.style.display='none';
     initFactionCards();
     document.getElementById('dso-select').style.display='';
     document.getElementById('dso-reveal').style.display='none';
-    document.getElementById('dso-game').style.display='none';
+    dsoGame.style.display='none';
   },
   cleanup(){
     if(window._mpMultiplayer) return; // don't stop during multiplayer
     if(S.raf){ cancelAnimationFrame(S.raf); S.raf=null; }
     if(dsoRevealRAF){ cancelAnimationFrame(dsoRevealRAF); dsoRevealRAF=null; }
     if(dsoPreviewRAF){ cancelAnimationFrame(dsoPreviewRAF); dsoPreviewRAF=null; }
-    S.fromCampaign = null;
-    S.campaignMode = null;
     closeBuildPopup();
   },
 });

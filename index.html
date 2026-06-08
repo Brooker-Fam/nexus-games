@@ -273,69 +273,70 @@
         </div>
       </div>
 
-      <!-- RTS GAME SCREEN -->
-      <div id="dso-game" style="display:none">
-        <div class="rts-hud">
-          <div class="rts-hud-left">
-            <div class="rts-faction-badge" id="rts-faction-badge">PRISM ARMADA</div>
-            <div class="rts-resource"><span class="rts-res-icon">◈</span> GOLD: <span id="rts-gold">0</span></div>
-            <div class="rts-resource" id="rts-oil-row" style="display:none"><span class="rts-res-icon">🛢</span> OIL: <span id="rts-oil">0</span></div>
-            <div class="rts-resource"><span class="rts-res-icon">⚔</span> UNITS: <span id="rts-units">0</span></div>
-            <div class="rts-resource rts-diff-row"><span class="rts-res-icon">⚙</span> AI LEVEL: <span id="rts-difficulty" class="rts-diff-val">5</span><span class="rts-diff-max">/10</span></div>
-          </div>
-          <div class="rts-hud-mid">
-            <div class="rts-build-panel">
-              <div class="rts-build-label rts-build-hint">
-                Click your <span id="hud-building-name">TEMPLE</span> to build
-              </div>
-              <button class="rts-build-btn rts-attack-btn" id="btn-attack">
-                <span class="rts-build-icon">⚡</span>
-                ATTACK!
-              </button>
-              <div class="rts-speed-btns" id="rts-speed-btns">
-                <button class="speed-btn active" data-speed="1">1×</button>
-                <button class="speed-btn" data-speed="2">2×</button>
-                <button class="speed-btn" data-speed="3">3×</button>
-              </div>
-            </div>
-          </div>
-          <div class="rts-hud-right">
-            <div class="rts-resource">ENEMY: <span id="rts-enemy-faction" class="rts-enemy-color">???</span></div>
-            <div class="rts-resource">BASE HP: <span id="rts-base-hp" class="rts-hp-color">150</span></div>
-            <button class="rts-retreat-btn" id="btn-rts-menu">◂ MENU</button>
-          </div>
-        </div>
-        <div id="rts-viewport-wrap">
-          <canvas id="rts-canvas" width="1200" height="580"></canvas>
-          <canvas id="rts-minimap" width="240" height="98"></canvas>
-          <div id="rts-scroll-hint">Click your base to build · Right-click to move/attack</div>
-          <!-- Campaign survival timer -->
-          <div id="campaign-timer-bar" style="display:none">
-            <div class="cti-label">SURVIVE</div>
-            <div class="cti-time" id="campaign-timer">3:00</div>
-          </div>
-          <!-- BUILD POPUP MENU -->
-          <div id="rts-build-popup" style="display:none">
-            <div class="rbp-title" id="rbp-title">TEMPLE</div>
-            <div class="rbp-options" id="rbp-options"></div>
-            <button class="rbp-close" id="btn-popup-close">✕ CLOSE</button>
-          </div>
-        </div>
-        <div class="rts-log-bar"><span id="rts-log">Click your base to build units!</span></div>
-        <div id="rts-gameover-overlay" style="display:none" class="rts-over-overlay">
-          <div class="rts-over-title" id="rts-over-title">VICTORY</div>
-          <div class="rts-over-sub" id="rts-over-sub">The enemy base has fallen.</div>
-          <div class="rts-over-rating" id="rts-over-rating" style="display:none"></div>
-          <button class="overlay-btn" id="btn-rts-menu-over">◂ BACK TO MENU</button>
-        </div>
-      </div>
-
     </div>
   </div>
 
 
   <!-- CAMPAIGN -->
   <div id="tab-campaign" class="tab-content">
+
+    <!-- RTS GAME SCREEN — shared by campaign and DSO; JS moves it between tabs as needed -->
+    <div id="dso-game" style="display:none">
+      <div class="rts-hud">
+        <div class="rts-hud-left">
+          <div class="rts-faction-badge" id="rts-faction-badge">PRISM ARMADA</div>
+          <div class="rts-resource"><span class="rts-res-icon">◈</span> GOLD: <span id="rts-gold">0</span></div>
+          <div class="rts-resource" id="rts-oil-row" style="display:none"><span class="rts-res-icon">🛢</span> OIL: <span id="rts-oil">0</span></div>
+          <div class="rts-resource"><span class="rts-res-icon">⚔</span> UNITS: <span id="rts-units">0</span></div>
+          <div class="rts-resource rts-diff-row"><span class="rts-res-icon">⚙</span> AI LEVEL: <span id="rts-difficulty" class="rts-diff-val">5</span><span class="rts-diff-max">/10</span></div>
+        </div>
+        <div class="rts-hud-mid">
+          <div class="rts-build-panel">
+            <div class="rts-build-label rts-build-hint">
+              Click your <span id="hud-building-name">TEMPLE</span> to build
+            </div>
+            <button class="rts-build-btn rts-attack-btn" id="btn-attack">
+              <span class="rts-build-icon">⚡</span>
+              ATTACK!
+            </button>
+            <div class="rts-speed-btns" id="rts-speed-btns">
+              <button class="speed-btn active" data-speed="1">1×</button>
+              <button class="speed-btn" data-speed="2">2×</button>
+              <button class="speed-btn" data-speed="3">3×</button>
+            </div>
+          </div>
+        </div>
+        <div class="rts-hud-right">
+          <div class="rts-resource">ENEMY: <span id="rts-enemy-faction" class="rts-enemy-color">???</span></div>
+          <div class="rts-resource">BASE HP: <span id="rts-base-hp" class="rts-hp-color">150</span></div>
+          <button class="rts-retreat-btn" id="btn-rts-menu">◂ MENU</button>
+        </div>
+      </div>
+      <div id="rts-viewport-wrap">
+        <canvas id="rts-canvas" width="1200" height="580"></canvas>
+        <canvas id="rts-minimap" width="240" height="98"></canvas>
+        <div id="rts-scroll-hint">Click your base to build · Right-click to move/attack</div>
+        <!-- Campaign survival timer -->
+        <div id="campaign-timer-bar" style="display:none">
+          <div class="cti-label">SURVIVE</div>
+          <div class="cti-time" id="campaign-timer">3:00</div>
+        </div>
+        <!-- BUILD POPUP MENU -->
+        <div id="rts-build-popup" style="display:none">
+          <div class="rbp-title" id="rbp-title">TEMPLE</div>
+          <div class="rbp-options" id="rbp-options"></div>
+          <button class="rbp-close" id="btn-popup-close">✕ CLOSE</button>
+        </div>
+      </div>
+      <div class="rts-log-bar"><span id="rts-log">Click your base to build units!</span></div>
+      <div id="rts-gameover-overlay" style="display:none" class="rts-over-overlay">
+        <div class="rts-over-title" id="rts-over-title">VICTORY</div>
+        <div class="rts-over-sub" id="rts-over-sub">The enemy base has fallen.</div>
+        <div class="rts-over-rating" id="rts-over-rating" style="display:none"></div>
+        <button class="overlay-btn" id="btn-rts-menu-over">◂ BACK TO MENU</button>
+      </div>
+    </div>
+
     <div id="campaign-select">
       <div class="campaign-header">
         <div class="campaign-pre">STORY MISSIONS</div>
