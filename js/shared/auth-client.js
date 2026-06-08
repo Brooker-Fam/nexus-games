@@ -140,3 +140,5 @@
     refresh();
   }
 })();
+
+//# sourceMappingURL=auth-client.js.map
