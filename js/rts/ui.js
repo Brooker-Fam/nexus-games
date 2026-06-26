@@ -40,7 +40,7 @@ function openBuildPopup(screenX, screenY, context){
     sfx('rtsQueueUnit');
     // Refresh popup after short delay to let state sync update
     const b=S.entities.find(e=>e.id===buildingId);
-    if(b) setTimeout(()=>openBuildPopup(b.x-S.camX,b.y-S.camY,popupContext), window._mpMultiplayer && !mpIsHost ? 200 : 0);
+    if(b) setTimeout(()=>openBuildPopup((b.x-S.camX)*S.camZoom,(b.y-S.camY)*S.camZoom,popupContext), window._mpMultiplayer && !mpIsHost ? 200 : 0);
   }
 
   if(context==='base'){
@@ -220,7 +220,7 @@ function rtsSelectArmy(){
 }
 
 // Convert screen coords → world coords
-function screenToWorld(sx, sy){ return { x: sx+S.camX, y: sy+S.camY }; }
+function screenToWorld(sx, sy){ return { x: sx/S.camZoom+S.camX, y: sy/S.camZoom+S.camY }; }
 // Get canvas-relative mouse position
 function canvasPos(e){
   const c=document.getElementById('rts-canvas');
@@ -286,7 +286,7 @@ function rtsHandleClick(e){
   if(hit){
     hit.selected=true; S.selected=[hit];
     const cfg=FACTION_CFG[S.playerFaction];
-    const sx=hit.x-S.camX, sy=hit.y-S.camY;
+    const sx=(hit.x-S.camX)*S.camZoom, sy=(hit.y-S.camY)*S.camZoom;
     if(hit.type==='base'){
       if(hit.underConstruction){
         const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
