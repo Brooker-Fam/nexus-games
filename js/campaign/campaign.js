@@ -185,13 +185,33 @@ function endCampaign(won) {
 
 document.addEventListener('DOMContentLoaded', function () {
   registerGame('campaign', {
-    init()    { document.getElementById('campaign-select').style.display = ''; },
-    cleanup() {},
+    init() {
+      // Ensure dso-game lives in the campaign tab
+      const tabCampaign = document.getElementById('tab-campaign');
+      const dsoGame = document.getElementById('dso-game');
+      if (dsoGame.parentNode !== tabCampaign) tabCampaign.insertBefore(dsoGame, tabCampaign.firstChild);
+      dsoGame.style.display = 'none';
+      document.getElementById('campaign-select').style.display = '';
+    },
+    cleanup() {
+      if (S.raf) { cancelAnimationFrame(S.raf); S.raf = null; }
+      S.fromCampaign = null;
+      S.campaignMode = null;
+      const timerBar = document.getElementById('campaign-timer-bar');
+      if (timerBar) timerBar.style.display = 'none';
+      document.getElementById('dso-game').style.display = 'none';
+    },
   });
 
   document.getElementById('cc-shadow').addEventListener('click', function () {
     S.fromCampaign = 'shadow';
-    switchTab('cs', document.getElementById('tab-btn-cs'));
+    // Stay on campaign tab — show game area here
+    document.getElementById('campaign-select').style.display = 'none';
+    const dsoGame = document.getElementById('dso-game');
+    dsoGame.style.display = 'block';
+    document.getElementById('rts-gameover-overlay').style.display = 'none';
     startCampaignMission('shadow');
   });
 });
+
+//# sourceMappingURL=campaign.js.map

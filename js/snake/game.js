@@ -310,3 +310,5 @@ registerGame('snake', {
     if(snakeRaf){ cancelAnimationFrame(snakeRaf); snakeRaf = null; }
   },
 });
+
+//# sourceMappingURL=game.js.map

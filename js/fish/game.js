@@ -528,3 +528,5 @@ registerGame('fish', {
     if(fishRaf){ cancelAnimationFrame(fishRaf); fishRaf = null; }
   },
 });
+
+//# sourceMappingURL=game.js.map
