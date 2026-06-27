@@ -18,4 +18,45 @@
   }
 })();
 
+// ── INTERFACE ZOOM ──
+(function(){
+  const zoomOut = document.getElementById('zoom-out');
+  const zoomIn = document.getElementById('zoom-in');
+  const zoomLabel = document.getElementById('zoom-label');
+  const minZoom = 1;
+  const maxZoom = 1.35;
+  const step = 0.05;
+  const defaultZoom = 1.15;
+
+  if(!zoomOut || !zoomIn || !zoomLabel) return;
+
+  function clampZoom(value){
+    return Math.min(maxZoom, Math.max(minZoom, value));
+  }
+
+  function updateZoom(value){
+    const zoom = clampZoom(value);
+    document.body.style.setProperty('--ui-zoom', zoom.toFixed(2));
+    zoomLabel.textContent = `${Math.round(zoom * 100)}%`;
+    zoomOut.disabled = zoom <= minZoom;
+    zoomIn.disabled = zoom >= maxZoom;
+    try {
+      localStorage.setItem('nexus-ui-zoom', zoom.toFixed(2));
+    } catch(e) {
+      // Ignore storage failures so the zoom buttons still work.
+    }
+  }
+
+  let savedZoom = defaultZoom;
+  try {
+    savedZoom = parseFloat(localStorage.getItem('nexus-ui-zoom')) || defaultZoom;
+  } catch(e) {
+    savedZoom = defaultZoom;
+  }
+
+  updateZoom(savedZoom);
+  zoomOut.addEventListener('click', () => updateZoom(savedZoom = clampZoom(savedZoom - step)));
+  zoomIn.addEventListener('click', () => updateZoom(savedZoom = clampZoom(savedZoom + step)));
+})();
+
 //# sourceMappingURL=ui.js.map
