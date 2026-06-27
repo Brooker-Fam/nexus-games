@@ -331,14 +331,14 @@
     padding:5px; cursor:pointer; transition:all 0.15s;
   }
   .rbp-close:hover { border-color:rgba(255,100,100,0.4); color:#ff8888; }
-  .rts-attack-btn {
-    color:#ff8888;
-    background:rgba(80,0,0,0.3);
+  .rts-army-btn {
+    color:#9fffe0;
+    background:rgba(0,80,56,0.28);
   }
-  .rts-attack-btn:hover {
-    border-color:#ff4444; color:#ffaaaa;
-    background:rgba(255,40,40,0.15);
-    box-shadow:0 0 16px rgba(255,60,60,0.3);
+  .rts-army-btn:hover {
+    border-color:#37ffc6; color:#c8fff0;
+    background:rgba(30,220,160,0.16);
+    box-shadow:0 0 16px rgba(55,255,198,0.28);
   }
 
   /* ── RTS RESPONSIVE ── */

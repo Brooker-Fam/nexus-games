@@ -183,7 +183,7 @@ document.getElementById('btn-mp-join').onclick=async function(){
 };
 
 // RTS controls
-document.getElementById('btn-attack').onclick=function(e){ e.preventDefault(); rtsOrderAttack(); this.blur(); };
+document.getElementById('btn-select-army').onclick=function(e){ e.preventDefault(); rtsSelectArmy(); this.blur(); };
 document.getElementById('rts-speed-btns').onclick=function(e){
   const btn=e.target.closest('.speed-btn');
   if(!btn) return;

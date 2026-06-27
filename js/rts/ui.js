@@ -206,8 +206,20 @@ function closeBuildPopup(){
   S.buildingSource = null;
 }
 
-function rtsOrderAttack(){
-  issueCommand({ type:'attack_all' });
+function rtsSelectArmy(){
+  const side=mySide();
+  for(const ent of S.entities) ent.selected=false;
+  S.selected=[];
+
+  for(const ent of S.entities){
+    if(ent.side!==side || ent.type!=='warrior') continue;
+    ent.selected=true;
+    S.selected.push(ent);
+  }
+
+  if(S.buildPopupOpen) closeBuildPopup();
+  const count=S.selected.length;
+  rtsSetLog(count>0 ? `${count} army unit${count===1?'':'s'} selected — right-click to move or attack.` : 'No army units to select.');
 }
 
 // Convert screen coords → world coords
