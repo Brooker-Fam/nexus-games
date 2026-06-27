@@ -17,11 +17,20 @@
   * { margin:0; padding:0; box-sizing:border-box; }
 
   body {
+    --ui-zoom: 1.15;
     background: var(--bg-deep);
     color: var(--text-bright);
     font-family: 'Rajdhani', sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
+  }
+
+  .app-zoom-shell {
+    transform: scale(var(--ui-zoom));
+    transform-origin: top center;
+    width: calc(100% / var(--ui-zoom));
+    min-height: calc(100vh / var(--ui-zoom));
+    margin: 0 auto;
   }
 
   /* ── LOGIN SCREEN OVERLAY ── */
@@ -106,6 +115,46 @@
 
   /* ── AUTH CHIP ── */
   .auth-slot { display: inline-flex; align-items: center; margin-right: 12px; }
+  .zoom-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 12px;
+    padding: 3px;
+    border: 1px solid var(--panel-border);
+    background: rgba(0,20,40,0.72);
+  }
+  .zoom-btn {
+    min-width: 24px;
+    height: 24px;
+    background: transparent;
+    border: 1px solid rgba(0,245,255,0.18);
+    color: var(--neon-cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .zoom-btn:hover {
+    background: rgba(0,245,255,0.1);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 8px rgba(0,245,255,0.35);
+  }
+  .zoom-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .zoom-label {
+    min-width: 42px;
+    text-align: center;
+    color: var(--text-dim);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
   .auth-btn {
     background: transparent;
     border: 1px solid var(--panel-border);
@@ -389,5 +438,6 @@
     .header-top { padding: 10px 0 6px; }
     .logo { font-size: 16px; letter-spacing: 2px; }
     .status-text { display: none; }
+    .zoom-controls { order: 3; width: 100%; justify-content: center; margin: 8px 0 0; }
     .tab { font-size: 8px; letter-spacing: 1px; padding: 8px 10px; }
   }
