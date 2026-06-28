@@ -235,6 +235,17 @@ function rtsHandleClick(e){
   const sp=canvasPos(e);
   const wp=screenToWorld(sp.x, sp.y);
   if(e.target.closest && e.target.closest('#rts-build-popup')) return;
+  if(S.attackMoveMode){
+    const selectedWarriorIds=S.selected.filter(s=>s.side===mySide()&&s.type==='warrior').map(s=>s.id);
+    if(selectedWarriorIds.length>0){
+      issueCommand({ type:'attack_move', unitIds:selectedWarriorIds, x:wp.x, y:wp.y });
+      rtsSetLog(`Attack-move order issued!`);
+      S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#ffaa00',size:0,isRing:true,radius:4});
+      S.attackMoveMode=false;
+      return;
+    }
+    S.attackMoveMode=false;
+  }
   if(S.buildPopupOpen){ closeBuildPopup(); }
 
   // structure/base placement mode (left-click to place)
@@ -389,15 +400,21 @@ function rtsHandleRightClick(e){
     }
   }
 
+  const selectedWarriorIds=S.selected.filter(s=>s.side===mySide()&&s.type==='warrior').map(s=>s.id);
+  const isAttackMove = S.attackMoveMode && selectedWarriorIds.length>0 && !enemyHit;
   if(enemyHit){
     issueCommand({ type:'attack_target', unitIds:selectedIds, targetId:enemyHit.id });
     rtsSetLog(`Attack order issued!`);
+  } else if(isAttackMove){
+    issueCommand({ type:'attack_move', unitIds:selectedWarriorIds, x:wp.x, y:wp.y });
+    rtsSetLog(`Attack-move order issued!`);
   } else {
     issueCommand({ type:'move_units', unitIds:selectedIds, x:wp.x, y:wp.y });
     rtsSetLog(`Move order issued!`);
   }
+  S.attackMoveMode = false;
   S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,
-    color:enemyHit?'#ff4444':'#00ff88',size:0,isRing:true,radius:4});
+    color:enemyHit?'#ff4444':isAttackMove?'#ffaa00':'#00ff88',size:0,isRing:true,radius:4});
 }
 
 function rtsSetLog(msg){ document.getElementById('rts-log').textContent=msg; }
