@@ -95,6 +95,7 @@ function executeCommand(cmd){
         const idx = cmd.unitIds.indexOf(id);
         const spread = idx * 20 - (cmd.unitIds.length * 10);
         unit.moveTarget = { x:cmd.x + spread, y:cmd.y };
+        unit.attackMoveTarget = null;
         unit.forcedTarget = null;
         if(unit.type==='worker'){
           unit.assignedTask = null;
@@ -145,6 +146,23 @@ function executeCommand(cmd){
         if(!target) continue;
         unit.forcedTarget = target;
         unit.moveTarget = null;
+        unit.attackMoveTarget = null;
+        unit.state = 'march';
+      }
+      break;
+    }
+
+
+    case 'attack_move': {
+      for(const id of cmd.unitIds){
+        const unit = S.entities.find(e=>e.id===id);
+        if(!unit || unit.side!==side || unit.type!=='warrior') continue;
+        const idx = cmd.unitIds.indexOf(id);
+        const spread = idx * 20 - (cmd.unitIds.length * 10);
+        unit.attackMoveTarget = { x:cmd.x + spread, y:cmd.y };
+        unit.moveTarget = null;
+        unit.forcedTarget = null;
+        unit.target = null;
         unit.state = 'march';
       }
       break;

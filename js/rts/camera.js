@@ -23,7 +23,7 @@ const S = {
   entities: [], playerBase: null, enemyBase: null,
   particles: [], goldNodes: [], projectiles: [],
   // selection / UI
-  selected: [], buildPopupOpen: false, buildStructureMode: false, buildingSource: null,
+  selected: [], buildPopupOpen: false, buildStructureMode: false, buildingSource: null, attackMoveMode: false,
   // AI
   aiTimer: 0,
   // camera
@@ -37,7 +37,7 @@ function resetRtsState(){
   S.gold={player:0, enemy:0}; S.oil={player:0, enemy:0}; S.baseHP=150; S.enemyBaseHP=150;
   S.entities=[]; S.playerBase=null; S.enemyBase=null;
   S.particles=[]; S.goldNodes=[]; S.projectiles=[];
-  S.selected=[]; S.buildPopupOpen=false; S.buildStructureMode=false; S.buildingSource=null;
+  S.selected=[]; S.buildPopupOpen=false; S.buildStructureMode=false; S.buildingSource=null; S.attackMoveMode=false;
   S.aiTimer=0;
   S.stats={ kills:0, deaths:0, goldEarned:0, unitsBuilt:0 };
   S.camX=0; S.camY=RH/2-VH/2; S.mouseWorld=null;
@@ -74,6 +74,12 @@ function setupCameraControls(){
   document.addEventListener('keydown', e=>{
     const game = document.getElementById('dso-game');
     if(!game || game.style.display==='none') return;
+    if((e.key==='a'||e.key==='A') && S.selected.some(u=>u.side===mySide()&&u.type==='warrior')){
+      S.attackMoveMode = true;
+      rtsSetLog('Attack-move armed — click a destination.');
+      e.preventDefault();
+      return;
+    }
     keysHeld[e.key] = true;
     // prevent page scroll with arrow keys when game is open
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();

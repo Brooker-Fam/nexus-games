@@ -516,6 +516,35 @@ function canTargetAerial(w){
   return true;
 }
 
+
+function warriorFindAttackMoveTarget(w){
+  const scanRange = Math.max(w.range||50, 180);
+  let nearest=null, nearestDist=Infinity;
+  for(const e of S.entities){
+    if(e.side===w.side) continue;
+    if(e===S.playerBase||e===S.enemyBase) continue;
+    if(e.aerial && !canTargetAerial(w)) continue;
+    const d=_dist(e.x-w.x,e.y-w.y);
+    if(d<=scanRange && d<nearestDist){ nearest=e; nearestDist=d; }
+  }
+  return nearest ? { target:nearest, dist:nearestDist } : { target:null, dist:Infinity };
+}
+
+function warriorAttackMove(w){
+  const found = warriorFindAttackMoveTarget(w);
+  if(found.target){
+    if(w.ranged) warriorRangedAttack(w, found.target, found.dist);
+    else warriorMeleeAttack(w, found.target, found.dist);
+    return;
+  }
+  if(moveToward(w, w.attackMoveTarget.x, w.attackMoveTarget.y, 8)){
+    w.attackMoveTarget=null;
+    w.state='idle';
+  } else {
+    w.state='march';
+  }
+}
+
 function warriorFindTarget(w, enemyBase2){
   // Forced target (right-click)
   if(w.forcedTarget){
@@ -672,6 +701,11 @@ function warriorTick(w, playerBase, enemyBase){
       }
     }
     if(w.state==='idle') return;
+  }
+
+  if(w.attackMoveTarget){
+    warriorAttackMove(w);
+    return;
   }
 
   if(w.moveTarget){
