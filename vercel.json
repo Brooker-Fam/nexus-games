@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node scripts/generate-posthog-config.cjs && node scripts/generate-sourcemaps.cjs && node scripts/migrate.js",
+  "buildCommand": "node scripts/generate-posthog-config.cjs && node scripts/check-served-js.cjs && node scripts/generate-sourcemaps.cjs && node scripts/migrate.js",
   "outputDirectory": ".",
   "cleanUrls": false,
   "rewrites": [

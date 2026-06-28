@@ -1,0 +1,19 @@
+name: check-js
+
+# Parse-checks every served JS file and greps for Git conflict markers so a
+# malformed file (e.g. an un-resolved `<<<<<<<` merge marker) can never be
+# merged and break the homepage with a parse-time SyntaxError.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/check-served-js.cjs
