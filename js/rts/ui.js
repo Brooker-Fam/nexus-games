@@ -61,30 +61,28 @@ function openBuildPopup(screenX, screenY, context){
       S.buildStructureMode='barracks'; _buildModeCost=20;
       rtsSetLog(`Click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
     });
-    if(!S.campaignMode){
-      addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Click to place — trains elite units (30g)`, 30, ()=>{
-        S.buildStructureMode=true; _buildModeCost=30;
-        rtsSetLog(`Click to place your ${cfg.structLabel}!`); closeBuildPopup();
-      });
-      addOpt('💣', 'Build CANNON', 'Auto-attacks nearby enemies (15g)', 15, ()=>{
-        S.buildStructureMode='cannon'; _buildModeCost=15;
-        rtsSetLog('Click to place your CANNON!'); closeBuildPopup();
-      });
-      addOpt(cfg.aerialIcon, `Build ${cfg.aerialLabel}`, `Click to place — aerial units (25g)`, 25, ()=>{
-        S.buildStructureMode='aerial'; _buildModeCost=25;
-        rtsSetLog(`Click to place your ${cfg.aerialLabel}!`); closeBuildPopup();
-      });
-      if(cfg.oilRigLabel){
-        addOpt(cfg.oilRigIcon, `Build ${cfg.oilRigLabel}`, `Click to place — drones collect oil for tanks & war drones (20g)`, 20, ()=>{
-          S.buildStructureMode='oilrig'; _buildModeCost=20;
-          rtsSetLog(`Click to place your ${cfg.oilRigLabel}!`); closeBuildPopup();
-        });
-      }
-      addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Click to place — trains more workers (35g)`, 35, ()=>{
-        S.buildStructureMode='base'; _buildModeCost=35;
-        rtsSetLog(`Click to place your new ${cfg.buildingName}!`); closeBuildPopup();
+    addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Click to place — trains elite units (30g)`, 30, ()=>{
+      S.buildStructureMode=true; _buildModeCost=30;
+      rtsSetLog(`Click to place your ${cfg.structLabel}!`); closeBuildPopup();
+    });
+    addOpt('💣', 'Build CANNON', 'Auto-attacks nearby enemies (15g)', 15, ()=>{
+      S.buildStructureMode='cannon'; _buildModeCost=15;
+      rtsSetLog('Click to place your CANNON!'); closeBuildPopup();
+    });
+    addOpt(cfg.aerialIcon, `Build ${cfg.aerialLabel}`, `Click to place — aerial units (25g)`, 25, ()=>{
+      S.buildStructureMode='aerial'; _buildModeCost=25;
+      rtsSetLog(`Click to place your ${cfg.aerialLabel}!`); closeBuildPopup();
+    });
+    if(cfg.oilRigLabel){
+      addOpt(cfg.oilRigIcon, `Build ${cfg.oilRigLabel}`, `Click to place — drones collect oil for tanks & war drones (20g)`, 20, ()=>{
+        S.buildStructureMode='oilrig'; _buildModeCost=20;
+        rtsSetLog(`Click to place your ${cfg.oilRigLabel}!`); closeBuildPopup();
       });
     }
+    addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Click to place — trains more workers (35g)`, 35, ()=>{
+      S.buildStructureMode='base'; _buildModeCost=35;
+      rtsSetLog(`Click to place your new ${cfg.buildingName}!`); closeBuildPopup();
+    });
 
   } else if(context==='aerial'){
     const sel=S.selected[0];
@@ -98,7 +96,6 @@ function openBuildPopup(screenX, screenY, context){
 
   } else if(context==='swordsman'){
     const sel=S.selected[0]; if(!sel) return;
-    if(S.campaignMode){ closeBuildPopup(); rtsSetLog('SWORDSMAN — right-click to move or attack.'); return; }
     title.textContent='SWORDSMAN';
     addOpt('⚔', 'FIGHT', 'Duel a nearby Swordsman — the victor becomes a Bloodhound', 0,
       ()=>{ issueCommand({type:'start_duel',swordsmanId:sel.id}); closeBuildPopup(); }, false);

@@ -41,9 +41,6 @@ function resetRtsState(){
   S.aiTimer=0;
   S.stats={ kills:0, deaths:0, goldEarned:0, unitsBuilt:0 };
   S.camX=0; S.camY=RH/2-VH/2; S.mouseWorld=null;
-  // Campaign state — always clear so a leftover campaign session can't corrupt a fresh DSO game
-  S.campaignMode=null; S.fromCampaign=null;
-  S.campaignTimer=0; S.campaignGoldTimer=0; S.campaignWaveIdx=0;
 }
 
 // ── CAMERA ──
@@ -74,9 +71,21 @@ function setupCameraControls(){
   document.addEventListener('keydown', e=>{
     const game = document.getElementById('dso-game');
     if(!game || game.style.display==='none') return;
-    keysHeld[e.key] = true;
-    // prevent page scroll with arrow keys when game is open
-    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+
+    if(e.key==='a' || e.key==='A'){
+      if(!e.repeat && typeof issueCommand==='function'){
+        issueCommand({ type:'attack_all' });
+      }
+      e.preventDefault();
+      return;
+    }
+
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
+      keysHeld[e.key] = true;
+      e.preventDefault();
+    }
+    // prevent page scroll with space when game is open
+    if(e.key===' ') e.preventDefault();
   });
   document.addEventListener('keyup', e=>{ delete keysHeld[e.key]; });
 
@@ -160,10 +169,10 @@ function setupCameraControls(){
 }
 
 function tickCamera(){
-  if(keysHeld['ArrowLeft']||keysHeld['a']||keysHeld['A']) S.camX-=CAM_SPEED;
-  if(keysHeld['ArrowRight']||keysHeld['d']||keysHeld['D']) S.camX+=CAM_SPEED;
-  if(keysHeld['ArrowUp']||keysHeld['w']||keysHeld['W']) S.camY-=CAM_SPEED;
-  if(keysHeld['ArrowDown']||keysHeld['s']||keysHeld['S']) S.camY+=CAM_SPEED;
+  if(keysHeld['ArrowLeft']) S.camX-=CAM_SPEED;
+  if(keysHeld['ArrowRight']) S.camX+=CAM_SPEED;
+  if(keysHeld['ArrowUp']) S.camY-=CAM_SPEED;
+  if(keysHeld['ArrowDown']) S.camY+=CAM_SPEED;
   clampCam();
 }
 
