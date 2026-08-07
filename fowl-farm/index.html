@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fowl Farm</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Fowl Farm</h1>
+    <p class="tagline">Hatch. Collect. Expand.</p>
+  </header>
+
+  <main class="layout">
+    <!-- HUD -->
+    <section class="hud" aria-label="Farm status">
+      <div class="hud-row">
+        <div class="hud-cell">
+          <div class="hud-label">Chickens</div>
+          <div class="hud-value" id="hud-chicken-count">0</div>
+        </div>
+        <div class="hud-cell">
+          <div class="hud-label">Geese</div>
+          <div class="hud-value" id="hud-goose-count">0</div>
+        </div>
+        <div class="hud-cell">
+          <div class="hud-label">Coins</div>
+          <div class="hud-value hud-coin" id="hud-coins">0</div>
+        </div>
+      </div>
+
+      <div class="hud-row hud-eggs">
+        <div class="hud-cell">
+          <div class="hud-label">Chicken eggs</div>
+          <div class="hud-value">
+            <span id="hud-chicken-pending">0</span>
+            <span class="hud-sep">pending</span>
+            <span class="hud-sep">·</span>
+            <span id="hud-chicken-collected">0</span>
+            <span class="hud-sep">collected</span>
+          </div>
+        </div>
+        <div class="hud-cell">
+          <div class="hud-label">Goose eggs</div>
+          <div class="hud-value">
+            <span id="hud-goose-pending">0</span>
+            <span class="hud-sep">pending</span>
+            <span class="hud-sep">·</span>
+            <span id="hud-goose-collected">0</span>
+            <span class="hud-sep">collected</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-actions">
+        <button id="hud-collect-btn" class="btn btn-primary" type="button">Collect Eggs</button>
+        <button id="hud-reset-btn" class="btn btn-ghost" type="button">Reset Game</button>
+        <span id="hud-status" class="hud-status" aria-live="polite"></span>
+      </div>
+    </section>
+
+    <!-- Placeholder: the farm view hoglet will render birds/sprites here. -->
+    <section class="panel">
+      <h2>Farm</h2>
+      <div id="farm-view" class="placeholder" aria-label="Farm view placeholder">
+        <p>🐣 Farm view goes here.</p>
+        <p class="placeholder-sub">Reserved for the sprite-rendering hoglet.</p>
+      </div>
+    </section>
+
+    <!-- Placeholder: the incubator hoglet will render incubator slots here. -->
+    <section class="panel">
+      <h2>Incubators</h2>
+      <div id="incubator-panel" class="placeholder" aria-label="Incubator panel placeholder">
+        <p>🥚 Incubator UI goes here.</p>
+        <p class="placeholder-sub">Reserved for the incubator/upgrade hoglet.</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
