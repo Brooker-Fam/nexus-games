@@ -22,7 +22,9 @@ function openBuildPopup(screenX, screenY, context){
     const forceDisabled = disabled!==undefined ? !!disabled : false;
     btn.dataset.forceDisabled = forceDisabled ? '1' : '0';
     btn.disabled=forceDisabled || myGold()<cost || myOil()<oilCost;
-    const oilCostLabel = oilCost>0 ? `+${oilCost}o` : '';
+    const resCfg=FACTION_CFG[S.playerFaction||'prism'];
+    const oilAbbrev=(resCfg.oilResourceName||'oil').slice(0,3).toLowerCase();
+    const oilCostLabel = oilCost>0 ? ` +${oilCost}${oilAbbrev}` : '';
     btn.innerHTML=`<span class="rbp-opt-icon">${icon}</span>
       <span class="rbp-opt-info"><span class="rbp-opt-name">${name}</span>
       <span class="rbp-opt-desc">${desc}</span></span>
@@ -74,7 +76,7 @@ function openBuildPopup(screenX, screenY, context){
       rtsSetLog(`Click to place your ${cfg.aerialLabel}!`); closeBuildPopup();
     });
     if(cfg.oilRigLabel){
-      addOpt(cfg.oilRigIcon, `Build ${cfg.oilRigLabel}`, `Click to place — drones collect oil for tanks & war drones (20g)`, 20, ()=>{
+      addOpt(cfg.oilRigIcon, `Build ${cfg.oilRigLabel}`, `Click to place — workers harvest ${cfg.oilResourceName||'oil'} needed for advanced units (20g)`, 20, ()=>{
         S.buildStructureMode='oilrig'; _buildModeCost=20;
         rtsSetLog(`Click to place your ${cfg.oilRigLabel}!`); closeBuildPopup();
       });
@@ -314,9 +316,12 @@ function rtsHandleClick(e){
     } else if(hit.type==='structure' && hit.isOilRig){
       if(hit.underConstruction){
         const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
-        rtsSetLog(`OIL RIG — under construction ${pct}%`);
+        const rigCfg=FACTION_CFG[S.playerFaction||'prism'];
+        rtsSetLog(`${rigCfg.oilRigLabel||'OIL RIG'} — under construction ${pct}%`);
       } else {
-        rtsSetLog(`OIL RIG — oil: ${hit.oil||0}/${hit.maxOil||200}  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
+        const rigCfg2=FACTION_CFG[S.playerFaction||'prism'];
+        const resName=(rigCfg2.oilResourceName||'oil').toLowerCase();
+        rtsSetLog(`${rigCfg2.oilRigLabel||'OIL RIG'} — ${resName}: ${hit.oil||0}/${hit.maxOil||200}  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
       }
     } else if(hit.type==='structure'){
       if(hit.underConstruction){
@@ -423,13 +428,15 @@ function updateRtsHUD(){
   const units=S.entities.filter(e=>e.side===mySide()&&e.type!=='base').length;
   document.getElementById('rts-units').textContent=units;
   document.getElementById('rts-base-hp').textContent=S.baseHP;
-  // oil HUD — only show for Roboto faction
+  // second resource HUD (oil / essence / light) — show for factions with an oil rig
   const cfg=FACTION_CFG[S.playerFaction||'prism'];
   const oilRow=document.getElementById('rts-oil-row');
   if(oilRow){
     if(cfg.oilRigLabel){
       oilRow.style.display='';
-      document.getElementById('rts-oil').textContent=Math.floor(myOil());
+      const icon=cfg.oilResourceIcon||'🛢';
+      const name=cfg.oilResourceName||'OIL';
+      oilRow.innerHTML=`<span class="rts-res-icon">${icon}</span> ${name}: <span id="rts-oil">${Math.floor(myOil())}</span>`;
     } else {
       oilRow.style.display='none';
     }
