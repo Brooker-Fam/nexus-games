@@ -183,7 +183,7 @@ function drawRTSStructure(rc, s){
     rc.font='7px Orbitron,sans-serif'; rc.textAlign='center'; rc.fillStyle=cfg.color; rc.shadowBlur=8;
     rc.fillText('DARK SHRINE',x,y+32);
 
-  } else {
+  } else if(s.structType==='armory'){
     // ── ARMORY (Roboto) ── chunky fortified building
     rc.fillStyle='rgba(120,60,0,0.15)';
     rc.beginPath(); rc.ellipse(x,y+26,34,9,0,0,Math.PI*2); rc.fill();
@@ -413,66 +413,159 @@ function drawRTSStructure(rc, s){
   }
 
   if(s.structType==='oilrig'){
-    // ── OIL RIG (Roboto) ── pump-jack derrick with animated piston
     const t=S.frame*0.04;
-    // ground base plate
-    rc.fillStyle='#1a1208';
-    rc.beginPath(); rc.roundRect(x-28,y+14,56,10,2); rc.fill();
-    rc.strokeStyle='rgba(200,120,0,0.4)'; rc.lineWidth=1; rc.stroke();
-    // oil puddle
-    rc.fillStyle='rgba(20,10,0,0.55)';
-    rc.beginPath(); rc.ellipse(x,y+20,24,6,0,0,Math.PI*2); rc.fill();
-    // derrick legs (A-frame)
-    rc.strokeStyle='#2a2010'; rc.lineWidth=4;
-    rc.beginPath(); rc.moveTo(x-22,y+14); rc.lineTo(x,y-36); rc.stroke();
-    rc.beginPath(); rc.moveTo(x+22,y+14); rc.lineTo(x,y-36); rc.stroke();
-    rc.beginPath(); rc.moveTo(x-22,y+14); rc.lineTo(x+22,y+14); rc.stroke();
-    // cross-brace struts
-    rc.strokeStyle='rgba(150,100,30,0.7)'; rc.lineWidth=2;
-    rc.beginPath(); rc.moveTo(x-18,y+4); rc.lineTo(x+18,y+4); rc.stroke();
-    rc.beginPath(); rc.moveTo(x-12,y-12); rc.lineTo(x+12,y-12); rc.stroke();
-    // crown block (top cap)
-    rc.fillStyle='#2a1a08';
-    rc.beginPath(); rc.roundRect(x-8,y-40,16,6,2); rc.fill();
-    rc.strokeStyle='rgba(255,140,0,0.5)'; rc.lineWidth=1; rc.stroke();
-    // walking beam (pivoting arm) — animated
-    const beamAngle=Math.sin(t)*0.4;
-    rc.save();
-    rc.translate(x, y-34);
-    rc.rotate(beamAngle);
-    rc.fillStyle='#3a2810';
-    rc.beginPath(); rc.roundRect(-20,-3,40,6,2); rc.fill();
-    rc.strokeStyle='rgba(255,140,0,0.4)'; rc.lineWidth=1; rc.stroke();
-    rc.restore();
-    // piston rod — moves with beam
-    const pistonY=y-16+Math.sin(t)*8;
-    rc.strokeStyle='#888'; rc.lineWidth=3;
-    rc.beginPath(); rc.moveTo(x+18,y-34+Math.sin(t)*6); rc.lineTo(x+18,pistonY); rc.stroke();
-    rc.fillStyle='#555';
-    rc.beginPath(); rc.roundRect(x+14,pistonY,8,5,1); rc.fill();
-    // pipe going down to ground
-    rc.strokeStyle='rgba(100,80,40,0.8)'; rc.lineWidth=4;
-    rc.beginPath(); rc.moveTo(x+18,pistonY+5); rc.lineTo(x+18,y+14); rc.stroke();
-    // oil drum on side
-    rc.fillStyle='#1a0a00';
-    rc.beginPath(); rc.roundRect(x-38,y+4,14,18,3); rc.fill();
-    rc.strokeStyle='rgba(255,120,0,0.5)'; rc.lineWidth=1.5; rc.stroke();
-    rc.strokeStyle='rgba(255,120,0,0.25)'; rc.lineWidth=1;
-    for(const ly of [y+8,y+13,y+18]){ rc.beginPath(); rc.moveTo(x-37,ly); rc.lineTo(x-25,ly); rc.stroke(); }
-    // oil level indicator (fill based on s.oil / s.maxOil)
-    const oilPct=(s.oil||0)/(s.maxOil||200);
-    const lvlH=Math.round(14*oilPct);
-    rc.fillStyle=`rgba(20,80,0,${0.4+oilPct*0.5})`;
-    rc.beginPath(); rc.rect(x-37,y+22-lvlH,12,lvlH); rc.fill();
-    // flame flicker at tip
-    const flicker=0.6+Math.sin(t*7)*0.4;
-    rc.fillStyle=`rgba(255,${Math.round(100+flicker*100)},0,${flicker*0.8})`;
-    rc.shadowColor='#ff6600'; rc.shadowBlur=10;
-    rc.beginPath(); rc.arc(x,y-40,3+Math.sin(t*9)*1.5,0,Math.PI*2); rc.fill();
-    rc.shadowBlur=0;
-    // label
-    rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
-    rc.fillStyle=cfg.color; rc.fillText('OIL',x,y+34); rc.fillText('RIG',x,y+42);
+    const rigFaction=s.faction||(s.side==='player'?S.playerFaction:S.enemyFaction);
+
+    if(rigFaction==='shadow'){
+      // ── GARDEN (Shadow) ── withered soil plot growing glowing essence blooms
+      // soil plot
+      rc.fillStyle='#0e0518';
+      rc.beginPath(); rc.ellipse(x,y+18,30,10,0,0,Math.PI*2); rc.fill();
+      rc.strokeStyle='rgba(150,60,255,0.35)'; rc.lineWidth=1; rc.stroke();
+      // low garden wall
+      rc.strokeStyle='rgba(90,30,150,0.6)'; rc.lineWidth=2;
+      rc.beginPath(); rc.ellipse(x,y+18,30,10,0,0,Math.PI*2); rc.stroke();
+      // tangled dark vines rising from soil (3 stalks)
+      const stalks=[[-16,0.9],[0,1.15],[16,0.95]];
+      for(const [sx,sh] of stalks){
+        const sway=Math.sin(t+sx)*3;
+        rc.strokeStyle='#2a1040'; rc.lineWidth=2.5; rc.lineCap='round';
+        rc.beginPath();
+        rc.moveTo(x+sx,y+16);
+        rc.quadraticCurveTo(x+sx+sway,y-2,x+sx+sway*1.4,y-30*sh);
+        rc.stroke();
+        // glowing bloom at tip
+        const bloomPulse=0.6+Math.sin(t*3+sx)*0.4;
+        const bg=rc.createRadialGradient(x+sx+sway*1.4,y-30*sh,0,x+sx+sway*1.4,y-30*sh,8);
+        bg.addColorStop(0,`rgba(230,180,255,${bloomPulse})`); bg.addColorStop(0.5,'rgba(160,40,255,0.7)'); bg.addColorStop(1,'transparent');
+        rc.fillStyle=bg; rc.shadowColor='#aa00ff'; rc.shadowBlur=14;
+        rc.beginPath(); rc.arc(x+sx+sway*1.4,y-30*sh,6,0,Math.PI*2); rc.fill();
+        rc.shadowBlur=0;
+      }
+      // essence-collecting basin on side
+      rc.fillStyle='#100020';
+      rc.beginPath(); rc.ellipse(x-34,y+14,10,6,0,0,Math.PI*2); rc.fill();
+      rc.strokeStyle='rgba(180,80,255,0.5)'; rc.lineWidth=1.2; rc.stroke();
+      // essence level indicator (fill based on s.oil / s.maxOil)
+      const essPct=(s.oil||0)/(s.maxOil||200);
+      rc.fillStyle=`rgba(180,60,255,${0.35+essPct*0.5})`;
+      rc.beginPath(); rc.ellipse(x-34,y+14,9*essPct,5*essPct,0,0,Math.PI*2); rc.fill();
+      // drifting motes above the plot
+      for(let i=0;i<3;i++){
+        const a=(t*0.6+i*2.2)%(Math.PI*2);
+        const mx=x+Math.cos(a)*20, my=y-10+Math.sin(a)*10;
+        rc.fillStyle='rgba(200,120,255,0.6)'; rc.shadowColor='#cc66ff'; rc.shadowBlur=6;
+        rc.beginPath(); rc.arc(mx,my,1.6,0,Math.PI*2); rc.fill();
+      }
+      rc.shadowBlur=0;
+      // label
+      rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
+      rc.fillStyle=cfg.color; rc.fillText('GARDEN',x,y+34);
+
+    } else if(rigFaction==='prism'){
+      // ── ALTAR (Prism) ── stone altar radiating harvestable light
+      // base platform
+      rc.fillStyle='rgba(180,240,255,0.1)';
+      rc.beginPath(); rc.ellipse(x,y+20,28,9,0,0,Math.PI*2); rc.fill();
+      // stone pedestal (tiered)
+      const pGrad=rc.createLinearGradient(x-22,y-4,x+22,y+18);
+      pGrad.addColorStop(0,'#eaf8ff'); pGrad.addColorStop(1,'#9cc8e0');
+      rc.fillStyle=pGrad;
+      rc.beginPath(); rc.roundRect(x-22,y+6,44,12,2); rc.fill();
+      rc.strokeStyle='rgba(120,210,255,0.5)'; rc.lineWidth=1; rc.stroke();
+      rc.beginPath(); rc.roundRect(x-14,y-6,28,12,2); rc.fill();
+      rc.strokeStyle='rgba(120,210,255,0.5)'; rc.lineWidth=1; rc.stroke();
+      // offering bowl on top, catching light
+      rc.fillStyle='#cde8f6';
+      rc.beginPath(); rc.ellipse(x,y-8,10,4,0,0,Math.PI*2); rc.fill();
+      rc.strokeStyle='rgba(150,220,255,0.6)'; rc.lineWidth=1; rc.stroke();
+      // hovering light orb — pulses and rains rays down into the bowl
+      const orbY=y-26+Math.sin(t)*2;
+      const glow=0.6+Math.sin(t*3)*0.4;
+      const og=rc.createRadialGradient(x,orbY,0,x,orbY,14);
+      og.addColorStop(0,`rgba(255,255,255,${glow})`); og.addColorStop(0.4,'rgba(180,240,255,0.8)'); og.addColorStop(1,'transparent');
+      rc.fillStyle=og; rc.shadowColor='#aaffff'; rc.shadowBlur=18;
+      rc.beginPath(); rc.arc(x,orbY,10,0,Math.PI*2); rc.fill();
+      rc.shadowBlur=0;
+      // light rays down to bowl
+      rc.strokeStyle=`rgba(220,250,255,${0.3+glow*0.3})`; rc.lineWidth=1;
+      for(const rx of [-4,0,4]){ rc.beginPath(); rc.moveTo(x+rx*0.4,orbY+8); rc.lineTo(x+rx,y-9); rc.stroke(); }
+      // light level indicator — glow fill in the bowl
+      const lightPct=(s.oil||0)/(s.maxOil||200);
+      rc.fillStyle=`rgba(200,240,255,${0.3+lightPct*0.6})`;
+      rc.beginPath(); rc.ellipse(x,y-8,8*lightPct,3*lightPct,0,0,Math.PI*2); rc.fill();
+      // orbiting sparkles
+      for(let i=0;i<2;i++){
+        const a=(t*0.05+i*Math.PI)%(Math.PI*2);
+        rc.fillStyle='rgba(255,255,255,0.9)'; rc.shadowColor='#aaffff'; rc.shadowBlur=8;
+        rc.beginPath(); rc.arc(x+Math.cos(a)*16,orbY+Math.sin(a)*6,2,0,Math.PI*2); rc.fill();
+      }
+      rc.shadowBlur=0;
+      // label
+      rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
+      rc.fillStyle=cfg.color; rc.fillText('ALTAR',x,y+34);
+
+    } else {
+      // ── OIL RIG (Roboto) ── pump-jack derrick with animated piston
+      // ground base plate
+      rc.fillStyle='#1a1208';
+      rc.beginPath(); rc.roundRect(x-28,y+14,56,10,2); rc.fill();
+      rc.strokeStyle='rgba(200,120,0,0.4)'; rc.lineWidth=1; rc.stroke();
+      // oil puddle
+      rc.fillStyle='rgba(20,10,0,0.55)';
+      rc.beginPath(); rc.ellipse(x,y+20,24,6,0,0,Math.PI*2); rc.fill();
+      // derrick legs (A-frame)
+      rc.strokeStyle='#2a2010'; rc.lineWidth=4;
+      rc.beginPath(); rc.moveTo(x-22,y+14); rc.lineTo(x,y-36); rc.stroke();
+      rc.beginPath(); rc.moveTo(x+22,y+14); rc.lineTo(x,y-36); rc.stroke();
+      rc.beginPath(); rc.moveTo(x-22,y+14); rc.lineTo(x+22,y+14); rc.stroke();
+      // cross-brace struts
+      rc.strokeStyle='rgba(150,100,30,0.7)'; rc.lineWidth=2;
+      rc.beginPath(); rc.moveTo(x-18,y+4); rc.lineTo(x+18,y+4); rc.stroke();
+      rc.beginPath(); rc.moveTo(x-12,y-12); rc.lineTo(x+12,y-12); rc.stroke();
+      // crown block (top cap)
+      rc.fillStyle='#2a1a08';
+      rc.beginPath(); rc.roundRect(x-8,y-40,16,6,2); rc.fill();
+      rc.strokeStyle='rgba(255,140,0,0.5)'; rc.lineWidth=1; rc.stroke();
+      // walking beam (pivoting arm) — animated
+      const beamAngle=Math.sin(t)*0.4;
+      rc.save();
+      rc.translate(x, y-34);
+      rc.rotate(beamAngle);
+      rc.fillStyle='#3a2810';
+      rc.beginPath(); rc.roundRect(-20,-3,40,6,2); rc.fill();
+      rc.strokeStyle='rgba(255,140,0,0.4)'; rc.lineWidth=1; rc.stroke();
+      rc.restore();
+      // piston rod — moves with beam
+      const pistonY=y-16+Math.sin(t)*8;
+      rc.strokeStyle='#888'; rc.lineWidth=3;
+      rc.beginPath(); rc.moveTo(x+18,y-34+Math.sin(t)*6); rc.lineTo(x+18,pistonY); rc.stroke();
+      rc.fillStyle='#555';
+      rc.beginPath(); rc.roundRect(x+14,pistonY,8,5,1); rc.fill();
+      // pipe going down to ground
+      rc.strokeStyle='rgba(100,80,40,0.8)'; rc.lineWidth=4;
+      rc.beginPath(); rc.moveTo(x+18,pistonY+5); rc.lineTo(x+18,y+14); rc.stroke();
+      // oil drum on side
+      rc.fillStyle='#1a0a00';
+      rc.beginPath(); rc.roundRect(x-38,y+4,14,18,3); rc.fill();
+      rc.strokeStyle='rgba(255,120,0,0.5)'; rc.lineWidth=1.5; rc.stroke();
+      rc.strokeStyle='rgba(255,120,0,0.25)'; rc.lineWidth=1;
+      for(const ly of [y+8,y+13,y+18]){ rc.beginPath(); rc.moveTo(x-37,ly); rc.lineTo(x-25,ly); rc.stroke(); }
+      // oil level indicator (fill based on s.oil / s.maxOil)
+      const oilPct=(s.oil||0)/(s.maxOil||200);
+      const lvlH=Math.round(14*oilPct);
+      rc.fillStyle=`rgba(20,80,0,${0.4+oilPct*0.5})`;
+      rc.beginPath(); rc.rect(x-37,y+22-lvlH,12,lvlH); rc.fill();
+      // flame flicker at tip
+      const flicker=0.6+Math.sin(t*7)*0.4;
+      rc.fillStyle=`rgba(255,${Math.round(100+flicker*100)},0,${flicker*0.8})`;
+      rc.shadowColor='#ff6600'; rc.shadowBlur=10;
+      rc.beginPath(); rc.arc(x,y-40,3+Math.sin(t*9)*1.5,0,Math.PI*2); rc.fill();
+      rc.shadowBlur=0;
+      // label
+      rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
+      rc.fillStyle=cfg.color; rc.fillText('OIL',x,y+34); rc.fillText('RIG',x,y+42);
+    }
   }
 
   // HP bar

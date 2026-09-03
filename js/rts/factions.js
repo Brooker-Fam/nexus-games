@@ -21,7 +21,7 @@ const FACTION_CFG={
     aerialName:'WARP CONDUIT', aerialLabel:'WARP CONDUIT', aerialIcon:'🌀',
     aerialUnitLabel:'WAR DRONE', aerialUnitDesc:'Aerial — fast energy bolts, immune to melee',
     aerialUnitCost:22, aerialUnitIcon:'✦', aerialFn:'makeStarFighter', aerialOilCost:8,
-    oilRigName:'LIGHT WELL', oilRigLabel:'LIGHT WELL', oilRigIcon:'✨',
+    oilRigName:'ALTAR', oilRigLabel:'ALTAR', oilRigIcon:'⛩',
     oilResourceName:'LIGHT', oilResourceIcon:'🌟',
   },
   shadow:{
@@ -44,7 +44,7 @@ const FACTION_CFG={
     aerialName:'WARP CONDUIT', aerialLabel:'WARP CONDUIT', aerialIcon:'🌀',
     aerialUnitLabel:'WAR DRONE', aerialUnitDesc:'Aerial — fast energy bolts, immune to melee',
     aerialUnitCost:22, aerialUnitIcon:'✦', aerialFn:'makeStarFighter', aerialOilCost:8,
-    oilRigName:'VOID NEXUS', oilRigLabel:'VOID NEXUS', oilRigIcon:'🔮',
+    oilRigName:'GARDEN', oilRigLabel:'GARDEN', oilRigIcon:'🌺',
     oilResourceName:'ESSENCE', oilResourceIcon:'💜',
   },
   roboto:{

@@ -110,12 +110,13 @@ function makeCannon(side, faction, x, y){
 
 // ── OIL RIG ──
 function makeOilRig(side, faction, x, y){
+  const cfg=FACTION_CFG[faction];
   return {
     id:nextId(), type:'structure', side, faction,
     x, y, hp:80, maxHp:80,
     structType:'oilrig',
     selected:false, frame:0,
-    label:'OIL RIG', isOilRig:true,
+    label:(cfg&&cfg.oilRigLabel)||'OIL RIG', isOilRig:true,
     oil:200, maxOil:200,
     underConstruction:true, buildProgress:0, buildTime:BUILD_TIMES.structure,
   };
