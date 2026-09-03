@@ -454,12 +454,11 @@ function cannonTick(c){
   if(c.underConstruction) return; // can't fire while being built
   c.cooldown=Math.max(0,(c.cooldown||0)-1);
   if(c.cooldown>0) return;
-  // find nearest enemy within range (cannons cannot target aerial units)
+  // Find the nearest enemy within range, including aerial units.
   let target=null, bestDist=c.range;
   const enemySide=c.side==='player'?'enemy':'player';
   for(const e of S.entities){
     if(e.side!==enemySide) continue;
-    if(e.aerial) continue; // cannons can't hit aerial units
     const d=_dist(e.x-c.x,e.y-c.y);
     if(d<bestDist){ bestDist=d; target=e; }
   }
@@ -505,9 +504,9 @@ const MELEE_ATTACK_TICKS = 45;
 // Returns true if this attacker can hit aerial units.
 // Allowed: gunbot (roboto warrior), shockbot, dark warrior (shadow elite),
 //          witch (prism warrior), oracle (prism elite), wizard, starfighter, skyattacker.
-// Blocked: cannons, workers, swordsman (shadow melee warrior), necromancer, tank.
+// Blocked: workers, swordsman (shadow melee warrior), necromancer, tank.
 function canTargetAerial(w){
-  if(w.type==='cannon') return false;
+  if(w.type==='cannon') return true;
   if(w.type!=='warrior') return false;
   if(w.faction==='shadow' && !w.subtype) return false; // swordsman (melee only)
   if(w.subtype==='bloodhound') return w.bowMode===true; // bow mode can hit aerial
