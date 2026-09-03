@@ -232,6 +232,11 @@
     display:block;
   }
   #rts-viewport-wrap:active { cursor:grabbing; }
+  /* A red crosshair confirms that the next click issues an attack-move order. */
+  #rts-viewport-wrap.rts-attack-move-armed,
+  #rts-viewport-wrap.rts-attack-move-armed:active {
+    cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M16 2v8M16 22v8M2 16h8M22 16h8M16 10a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z' fill='none' stroke='%23ff3030' stroke-width='2.5'/%3E%3C/svg%3E") 16 16, crosshair;
+  }
   #rts-canvas {
     display:block;
     width:100%; height:100%;

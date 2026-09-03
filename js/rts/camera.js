@@ -74,6 +74,7 @@ function setupCameraControls(){
     if(!game || game.style.display==='none') return;
     if((e.key==='a'||e.key==='A') && S.selected.some(u=>u.side===mySide()&&u.type==='warrior')){
       S.attackMoveMode = true;
+      rtsUpdateViewportCursor();
       rtsSetLog('Attack-move armed — click a destination.');
       e.preventDefault();
       return;
@@ -114,9 +115,7 @@ function setupCameraControls(){
         S.mouseWorld={x:sx/S.camZoom+S.camX, y:sy/S.camZoom+S.camY};
       }
     }
-    // update cursor style
-    const wrap2=document.getElementById('rts-viewport-wrap');
-    if(wrap2) wrap2.style.cursor=S.buildStructureMode?'crosshair':dragSelActive?'crosshair':'default';
+    rtsUpdateViewportCursor();
   });
   window.addEventListener('mouseup', ()=>{
     camDragActive=false;
@@ -170,6 +169,18 @@ function setupCameraControls(){
   wrap.addEventListener('contextmenu', e=>{
     rtsHandleRightClick(e);
   });
+}
+
+// Attack-move needs a distinct visual cue before the destination is chosen.
+function rtsUpdateViewportCursor(){
+  const wrap=document.getElementById('rts-viewport-wrap');
+  if(!wrap) return;
+  wrap.classList.toggle('rts-attack-move-armed', S.attackMoveMode);
+  if(!S.attackMoveMode){
+    wrap.style.cursor=S.buildStructureMode||dragSelActive?'crosshair':'default';
+  } else {
+    wrap.style.cursor='';
+  }
 }
 
 function tickCamera(){

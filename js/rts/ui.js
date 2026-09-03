@@ -244,9 +244,11 @@ function rtsHandleClick(e){
       rtsSetLog(`Attack-move order issued!`);
       S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#ffaa00',size:0,isRing:true,radius:4});
       S.attackMoveMode=false;
+      rtsUpdateViewportCursor();
       return;
     }
     S.attackMoveMode=false;
+    rtsUpdateViewportCursor();
   }
   if(S.buildPopupOpen){ closeBuildPopup(); }
 
@@ -418,6 +420,7 @@ function rtsHandleRightClick(e){
     rtsSetLog(`Move order issued!`);
   }
   S.attackMoveMode = false;
+  rtsUpdateViewportCursor();
   S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,
     color:enemyHit?'#ff4444':isAttackMove?'#ffaa00':'#00ff88',size:0,isRing:true,radius:4});
 }
