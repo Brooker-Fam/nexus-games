@@ -125,7 +125,7 @@ function aiTick(){
       aiBuild('aerial', eb.x-160, eb.y-150, 25);
     }
 
-    // Roboto: build oil rig once barracks + 3 workers exist
+    // Build oil-rig-equivalent resource structure once barracks + 3 workers exist
     const eCfg2=FACTION_CFG[S.enemyFaction];
     if(eCfg2.oilRigLabel){
       const oilRigs=aiCount('structure',e=>e.isOilRig);
@@ -337,7 +337,7 @@ function workerBuild(w){
       ghost.hp=ghost.maxHp;
       sfx('rtsBuildDone');
       if(w.side==='player'){
-        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:bt==='aerial'?FACTION_CFG[w.faction].aerialLabel:bt==='oilrig'?'OIL RIG':FACTION_CFG[w.faction].structLabel;
+        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:bt==='aerial'?FACTION_CFG[w.faction].aerialLabel:bt==='oilrig'?(FACTION_CFG[w.faction].oilRigLabel||'OIL RIG'):FACTION_CFG[w.faction].structLabel;
         rtsSetLog(`${lbl} complete!`);
       }
       w.state='idle'; w.buildTarget=null; w.hammerSwing=0; w.buildTimer=0;
