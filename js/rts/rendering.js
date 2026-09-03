@@ -2,8 +2,9 @@ function rtsDraw(){
   const rc=document.getElementById('rts-canvas').getContext('2d');
   rc.clearRect(0,0,VW,VH);
 
-  // apply camera transform
+  // apply camera transform (zoom then pan)
   rc.save();
+  rc.scale(S.camZoom, S.camZoom);
   rc.translate(-S.camX, -S.camY);
 
   drawRTSBackground(rc);
@@ -120,9 +121,9 @@ function drawMinimap(){
     mc.beginPath(); mc.arc(p.x*scaleX,p.y*scaleY,1,0,Math.PI*2); mc.fill();
   }
 
-  // viewport rect
+  // viewport rect (accounts for zoom level)
   mc.strokeStyle='rgba(0,245,255,0.6)'; mc.lineWidth=1.5;
-  mc.strokeRect(S.camX*scaleX, S.camY*scaleY, VW*scaleX, VH*scaleY);
+  mc.strokeRect(S.camX*scaleX, S.camY*scaleY, (VW/S.camZoom)*scaleX, (VH/S.camZoom)*scaleY);
 
   // border
   mc.strokeStyle='rgba(0,245,255,0.3)'; mc.lineWidth=1;
@@ -138,8 +139,8 @@ function drawRTSBackground(rc){
   // grid — only draw visible portion for perf
   const gx0=Math.floor(S.camX/60)*60, gy0=Math.floor(S.camY/60)*60;
   rc.strokeStyle='rgba(0,200,255,0.035)'; rc.lineWidth=1;
-  for(let x2=gx0;x2<S.camX+VW+60;x2+=60){rc.beginPath();rc.moveTo(x2,S.camY);rc.lineTo(x2,S.camY+VH);rc.stroke();}
-  for(let y2=gy0;y2<S.camY+VH+60;y2+=60){rc.beginPath();rc.moveTo(S.camX,y2);rc.lineTo(S.camX+VW,y2);rc.stroke();}
+  for(let x2=gx0;x2<S.camX+VW/S.camZoom+60;x2+=60){rc.beginPath();rc.moveTo(x2,S.camY);rc.lineTo(x2,S.camY+VH/S.camZoom);rc.stroke();}
+  for(let y2=gy0;y2<S.camY+VH/S.camZoom+60;y2+=60){rc.beginPath();rc.moveTo(S.camX,y2);rc.lineTo(S.camX+VW/S.camZoom,y2);rc.stroke();}
 
   // center divider line
   rc.strokeStyle='rgba(255,255,255,0.04)'; rc.lineWidth=2; rc.setLineDash([10,16]);

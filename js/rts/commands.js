@@ -47,8 +47,8 @@ function executeCommand(cmd){
       const costMap = { worker:cfg.workerCost, warrior:cfg.warriorCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost, aerial:cfg.aerialUnitCost };
       const cost = costMap[cmd.unitType] || 0;
       if(S.gold[side] < cost) break;
-      // Roboto: tanks and sky attackers also cost oil
-      const oilCost = cmd.unitType==='elite2' ? (cfg.tankOilCost||0)
+      // second resource costs (oil / essence / light)
+      const oilCost = cmd.unitType==='elite2' ? (cfg.tankOilCost||cfg.elite2OilCost||0)
                     : cmd.unitType==='aerial'  ? (cfg.aerialOilCost||0) : 0;
       if(oilCost > 0 && (S.oil[side]||0) < oilCost) break;
 

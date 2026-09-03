@@ -27,7 +27,7 @@ const S = {
   // AI
   aiTimer: 0,
   // camera
-  camX: 0, camY: RH/2 - VH/2, mouseWorld: null,
+  camX: 0, camY: RH/2 - VH/2, camZoom: 1, mouseWorld: null,
   // performance stats (reset each game)
   stats: { kills:0, deaths:0, goldEarned:0, unitsBuilt:0 },
 };
@@ -40,7 +40,7 @@ function resetRtsState(){
   S.selected=[]; S.buildPopupOpen=false; S.buildStructureMode=false; S.buildingSource=null; S.attackMoveMode=false;
   S.aiTimer=0;
   S.stats={ kills:0, deaths:0, goldEarned:0, unitsBuilt:0 };
-  S.camX=0; S.camY=RH/2-VH/2; S.mouseWorld=null;
+  S.camX=0; S.camY=RH/2-VH/2; S.camZoom=1; S.mouseWorld=null;
 }
 
 // ── CAMERA ──
@@ -50,8 +50,9 @@ const CAM_SPEED=14;
 const keysHeld={};
 
 function clampCam(){
-  S.camX=Math.max(0,Math.min(RW-VW,S.camX));
-  S.camY=Math.max(0,Math.min(RH-VH,S.camY));
+  const vw=VW/S.camZoom, vh=VH/S.camZoom;
+  S.camX=Math.max(0,Math.min(RW-vw,S.camX));
+  S.camY=Math.max(0,Math.min(RH-vh,S.camY));
 }
 
 let cameraControlsInitialized = false;
@@ -110,7 +111,7 @@ function setupCameraControls(){
       const scX=canvas2.width/rect.width, scY=canvas2.height/rect.height;
       const sx=(e.clientX-rect.left)*scX, sy=(e.clientY-rect.top)*scY;
       if(sx>=0&&sy>=0&&sx<=VW&&sy<=VH){
-        S.mouseWorld={x:sx+S.camX, y:sy+S.camY};
+        S.mouseWorld={x:sx/S.camZoom+S.camX, y:sy/S.camZoom+S.camY};
       }
     }
     // update cursor style
@@ -140,13 +141,22 @@ function setupCameraControls(){
   },{passive:true});
   wrap.addEventListener('touchend', ()=>{ camDragging=false; });
 
-  // Scroll wheel pans the camera
+  // Scroll wheel: zoom toward cursor (vertical), pan horizontal (horizontal scroll)
   wrap.addEventListener('wheel', e=>{
     const game = document.getElementById('dso-game');
     if(!game || game.style.display==='none') return;
     e.preventDefault();
-    if(e.deltaX) S.camX += e.deltaX;
-    if(e.deltaY) S.camY += e.deltaY * 0.5;
+    if(e.deltaX) { S.camX += e.deltaX / S.camZoom; clampCam(); return; }
+    const canvas2=document.getElementById('rts-canvas');
+    if(!canvas2) return;
+    const rect=canvas2.getBoundingClientRect();
+    const scX=canvas2.width/rect.width, scY=canvas2.height/rect.height;
+    const sx=(e.clientX-rect.left)*scX, sy=(e.clientY-rect.top)*scY;
+    const worldX=sx/S.camZoom+S.camX, worldY=sy/S.camZoom+S.camY;
+    const factor=e.deltaY<0?1.12:1/1.12;
+    S.camZoom=Math.max(0.4,Math.min(3,S.camZoom*factor));
+    S.camX=worldX-sx/S.camZoom;
+    S.camY=worldY-sy/S.camZoom;
     clampCam();
   },{passive:false});
 
@@ -178,10 +188,10 @@ function _applyDragSelect(){
   const scX=canvas.width/rect.width, scY=canvas.height/rect.height;
 
   // Convert client coords to world coords
-  const wx1=(Math.min(dragSelStartCX,dragSelCurCX)-rect.left)*scX+S.camX;
-  const wy1=(Math.min(dragSelStartCY,dragSelCurCY)-rect.top )*scY+S.camY;
-  const wx2=(Math.max(dragSelStartCX,dragSelCurCX)-rect.left)*scX+S.camX;
-  const wy2=(Math.max(dragSelStartCY,dragSelCurCY)-rect.top )*scY+S.camY;
+  const wx1=(Math.min(dragSelStartCX,dragSelCurCX)-rect.left)*scX/S.camZoom+S.camX;
+  const wy1=(Math.min(dragSelStartCY,dragSelCurCY)-rect.top )*scY/S.camZoom+S.camY;
+  const wx2=(Math.max(dragSelStartCX,dragSelCurCX)-rect.left)*scX/S.camZoom+S.camX;
+  const wy2=(Math.max(dragSelStartCY,dragSelCurCY)-rect.top )*scY/S.camZoom+S.camY;
 
   const side=mySide();
   for(const ent of S.entities) ent.selected=false;
