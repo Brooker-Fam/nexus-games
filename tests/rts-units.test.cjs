@@ -46,3 +46,25 @@ test('Prism Princess is a costly royal artillery unit',()=>{
   const costs=vm.runInContext('({gold:FACTION_CFG.prism.princessCost,light:FACTION_CFG.prism.princessOilCost})',factionContext);
   assert.deepEqual({...costs},{gold:200,light:75});
 });
+
+test('Legionnaire starts in sword mode and can switch to bow mode',()=>{
+  const context=makeContext();
+  const initial=vm.runInContext(`(() => {
+    const unit=makeLegionnaire('player','prism',100,100);
+    return {bowMode:unit.bowMode,ranged:unit.ranged,damage:unit.damage,range:unit.range};
+  })()`,context);
+  assert.deepEqual({...initial},{bowMode:false,ranged:false,damage:14,range:50});
+
+  Object.assign(context,{
+    S:{frame:0,entities:[],playerFaction:'prism',enemyFaction:'shadow'},
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    FACTION_CFG:{prism:{}}, rtsSetLog:()=>{}, updateRtsHUD:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  const bow=vm.runInContext(`(() => {
+    const unit=makeLegionnaire('player','prism',100,100); S.entities=[unit];
+    executeCommand({type:'toggle_weapon',unitId:unit.id,side:'player'});
+    return {bowMode:unit.bowMode,ranged:unit.ranged,damage:unit.damage,range:unit.range,fireRate:unit.fireRate,speed:unit.speed};
+  })()`,context);
+  assert.deepEqual({...bow},{bowMode:true,ranged:true,damage:10,range:210,fireRate:48,speed:0.8});
+});

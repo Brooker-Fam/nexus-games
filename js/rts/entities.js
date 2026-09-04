@@ -65,7 +65,7 @@ function makeWarbot(side, faction, nearX, nearY){
     forcedTarget:null, moveTarget:null,
   };
 }
-// Legionnaire (Prism) — melee swordfighter, trained in squads of four
+// Legionnaire (Prism) — swordfighter who can switch to a slower ranged bow mode
 function makeLegionnaire(side, faction, nearX, nearY){
   const bx = nearX !== undefined ? nearX : (side==='player'? PLAYER_BASE_X+120 : ENEMY_BASE_X-120);
   const by = nearY !== undefined ? nearY : BASE_Y;
@@ -75,7 +75,7 @@ function makeLegionnaire(side, faction, nearX, nearY){
     hp:35, maxHp:35, speed:1.0,
     state:'idle',
     target:null, attackTimer:0,
-    damage:14, range:50, ranged:false, fireRate:0,
+    damage:14, range:50, ranged:false, fireRate:0, bowMode:false,
     frame:0, selected:false,
     forcedTarget:null, moveTarget:null,
   };

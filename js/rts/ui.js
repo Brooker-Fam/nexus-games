@@ -204,6 +204,14 @@ function openBuildPopup(screenX, screenY, context){
       isBow?'Charge into melee — high damage, wide aggro':'Stand and shoot — ranged, no charge',
       0, ()=>{ issueCommand({type:'toggle_weapon',unitId:sel.id}); closeBuildPopup(); }, false);
 
+  } else if(context==='legionnaire'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='LEGIONNAIRE';
+    const isBow=sel.bowMode;
+    addOpt(isBow?'🗡':'🏹', isBow?'Switch to SWORD':'Switch to BOW',
+      isBow?'Close ranks for stronger melee attacks':'Fire at range and target aerial units',
+      0, ()=>{ issueCommand({type:'toggle_weapon',unitId:sel.id}); closeBuildPopup(); }, false);
+
   } else if(context==='structure'){
     const sel=S.selected[0];
     if(!sel) return;
@@ -417,6 +425,9 @@ function rtsHandleClick(e){
     } else if(hit.type==='warrior' && hit.subtype==='bloodhound'){
       openBuildPopup(sx,sy,'bloodhound');
       rtsSetLog(`BLOODHOUND — ${hit.bowMode?'bow':'sword'} mode  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
+    } else if(hit.type==='warrior' && hit.subtype==='legionnaire'){
+      openBuildPopup(sx,sy,'legionnaire');
+      rtsSetLog(`LEGIONNAIRE — ${hit.bowMode?'bow':'sword'} mode  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior' && hit.subtype==='assaultbot'){
       openBuildPopup(sx,sy,'assaultbot');
       rtsSetLog(`ASSAULT BOT — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);

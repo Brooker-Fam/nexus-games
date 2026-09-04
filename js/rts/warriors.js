@@ -443,8 +443,19 @@ function drawLegionnaire(rc,cfg,w){
   rc.beginPath(); rc.moveTo(0,-7); rc.lineTo(0,7); rc.moveTo(-4,0); rc.lineTo(4,0); rc.stroke();
   rc.restore();
 
-  // SWORD ARM — slash when attacking, held ready otherwise
-  if(isAttacking){
+  // WEAPON ARM — legionnaires can trade their sword for a ranged light bow
+  if(w.bowMode){
+    const draw = isAttacking ? Math.sin(t*0.45)*2 : 0;
+    rc.save(); rc.translate(8,-13); rc.rotate(-0.2);
+    rc.strokeStyle='#dff8ff'; rc.lineWidth=3; rc.lineCap='round';
+    rc.beginPath(); rc.arc(8+draw,0,13,-Math.PI/2,Math.PI/2); rc.stroke();
+    rc.strokeStyle='rgba(0,220,255,0.85)'; rc.lineWidth=1.2;
+    rc.beginPath(); rc.moveTo(8+draw,-13); rc.lineTo(isAttacking?-2:2,0); rc.lineTo(8+draw,13); rc.stroke();
+    rc.strokeStyle='#ffffff'; rc.lineWidth=1.5;
+    rc.beginPath(); rc.moveTo(isAttacking?-4:1,0); rc.lineTo(28,0); rc.stroke();
+    rc.fillStyle='#00ddff'; rc.beginPath(); rc.moveTo(30,0); rc.lineTo(25,-3); rc.lineTo(25,3); rc.closePath(); rc.fill();
+    rc.restore();
+  } else if(isAttacking){
     const slashAngle = Math.sin(t*0.35)*0.7-0.3;
     rc.save(); rc.rotate(slashAngle);
     rc.strokeStyle='#c8e8ff'; rc.lineWidth=5; rc.lineCap='round';
