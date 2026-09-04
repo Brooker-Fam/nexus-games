@@ -35,7 +35,7 @@ const TD_MAPS = [
       {x:0,y:3},{x:4,y:3},{x:4,y:1},{x:8,y:1},
       {x:8,y:6},{x:12,y:6},{x:12,y:3},{x:16,y:3},
       {x:16,y:10},{x:10,y:10},{x:10,y:8},{x:6,y:8},
-      {x:6,y:11},{x:17.5,y:11}
+      {x:6,y:11},{x:17,y:11}
     ],
   },
   {
@@ -43,7 +43,7 @@ const TD_MAPS = [
     waypoints: [
       {x:0,y:2},{x:3,y:2},{x:3,y:7},{x:7,y:7},
       {x:7,y:1},{x:11,y:1},{x:11,y:9},{x:15,y:9},
-      {x:15,y:4},{x:17.5,y:4}
+      {x:15,y:4},{x:17,y:4}
     ],
   },
   {
@@ -51,7 +51,7 @@ const TD_MAPS = [
     waypoints: [
       {x:0,y:9},{x:3,y:9},{x:3,y:4},{x:6,y:4},
       {x:6,y:10},{x:10,y:10},{x:10,y:2},{x:14,y:2},
-      {x:14,y:7},{x:17.5,y:7}
+      {x:14,y:7},{x:17,y:7}
     ],
   },
 ];
@@ -59,7 +59,8 @@ const TD_MAPS = [
 let activeMap = TD_MAPS[Math.floor(Math.random()*TD_MAPS.length)];
 let PATH_WAYPOINTS = activeMap.waypoints;
 
-function wpPx(wp){ return {x: wp.x*CELL, y: wp.y*CELL + CELL/2}; }
+// Waypoints identify grid cells; units travel between the cells' centers.
+function wpPx(wp){ return {x: (wp.x+0.5)*CELL, y: (wp.y+0.5)*CELL}; }
 
 const TOWER_TYPES = {
   gun:     { color:'#00f5ff', range:120, damage:15, rate:30,  cost:50,  bullet:'cyan',   aoe:false },
@@ -182,8 +183,7 @@ function spawnEnemy(){
   const spd = TD_CONFIG.enemyBaseSpeed + state.wave * TD_CONFIG.enemySpeedScaling + Math.random()*0.2;
   const isBoss = state.waveEnemiesLeft === 1 && state.wave % TD_CONFIG.bossWaveInterval === 0;
   state.enemies.push({
-    x: PATH_WAYPOINTS[0].x*CELL,
-    y: PATH_WAYPOINTS[0].y*CELL + CELL/2,
+    ...wpPx(PATH_WAYPOINTS[0]),
     wpIdx: 0, progress: 0,
     hp: isBoss ? hp*TD_CONFIG.bossHpMultiplier : hp,
     maxHp: isBoss ? hp*TD_CONFIG.bossHpMultiplier : hp,

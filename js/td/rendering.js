@@ -11,23 +11,25 @@ function drawBg(){
 
 function drawPath(){
   const pts = PATH_WAYPOINTS.map(wpPx);
-  // glow
+
+  // Draw the route as grid tiles so its visual footprint exactly matches the
+  // cells that are unavailable for tower placement.
   ctx.save();
-  ctx.strokeStyle='rgba(0,136,255,0.15)';
-  ctx.lineWidth = CELL;
-  ctx.lineCap='round'; ctx.lineJoin='round';
-  ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
-  pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
-  ctx.stroke();
-  // fill
-  ctx.strokeStyle='rgba(0,30,60,0.9)';
-  ctx.lineWidth = CELL-4;
-  ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
-  pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
-  ctx.stroke();
-  // edge lines
-  ctx.strokeStyle='rgba(0,136,255,0.3)';
+  ctx.shadowColor='rgba(0,136,255,0.45)';
+  ctx.shadowBlur=10;
+  for(const cell of pathCells){
+    const [gx,gy]=cell.split(',').map(Number);
+    ctx.fillStyle='rgba(0,30,60,0.95)';
+    ctx.fillRect(gx*CELL+2,gy*CELL+2,CELL-4,CELL-4);
+    ctx.strokeStyle='rgba(0,136,255,0.35)';
+    ctx.strokeRect(gx*CELL+2.5,gy*CELL+2.5,CELL-5,CELL-5);
+  }
+
+  // A center trace keeps the route easy to follow through corners.
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(0,136,255,0.35)';
   ctx.lineWidth=1;
+  ctx.lineCap='square'; ctx.lineJoin='miter';
   ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
   pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
   ctx.stroke();
