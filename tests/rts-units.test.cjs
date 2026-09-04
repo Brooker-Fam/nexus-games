@@ -14,12 +14,21 @@ function makeContext(){
   return context;
 }
 
-test('warship trades damage for a tenfold faster attack rate',()=>{
+test('warship has another tenfold attack-rate increase',()=>{
   const context=makeContext();
   const stats=vm.runInContext(`(() => {
     const warship=makeWarship('player','roboto',100,100);
     return {damage:warship.damage,fireRate:warship.fireRate,burstCount:warship.burstCount};
   })()`,context);
 
-  assert.deepEqual({...stats},{damage:4,fireRate:7,burstCount:3});
+  assert.deepEqual({...stats},{damage:4,fireRate:0.7,burstCount:3});
+});
+
+test('Roboto warship uses a spaceship icon',()=>{
+  const context=vm.createContext({});
+  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8');
+  vm.runInContext(source,context);
+
+  const icon=vm.runInContext('FACTION_CFG.roboto.aerial2Icon',context);
+  assert.equal(icon,'🚀');
 });

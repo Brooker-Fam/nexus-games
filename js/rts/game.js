@@ -696,6 +696,15 @@ function warriorMarchToward(w, target, spreadMod, spreadScale){
   w.x+=dx/d*w.speed; w.y+=(dy+spread*0.05)/d*w.speed;
 }
 
+function advanceRangedAttack(w, target){
+  const fireRate=w.fireRate||50;
+  w.attackTimer++;
+  while(w.attackTimer>=fireRate){
+    w.attackTimer-=fireRate;
+    fireWarriorProjectiles(w, target);
+  }
+}
+
 function warriorRangedAttack(w, target, targetDist){
   // AI kiting: ranged units retreat from nearby melee threats (singleplayer only)
   if(!window._mpMultiplayer && w.side==='enemy' && AI_CONFIG.kiteChance>0 && targetDist<=w.range){
@@ -708,8 +717,7 @@ function warriorRangedAttack(w, target, targetDist){
         w.x+=dx/dist*w.speed; w.y+=dy/dist*w.speed;
         // Still fire if ready
         if(w.aerial) w.aimAngle=Math.atan2(target.y-w.y, target.x-w.x);
-        w.attackTimer++;
-        if(w.attackTimer>=(w.fireRate||50)){ w.attackTimer=0; fireWarriorProjectiles(w, target); }
+        advanceRangedAttack(w, target);
         return;
       }
     }
@@ -717,10 +725,9 @@ function warriorRangedAttack(w, target, targetDist){
 
   if(targetDist<=w.range){
     w.state='attack';
-    w.attackTimer++;
+    advanceRangedAttack(w, target);
     // track aim angle for aerial units so they visually face their target
     if(w.aerial) w.aimAngle=Math.atan2(target.y-w.y, target.x-w.x);
-    if(w.attackTimer>=(w.fireRate||50)){ w.attackTimer=0; fireWarriorProjectiles(w, target); }
   } else {
     if(w.aerial) w.aimAngle=Math.atan2(target.y-w.y, target.x-w.x);
     warriorMarchToward(w, target, 13, 4);
