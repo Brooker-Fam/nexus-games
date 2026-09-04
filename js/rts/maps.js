@@ -12,6 +12,7 @@ const RTS_MAPS = [
   { id:'nova', name:'SHATTERED NOVA', colors:['#151407','#080b12','#151407'], accent:'#ffe066',
     lanes:[-330,-110,110,330], quarters:[-380,0,380], center:[-320,-160,0,160,320], decor:'shards' },
 ];
+const GOLD_MINE_CAPACITY = 1600;
 
 function rtsMapRand(min,max){ return min+rtsRand()*(max-min); }
 
@@ -32,7 +33,7 @@ function makeBattlefield(){
   }
 }
 
-function addMirroredGoldPair(x,y,gold=150){
+function addMirroredGoldPair(x,y,gold=GOLD_MINE_CAPACITY){
   const jitterX=rtsMapRand(-42,42), jitterY=rtsMapRand(-34,34);
   S.goldNodes.push({x:x+jitterX,y:y+jitterY,gold,maxGold:gold,owner:'neutral'});
   S.goldNodes.push({x:RW-x-jitterX,y:y+jitterY,gold,maxGold:gold,owner:'neutral'});
@@ -41,8 +42,8 @@ function addMirroredGoldPair(x,y,gold=150){
 function addBaseGoldPair(angle,radius){
   const x=PLAYER_BASE_X+Math.cos(angle)*radius;
   const y=BASE_Y+Math.sin(angle)*radius;
-  S.goldNodes.push({x,y,gold:150,maxGold:150,owner:'player'});
-  S.goldNodes.push({x:RW-x,y,gold:150,maxGold:150,owner:'enemy'});
+  S.goldNodes.push({x,y,gold:GOLD_MINE_CAPACITY,maxGold:GOLD_MINE_CAPACITY,owner:'player'});
+  S.goldNodes.push({x:RW-x,y,gold:GOLD_MINE_CAPACITY,maxGold:GOLD_MINE_CAPACITY,owner:'enemy'});
 }
 
 function makeMapGoldNodes(){
@@ -59,6 +60,6 @@ function makeMapGoldNodes(){
   // The preset defines the strategy; jitter and distance make repeat visits fresh.
   for(const dy of map.quarters) addMirroredGoldPair(rtsMapRand(RW*.25,RW*.32),BASE_Y+dy);
   for(const dy of map.center){
-    S.goldNodes.push({x:RW/2,y:BASE_Y+dy+rtsMapRand(-28,28),gold:180,maxGold:180,owner:'neutral'});
+    S.goldNodes.push({x:RW/2,y:BASE_Y+dy+rtsMapRand(-28,28),gold:GOLD_MINE_CAPACITY,maxGold:GOLD_MINE_CAPACITY,owner:'neutral'});
   }
 }

@@ -22,6 +22,18 @@ test('battlefields and resource jitter are repeatable from a seed',()=>{
   assert.equal(generate(92741),generate(92741));
 });
 
+test('every gold mine starts with 1,600 gold',()=>{
+  const context=makeContext();
+  const result=vm.runInContext(`(() => {
+    for(let seed=1;seed<=30;seed++){
+      rtsRandSeed(seed); makeBattlefield(); makeMapGoldNodes();
+      if(!S.goldNodes.every(node=>node.gold===1600 && node.maxGold===1600)) return false;
+    }
+    return true;
+  })()`,context);
+  assert.equal(result,true);
+});
+
 test('random map generation offers multiple layouts and mirrored resources',()=>{
   const context=makeContext();
   const result=vm.runInContext(`(() => {

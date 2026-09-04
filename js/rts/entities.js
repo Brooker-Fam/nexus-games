@@ -335,20 +335,20 @@ function makeGoldNodes(){
   const MY=BASE_Y;
   // === Player-side cluster ===
   for(const [dx,dy] of [[200,-160],[200,0],[200,160],[350,-80],[350,80]]){
-    S.goldNodes.push({ x:PLAYER_BASE_X+dx, y:MY+dy, gold:150, maxGold:150, owner:'player' });
+    S.goldNodes.push({ x:PLAYER_BASE_X+dx, y:MY+dy, gold:1600, maxGold:1600, owner:'player' });
   }
   // === Enemy-side cluster ===
   for(const [dx,dy] of [[-200,-160],[-200,0],[-200,160],[-350,-80],[-350,80]]){
-    S.goldNodes.push({ x:ENEMY_BASE_X+dx, y:MY+dy, gold:150, maxGold:150, owner:'enemy' });
+    S.goldNodes.push({ x:ENEMY_BASE_X+dx, y:MY+dy, gold:1600, maxGold:1600, owner:'enemy' });
   }
   // === Center contested ===
   for(const [dx,dy] of [[0,-260],[0,-130],[0,0],[0,130],[0,260],[-200,-200],[-200,200],[200,-200],[200,200]]){
-    S.goldNodes.push({ x:RW/2+dx, y:MY+dy, gold:150, maxGold:150, owner:'neutral' });
+    S.goldNodes.push({ x:RW/2+dx, y:MY+dy, gold:1600, maxGold:1600, owner:'neutral' });
   }
   // === Quarter-map nodes (between base and center) ===
   const q1=RW*0.27, q2=RW*0.73;
   for(const [qx,dy] of [[q1,-300],[q1,0],[q1,300],[q2,-300],[q2,0],[q2,300]]){
-    S.goldNodes.push({ x:qx, y:MY+dy, gold:150, maxGold:150, owner:'neutral' });
+    S.goldNodes.push({ x:qx, y:MY+dy, gold:1600, maxGold:1600, owner:'neutral' });
   }
 }
 
