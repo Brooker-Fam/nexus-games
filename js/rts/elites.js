@@ -1,6 +1,6 @@
 // ── ELITE DRAW FUNCTIONS ──
 
-function drawElitePrincess(rc,cfg,w){
+function drawEliteOracle(rc,cfg,w){
   // Princess — a crowned Prism summoner whose twin orbs call her Legionnaires
   const t=w.frame, isAtt=w.state==='attack';
   // legs
