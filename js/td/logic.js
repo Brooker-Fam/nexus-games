@@ -22,6 +22,8 @@ const TD_CONFIG = {
   bossWaveInterval: 5,
   bossHpMultiplier: 4,
   bossSpeedMultiplier: 0.5,
+  bossInterestThreshold: 50,
+  bossInterestRate: 0.1,
   baseEnemyCount: 8,
   enemyCountScaling: 3,
   waveScaling: { multiplier: 1 },
@@ -100,6 +102,19 @@ function updateHUD(){
   document.getElementById('livesNum').textContent = state.lives;
   document.getElementById('goldNum').textContent = state.gold;
   document.getElementById('scoreNum').textContent = state.score;
+}
+
+function calculateBossInterest(gold){
+  const eligibleGold = Math.floor(gold / TD_CONFIG.bossInterestThreshold) * TD_CONFIG.bossInterestThreshold;
+  return Math.floor(eligibleGold * TD_CONFIG.bossInterestRate);
+}
+
+function awardBossInterest(){
+  const interest = calculateBossInterest(state.gold);
+  if(interest <= 0) return;
+  state.gold += interest;
+  addLog(`Boss interest: +${interest}g (10% per 50g saved)`,'good');
+  sfx('rtsGoldIn');
 }
 
 // Path cells set
@@ -340,6 +355,7 @@ function tick(){
       state.score += e.boss?200:20+state.wave*5;
       spawnHitParticle(e.x,e.y,'orange');
       addLog(`+${e.boss?200:20+state.wave*5}pts`,'good');
+      if(e.boss) awardBossInterest();
       state.enemies.splice(i,1);
       updateHUD();
     }
