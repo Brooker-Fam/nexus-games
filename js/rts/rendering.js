@@ -79,6 +79,7 @@ function drawMinimap(){
   mc.clearRect(0,0,MW,MH);
   // background
   mc.fillStyle='rgba(2,8,16,0.9)'; mc.fillRect(0,0,MW,MH);
+  if(S.map){ mc.fillStyle=hexAlpha(S.map.accent,.045); mc.fillRect(0,0,MW,MH); }
   // grid hint
   mc.strokeStyle='rgba(0,200,255,0.05)'; mc.lineWidth=0.5;
   for(let x2=0;x2<MW;x2+=MW/10){mc.beginPath();mc.moveTo(x2,0);mc.lineTo(x2,MH);mc.stroke();}
@@ -134,8 +135,24 @@ function drawMinimap(){
 function drawRTSBackground(rc){
   // dark ground — full world size
   const bg=rc.createLinearGradient(0,0,RW,RH);
-  bg.addColorStop(0,'#060d18'); bg.addColorStop(0.5,'#030a14'); bg.addColorStop(1,'#060d18');
+  const map=S.map||{colors:['#060d18','#030a14','#060d18'],accent:'#00c8ff',decor:'nebula'};
+  bg.addColorStop(0,map.colors[0]); bg.addColorStop(0.5,map.colors[1]); bg.addColorStop(1,map.colors[2]);
   rc.fillStyle=bg; rc.fillRect(0,0,RW,RH);
+
+  // Distinct, subtle landmarks make each battlefield readable without blocking units.
+  for(const d of S.mapDecor||[]){
+    rc.save(); rc.translate(d.x,d.y); rc.rotate(d.rotation); rc.globalAlpha=d.alpha;
+    if(map.decor==='shards'){
+      rc.fillStyle=map.accent; rc.beginPath(); rc.moveTo(-d.size,8); rc.lineTo(d.size,-5); rc.lineTo(d.size*.25,14); rc.closePath(); rc.fill();
+    } else if(map.decor==='rift'){
+      rc.strokeStyle=map.accent; rc.lineWidth=3; rc.beginPath(); rc.moveTo(-d.size,0); rc.quadraticCurveTo(0,d.size*.35,d.size,0); rc.stroke();
+    } else {
+      const haze=rc.createRadialGradient(0,0,0,0,0,d.size*2.2);
+      haze.addColorStop(0,hexAlpha(map.accent,.75)); haze.addColorStop(1,'transparent');
+      rc.fillStyle=haze; rc.beginPath(); rc.arc(0,0,d.size*2.2,0,Math.PI*2); rc.fill();
+    }
+    rc.restore();
+  }
 
   // grid — only draw visible portion for perf
   const gx0=Math.floor(S.camX/60)*60, gy0=Math.floor(S.camY/60)*60;
@@ -158,7 +175,7 @@ function drawRTSBackground(rc){
   rc.fillStyle=eg; rc.fillRect(RW*0.65,0,RW*0.35,RH);
 
   // world border glow
-  rc.strokeStyle='rgba(0,100,160,0.3)'; rc.lineWidth=6;
+  rc.strokeStyle=hexAlpha(map.accent,0.3); rc.lineWidth=6;
   rc.strokeRect(3,3,RW-6,RH-6);
 }
 function hexAlpha(hex,a){

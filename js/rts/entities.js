@@ -244,6 +244,10 @@ function makeTank(side, faction, nearX, nearY){
   };
 }
 function makeGoldNodes(){
+  if(typeof makeMapGoldNodes==='function'){
+    makeMapGoldNodes();
+    return;
+  }
   S.goldNodes=[];
   const MY=BASE_Y;
   // === Player-side cluster ===
@@ -265,7 +269,7 @@ function makeGoldNodes(){
   }
 }
 
-function startRTS(playerFaction, enemyFaction){
+function startRTS(playerFaction, enemyFaction, mapSeed){
   // pick enemy faction before reset
   let eFaction = enemyFaction;
   if(!eFaction && !window._mpMultiplayer){
@@ -277,7 +281,9 @@ function startRTS(playerFaction, enemyFaction){
   S.playerFaction=playerFaction;
   if(eFaction) S.enemyFaction=eFaction;
   _nextEntityId=1;
-  rtsRandSeed(42);
+  S.mapSeed=(mapSeed===undefined ? (Date.now()^(Math.random()*0x7fffffff)) : mapSeed)|0;
+  rtsRandSeed(S.mapSeed);
+  if(typeof makeBattlefield==='function') makeBattlefield();
   rtsCommandQueue.length=0;
   _pendingChains.length=0;
   deadSwordsmenPool.length=0;
@@ -307,6 +313,8 @@ function startRTS(playerFaction, enemyFaction){
   document.getElementById('hud-building-name').textContent=pCfg.buildingName;
   document.getElementById('rts-enemy-faction').textContent=S.enemyFaction.toUpperCase();
   document.getElementById('rts-enemy-faction').style.color=FACTION_CFG[S.enemyFaction].color;
+  const mapName=document.getElementById('rts-map-name');
+  if(mapName) mapName.textContent=S.map?S.map.name:'ORION DIVIDE';
   rtsSetLog('Click your '+pCfg.buildingName+' to train units!');
 
   if(S.raf) cancelAnimationFrame(S.raf);

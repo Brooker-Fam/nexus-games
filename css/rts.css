@@ -256,6 +256,7 @@
     background:rgba(2,8,16,0.7); padding:4px 10px;
     animation: fadeOut 5s ease 2s forwards;
   }
+  .rts-map-name { color:#9eeeff; text-shadow:0 0 8px rgba(0,200,255,.35); }
   @keyframes fadeOut { to { opacity:0; } }
   .rts-log-bar {
     background:rgba(2,8,16,0.9); border:1px solid rgba(0,245,255,0.1); border-top:none;

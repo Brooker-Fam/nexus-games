@@ -1,7 +1,7 @@
 // ── RTS MULTIPLAYER (PeerJS WebRTC) ──
 // Version hash — both clients must match or desync is guaranteed.
 // Bump this whenever game logic, costs, stats, or balance changes.
-const MP_VERSION = 'v9-det-dist';
+const MP_VERSION = 'v10-random-maps';
 
 let mpPeer=null, mpConn=null, mpIsHost=false, mpConnected=false;
 let mpLocalFaction=null, mpRemoteFaction=null;
@@ -84,7 +84,7 @@ function mpPickFaction(f){
 function mpCheckStart(){
   if(!mpLocalFaction||!mpRemoteFaction) return;
   if(mpIsHost){
-    const msg={t:'go',hf:mpLocalFaction,gf:mpRemoteFaction,ver:MP_VERSION};
+    const msg={t:'go',hf:mpLocalFaction,gf:mpRemoteFaction,seed:(Date.now()^(Math.random()*0x7fffffff))|0,ver:MP_VERSION};
     mpSend(msg); mpStartGame(msg);
   }
 }
@@ -104,7 +104,7 @@ function mpStartGame(msg){
   // Both clients init identically
   S.playerFaction=msg.hf;
   S.enemyFaction=msg.gf;
-  startRTS(msg.hf);
+  startRTS(msg.hf,msg.gf,msg.seed);
   lsInit();
   mpStartKeepAlive();
   // Guest: fix HUD for their faction, start camera at their base
