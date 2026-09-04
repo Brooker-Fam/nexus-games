@@ -8,7 +8,7 @@ function makeBase(side, faction, x, y){
   const by = y !== undefined ? y : BASE_Y;
   const placed = x !== undefined; // true when built by worker (not starting base)
   return { id:nextId(), type:'base', side, x:bx, y:by,
-    hp: placed ? 1 : 150, maxHp:150, w:60, h:80,
+    hp: placed ? 1 : BUILDING_HEALTH.base, maxHp:BUILDING_HEALTH.base, w:60, h:80,
     queue:[], trainTimer:0,
     ...(placed ? { underConstruction:true, buildProgress:0, buildTime:BUILD_TIMES.structure } : {}),
   };
@@ -70,7 +70,7 @@ function makeStructure(side, faction, x, y, overrideType){
   const structType = overrideType || (faction==='roboto'?'armory': faction==='prism'?'shrine':'darkgen');
   return {
     id:nextId(), type:'structure', side, faction,
-    x, y, hp:80, maxHp:80,
+    x, y, hp:BUILDING_HEALTH.structure, maxHp:BUILDING_HEALTH.structure,
     structType,
     selected:false, frame:0,
     label: cfg.structLabel,
@@ -86,7 +86,7 @@ function makeBarracks(side, faction, x, y){
   const cfg=FACTION_CFG[faction];
   return {
     id:nextId(), type:'structure', side, faction,
-    x, y, hp:80, maxHp:80,
+    x, y, hp:BUILDING_HEALTH.structure, maxHp:BUILDING_HEALTH.structure,
     structType: typeMap[faction]||'barracks',
     selected:false, frame:0,
     label: cfg.barracksLabel,
@@ -99,7 +99,7 @@ function makeBarracks(side, faction, x, y){
 function makeCannon(side, faction, x, y){
   return {
     id:nextId(), type:'cannon', side, faction,
-    x, y, hp:60, maxHp:60,
+    x, y, hp:BUILDING_HEALTH.cannon, maxHp:BUILDING_HEALTH.cannon,
     range:280, damage:25, cooldown:0, rate:90,
     aimAngle:0,
     selected:false, frame:0,
@@ -113,7 +113,7 @@ function makeOilRig(side, faction, x, y){
   const cfg=FACTION_CFG[faction];
   return {
     id:nextId(), type:'structure', side, faction,
-    x, y, hp:80, maxHp:80,
+    x, y, hp:BUILDING_HEALTH.structure, maxHp:BUILDING_HEALTH.structure,
     structType:'oilrig',
     selected:false, frame:0,
     label:(cfg&&cfg.oilRigLabel)||'OIL RIG', isOilRig:true,
@@ -128,7 +128,7 @@ function makeAerialBuilding(side, faction, x, y){
   const cfg=FACTION_CFG[faction];
   return {
     id:nextId(), type:'structure', side, faction,
-    x, y, hp:70, maxHp:70,
+    x, y, hp:BUILDING_HEALTH.aerial, maxHp:BUILDING_HEALTH.aerial,
     structType: typeMap[faction],
     selected:false, frame:0,
     label: cfg.aerialLabel,

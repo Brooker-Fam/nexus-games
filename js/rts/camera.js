@@ -7,6 +7,12 @@ const RW=4000, RH=1400;
 // Viewport (canvas element size)
 const VW=1200, VH=580;
 const PLAYER_BASE_X=160, ENEMY_BASE_X=RW-160, BASE_Y=RH/2;
+const BUILDING_HEALTH={
+  base:300,
+  structure:160,
+  cannon:120,
+  aerial:140,
+};
 
 // ── CENTRALIZED RTS STATE ──
 // All mutable game state in one object. resetRtsState() restores defaults.
@@ -18,7 +24,7 @@ const S = {
   oil:  {player:0, enemy:0},
   playerFaction: 'prism', enemyFaction: 'shadow',
   // base HP
-  baseHP: 150, enemyBaseHP: 150,
+  baseHP: BUILDING_HEALTH.base, enemyBaseHP: BUILDING_HEALTH.base,
   // entities
   entities: [], playerBase: null, enemyBase: null,
   particles: [], goldNodes: [], projectiles: [],
@@ -34,7 +40,7 @@ const S = {
 
 function resetRtsState(){
   S.raf=null; S.frame=0; S.speed=1; S.gameOver=false; S.log='';
-  S.gold={player:0, enemy:0}; S.oil={player:0, enemy:0}; S.baseHP=150; S.enemyBaseHP=150;
+  S.gold={player:0, enemy:0}; S.oil={player:0, enemy:0}; S.baseHP=BUILDING_HEALTH.base; S.enemyBaseHP=BUILDING_HEALTH.base;
   S.entities=[]; S.playerBase=null; S.enemyBase=null;
   S.particles=[]; S.goldNodes=[]; S.projectiles=[];
   S.selected=[]; S.buildPopupOpen=false; S.buildStructureMode=false; S.buildingSource=null; S.attackMoveMode=false;
