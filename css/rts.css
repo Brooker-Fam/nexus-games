@@ -120,14 +120,20 @@
   .rv-play:hover { background:linear-gradient(135deg,rgba(0,245,255,0.2),rgba(0,136,255,0.3)); box-shadow:0 0 25px rgba(0,245,255,0.3); }
 
   /* ── RTS GAME ── */
-  #dso-game { position:relative; }
+  #dso-game {
+    position:relative;
+    flex-direction:column;
+  }
   .rts-hud {
-    display:flex; align-items:center; justify-content:space-between;
+    display:grid;
+    grid-template-columns:minmax(160px,1fr) minmax(280px,2fr) minmax(160px,1fr);
+    align-items:center;
     padding:8px 14px;
     background:rgba(2,8,16,0.95);
     border:1px solid rgba(0,245,255,0.15);
-    border-bottom:none;
+    border-top:none;
     gap:10px;
+    order:3;
   }
   .rts-hud-left,.rts-hud-right { display:flex; flex-direction:column; gap:4px; min-width:160px; }
   .rts-hud-right { align-items:flex-end; }
@@ -140,7 +146,11 @@
   .rts-resource { font-size:12px; letter-spacing:1px; color:var(--text-dim); }
   .rts-res-icon { color:gold; }
   .rts-hud-mid { flex:1; display:flex; justify-content:center; }
-  .rts-build-panel { display:flex; align-items:center; gap:8px; }
+  .rts-build-panel {
+    width:100%; display:grid;
+    grid-template-columns:minmax(120px,1fr) minmax(120px,1fr) minmax(100px,auto);
+    align-items:center; gap:8px;
+  }
   .rts-build-label {
     font-family:'Orbitron',sans-serif; font-size:9px; letter-spacing:3px; color:var(--text-dim);
   }
@@ -230,6 +240,7 @@
     box-shadow:0 0 30px rgba(0,245,255,0.06);
     cursor:grab;
     display:block;
+    order:1;
   }
   #rts-viewport-wrap:active { cursor:grabbing; }
   /* A red crosshair confirms that the next click issues an attack-move order. */
@@ -262,6 +273,7 @@
     background:rgba(2,8,16,0.9); border:1px solid rgba(0,245,255,0.1); border-top:none;
     padding:5px 14px; font-size:11px; letter-spacing:1px; color:var(--text-dim);
     min-height:24px;
+    order:2;
   }
   .rts-over-overlay {
     position:absolute; top:36px; left:0; right:0; bottom:0;
@@ -283,11 +295,14 @@
   /* ── BUILD POPUP ── */
   #rts-build-popup {
     position:absolute;
+    left:12px;
+    right:12px;
+    bottom:12px;
     background:rgba(2,10,22,0.97);
     border:1px solid rgba(0,245,255,0.35);
     box-shadow:0 0 40px rgba(0,245,255,0.15), 0 0 80px rgba(0,0,0,0.8);
     padding:14px 16px 12px;
-    min-width:220px;
+    min-width:0;
     z-index:30;
     clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));
     pointer-events:all;
@@ -302,7 +317,11 @@
     color:var(--neon-cyan); margin-bottom:12px; padding-bottom:8px;
     border-bottom:1px solid rgba(0,245,255,0.15);
   }
-  .rbp-options { display:flex; flex-direction:column; gap:7px; margin-bottom:10px; }
+  .rbp-options {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:7px; margin-bottom:10px;
+  }
   .rbp-option {
     display:flex; align-items:center; gap:10px;
     background:rgba(0,20,40,0.7);
@@ -353,9 +372,10 @@
     .dso-pre { font-size: 9px; letter-spacing: 4px; }
     .faction-cards { gap: 12px; }
     .faction-card { width: 180px; }
-    .rts-hud { flex-wrap: wrap; padding: 6px 10px; }
+    .rts-hud { grid-template-columns:repeat(2,minmax(0,1fr)); padding: 6px 10px; }
     .rts-hud-left, .rts-hud-right { min-width: 120px; }
-    .rts-build-panel { flex-wrap: wrap; gap: 6px; }
+    .rts-hud-mid { grid-column:1 / -1; grid-row:1; }
+    .rts-build-panel { gap: 6px; }
     #rts-viewport-wrap { height: 50vw; min-height: 300px; max-height: min(580px, 70vh); }
     #rv-canvas { width: 100%; height: auto; }
     .reveal-champion { font-size: 24px; letter-spacing: 4px; }
@@ -365,7 +385,10 @@
     .dso-title { font-size: 18px; letter-spacing: 2px; }
     .faction-cards { flex-direction: column; align-items: center; }
     .faction-card { width: 90%; max-width: 280px; }
-    .rts-hud-mid { width: 100%; justify-content: center; }
+    .rts-hud { grid-template-columns:minmax(0,1fr); }
+    .rts-hud-mid { width: 100%; grid-column:auto; grid-row:auto; justify-content: center; }
+    .rts-build-panel { grid-template-columns:minmax(0,1fr); }
+    .rts-hud-right { align-items:flex-start; }
     .rts-build-btn { padding: 5px 10px; font-size: 8px; }
     .reveal-btns { flex-direction: column; gap: 10px; }
     .mp-buttons { flex-direction: column; gap: 10px; }

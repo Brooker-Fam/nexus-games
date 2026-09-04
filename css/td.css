@@ -35,7 +35,7 @@
 
   .game-area {
     display: grid;
-    grid-template-columns: 1fr 220px;
+    grid-template-columns: minmax(0, 1fr);
     gap: 16px;
   }
 
@@ -186,16 +186,22 @@
   .place-hint { margin-top:10px; font-size:10px; color:var(--text-dim); letter-spacing:1px; text-align:center; }
   .wave-section { margin-top: 10px; }
   .panel-title.speed { margin-bottom: 6px; }
-  .panel.flex { flex: 1; }
+  .panel.flex { min-width: 0; }
   .rts-enemy-color { color: #ff4444; }
   .rts-hp-color { color: #00ff88; }
   .rts-build-hint { font-size:10px; color:rgba(0,245,255,0.5); }
 
+  /* Keep every control menu in one scannable grid below the playfield. */
+  .sidebar {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr) minmax(180px, 1fr);
+    align-items: stretch;
+  }
+
   /* ── TD RESPONSIVE ── */
   @media (max-width: 900px) {
-    .game-area { grid-template-columns: 1fr; }
-    .sidebar { flex-direction: row; flex-wrap: wrap; gap: 8px; }
-    .sidebar .panel { flex: 1; min-width: 180px; }
+    .sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .sidebar .panel:first-child { grid-column: 1 / -1; }
     .game-header { flex-direction: column; gap: 10px; }
     .game-stats { justify-content: center; }
   }
@@ -205,19 +211,20 @@
     .stat-val { font-size: 14px; }
     .game-title { font-size: 16px; letter-spacing: 2px; }
     .tower-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
-    .sidebar { flex-direction: column; }
-    .sidebar .panel { min-width: unset; }
+    .sidebar { grid-template-columns: minmax(0, 1fr); }
+    .sidebar .panel:first-child { grid-column: auto; }
   }
-  /* Landscape mobile: side-by-side layout, constrain canvas to viewport height */
+  /* Landscape mobile: keep the canvas compact and its menus underneath. */
   @media (max-height: 500px) and (orientation: landscape) {
-    .game-area { grid-template-columns: 1fr 200px; }
-    #tdCanvas { max-height: 60vh; width: auto; max-width: 100%; }
+    .game-area { grid-template-columns: minmax(0, 1fr); }
+    #tdCanvas { max-height: 60vh; width: auto; max-width: 100%; margin: 0 auto; }
     .game-header { flex-direction: row; margin-bottom: 8px; }
     .game-header .game-title { font-size: 14px; }
     .stat-box { padding: 4px 10px; }
     .stat-val { font-size: 14px; }
     .stat-label { font-size: 8px; }
-    .sidebar { flex-direction: column; gap: 6px; max-height: 60vh; overflow-y: auto; }
+    .sidebar { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; max-height: none; overflow: visible; }
+    .sidebar .panel:first-child { grid-column: auto; }
     .sidebar .panel { padding: 8px 10px; }
     .panel-title { font-size: 9px; margin-bottom: 6px; padding-bottom: 4px; }
     .tower-grid { grid-template-columns: 1fr 1fr; gap: 4px; }

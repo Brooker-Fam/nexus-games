@@ -27,7 +27,7 @@ function dsoBack(){
 function dsoPlay(){
   cancelAnimationFrame(dsoRevealRAF); dsoRevealRAF=null;
   document.getElementById('dso-reveal').style.display='none';
-  document.getElementById('dso-game').style.display='block';
+  document.getElementById('dso-game').style.display='flex';
   document.getElementById('rts-gameover-overlay').style.display='none';
   startRTS(dsoSelectedFaction);
   if(window.posthog) posthog.capture('dso_game_started', { faction: dsoSelectedFaction, mode: 'singleplayer' });
