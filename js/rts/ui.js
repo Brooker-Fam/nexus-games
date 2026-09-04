@@ -106,11 +106,18 @@ function openBuildPopup(screenX, screenY, context){
     const sel=S.selected[0];
     if(!sel) return;
     title.textContent = cfg.aerialLabel;
-    const aerialOilCost = cfg.aerialOilCost||0;
-    addOpt(cfg.aerialUnitIcon, cfg.aerialUnitLabel, cfg.aerialUnitDesc, cfg.aerialUnitCost,
-      ()=>trainCmd(sel.id, 'aerial', 'aerial'),
-      myGold()<cfg.aerialUnitCost||myOil()<aerialOilCost||sel.underConstruction,
-      aerialOilCost);
+
+    const aerialTypes = [
+      { icon:cfg.aerialUnitIcon, label:cfg.aerialUnitLabel, desc:cfg.aerialUnitDesc, cost:cfg.aerialUnitCost, oilCost:cfg.aerialOilCost||0, unitType:'aerial' },
+      { icon:cfg.aerial2Icon, label:cfg.aerial2Label, desc:cfg.aerial2Desc, cost:cfg.aerial2Cost, oilCost:cfg.aerial2OilCost||0, unitType:'aerial2' },
+    ];
+
+    for(const u of aerialTypes){
+      addOpt(u.icon, u.label, u.desc, u.cost,
+        ()=>trainCmd(sel.id, u.unitType, 'aerial'),
+        myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        u.oilCost);
+    }
 
   } else if(context==='swordsman'){
     const sel=S.selected[0]; if(!sel) return;
@@ -370,7 +377,7 @@ function rtsHandleClick(e){
       openBuildPopup(sx,sy,'psionic');
       rtsSetLog(`PSIONIC WARRIOR — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior'){
-      const UNIT_LABELS={elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel'};
+      const UNIT_LABELS={elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label'};
       const lbl=cfg[UNIT_LABELS[hit.subtype]]||cfg.warriorLabel;
       rtsSetLog(`${lbl} selected — click to move or attack.`);
     }

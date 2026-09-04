@@ -70,6 +70,8 @@ const SFX={
   rtsHammer:       ()=>{ sfxNoise(0.08,0.06,1200); sfxTone(220,'square',0.06,0.001,0.04); },
   rtsPrismCannon:  ()=>{ sfxTone(900,'sine',0.15,0.005,0.18,1800); sfxTone(600,'sine',0.1,0.01,0.14,1200); sfxNoise(0.04,0.08,5000); },
   rtsShadowCannon: ()=>{ sfxTone(55,'sawtooth',0.22,0.01,0.45,28); sfxNoise(0.18,0.38,280); },
+  rtsBeam:         ()=>{ sfxTone(1600,'sine',0.14,0.003,0.22,2600); sfxNoise(0.05,0.15,8000); },
+  rtsDarkOrb:      ()=>{ sfxTone(140,'sawtooth',0.18,0.02,0.4,60); sfxNoise(0.14,0.3,350); },
 
   // Snake
   snakeEat:  ()=>{ sfxTone(880,'sine',0.18,0.005,0.1,1320); sfxTone(1320,'sine',0.08,0.01,0.08); },

@@ -61,6 +61,9 @@ const BUILD_TIMES={
   elite2:    1200,   // 20s
   starfighter: 720,  // 12s
   skyattacker: 840,  // 14s
+  warship:     1080, // 18s — Roboto 2nd air unit
+  lightfighter: 900, // 15s — Prism 2nd air unit
+  destroyer:   1260, // 21s — Shadow 2nd air unit
 };
 const QUEUE_MAX = 5; // max units queued per building
 
@@ -159,6 +162,47 @@ function makeSkyAttacker(side, faction, nearX, nearY){
     hp:90, maxHp:90, speed:1.4,
     state:'idle', target:null, attackTimer:0,
     damage:22, range:180, ranged:true, fireRate:60,
+    aerial:true,
+    frame:0, selected:false, forcedTarget:null, moveTarget:null,
+  };
+}
+
+// ── 2ND-TIER AERIAL UNITS ──
+// Warship (Roboto) — heavy gunship, fires a spread of bullets at once
+function makeWarship(side, faction, nearX, nearY){
+  const isPlayer=side==='player';
+  return {
+    id:nextId(), type:'warrior', subtype:'warship', side, faction,
+    x: nearX+(isPlayer?70:-70), y: nearY+(rtsRand()-0.5)*120,
+    hp:130, maxHp:130, speed:1.3,
+    state:'idle', target:null, attackTimer:0,
+    damage:8, range:200, ranged:true, fireRate:70, burstCount:3,
+    aerial:true,
+    frame:0, selected:false, forcedTarget:null, moveTarget:null,
+  };
+}
+// Light Fighter (Prism) — fast interceptor, fires a piercing beam of light
+function makeLightFighter(side, faction, nearX, nearY){
+  const isPlayer=side==='player';
+  return {
+    id:nextId(), type:'warrior', subtype:'lightfighter', side, faction,
+    x: nearX+(isPlayer?60:-60), y: nearY+(rtsRand()-0.5)*120,
+    hp:60, maxHp:60, speed:2.4,
+    state:'idle', target:null, attackTimer:0,
+    damage:20, range:240, ranged:true, fireRate:45,
+    aerial:true,
+    frame:0, selected:false, forcedTarget:null, moveTarget:null,
+  };
+}
+// Destroyer (Shadow) — heavy void ship, hurls slow orbs of darkness that damage an area
+function makeDestroyer(side, faction, nearX, nearY){
+  const isPlayer=side==='player';
+  return {
+    id:nextId(), type:'warrior', subtype:'destroyer', side, faction,
+    x: nearX+(isPlayer?70:-70), y: nearY+(rtsRand()-0.5)*120,
+    hp:160, maxHp:160, speed:1.0,
+    state:'idle', target:null, attackTimer:0,
+    damage:34, range:260, ranged:true, fireRate:120,
     aerial:true,
     frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };
