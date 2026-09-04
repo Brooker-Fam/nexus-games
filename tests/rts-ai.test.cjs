@@ -14,6 +14,7 @@ function makeContext(){
     window: { _mpMultiplayer: false },
     canTargetAerial: () => true,
     S: { entities: [], playerBase: null, enemyBase: null },
+    rtsRand: () => 0.5,
     console,
     Math,
   });
@@ -60,4 +61,39 @@ test('army evaluation accounts for health, damage rate, and range', () => {
   ]`, context);
   assert.ok(powers[0] > powers[1], 'healthy units should count for more');
   assert.ok(powers[2] > powers[0], 'fast ranged damage should count for more');
+});
+
+test('Princess attack summons a Legionnaire focused on her target', () => {
+  const context=makeContext();
+  const entitiesSource=fs.readFileSync(path.join(__dirname,'..','js','rts','entities.js'),'utf8');
+  vm.runInContext(entitiesSource,context);
+  context.FACTION_CFG={prism:{color:'#00ddff'}};
+  context.spawnMagicBurst=()=>{};
+  context.sfx=()=>{};
+
+  const result=vm.runInContext(`(() => {
+    const target={id:9,type:'warrior',side:'enemy',x:300,y:100,hp:40};
+    const princess=makeElite('player','prism',100,100);
+    princess.attackTimer=princess.fireRate-1;
+    S.entities=[princess,target];
+    advanceRangedAttack(princess,target);
+    const summoned=S.entities[2];
+    return {
+      count:S.entities.length,
+      subtype:summoned.subtype,
+      side:summoned.side,
+      targetId:summoned.forcedTarget.id,
+      state:summoned.state,
+      projectiles:S.projectiles ? S.projectiles.length : 0,
+    };
+  })()`,context);
+
+  assert.deepEqual({...result},{
+    count:3,
+    subtype:'legionnaire',
+    side:'player',
+    targetId:9,
+    state:'march',
+    projectiles:0,
+  });
 });
