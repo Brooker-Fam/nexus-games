@@ -1025,13 +1025,14 @@ function spawnHitParticles2(x,y){
 }
 
 function spawnDarkOrbBurst(x,y){
-  // void implosion for the Destroyer's dark orb
-  for(let i=0;i<14;i++){
-    const a=Math.random()*Math.PI*2, s=Math.random()*4+2;
-    S.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:26,maxLife:26,color:'#7700cc',size:3+Math.random()*3});
+  // Large void implosion for the Destroyer's dark orb
+  for(let i=0;i<28;i++){
+    const a=Math.random()*Math.PI*2, s=Math.random()*6+4;
+    S.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:32,maxLife:32,color:'#7700cc',size:5+Math.random()*5});
   }
-  S.particles.push({x,y,vx:0,vy:0,life:16,maxLife:16,color:'#5500aa',size:0,isRing:true,radius:5});
-  S.particles.push({x,y,vx:0,vy:0,life:10,maxLife:10,color:'#000000',size:0,isRing:true,radius:8});
+  S.particles.push({x,y,vx:0,vy:0,life:28,maxLife:28,color:'#aa44ff',size:0,isRing:true,radius:8});
+  S.particles.push({x,y,vx:0,vy:0,life:22,maxLife:22,color:'#5500aa',size:0,isRing:true,radius:14});
+  S.particles.push({x,y,vx:0,vy:0,life:16,maxLife:16,color:'#000000',size:0,isRing:true,radius:20});
 }
 
 function spawnHitFlash(x,y,color){
