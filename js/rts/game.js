@@ -32,6 +32,7 @@ const AI_CONFIG = {
   oilRigCost: STRUCT_COSTS.oilrig.gold,
   eliteCost: 30,
   warriorCost: 10,
+  warrior2Cost: 16,
   workerCost: 5,
 };
 const _AI_DEFAULTS = Object.assign({}, AI_CONFIG);
@@ -215,9 +216,22 @@ function aiTick(){
     // Mistake: easy AI sometimes skips training
     if(Math.random() >= AI_CONFIG.mistakeChance){
 
-    // Train warriors from ALL barracks
+    // Train warriors from ALL barracks (mix in 2nd-tier Warbot/Legionnaires when available)
     const allBarracks=S.entities.filter(e=>e.side==='enemy'&&e.type==='structure'&&e.isBarracks&&!e.underConstruction);
+    const eCfgW=FACTION_CFG[S.enemyFaction];
+    const warrior2FnMap2={makeWarbot,makeLegionnaireSquad};
+    const warrior2OilNeeded=eCfgW.warrior2OilCost||0;
     for(const bar of allBarracks){
+      const wantWarrior2 = eCfgW.warrior2Fn && Math.random()<0.35
+        && S.gold.enemy>=AI_CONFIG.warrior2Cost && (S.oil.enemy||0)>=warrior2OilNeeded;
+      if(wantWarrior2){
+        const w2fn=warrior2FnMap2[eCfgW.warrior2Fn];
+        const w2time=eCfgW.warrior2Fn==='makeLegionnaireSquad'?BUILD_TIMES.legionnairesquad:BUILD_TIMES.warbot;
+        if(w2fn && aiQueueAt(bar,eCfgW.warrior2Label,w2time,()=>w2fn('enemy',S.enemyFaction,bar.x,bar.y),AI_CONFIG.warrior2Cost)){
+          if(warrior2OilNeeded>0) S.oil.enemy=Math.max(0,(S.oil.enemy||0)-warrior2OilNeeded);
+          continue;
+        }
+      }
       aiQueueAt(bar,'Warrior',BUILD_TIMES.warrior,()=>makeWarrior('enemy',S.enemyFaction,bar.x,bar.y),AI_CONFIG.warriorCost);
     }
 
@@ -564,10 +578,14 @@ function buildingTick(b){
   if(b.trainTimer>=item.time){
     b.trainTimer=0;
     b.queue.shift();
-    // spawn the unit
-    const u=item.fn();
-    S.entities.push(u);
-    if(b.side==='player'){ S.stats.unitsBuilt++; rtsSetLog(`${item.label} ready!`); }
+    // spawn the unit(s) — some units (e.g. Legionnaires) train in squads
+    const result=item.fn();
+    const spawned=Array.isArray(result) ? result : [result];
+    for(const u of spawned) S.entities.push(u);
+    if(b.side==='player'){
+      S.stats.unitsBuilt+=spawned.length;
+      rtsSetLog(spawned.length>1 ? `${item.label} squad ready! (×${spawned.length})` : `${item.label} ready!`);
+    }
   }
 }
 
@@ -582,13 +600,14 @@ function queueUnit(building, label, time, fn){
 const MELEE_ATTACK_TICKS = 45;
 
 // Returns true if this attacker can hit aerial units.
-// Allowed: gunbot (roboto warrior), shockbot, dark warrior (shadow elite),
+// Allowed: gunbot (roboto warrior), warbot, shockbot, dark warrior (shadow elite),
 //          witch (prism warrior), oracle (prism elite), wizard, starfighter, skyattacker.
-// Blocked: workers, swordsman (shadow melee warrior), necromancer, tank.
+// Blocked: workers, swordsman (shadow melee warrior), legionnaire (prism melee), necromancer, tank.
 function canTargetAerial(w){
   if(w.type==='cannon') return true;
   if(w.type!=='warrior') return false;
   if(w.faction==='shadow' && !w.subtype) return false; // swordsman (melee only)
+  if(w.subtype==='legionnaire') return false; // melee sword squad only
   if(w.subtype==='bloodhound') return w.bowMode===true; // bow mode can hit aerial
   if(w.subtype==='necromancer') return false;
   if(w.subtype==='tank') return false;
