@@ -66,24 +66,197 @@ function drawTowers(){
 function drawEnemies(){
   if(!Array.isArray(state.enemies)) return;
   for(const e of state.enemies){
-    ctx.save();
-    const r = e.boss ? 16 : 10;
-    // glow
-    ctx.shadowColor = e.boss ? '#ff8800' : (e.slow>0?'#8888ff':'#ff0044');
-    ctx.shadowBlur = e.boss ? 20 : 12;
-    ctx.fillStyle = e.boss ? '#ff6600' : (e.slow>0?'#8888ff':'#ff2244');
-    ctx.beginPath(); ctx.arc(e.x,e.y,r,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle = e.boss ? '#ffaa00' : '#ff6688';
-    ctx.lineWidth=1.5; ctx.stroke();
-    ctx.restore();
-    // hp bar
-    const bw=28, bh=4;
-    ctx.fillStyle='rgba(0,0,0,0.6)';
-    ctx.fillRect(e.x-bw/2, e.y-r-8, bw, bh);
-    const hp = Math.max(0,e.hp/e.maxHp);
-    ctx.fillStyle = hp>0.5?'#00ff88':hp>0.25?'#ffaa00':'#ff2244';
-    ctx.fillRect(e.x-bw/2, e.y-r-8, bw*hp, bh);
+    if(e.boss) drawBossEnemy(e); else drawGruntEnemy(e);
+    drawEnemyHpBar(e);
   }
+}
+
+function drawEnemyHpBar(e){
+  const r = e.boss ? 16 : 10;
+  const bw=28, bh=4;
+  ctx.fillStyle='rgba(0,0,0,0.6)';
+  ctx.fillRect(e.x-bw/2, e.y-r-8, bw, bh);
+  const hp = Math.max(0,e.hp/e.maxHp);
+  ctx.fillStyle = hp>0.5?'#00ff88':hp>0.25?'#ffaa00':'#ff2244';
+  ctx.fillRect(e.x-bw/2, e.y-r-8, bw*hp, bh);
+}
+
+// draws a jointed hexapod leg (hip -> knee -> foot) with a tripod-gait sweep
+function drawMechLeg(baseAngle, r, phase, groupOffset, legLen, color, lineW){
+  const p = phase + groupOffset;
+  const sweep = Math.sin(p)*(r*0.28);
+  const dirX=Math.cos(baseAngle), dirY=Math.sin(baseAngle);
+  const tanX=-dirY, tanY=dirX;
+  const hipX=dirX*r*0.6, hipY=dirY*r*0.6;
+  const kneeX=hipX+dirX*legLen*0.55+tanX*sweep*0.5, kneeY=hipY+dirY*legLen*0.55+tanY*sweep*0.5;
+  const footX=hipX+dirX*legLen+tanX*sweep, footY=hipY+dirY*legLen+tanY*sweep;
+  ctx.strokeStyle=color; ctx.lineWidth=lineW; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(hipX,hipY); ctx.lineTo(kneeX,kneeY); ctx.lineTo(footX,footY); ctx.stroke();
+  ctx.fillStyle=color;
+  ctx.beginPath(); ctx.arc(footX,footY,lineW*0.7,0,Math.PI*2); ctx.fill();
+}
+
+// ── STANDARD ENEMY: small hexapod crawler bot ──
+function drawGruntEnemy(e){
+  const r = 10;
+  const frozen = e.slow>0;
+  const phase = (e.walkDist||0)*0.15;
+
+  ctx.save();
+  // ground shadow
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.beginPath(); ctx.ellipse(e.x, e.y+r*0.7, r*1.1, r*0.5, 0, 0, Math.PI*2); ctx.fill();
+
+  ctx.save();
+  ctx.translate(e.x, e.y); ctx.rotate(e.angle||0);
+  ctx.shadowColor = frozen?'#8888ff':'#ff0044';
+  ctx.shadowBlur = 10;
+
+  // 6 legs, alternating tripod gait
+  const legAngles=[-2.35,-1.57,-0.78,0.78,1.57,2.35];
+  const legColor = frozen?'rgba(150,200,255,0.85)':'rgba(255,80,100,0.85)';
+  legAngles.forEach((ba,i)=>{
+    drawMechLeg(ba, r, phase, (i%2===0?0:Math.PI), r*1.6, legColor, 1.4);
+  });
+
+  // hexagonal carapace body
+  const bGrad=ctx.createRadialGradient(-2,-2,1,0,0,r);
+  if(frozen){ bGrad.addColorStop(0,'#cfe8ff'); bGrad.addColorStop(0.5,'#6688cc'); bGrad.addColorStop(1,'#223a66'); }
+  else { bGrad.addColorStop(0,'#ff6688'); bGrad.addColorStop(0.5,'#cc1133'); bGrad.addColorStop(1,'#4a0812'); }
+  ctx.fillStyle=bGrad;
+  ctx.beginPath();
+  for(let i=0;i<6;i++){
+    const a=(i/6)*Math.PI*2;
+    const rr=r*(i%2===0?1:0.85);
+    i===0?ctx.moveTo(Math.cos(a)*rr,Math.sin(a)*rr):ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);
+  }
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle= frozen?'#aaccff':'#ff6688'; ctx.lineWidth=1.3; ctx.stroke();
+
+  // armor seam lines
+  ctx.strokeStyle='rgba(0,0,0,0.35)'; ctx.lineWidth=0.6;
+  for(let i=0;i<3;i++){
+    const a=(i/3)*Math.PI;
+    ctx.beginPath(); ctx.moveTo(Math.cos(a)*r*0.2,Math.sin(a)*r*0.2); ctx.lineTo(Math.cos(a)*r*0.9,Math.sin(a)*r*0.9); ctx.stroke();
+  }
+
+  // single pulsing sensor eye facing direction of travel
+  const eyePulse=0.6+Math.sin((state.frame||0)*0.15)*0.4;
+  const eGrad=ctx.createRadialGradient(r*0.5,0,0,r*0.5,0,3);
+  eGrad.addColorStop(0,`rgba(255,255,255,${eyePulse})`);
+  eGrad.addColorStop(0.5, frozen?'rgba(180,220,255,0.9)':'rgba(255,60,60,0.9)');
+  eGrad.addColorStop(1,'transparent');
+  ctx.fillStyle=eGrad;
+  ctx.beginPath(); ctx.arc(r*0.5,0,3,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle= frozen?'#dff4ff':'#fff';
+  ctx.beginPath(); ctx.arc(r*0.5,0,1,0,Math.PI*2); ctx.fill();
+
+  // frost crust overlay when slowed
+  if(frozen){
+    ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(180,220,255,0.25)';
+    ctx.beginPath(); ctx.arc(0,0,r*1.05,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(220,240,255,0.6)'; ctx.lineWidth=0.6;
+    [0.4,1.9,3.3,5.1].forEach(a=>{
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a)*r*0.9,Math.sin(a)*r*0.9); ctx.stroke();
+    });
+  }
+
+  ctx.restore();
+  ctx.restore();
+}
+
+// ── BOSS ENEMY: heavy 8-legged armored walker ──
+function drawBossEnemy(e){
+  const r = 16;
+  const frozen = e.slow>0;
+  const phase = (e.walkDist||0)*0.1;
+
+  ctx.save();
+  // ground shadow
+  ctx.fillStyle='rgba(0,0,0,0.45)';
+  ctx.beginPath(); ctx.ellipse(e.x, e.y+r*0.7, r*1.2, r*0.55, 0, 0, Math.PI*2); ctx.fill();
+
+  ctx.save();
+  ctx.translate(e.x, e.y); ctx.rotate(e.angle||0);
+  ctx.shadowColor = frozen?'#8888ff':'#ff8800';
+  ctx.shadowBlur = 20;
+
+  // 8 heavy legs, slower gait
+  const legAngles=[-2.6,-2.0,-1.4,-0.7,0.7,1.4,2.0,2.6];
+  const legColor = frozen?'rgba(150,190,255,0.85)':'rgba(255,150,50,0.9)';
+  legAngles.forEach((ba,i)=>{
+    drawMechLeg(ba, r, phase, (i%2===0?0:Math.PI), r*1.7, legColor, 2.2);
+  });
+
+  // spiked armored carapace
+  const bGrad=ctx.createRadialGradient(-3,-3,2,0,0,r);
+  if(frozen){ bGrad.addColorStop(0,'#cfe4ff'); bGrad.addColorStop(0.5,'#5577bb'); bGrad.addColorStop(1,'#1a2c55'); }
+  else { bGrad.addColorStop(0,'#ffaa55'); bGrad.addColorStop(0.5,'#cc4400'); bGrad.addColorStop(1,'#331400'); }
+  ctx.fillStyle=bGrad;
+  ctx.beginPath();
+  for(let i=0;i<8;i++){
+    const a=(i/8)*Math.PI*2;
+    const rr=r*(i%2===0?1.05:0.8);
+    i===0?ctx.moveTo(Math.cos(a)*rr,Math.sin(a)*rr):ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);
+  }
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle=frozen?'#aaccff':'#ffaa00'; ctx.lineWidth=1.6; ctx.stroke();
+
+  // outer spikes
+  for(let i=0;i<8;i+=2){
+    const a=(i/8)*Math.PI*2;
+    ctx.fillStyle= frozen? '#88aadd':'#992200';
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*r*0.9,Math.sin(a)*r*0.9);
+    ctx.lineTo(Math.cos(a-0.1)*r*1.4,Math.sin(a-0.1)*r*1.4);
+    ctx.lineTo(Math.cos(a+0.1)*r*1.4,Math.sin(a+0.1)*r*1.4);
+    ctx.closePath(); ctx.fill();
+  }
+
+  // seam plating lines
+  ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=0.8;
+  for(let i=0;i<4;i++){
+    const a=(i/4)*Math.PI;
+    ctx.beginPath(); ctx.moveTo(Math.cos(a)*r*0.2,Math.sin(a)*r*0.2); ctx.lineTo(Math.cos(a)*r*0.95,Math.sin(a)*r*0.95); ctx.stroke();
+  }
+
+  // twin glowing sensor eyes
+  const eyePulse=0.6+Math.sin((state.frame||0)*0.12)*0.4;
+  for(const ey of [-4,4]){
+    const eGrad=ctx.createRadialGradient(r*0.55,ey,0,r*0.55,ey,3.2);
+    eGrad.addColorStop(0,`rgba(255,255,255,${eyePulse})`);
+    eGrad.addColorStop(0.5, frozen?'rgba(180,220,255,0.9)':'rgba(255,120,20,0.9)');
+    eGrad.addColorStop(1,'transparent');
+    ctx.fillStyle=eGrad;
+    ctx.beginPath(); ctx.arc(r*0.55,ey,3.2,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=frozen?'#dff4ff':'#fff';
+    ctx.beginPath(); ctx.arc(r*0.55,ey,1.1,0,Math.PI*2); ctx.fill();
+  }
+
+  // pulsing power core
+  const core=ctx.createRadialGradient(0,0,0,0,0,5);
+  core.addColorStop(0,'#ffffff'); core.addColorStop(0.4, frozen?'#88ccff':'#ffcc44'); core.addColorStop(1, frozen?'#2244aa':'#992200');
+  ctx.globalAlpha=0.85;
+  ctx.fillStyle=core; ctx.beginPath(); ctx.arc(0,0,4.5,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=1;
+  ctx.strokeStyle='rgba(255,220,180,0.6)'; ctx.lineWidth=0.8; ctx.stroke();
+
+  // IFF antenna
+  ctx.strokeStyle=frozen?'#88aadd':'#996622'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(-r*0.3,-r*0.9); ctx.lineTo(-r*0.6,-r*1.4); ctx.stroke();
+  ctx.fillStyle= frozen? '#aaddff':'#ff4400';
+  ctx.beginPath(); ctx.arc(-r*0.6,-r*1.4,1.5,0,Math.PI*2); ctx.fill();
+
+  // frost crust overlay when slowed
+  if(frozen){
+    ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(180,220,255,0.22)';
+    ctx.beginPath(); ctx.arc(0,0,r*1.15,0,Math.PI*2); ctx.fill();
+  }
+
+  ctx.restore();
+  ctx.restore();
 }
 
 function drawBullets(){
