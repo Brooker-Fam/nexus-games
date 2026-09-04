@@ -208,13 +208,8 @@ function openBuildPopup(screenX, screenY, context){
     }
   }
 
-  // position popup
-  const wrap=document.getElementById('rts-viewport-wrap');
-  const ww=wrap.offsetWidth, wh=wrap.offsetHeight;
-  const pw=240, ph=220;
-  let px=Math.min(screenX+20,ww-pw-10);
-  let py=Math.max(10,Math.min(screenY-ph/2,wh-ph-10));
-  popup.style.left=px+'px'; popup.style.top=py+'px';
+  // The build menu is anchored below the action, so every option stays in a
+  // predictable grid instead of obscuring a different part of the battlefield.
   popup.style.display='block';
   S.buildPopupOpen=true;
 

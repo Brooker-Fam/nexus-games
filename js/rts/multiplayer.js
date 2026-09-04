@@ -99,7 +99,7 @@ function mpStartGame(msg){
   window._mpMultiplayer=true;
   document.getElementById('dso-select').style.display='none';
   document.getElementById('dso-reveal').style.display='none';
-  document.getElementById('dso-game').style.display='block';
+  document.getElementById('dso-game').style.display='flex';
   document.getElementById('rts-gameover-overlay').style.display='none';
   // Both clients init identically
   S.playerFaction=msg.hf;
