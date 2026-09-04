@@ -27,6 +27,7 @@ function executeCommand(cmd){
   const faction = side==='player' ? S.playerFaction : S.enemyFaction;
   const cfg = FACTION_CFG[faction];
   const elite2FnMap = { makeWizard, makeNecromancer, makeTank };
+  const aerial2FnMap = { makeWarship, makeLightFighter, makeDestroyer };
   const getBuildTypeFromEntity = (ent)=>{
     if(!ent) return 'structure';
     if(ent.type==='base') return 'base';
@@ -44,16 +45,20 @@ function executeCommand(cmd){
       if(!building || building.underConstruction) break;
       if(building.side !== side) break; // can't train from enemy building
       const aerialFnMap = { makeStarFighter, makeSkyAttacker };
-      const costMap = { worker:cfg.workerCost, warrior:cfg.warriorCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost, aerial:cfg.aerialUnitCost };
+      const costMap = { worker:cfg.workerCost, warrior:cfg.warriorCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost, aerial:cfg.aerialUnitCost, aerial2:cfg.aerial2Cost };
       const cost = costMap[cmd.unitType] || 0;
       if(S.gold[side] < cost) break;
       // second resource costs (oil / essence / light)
       const oilCost = cmd.unitType==='elite2' ? (cfg.tankOilCost||cfg.elite2OilCost||0)
                     : cmd.unitType==='aerial'  ? (cfg.aerialOilCost||0)
+                    : cmd.unitType==='aerial2' ? (cfg.aerial2OilCost||0)
                     : cmd.unitType==='elite'   ? (cfg.eliteOilCost||0) : 0;
       if(oilCost > 0 && (S.oil[side]||0) < oilCost) break;
 
-      const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite2, aerial:BUILD_TIMES[cfg.aerialFn==='makeSkyAttacker'?'skyattacker':'starfighter'] };
+      const aerial2TimeMap = { makeWarship:BUILD_TIMES.warship, makeLightFighter:BUILD_TIMES.lightfighter, makeDestroyer:BUILD_TIMES.destroyer };
+      const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite2,
+        aerial:BUILD_TIMES[cfg.aerialFn==='makeSkyAttacker'?'skyattacker':'starfighter'],
+        aerial2:aerial2TimeMap[cfg.aerial2Fn] };
       const time = timeMap[cmd.unitType] || BUILD_TIMES.worker;
 
       const fnMap = {
@@ -62,6 +67,7 @@ function executeCommand(cmd){
         elite:   ()=>makeElite(side, faction, building.x, building.y),
         elite2:  ()=>elite2FnMap[cfg.elite2Fn](side, faction, building.x, building.y),
         aerial:  ()=>aerialFnMap[cfg.aerialFn](side, faction, building.x, building.y),
+        aerial2: ()=>aerial2FnMap[cfg.aerial2Fn](side, faction, building.x, building.y),
       };
 
       const fn = fnMap[cmd.unitType];
@@ -70,6 +76,7 @@ function executeCommand(cmd){
         : cmd.unitType==='warrior' ? cfg.warriorLabel
         : cmd.unitType==='elite' ? cfg.eliteLabel
         : cmd.unitType==='aerial' ? cfg.aerialUnitLabel
+        : cmd.unitType==='aerial2' ? cfg.aerial2Label
         : cfg.elite2Label;
 
       if(!queueUnit(building, label, time, fn)) break;

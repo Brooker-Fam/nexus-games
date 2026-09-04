@@ -243,12 +243,23 @@ function aiTick(){
       }
     }
 
-    // Train aerial units from hangar
+    // Train aerial units from hangar (2nd tier preferred when affordable, like elite/elite2)
     const eCfg=FACTION_CFG[S.enemyFaction];
     const aerialHangar=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&e.isAerialHangar&&!e.underConstruction);
     const aerialFnMap2={makeStarFighter,makeSkyAttacker};
+    const aerial2FnMap2={makeWarship,makeLightFighter,makeDestroyer};
+    const aerial2BuildTimeMap={makeWarship:BUILD_TIMES.warship,makeLightFighter:BUILD_TIMES.lightfighter,makeDestroyer:BUILD_TIMES.destroyer};
     const aerialOilNeeded=eCfg.aerialOilCost||0;
-    if(aerialHangar && eCfg.aerialFn && S.gold.enemy>=eCfg.aerialUnitCost && (S.oil.enemy||0)>=aerialOilNeeded){
+    const aerial2OilNeeded=eCfg.aerial2OilCost||0;
+    if(aerialHangar && eCfg.aerial2Fn && S.gold.enemy>=eCfg.aerial2Cost && (S.oil.enemy||0)>=aerial2OilNeeded){
+      const a2fn=aerial2FnMap2[eCfg.aerial2Fn];
+      if(a2fn && aiQueueAt(aerialHangar,eCfg.aerial2Label,
+        aerial2BuildTimeMap[eCfg.aerial2Fn],
+        ()=>a2fn('enemy',S.enemyFaction,aerialHangar.x,aerialHangar.y),
+        eCfg.aerial2Cost)){
+        if(aerial2OilNeeded>0) S.oil.enemy=Math.max(0,(S.oil.enemy||0)-aerial2OilNeeded);
+      }
+    } else if(aerialHangar && eCfg.aerialFn && S.gold.enemy>=eCfg.aerialUnitCost && (S.oil.enemy||0)>=aerialOilNeeded){
       const afn=aerialFnMap2[eCfg.aerialFn];
       if(afn && aiQueueAt(aerialHangar,eCfg.aerialUnitLabel,
         BUILD_TIMES[eCfg.aerialFn==='makeSkyAttacker'?'skyattacker':'starfighter'],
@@ -679,7 +690,7 @@ function warriorRangedAttack(w, target, targetDist){
         // Still fire if ready
         if(w.aerial) w.aimAngle=Math.atan2(target.y-w.y, target.x-w.x);
         w.attackTimer++;
-        if(w.attackTimer>=(w.fireRate||50)){ w.attackTimer=0; spawnProjectile(w, target); }
+        if(w.attackTimer>=(w.fireRate||50)){ w.attackTimer=0; fireWarriorProjectiles(w, target); }
         return;
       }
     }
@@ -690,7 +701,7 @@ function warriorRangedAttack(w, target, targetDist){
     w.attackTimer++;
     // track aim angle for aerial units so they visually face their target
     if(w.aerial) w.aimAngle=Math.atan2(target.y-w.y, target.x-w.x);
-    if(w.attackTimer>=(w.fireRate||50)){ w.attackTimer=0; spawnProjectile(w, target); }
+    if(w.attackTimer>=(w.fireRate||50)){ w.attackTimer=0; fireWarriorProjectiles(w, target); }
   } else {
     if(w.aerial) w.aimAngle=Math.atan2(target.y-w.y, target.x-w.x);
     warriorMarchToward(w, target, 13, 4);
@@ -797,6 +808,8 @@ const COMBAT = {
   chainLightningRange: 200,
   chainLightningDamageFactor: 0.6,
   chainLightningBounces: 2,
+  darkOrbAoeRadius: 90,
+  darkOrbDamageFactor: 0.55,
 };
 
 // ── PROJECTILES ──
@@ -805,6 +818,11 @@ const PROJECTILE_TYPES = {
   tank:        { type:'shell',      color:'#ff6600', speed:9,  sound:'rtsCannonFire' },
   wizard:      { type:'lightning',  color:'#88ffff', speed:6,  sound:'rtsLightning' },
   necromancer: { type:'darkmagic',  color:'#440088', speed:4,  sound:'rtsDarkMagic' },
+  // 2nd-tier aerial units
+  warship:      { type:'bullet',  color:'#ffcc44', speed:12, sound:'rtsBullet' },
+  lightfighter: { type:'beam',    color:'#ffffff', speed:26, sound:'rtsBeam' },
+  destroyer:    { type:'darkorb', color:'#5500aa', speed:2.5, sound:'rtsDarkOrb',
+                  aoeRadius:COMBAT.darkOrbAoeRadius, aoeFactor:COMBAT.darkOrbDamageFactor },
   // elite per-faction
   'elite.roboto': { type:'lightning',  color:'#44ffff', speed:11, sound:'rtsLightning' },
   'elite.shadow': { type:'darkmagic',  color:'#220044', speed:4,  sound:'rtsDarkMagic' },
@@ -815,7 +833,7 @@ const PROJECTILE_TYPES = {
   'warrior.prism':  { type:'magic',  speed:4,  sound:'rtsMagicFire' },
 };
 
-function spawnProjectile(shooter, target){
+function spawnProjectile(shooter, target, burstOffset){
   const cfg=FACTION_CFG[shooter.faction];
   const sub = shooter.subtype;
   // Lookup: subtype first, then elite.faction, then warrior.faction
@@ -824,8 +842,17 @@ function spawnProjectile(shooter, target){
     || PROJECTILE_TYPES['warrior.'+shooter.faction]
     || { type:'magic', speed:4, sound:'rtsMagicFire' };
 
+  // Multi-shot volleys (e.g. Warship) spawn from slightly offset points that
+  // still home in on the same target, so the bullets fan out visually.
+  let sx=shooter.x, sy=shooter.y;
+  if(burstOffset){
+    const dx=target.x-shooter.x, dy=target.y-shooter.y, d=_dist(dx,dy)||1;
+    sx += (-dy/d)*burstOffset*7;
+    sy += (dx/d)*burstOffset*7;
+  }
+
   S.projectiles.push({
-    x:shooter.x, y:shooter.y,
+    x:sx, y:sy,
     tx:target,
     speed: pCfg.speed,
     damage:shooter.damage,
@@ -837,9 +864,20 @@ function spawnProjectile(shooter, target){
     isWizard: sub==='wizard',
     isNecro: sub==='necromancer',
     isTank: sub==='tank',
+    aoeRadius: pCfg.aoeRadius,
+    aoeFactor: pCfg.aoeFactor,
     side:shooter.side,
   });
   sfx(pCfg.sound||'rtsBullet', 80);
+}
+
+// Fires one shot, or (for units with burstCount>1, e.g. Warship) several
+// simultaneous bullets fanned out around the target.
+function fireWarriorProjectiles(w, target){
+  const n = w.burstCount||1;
+  if(n<=1){ spawnProjectile(w, target); return; }
+  const mid=(n-1)/2;
+  for(let i=0;i<n;i++) spawnProjectile(w, target, i-mid);
 }
 
 function updateProjectiles(){
@@ -866,6 +904,19 @@ function updateProjectiles(){
       else if(p.type==='lightning'||p.type==='darkmagic'){
         spawnLightningHit(p.tx.x,p.tx.y,p.color);
         chainLightning(p.tx, p.damage*COMBAT.chainLightningDamageFactor, p.color, p.side, COMBAT.chainLightningBounces);
+      }
+      else if(p.type==='darkorb'){
+        // destroyer's dark orb — slow-moving area damage
+        const radius = p.aoeRadius || COMBAT.darkOrbAoeRadius;
+        const factor = p.aoeFactor || COMBAT.darkOrbDamageFactor;
+        for(const ent of S.entities){
+          if(ent.side===p.side||ent.type==='base') continue;
+          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<radius) ent.hp-=p.damage*factor;
+        }
+        spawnDarkOrbBurst(p.tx.x, p.tx.y);
+      }
+      else if(p.type==='beam'){
+        spawnLightningHit(p.tx.x,p.tx.y,p.color);
       } else {
         spawnMagicBurst(p.tx.x,p.tx.y,p.color);
       }
@@ -945,6 +996,16 @@ function spawnHitParticles2(x,y){
   }
   S.particles.push({x,y,vx:0,vy:0,life:18,maxLife:18,color:'#ff8800',size:0,isRing:true,radius:4});
   S.particles.push({x,y,vx:0,vy:0,life:12,maxLife:12,color:'#ffcc44',size:0,isRing:true,radius:6});
+}
+
+function spawnDarkOrbBurst(x,y){
+  // void implosion for the Destroyer's dark orb
+  for(let i=0;i<14;i++){
+    const a=Math.random()*Math.PI*2, s=Math.random()*4+2;
+    S.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:26,maxLife:26,color:'#7700cc',size:3+Math.random()*3});
+  }
+  S.particles.push({x,y,vx:0,vy:0,life:16,maxLife:16,color:'#5500aa',size:0,isRing:true,radius:5});
+  S.particles.push({x,y,vx:0,vy:0,life:10,maxLife:10,color:'#000000',size:0,isRing:true,radius:8});
 }
 
 function spawnHitFlash(x,y,color){

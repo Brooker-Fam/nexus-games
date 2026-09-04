@@ -9,10 +9,11 @@ function drawRTSWarrior(rc,w){
   if(w.aerial){
     // Aerial units rotate to face their target.
     // Hover bob is applied in screen-space (before rotation) so it always moves up/down.
-    const hover = w.subtype==='skyattacker' ? Math.sin(w.frame*0.1)*2.5 : Math.sin(w.frame*0.12)*3;
+    const isHeavyAerial = w.subtype==='skyattacker'||w.subtype==='warship'||w.subtype==='destroyer';
+    const hover = isHeavyAerial ? Math.sin(w.frame*0.1)*2.5 : Math.sin(w.frame*0.12)*3;
     // Ground shadow — drawn before rotation so it stays flat below the unit.
     rc.fillStyle='rgba(0,0,0,0.18)';
-    rc.beginPath(); rc.ellipse(0, 20, w.subtype==='skyattacker'?18:14, 5, 0, 0, Math.PI*2); rc.fill();
+    rc.beginPath(); rc.ellipse(0, 20, isHeavyAerial?18:14, 5, 0, 0, Math.PI*2); rc.fill();
     // Move unit up by floating height (screen-space, pre-rotation).
     rc.translate(0, -8+hover);
     // Now rotate to face target. Default direction is right (0) for player, left (π) for enemy.
@@ -30,6 +31,12 @@ function drawRTSWarrior(rc,w){
     else drawShadowWraith(rc,cfg,w);
   } else if(w.subtype==='skyattacker'){
     drawSkyAttackerUnit(rc,cfg,w);
+  } else if(w.subtype==='warship'){
+    drawWarshipUnit(rc,cfg,w);
+  } else if(w.subtype==='lightfighter'){
+    drawLightFighterUnit(rc,cfg,w);
+  } else if(w.subtype==='destroyer'){
+    drawDestroyerUnit(rc,cfg,w);
   } else if(w.subtype==='elite'){
     if(w.faction==='prism') drawEliteOracle(rc,cfg,w);
     else if(w.faction==='shadow') drawEliteDarkWarrior(rc,cfg,w);
@@ -421,6 +428,43 @@ function drawRTSProjectiles(rc){
         rc.beginPath(); rc.arc(p.x,p.y,14,ra,ra+0.8); rc.stroke();
         rc.globalAlpha=1;
       }
+    } else if(p.type==='beam'){
+      // light fighter — bright laser bolt
+      if(p.trail.length>1){
+        for(let i=1;i<p.trail.length;i++){
+          const frac=i/p.trail.length;
+          rc.strokeStyle=`rgba(255,255,255,${frac*0.7})`;
+          rc.lineWidth=frac*4; rc.lineCap='round';
+          rc.beginPath(); rc.moveTo(p.trail[i-1].x,p.trail[i-1].y); rc.lineTo(p.trail[i].x,p.trail[i].y); rc.stroke();
+        }
+        const last=p.trail[p.trail.length-1];
+        rc.shadowColor='#ffffff'; rc.shadowBlur=18;
+        rc.strokeStyle='rgba(180,255,255,0.5)'; rc.lineWidth=5; rc.lineCap='round';
+        rc.beginPath(); rc.moveTo(last.x,last.y); rc.lineTo(p.x,p.y); rc.stroke();
+        rc.strokeStyle='rgba(255,255,255,0.95)'; rc.lineWidth=2.5;
+        rc.beginPath(); rc.moveTo(last.x,last.y); rc.lineTo(p.x,p.y); rc.stroke();
+      }
+      const bg=rc.createRadialGradient(p.x,p.y,0,p.x,p.y,7);
+      bg.addColorStop(0,'#ffffff'); bg.addColorStop(0.5,'#aaffff'); bg.addColorStop(1,'transparent');
+      rc.fillStyle=bg; rc.beginPath(); rc.arc(p.x,p.y,7,0,Math.PI*2); rc.fill();
+    } else if(p.type==='darkorb'){
+      // destroyer — slow void orb with orbiting particles
+      for(let i=1;i<p.trail.length;i++){
+        const frac=i/p.trail.length;
+        rc.strokeStyle=`rgba(60,0,100,${frac*0.4})`;
+        rc.lineWidth=frac*7; rc.lineCap='round';
+        rc.beginPath(); rc.moveTo(p.trail[i-1].x,p.trail[i-1].y); rc.lineTo(p.trail[i].x,p.trail[i].y); rc.stroke();
+      }
+      rc.shadowColor='#7700cc'; rc.shadowBlur=20;
+      const dg=rc.createRadialGradient(p.x,p.y,0,p.x,p.y,13);
+      dg.addColorStop(0,'#2a0044'); dg.addColorStop(0.5,'#5500aa'); dg.addColorStop(1,'transparent');
+      rc.fillStyle=dg; rc.beginPath(); rc.arc(p.x,p.y,13,0,Math.PI*2); rc.fill();
+      for(let oi=0;oi<3;oi++){
+        const oa=S.frame*0.15+oi*(Math.PI*2/3);
+        rc.fillStyle='rgba(180,80,255,0.8)';
+        rc.beginPath(); rc.arc(p.x+Math.cos(oa)*8,p.y+Math.sin(oa)*8,2,0,Math.PI*2); rc.fill();
+      }
+      rc.fillStyle='#0a0014'; rc.beginPath(); rc.arc(p.x,p.y,5,0,Math.PI*2); rc.fill();
     } else {
       // standard magic orb
       for(let i=1;i<p.trail.length;i++){
