@@ -86,6 +86,7 @@ function drawMinimap(){
 
   // gold nodes
   for(const n of S.goldNodes){
+    if(n.gold<=0) continue;
     mc.fillStyle='rgba(255,220,50,0.6)';
     mc.beginPath(); mc.arc(n.x*scaleX, n.y*scaleY, 2, 0, Math.PI*2); mc.fill();
   }
@@ -168,6 +169,7 @@ function hexAlpha(hex,a){
 
 function drawGoldNodes(rc){
   for(const node of S.goldNodes){
+    if(node.gold<=0) continue;
     rc.save();
     rc.shadowColor='#ffdd00'; rc.shadowBlur=18;
     // pile of gold
