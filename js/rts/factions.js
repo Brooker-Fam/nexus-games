@@ -78,7 +78,7 @@ const FACTION_CFG={
     aerialUnitLabel:'WAR DRONE', aerialUnitDesc:'Aerial — heavy missiles, immune to melee',
     aerialUnitCost:22, aerialUnitIcon:'🚀', aerialFn:'makeSkyAttacker', aerialOilCost:8,
     aerial2Label:'WARSHIP', aerial2Desc:'Aerial — fires a spread of bullets at once',
-    aerial2Cost:30, aerial2Icon:'🚀', aerial2Fn:'makeWarship', aerial2OilCost:15,
+    aerial2Cost:60, aerial2Icon:'🚀', aerial2Fn:'makeWarship', aerial2OilCost:30,
     oilRigName:'OIL RIG', oilRigLabel:'OIL RIG', oilRigIcon:'🛢',
   },
 };
