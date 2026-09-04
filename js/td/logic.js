@@ -27,13 +27,37 @@ const TD_CONFIG = {
   waveScaling: { multiplier: 1 },
 };
 
-// Path waypoints (grid coords)
-const PATH_WAYPOINTS = [
-  {x:0,y:3},{x:4,y:3},{x:4,y:1},{x:8,y:1},
-  {x:8,y:6},{x:12,y:6},{x:12,y:3},{x:16,y:3},
-  {x:16,y:10},{x:10,y:10},{x:10,y:8},{x:6,y:8},
-  {x:6,y:11},{x:17.5,y:11}
+// Map paths (grid coords). A new one is selected for every game.
+const TD_MAPS = [
+  {
+    name: 'Circuit Breaker',
+    waypoints: [
+      {x:0,y:3},{x:4,y:3},{x:4,y:1},{x:8,y:1},
+      {x:8,y:6},{x:12,y:6},{x:12,y:3},{x:16,y:3},
+      {x:16,y:10},{x:10,y:10},{x:10,y:8},{x:6,y:8},
+      {x:6,y:11},{x:17.5,y:11}
+    ],
+  },
+  {
+    name: 'Switchback',
+    waypoints: [
+      {x:0,y:2},{x:3,y:2},{x:3,y:7},{x:7,y:7},
+      {x:7,y:1},{x:11,y:1},{x:11,y:9},{x:15,y:9},
+      {x:15,y:4},{x:17.5,y:4}
+    ],
+  },
+  {
+    name: 'Data Spiral',
+    waypoints: [
+      {x:0,y:9},{x:3,y:9},{x:3,y:4},{x:6,y:4},
+      {x:6,y:10},{x:10,y:10},{x:10,y:2},{x:14,y:2},
+      {x:14,y:7},{x:17.5,y:7}
+    ],
+  },
 ];
+
+let activeMap = TD_MAPS[Math.floor(Math.random()*TD_MAPS.length)];
+let PATH_WAYPOINTS = activeMap.waypoints;
 
 function wpPx(wp){ return {x: wp.x*CELL, y: wp.y*CELL + CELL/2}; }
 
@@ -55,6 +79,9 @@ let state = {...TD_DEFAULTS, towers:[], enemies:[], bullets:[], particles:[]};
 
 function initState(){
   state = {...TD_DEFAULTS, towers:[], enemies:[], bullets:[], particles:[]};
+  activeMap = TD_MAPS[Math.floor(Math.random()*TD_MAPS.length)];
+  PATH_WAYPOINTS = activeMap.waypoints;
+  buildPath();
   setLog([]);
 }
 
@@ -147,7 +174,7 @@ function startWave(){
   sfx('tdWave');
   addLog(`▶ WAVE ${state.wave} INCOMING — ${count} enemies`,'info');
   updateHUD();
-  if(window.posthog) posthog.capture('td_wave_started', { wave: state.wave, enemy_count: count, towers: state.towers.length, gold: state.gold, score: state.score });
+  if(window.posthog) posthog.capture('td_wave_started', { wave: state.wave, map: activeMap.name, enemy_count: count, towers: state.towers.length, gold: state.gold, score: state.score });
 }
 
 function spawnEnemy(){
@@ -335,7 +362,7 @@ function endGame(won){
   ov.classList.add('show');
   if(won){ ot.className='overlay-title win'; ot.textContent='VICTORY'; os.textContent=`WAVE ${state.wave} — SCORE: ${state.score}`; sfx('tdVictory'); }
   else    { ot.className='overlay-title lose'; ot.textContent='GAME OVER'; os.textContent=`REACHED WAVE ${state.wave} — SCORE: ${state.score}`; sfx('tdDead'); }
-  if(window.posthog) posthog.capture('td_game_ended', { outcome: won ? 'victory' : 'defeat', wave: state.wave, score: state.score, towers_placed: state.towers.length });
+  if(window.posthog) posthog.capture('td_game_ended', { outcome: won ? 'victory' : 'defeat', map: activeMap.name, wave: state.wave, score: state.score, towers_placed: state.towers.length });
 }
 
 function resetGame(){
@@ -346,7 +373,7 @@ function resetGame(){
   initState();
   updateHUD();
   setLog([]);
-  addLog('Game initialized. Place towers and send waves!','info');
+  addLog(`Map: ${activeMap.name}. Place towers and send waves!`,'info');
   lastTime=performance.now();
   tdAccum=0;
   raf=requestAnimationFrame(gameLoop);
@@ -359,7 +386,7 @@ registerGame('td', {
     renderPreviewLaser(document.getElementById('prev-laser').getContext('2d'));
     renderPreviewMissile(document.getElementById('prev-missile').getContext('2d'));
     renderPreviewCryo(document.getElementById('prev-slow').getContext('2d'));
-    addLog('Game initialized. Place towers and send waves!','info');
+    addLog(`Map: ${activeMap.name}. Place towers and send waves!`,'info');
     updateHUD();
     lastTime=performance.now();
     tdAccum=0;
