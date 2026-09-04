@@ -47,6 +47,7 @@ function resetRtsState(){
 let camDragging=false, camDragActive=false, camDragStartX=0, camDragStartY=0, camDragCamX=0, camDragCamY=0;
 let dragSelActive=false, dragSelStartCX=0, dragSelStartCY=0, dragSelCurCX=0, dragSelCurCY=0;
 const CAM_SPEED=14;
+const CAM_ZOOM_FACTOR=1.06;
 const keysHeld={};
 
 function clampCam(){
@@ -152,7 +153,7 @@ function setupCameraControls(){
     const scX=canvas2.width/rect.width, scY=canvas2.height/rect.height;
     const sx=(e.clientX-rect.left)*scX, sy=(e.clientY-rect.top)*scY;
     const worldX=sx/S.camZoom+S.camX, worldY=sy/S.camZoom+S.camY;
-    const factor=e.deltaY<0?1.12:1/1.12;
+    const factor=e.deltaY<0?CAM_ZOOM_FACTOR:1/CAM_ZOOM_FACTOR;
     S.camZoom=Math.max(0.4,Math.min(3,S.camZoom*factor));
     S.camX=worldX-sx/S.camZoom;
     S.camY=worldY-sy/S.camZoom;
