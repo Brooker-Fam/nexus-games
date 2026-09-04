@@ -139,6 +139,7 @@ function recordGameResult(playerWon, gameFrames, gameStats){
     k:  (gameStats && gameStats.kills)      || 0,
     dt: (gameStats && gameStats.deaths)     || 0,
     ge: (gameStats && gameStats.goldEarned) || 0,
+    oe: (gameStats && gameStats.oilEarned)  || 0,
     ub: (gameStats && gameStats.unitsBuilt) || 0,
     pm,
   });
@@ -286,6 +287,17 @@ function refreshDifficultyStats(){
     setTxt('dso-stat-gpm', gpm > 0 ? gpm + '/m' : '—');
   } else {
     setTxt('dso-stat-gpm', '—');
+  }
+
+  // Average secondary resource (oil / essence / light) per minute
+  const gamesWithOilStats = d.history.filter(g => g.oe !== undefined);
+  if(gamesWithOilStats.length > 0){
+    const totalOil = gamesWithOilStats.reduce((s,g)=>s+(g.oe||0),0);
+    const totalMins = gamesWithOilStats.reduce((s,g)=>s+((g.f||0)/3600),0); // frames→minutes at 60fps
+    const opm = totalMins > 0 ? Math.round(totalOil / totalMins) : 0;
+    setTxt('dso-stat-opm', opm > 0 ? opm + '/m' : '—');
+  } else {
+    setTxt('dso-stat-opm', '—');
   }
 
   if(d.streak > 0) setTxt('dso-stat-streak', d.streak + 'W');
