@@ -413,6 +413,7 @@ function workerReturn(w, myBase){
       let oil=w.oilCarry;
       if(w.side==='enemy' && !window._mpMultiplayer) oil=Math.round(oil*AI_CONFIG.resourceBonus);
       S.oil[w.side]=(S.oil[w.side]||0)+oil;
+      if(w.side==='player') S.stats.oilEarned+=oil;
       w.oilCarry=0;
     }
     if(w.goldCarry>0){
