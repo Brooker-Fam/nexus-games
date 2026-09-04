@@ -601,13 +601,14 @@ const MELEE_ATTACK_TICKS = 45;
 
 // Returns true if this attacker can hit aerial units.
 // Allowed: gunbot (roboto warrior), warbot, shockbot, dark warrior (shadow elite),
-//          witch (prism warrior), princess (prism elite), wizard, starfighter, skyattacker.
-// Blocked: workers, swordsman (shadow melee warrior), legionnaire (prism melee), necromancer, tank.
+//          witch (prism warrior), princess (prism elite), wizard, starfighter, skyattacker,
+//          bow-mode legionnaire, bow-mode bloodhound.
+// Blocked: workers, swordsman (shadow melee warrior), sword-mode legionnaire, necromancer, tank.
 function canTargetAerial(w){
   if(w.type==='cannon') return true;
   if(w.type!=='warrior') return false;
   if(w.faction==='shadow' && !w.subtype) return false; // swordsman (melee only)
-  if(w.subtype==='legionnaire') return false; // melee sword squad only
+  if(w.subtype==='legionnaire') return w.bowMode===true; // bow mode can hit aerial
   if(w.subtype==='bloodhound') return w.bowMode===true; // bow mode can hit aerial
   if(w.subtype==='necromancer') return false;
   if(w.subtype==='tank') return false;
