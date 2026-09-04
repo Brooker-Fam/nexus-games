@@ -33,16 +33,17 @@ test('Roboto warship uses a spaceship icon',()=>{
   assert.equal(icon,'🚀');
 });
 
-test('Prism Princess is a costly royal artillery unit',()=>{
+test('Prism elite is a Princess that summons Legionnaires',()=>{
   const context=makeContext();
-  const stats=vm.runInContext(`(() => {
-    const princess=makePrincess('player','prism',100,100);
-    return {subtype:princess.subtype,hp:princess.hp,damage:princess.damage,range:princess.range,time:BUILD_TIMES.princess};
-  })()`,context);
-  assert.deepEqual({...stats},{subtype:'princess',hp:260,damage:65,range:420,time:2400});
+  const princess=vm.runInContext("makeElite('player','prism',100,100)",context);
+
+  assert.equal(princess.summonsLegionnaires,true);
+  assert.equal(princess.fireRate,180);
 
   const factionContext=vm.createContext({});
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),factionContext);
-  const costs=vm.runInContext('({gold:FACTION_CFG.prism.princessCost,light:FACTION_CFG.prism.princessOilCost})',factionContext);
-  assert.deepEqual({...costs},{gold:200,light:75});
+  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8');
+  vm.runInContext(source,factionContext);
+  const presentation=vm.runInContext('({label:FACTION_CFG.prism.eliteLabel,desc:FACTION_CFG.prism.eliteDesc})',factionContext);
+  assert.equal(presentation.label,'PRINCESS');
+  assert.match(presentation.desc,/Legionnaires/);
 });

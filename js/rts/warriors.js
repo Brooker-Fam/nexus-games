@@ -39,11 +39,11 @@ function drawRTSWarrior(rc,w){
     drawDestroyerUnit(rc,cfg,w);
   } else if(w.subtype==='warbot'){
     drawWarbot(rc,cfg,w);
-  } else if(w.subtype==='princess'){
-    drawPrincess(rc,cfg,w);
   } else if(w.subtype==='legionnaire'){
     drawLegionnaire(rc,cfg,w);
   } else if(w.subtype==='elite'){
+    // Keep the established renderer entry point; the Prism elite is presented
+    // and behaves as the Princess while retaining its compatible draw hook.
     if(w.faction==='prism') drawEliteOracle(rc,cfg,w);
     else if(w.faction==='shadow') drawEliteDarkWarrior(rc,cfg,w);
     else drawEliteShockbot(rc,cfg,w);
@@ -69,23 +69,6 @@ function drawRTSWarrior(rc,w){
   // selection ring
   if(w.selected) drawSelectionRing(rc, w.x, w.y, 18, 8, 2.5);
   if(w.hp<w.maxHp) drawHealthBar(rc, w.x, w.y-26, 20, 3, w.hp, w.maxHp);
-}
-
-function drawPrincess(rc,cfg,w){
-  const t=w.frame;
-  rc.shadowColor='#fff2a8'; rc.shadowBlur=18;
-  // Flowing white-and-cyan royal gown.
-  const gown=rc.createLinearGradient(0,-12,0,20);
-  gown.addColorStop(0,'#ffffff'); gown.addColorStop(1,'#55ddee');
-  rc.fillStyle=gown;
-  rc.beginPath(); rc.moveTo(-7,-7); rc.quadraticCurveTo(-14,9,-16,20);
-  rc.quadraticCurveTo(0,25,16,20); rc.quadraticCurveTo(14,9,7,-7); rc.closePath(); rc.fill();
-  // Face, luminous hair, and unmistakable crown.
-  rc.fillStyle='#ffe0c2'; rc.beginPath(); rc.arc(0,-17,7,0,Math.PI*2); rc.fill();
-  rc.strokeStyle='#f5ffff'; rc.lineWidth=4; rc.beginPath(); rc.arc(0,-16,9,Math.PI*.65,Math.PI*2.35); rc.stroke();
-  rc.fillStyle='#ffd84d'; rc.beginPath(); rc.moveTo(-8,-25); rc.lineTo(-6,-35); rc.lineTo(-1,-28);
-  rc.lineTo(0,-38); rc.lineTo(4,-28); rc.lineTo(8,-35); rc.lineTo(8,-24); rc.closePath(); rc.fill();
-  rc.strokeStyle='#ffffff'; rc.lineWidth=2; rc.beginPath(); rc.arc(0,3,10+Math.sin(t*.08)*2,0,Math.PI*2); rc.stroke();
 }
 
 function drawWarriorPrism(rc,cfg,w){

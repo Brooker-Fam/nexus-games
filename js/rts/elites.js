@@ -1,7 +1,7 @@
 // ── ELITE DRAW FUNCTIONS ──
 
 function drawEliteOracle(rc,cfg,w){
-  // Oracle — taller witch with white/gold robes, bigger crown, twin orbs
+  // Princess — a crowned Prism summoner whose twin orbs call her Legionnaires
   const t=w.frame, isAtt=w.state==='attack';
   // legs
   rc.strokeStyle='#aad0e8'; rc.lineWidth=3; rc.lineCap='round';

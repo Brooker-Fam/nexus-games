@@ -589,10 +589,10 @@ function buildingTick(b){
   }
 }
 
-function queueUnit(building, label, time, fn, unitType){
+function queueUnit(building, label, time, fn){
   if(!building.queue) building.queue=[];
   if(building.queue.length>=QUEUE_MAX){ rtsSetLog('Queue full!'); return false; }
-  building.queue.push({label,time,fn,unitType});
+  building.queue.push({label,time,fn});
   return true;
 }
 
@@ -601,7 +601,7 @@ const MELEE_ATTACK_TICKS = 45;
 
 // Returns true if this attacker can hit aerial units.
 // Allowed: gunbot (roboto warrior), warbot, shockbot, dark warrior (shadow elite),
-//          witch (prism warrior), oracle (prism elite), wizard, starfighter, skyattacker.
+//          witch (prism warrior), princess (prism elite), wizard, starfighter, skyattacker.
 // Blocked: workers, swordsman (shadow melee warrior), legionnaire (prism melee), necromancer, tank.
 function canTargetAerial(w){
   if(w.type==='cannon') return true;
@@ -701,8 +701,28 @@ function advanceRangedAttack(w, target){
   w.attackTimer++;
   while(w.attackTimer>=fireRate){
     w.attackTimer-=fireRate;
-    fireWarriorProjectiles(w, target);
+    if(w.summonsLegionnaires) summonLegionnaire(w, target);
+    else fireWarriorProjectiles(w, target);
   }
+}
+
+function summonLegionnaire(princess, target){
+  const spawnOffset=princess.side==='player'?24:-24;
+  // makeLegionnaire normally offsets a unit from a production building; adjust
+  // its origin so the summoned soldier appears directly in front of Princess.
+  const productionOffset=princess.side==='player'?80:-80;
+  const legionnaire=makeLegionnaire(
+    princess.side,
+    princess.faction,
+    princess.x+spawnOffset-productionOffset,
+    princess.y
+  );
+  legionnaire.y=princess.y+(rtsRand()-0.5)*36;
+  legionnaire.forcedTarget=target;
+  legionnaire.state='march';
+  S.entities.push(legionnaire);
+  spawnMagicBurst(legionnaire.x,legionnaire.y,FACTION_CFG.prism.color);
+  sfx('rtsMagicFire',80);
 }
 
 function warriorRangedAttack(w, target, targetDist){
@@ -844,7 +864,6 @@ const PROJECTILE_TYPES = {
   tank:        { type:'shell',      color:'#ff6600', speed:9,  sound:'rtsCannonFire' },
   wizard:      { type:'lightning',  color:'#88ffff', speed:6,  sound:'rtsLightning' },
   necromancer: { type:'darkmagic',  color:'#440088', speed:4,  sound:'rtsDarkMagic' },
-  princess:    { type:'prismblast', color:'#fff4a8', speed:7, sound:'rtsMagicFire' },
   // 2nd-tier aerial units
   warship:      { type:'bullet',  color:'#ffcc44', speed:12, sound:'rtsBullet' },
   lightfighter: { type:'beam',    color:'#ffffff', speed:26, sound:'rtsBeam' },
