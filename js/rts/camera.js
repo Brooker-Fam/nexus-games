@@ -28,6 +28,7 @@ const S = {
   // entities
   entities: [], playerBase: null, enemyBase: null,
   particles: [], goldNodes: [], projectiles: [],
+  map: null, mapDecor: [], mapSeed: 1,
   // selection / UI
   selected: [], buildPopupOpen: false, buildStructureMode: false, buildingSource: null, attackMoveMode: false,
   // AI
@@ -43,6 +44,7 @@ function resetRtsState(){
   S.gold={player:0, enemy:0}; S.oil={player:0, enemy:0}; S.baseHP=BUILDING_HEALTH.base; S.enemyBaseHP=BUILDING_HEALTH.base;
   S.entities=[]; S.playerBase=null; S.enemyBase=null;
   S.particles=[]; S.goldNodes=[]; S.projectiles=[];
+  S.map=null; S.mapDecor=[];
   S.selected=[]; S.buildPopupOpen=false; S.buildStructureMode=false; S.buildingSource=null; S.attackMoveMode=false;
   S.aiTimer=0;
   S.stats={ kills:0, deaths:0, goldEarned:0, oilEarned:0, unitsBuilt:0 };
