@@ -21,9 +21,13 @@ const AI_CONFIG = {
   mistakeChance: 0,          // chance to skip a decision cycle
   attackPartialChance: 0,    // chance to only send some warriors
   // costs
-  barracksCost: 20,
-  cannonCost: 15,
-  structureCost: 30,
+  barracksCost: STRUCT_COSTS.barracks.gold,
+  cannonCost: STRUCT_COSTS.cannon.gold,
+  structureCost: STRUCT_COSTS.structure.gold,
+  structureOilCost: STRUCT_COSTS.structure.oil,
+  aerialCost: STRUCT_COSTS.aerial.gold,
+  aerialOilCost: STRUCT_COSTS.aerial.oil,
+  oilRigCost: STRUCT_COSTS.oilrig.gold,
   eliteCost: 30,
   warriorCost: 10,
   workerCost: 5,
@@ -53,12 +57,14 @@ function aiQueueAt(building, label, time, fn, cost){
   return true;
 }
 
-function aiBuild(type, nearX, nearY, cost){
+function aiBuild(type, nearX, nearY, cost, oilCost=0){
   if(S.gold.enemy<cost) return false;
+  if(oilCost>0 && (S.oil.enemy||0)<oilCost) return false;
   // Find an idle AI worker to assign
   const worker = S.entities.find(e=>e.side==='enemy'&&e.type==='worker'&&e.state!=='building');
   if(!worker) return false;
   S.gold.enemy-=cost;
+  if(oilCost>0) S.oil.enemy=Math.max(0,(S.oil.enemy||0)-oilCost);
   const x=nearX+(rtsRand()-0.5)*160;
   const y=nearY+(rtsRand()-0.5)*200;
   // Assign worker to build (same flow as player)
@@ -117,12 +123,12 @@ function aiTick(){
 
     // Build elite structure (worker threshold set by difficulty)
     if(eliteStructs===0 && workers>=AI_CONFIG.eliteWorkerReq && barracks>=1){
-      aiBuild('structure', eb.x-200, eb.y, AI_CONFIG.structureCost);
+      aiBuild('structure', eb.x-200, eb.y, AI_CONFIG.structureCost, AI_CONFIG.structureOilCost);
     }
 
     // Build aerial hangar once elite structure exists
     if(aerialHangars===0 && eliteStructs>=1 && workers>=AI_CONFIG.eliteWorkerReq){
-      aiBuild('aerial', eb.x-160, eb.y-150, 25);
+      aiBuild('aerial', eb.x-160, eb.y-150, AI_CONFIG.aerialCost, AI_CONFIG.aerialOilCost);
     }
 
     // Build oil-rig-equivalent resource structure once barracks + 3 workers exist
@@ -130,7 +136,7 @@ function aiTick(){
     if(eCfg2.oilRigLabel){
       const oilRigs=aiCount('structure',e=>e.isOilRig);
       if(oilRigs===0 && barracks>=1 && workers>=3){
-        aiBuild('oilrig', eb.x-180, eb.y+200, 20);
+        aiBuild('oilrig', eb.x-180, eb.y+200, AI_CONFIG.oilRigCost);
       }
     }
 

@@ -82,6 +82,7 @@ function executeCommand(cmd){
 
     case 'build_structure': {
       if(cmd.cost) S.gold[side] -= cmd.cost;
+      if(cmd.oilCost) S.oil[side] = Math.max(0, (S.oil[side]||0) - cmd.oilCost);
       const worker = S.entities.find(e=>e.id===cmd.workerId);
       if(!worker) break;
       worker.buildTarget = { x:cmd.x, y:cmd.y, buildType:cmd.buildType, ghost:null };
