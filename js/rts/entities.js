@@ -22,7 +22,7 @@ function makeWorker(side, faction, nearX, nearY){
     x: bx+offsetX, y: by+spread,
     hp:20, maxHp:20, speed:0.65,
     state:'idle',
-    target:null, goldCarry:0, goldCap:3,
+    target:null, goldCarry:0, goldCap:5,
     mineTimer:0, frame:0,
   };
 }
