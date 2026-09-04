@@ -6,6 +6,8 @@ const FACTION_CFG={
     warriorColor:'#ffffff', buildingName:'TEMPLE',
     workerLabel:'ACOLYTE', warriorLabel:'WITCH',
     workerCost:5,
+    princessLabel:'PRINCESS', princessDesc:'Unique royal caster — devastating prismatic artillery (limit 1)',
+    princessCost:200, princessOilCost:75, princessIcon:'👑',
     buildingColor:'#c0e8ff',
     barracksName:'PORTAL', barracksLabel:'PORTAL',
     warriorCost:10, warriorDesc:'Ranged — magic projectiles',

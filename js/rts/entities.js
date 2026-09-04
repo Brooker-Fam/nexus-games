@@ -103,6 +103,7 @@ const BUILD_TIMES={
   destroyer:   1260, // 21s — Shadow 2nd air unit
   warbot:      780,  // 13s — Roboto 2nd barracks unit
   legionnairesquad: 1500, // 25s — Prism 2nd barracks unit, trains 4 at once
+  princess: 2400, // 40s — unique Prism royal unit, trained at the Temple
 };
 const QUEUE_MAX = 5; // max units queued per building
 
@@ -289,6 +290,18 @@ function makeElite(side, faction, nearX, nearY){
     fireRate: faction==='roboto'?20:60,
     frame:0, selected:false,
     forcedTarget:null, moveTarget:null,
+  };
+}
+// Princess (Prism Temple) — a unique, exceptionally expensive royal artillery unit.
+function makePrincess(side, faction, nearX, nearY){
+  const isPlayer=side==='player';
+  return {
+    id:nextId(), type:'warrior', subtype:'princess', side, faction,
+    x:nearX+(isPlayer?70:-70), y:nearY+(rtsRand()-0.5)*100,
+    hp:260, maxHp:260, speed:0.8,
+    state:'idle', target:null, attackTimer:0,
+    damage:65, range:420, ranged:true, fireRate:85,
+    frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };
 }
 function makeWizard(side, faction, nearX, nearY){

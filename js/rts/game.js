@@ -589,10 +589,10 @@ function buildingTick(b){
   }
 }
 
-function queueUnit(building, label, time, fn){
+function queueUnit(building, label, time, fn, unitType){
   if(!building.queue) building.queue=[];
   if(building.queue.length>=QUEUE_MAX){ rtsSetLog('Queue full!'); return false; }
-  building.queue.push({label,time,fn});
+  building.queue.push({label,time,fn,unitType});
   return true;
 }
 
@@ -844,6 +844,7 @@ const PROJECTILE_TYPES = {
   tank:        { type:'shell',      color:'#ff6600', speed:9,  sound:'rtsCannonFire' },
   wizard:      { type:'lightning',  color:'#88ffff', speed:6,  sound:'rtsLightning' },
   necromancer: { type:'darkmagic',  color:'#440088', speed:4,  sound:'rtsDarkMagic' },
+  princess:    { type:'prismblast', color:'#fff4a8', speed:7, sound:'rtsMagicFire' },
   // 2nd-tier aerial units
   warship:      { type:'bullet',  color:'#ffcc44', speed:12, sound:'rtsBullet' },
   lightfighter: { type:'beam',    color:'#ffffff', speed:26, sound:'rtsBeam' },

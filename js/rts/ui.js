@@ -91,6 +91,14 @@ function openBuildPopup(screenX, screenY, context){
     const sel=S.selected[0];
     addOpt(cfg.workerIcon, cfg.workerLabel, 'Gathers gold from mines', cfg.workerCost,
       ()=>trainCmd(sel?sel.id:S.buildingSource?.id, 'worker', 'base'));
+    if(myFaction()==='prism'){
+      const princessExists=S.entities.some(e=>e.side===mySide() && e.subtype==='princess');
+      const princessQueued=S.entities.some(e=>e.side===mySide() && e.queue?.some(q=>q.unitType==='princess'));
+      addOpt(cfg.princessIcon, cfg.princessLabel, cfg.princessDesc, cfg.princessCost,
+        ()=>trainCmd(sel?sel.id:S.buildingSource?.id, 'princess', 'base'),
+        princessExists||princessQueued||myGold()<cfg.princessCost||myOil()<cfg.princessOilCost,
+        cfg.princessOilCost);
+    }
 
   } else if(context==='barracks'){
     const sel=S.selected[0]; if(!sel) return;
@@ -416,7 +424,7 @@ function rtsHandleClick(e){
       openBuildPopup(sx,sy,'psionic');
       rtsSetLog(`PSIONIC WARRIOR — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior'){
-      const UNIT_LABELS={elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label',warbot:'warrior2Label',legionnaire:'warrior2Label'};
+      const UNIT_LABELS={princess:'princessLabel',elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label',warbot:'warrior2Label',legionnaire:'warrior2Label'};
       const lbl=cfg[UNIT_LABELS[hit.subtype]]||cfg.warriorLabel;
       rtsSetLog(`${lbl} selected — click to move or attack.`);
     }

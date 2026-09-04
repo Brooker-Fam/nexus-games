@@ -32,3 +32,17 @@ test('Roboto warship uses a spaceship icon',()=>{
   const icon=vm.runInContext('FACTION_CFG.roboto.aerial2Icon',context);
   assert.equal(icon,'🚀');
 });
+
+test('Prism Princess is a costly royal artillery unit',()=>{
+  const context=makeContext();
+  const stats=vm.runInContext(`(() => {
+    const princess=makePrincess('player','prism',100,100);
+    return {subtype:princess.subtype,hp:princess.hp,damage:princess.damage,range:princess.range,time:BUILD_TIMES.princess};
+  })()`,context);
+  assert.deepEqual({...stats},{subtype:'princess',hp:260,damage:65,range:420,time:2400});
+
+  const factionContext=vm.createContext({});
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),factionContext);
+  const costs=vm.runInContext('({gold:FACTION_CFG.prism.princessCost,light:FACTION_CFG.prism.princessOilCost})',factionContext);
+  assert.deepEqual({...costs},{gold:200,light:75});
+});
