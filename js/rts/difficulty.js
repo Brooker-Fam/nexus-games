@@ -214,6 +214,8 @@ function applyDifficultyToAI(){
   // Tactical micro — S-curve: kicks in meaningfully at mid difficulty
   AI_CONFIG.focusFireChance  = +_diffSCurve(0, 0.85).toFixed(2); // target low-HP enemies
   AI_CONFIG.kiteChance       = +_diffSCurve(0, 0.7).toFixed(2);  // ranged retreat from melee
+  AI_CONFIG.strategicTargetChance = +_diffSCurve(0.05, 0.9).toFixed(2);
+  AI_CONFIG.counterAttackRatio = +(1.45 - t * 0.55).toFixed(2);
 
   // Mistakes — easy AI sometimes skips decisions
   AI_CONFIG.mistakeChance      = +(0.30 * (1 - t)).toFixed(2);   // 30% at easy → 0% at hard
