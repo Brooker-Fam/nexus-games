@@ -66,8 +66,20 @@ function openBuildPopup(screenX, screenY, context){
   } else if(context==='barracks'){
     const sel=S.selected[0]; if(!sel) return;
     title.textContent = cfg.barracksLabel;
-    addOpt(cfg.warriorIcon, cfg.warriorLabel, cfg.warriorDesc, cfg.warriorCost,
-      ()=>trainCmd(sel.id, 'warrior', 'barracks'));
+
+    const barracksTypes = [
+      { icon:cfg.warriorIcon, label:cfg.warriorLabel, desc:cfg.warriorDesc, cost:cfg.warriorCost, oilCost:cfg.warriorOilCost||0, unitType:'warrior' },
+    ];
+    if(cfg.warrior2Label){
+      barracksTypes.push({ icon:cfg.warrior2Icon, label:cfg.warrior2Label, desc:cfg.warrior2Desc, cost:cfg.warrior2Cost, oilCost:cfg.warrior2OilCost||0, unitType:'warrior2' });
+    }
+
+    for(const u of barracksTypes){
+      addOpt(u.icon, u.label, u.desc, u.cost,
+        ()=>trainCmd(sel.id, u.unitType, 'barracks'),
+        myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        u.oilCost);
+    }
 
   } else if(context==='worker'){
     title.textContent = 'WORKER ACTIONS';
@@ -372,7 +384,7 @@ function rtsHandleClick(e){
       openBuildPopup(sx,sy,'psionic');
       rtsSetLog(`PSIONIC WARRIOR — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior'){
-      const UNIT_LABELS={elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label'};
+      const UNIT_LABELS={elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label',warbot:'warrior2Label',legionnaire:'warrior2Label'};
       const lbl=cfg[UNIT_LABELS[hit.subtype]]||cfg.warriorLabel;
       rtsSetLog(`${lbl} selected — click to move or attack.`);
     }

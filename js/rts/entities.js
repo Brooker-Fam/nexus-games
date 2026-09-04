@@ -49,6 +49,43 @@ function makeWarrior(side, faction, nearX, nearY){
   };
 }
 
+// ── 2ND-TIER BARRACKS UNITS ──
+// Warbot (Roboto) — heavier armored GunBot variant, more HP and damage
+function makeWarbot(side, faction, nearX, nearY){
+  const bx = nearX !== undefined ? nearX : (side==='player'? PLAYER_BASE_X+120 : ENEMY_BASE_X-120);
+  const by = nearY !== undefined ? nearY : BASE_Y;
+  const offsetX = side==='player' ? 80 : -80;
+  return { id:nextId(), type:'warrior', subtype:'warbot', side, faction,
+    x: bx+offsetX, y: by+(rtsRand()-0.5)*200,
+    hp:40, maxHp:40, speed:0.55,
+    state:'idle',
+    target:null, attackTimer:0,
+    damage:10, range:200, ranged:true, fireRate:16,
+    frame:0, selected:false,
+    forcedTarget:null, moveTarget:null,
+  };
+}
+// Legionnaire (Prism) — melee swordfighter, trained in squads of four
+function makeLegionnaire(side, faction, nearX, nearY){
+  const bx = nearX !== undefined ? nearX : (side==='player'? PLAYER_BASE_X+120 : ENEMY_BASE_X-120);
+  const by = nearY !== undefined ? nearY : BASE_Y;
+  const offsetX = side==='player' ? 80 : -80;
+  return { id:nextId(), type:'warrior', subtype:'legionnaire', side, faction,
+    x: bx+offsetX, y: by+(rtsRand()-0.5)*200,
+    hp:35, maxHp:35, speed:1.0,
+    state:'idle',
+    target:null, attackTimer:0,
+    damage:14, range:50, ranged:false, fireRate:0,
+    frame:0, selected:false,
+    forcedTarget:null, moveTarget:null,
+  };
+}
+function makeLegionnaireSquad(side, faction, nearX, nearY){
+  const squad=[];
+  for(let i=0;i<4;i++) squad.push(makeLegionnaire(side, faction, nearX, nearY));
+  return squad;
+}
+
 // ── BUILD TIMES (ticks at 60/s) ──
 const BUILD_TIMES={
   structure: 900,    // 15s
@@ -64,6 +101,8 @@ const BUILD_TIMES={
   warship:     1080, // 18s — Roboto 2nd air unit
   lightfighter: 900, // 15s — Prism 2nd air unit
   destroyer:   1260, // 21s — Shadow 2nd air unit
+  warbot:      780,  // 13s — Roboto 2nd barracks unit
+  legionnairesquad: 1500, // 25s — Prism 2nd barracks unit, trains 4 at once
 };
 const QUEUE_MAX = 5; // max units queued per building
 

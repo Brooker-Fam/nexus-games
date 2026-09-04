@@ -37,6 +37,10 @@ function drawRTSWarrior(rc,w){
     drawLightFighterUnit(rc,cfg,w);
   } else if(w.subtype==='destroyer'){
     drawDestroyerUnit(rc,cfg,w);
+  } else if(w.subtype==='warbot'){
+    drawWarbot(rc,cfg,w);
+  } else if(w.subtype==='legionnaire'){
+    drawLegionnaire(rc,cfg,w);
   } else if(w.subtype==='elite'){
     if(w.faction==='prism') drawEliteOracle(rc,cfg,w);
     else if(w.faction==='shadow') drawEliteDarkWarrior(rc,cfg,w);
@@ -316,6 +320,158 @@ function drawWarriorRoboto(rc,cfg,w){
   rc.fillStyle=antBlink?'#ff4400':'#440000';
   rc.shadowColor='#ff4400'; rc.shadowBlur=antBlink?8:2;
   rc.beginPath(); rc.arc(5,-45,1.8,0,Math.PI*2); rc.fill();
+}
+
+// ── WARBOT (Roboto Barracks, tier 2) — bulkier, up-armored GunBot ──
+function drawWarbot(rc,cfg,w){
+  const t = w.frame;
+  const isAttacking = w.state==='attack';
+  const isMarching  = w.state==='march';
+
+  // LEGS — heavy, wide stride
+  for(const [lx, phase] of [[-7,0],[4,Math.PI]]){
+    const step = isMarching ? Math.sin(t*0.2+phase)*4 : 0;
+    rc.fillStyle='#22181a'; rc.fillRect(lx,-4+step,9,15); rc.strokeStyle='rgba(255,60,0,0.3)'; rc.lineWidth=0.6; rc.strokeRect(lx,-4+step,9,15);
+    rc.fillStyle='#151011'; rc.beginPath(); rc.roundRect(lx-2,10+step,13,5,1); rc.fill();
+  }
+
+  // TORSO — thicker double-plated hull
+  const lean = isMarching ? 0.1 : 0;
+  rc.save(); rc.rotate(lean);
+  const tGrad=rc.createLinearGradient(-13,-30,13,2);
+  tGrad.addColorStop(0,'#42383a'); tGrad.addColorStop(1,'#161112');
+  rc.fillStyle=tGrad; rc.beginPath(); rc.roundRect(-13,-30,26,32,3); rc.fill();
+  rc.strokeStyle='rgba(255,60,0,0.5)'; rc.lineWidth=1; rc.stroke();
+  for(let vy=-24;vy<=-4;vy+=7){ rc.fillStyle='#0a0808'; rc.fillRect(-9,vy,18,4.5); }
+  // dual power core
+  const coreFlash = isAttacking ? 0.5+Math.sin(t*0.5)*0.5 : 0.7;
+  for(const cx of [-4,4]){
+    const cG=rc.createRadialGradient(cx,-12,0,cx,-12,3.5+coreFlash*2);
+    cG.addColorStop(0,'#ffe066'); cG.addColorStop(0.5,`rgba(255,${isAttacking?40:80},0,${coreFlash})`); cG.addColorStop(1,'transparent');
+    rc.fillStyle=cG; rc.beginPath(); rc.arc(cx,-12,3.5+coreFlash*1.5,0,Math.PI*2); rc.fill();
+  }
+  rc.restore();
+
+  // LEFT ARM — heavy shoulder guard
+  const leftSwing = isMarching ? Math.sin(t*0.2+Math.PI)*5 : 0;
+  rc.fillStyle='#241a1a'; rc.fillRect(-17,-26+leftSwing,7,20); rc.strokeStyle='rgba(255,60,0,0.35)'; rc.lineWidth=0.6; rc.strokeRect(-17,-26+leftSwing,7,20);
+  rc.fillStyle='#332222'; rc.beginPath(); rc.roundRect(-19,-30,11,10,2); rc.fill();
+
+  // DUAL-BARREL CANNON ARM — heavy recoil
+  const recoil = isAttacking ? Math.max(0,Math.sin(t*0.5))*5 : 0;
+  rc.fillStyle='#221512'; rc.fillRect(11-recoil,-26,8,18); rc.strokeStyle='rgba(255,80,0,0.5)'; rc.lineWidth=0.6; rc.strokeRect(11-recoil,-26,8,18);
+  for(const [gx,gy] of [[13,-26],[20,-26]]){
+    rc.fillStyle='#181010'; rc.fillRect(gx-recoil,gy,4,22); rc.strokeStyle='rgba(255,80,0,0.45)'; rc.lineWidth=0.5; rc.strokeRect(gx-recoil,gy,4,22);
+  }
+  const flashSize = isAttacking ? 8+Math.sin(t*0.5)*6 : 3;
+  for(const gx of [15,22]){
+    const mg=rc.createRadialGradient(gx-recoil,-4,0,gx-recoil,-4,flashSize);
+    mg.addColorStop(0,`rgba(255,200,140,${isAttacking?0.95:0.25})`);
+    mg.addColorStop(0.5,`rgba(255,60,0,${isAttacking?0.7:0.1})`);
+    mg.addColorStop(1,'transparent');
+    rc.fillStyle=mg; rc.beginPath(); rc.arc(gx-recoil,-4,flashSize,0,Math.PI*2); rc.fill();
+  }
+
+  // HEAD — heavier browplate, twin antennae
+  const hG=rc.createLinearGradient(-9,-42,9,-26);
+  hG.addColorStop(0,'#403436'); hG.addColorStop(1,'#181416');
+  rc.fillStyle=hG; rc.beginPath(); rc.roundRect(-9,-42,18,16,3); rc.fill();
+  rc.strokeStyle='rgba(255,60,0,0.5)'; rc.lineWidth=0.8; rc.stroke();
+  rc.fillStyle='#1a1212'; rc.fillRect(-9,-42,18,4);
+  const vG=rc.createLinearGradient(-7,-38,7,-32);
+  const vc = isAttacking ? 'rgba(255,40,0,' : 'rgba(255,120,0,';
+  vG.addColorStop(0,vc+'0.2)'); vG.addColorStop(0.5,vc+'0.95)'); vG.addColorStop(1,vc+'0.2)');
+  rc.fillStyle=vG; rc.beginPath(); rc.roundRect(-7,-38,14,6,1); rc.fill();
+  const sx2=(t*2)%14-7;
+  rc.fillStyle='rgba(255,255,200,0.6)'; rc.fillRect(sx2,-38,2,6);
+  for(const ax of [-4,4]){
+    rc.strokeStyle='#555'; rc.lineWidth=1.4;
+    rc.beginPath(); rc.moveTo(ax,-42); rc.lineTo(ax*1.3,-49); rc.stroke();
+    const blink = isAttacking ? (t%8<4) : (t%60<30);
+    rc.fillStyle=blink?'#ff3300':'#440000'; rc.shadowColor='#ff3300'; rc.shadowBlur=blink?8:2;
+    rc.beginPath(); rc.arc(ax*1.3,-49,1.6,0,Math.PI*2); rc.fill();
+  }
+}
+
+// ── LEGIONNAIRE (Prism Portal, tier 2) — sword-and-shield squad soldier ──
+function drawLegionnaire(rc,cfg,w){
+  const t = w.frame;
+  const isAttacking = w.state==='attack';
+  const isMarching  = w.state==='march';
+
+  // LEGS — armored greaves
+  rc.strokeStyle='#446688'; rc.lineWidth=3.5; rc.lineCap='round';
+  rc.beginPath(); rc.moveTo(-3,6); rc.lineTo(-4+Math.sin(t*0.25)*5,17); rc.stroke();
+  rc.beginPath(); rc.moveTo(3,6);  rc.lineTo(4-Math.sin(t*0.25)*5,17); rc.stroke();
+
+  // CUIRASS — short soldier's tunic, not a full robe
+  const rGrad=rc.createLinearGradient(-9,-20,9,8);
+  rGrad.addColorStop(0,'#eaf8ff'); rGrad.addColorStop(1,'#5a9ac0');
+  rc.fillStyle=rGrad;
+  rc.beginPath(); rc.moveTo(-8,-18); rc.lineTo(-9,4); rc.quadraticCurveTo(-9,9,-4,9); rc.lineTo(4,9); rc.quadraticCurveTo(9,9,9,4); rc.lineTo(8,-18); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(100,200,255,0.5)'; rc.lineWidth=0.8; rc.stroke();
+  rc.fillStyle='rgba(0,220,255,0.6)'; rc.shadowColor='#00ddff'; rc.shadowBlur=6;
+  rc.beginPath(); rc.arc(0,-9,3,0,Math.PI*2); rc.fill();
+
+  // SHIELD ARM
+  const shieldBob = isMarching ? Math.sin(t*0.25)*2 : 0;
+  rc.save(); rc.translate(-9,-10+shieldBob);
+  const shG=rc.createRadialGradient(0,0,0,0,0,9);
+  shG.addColorStop(0,'#dff4ff'); shG.addColorStop(0.6,'#7ab8dd'); shG.addColorStop(1,'#33607f');
+  rc.fillStyle=shG; rc.beginPath(); rc.ellipse(0,0,6,9,0,0,Math.PI*2); rc.fill();
+  rc.strokeStyle='rgba(200,240,255,0.6)'; rc.lineWidth=1; rc.stroke();
+  rc.strokeStyle='rgba(0,200,255,0.5)'; rc.lineWidth=0.8;
+  rc.beginPath(); rc.moveTo(0,-7); rc.lineTo(0,7); rc.moveTo(-4,0); rc.lineTo(4,0); rc.stroke();
+  rc.restore();
+
+  // SWORD ARM — slash when attacking, held ready otherwise
+  if(isAttacking){
+    const slashAngle = Math.sin(t*0.35)*0.7-0.3;
+    rc.save(); rc.rotate(slashAngle);
+    rc.strokeStyle='#c8e8ff'; rc.lineWidth=5; rc.lineCap='round';
+    rc.beginPath(); rc.moveTo(7,-16); rc.lineTo(19,-4); rc.stroke();
+    rc.shadowColor='#00eeff'; rc.shadowBlur=18;
+    const sGrad=rc.createLinearGradient(19,-4,40,-24);
+    sGrad.addColorStop(0,'#ffffff'); sGrad.addColorStop(0.35,'#88eeff'); sGrad.addColorStop(1,'#0077aa');
+    rc.strokeStyle=sGrad; rc.lineWidth=3.5;
+    rc.beginPath(); rc.moveTo(19,-4); rc.lineTo(40,-24); rc.stroke();
+    rc.strokeStyle='rgba(255,255,255,0.7)'; rc.lineWidth=1.2;
+    rc.beginPath(); rc.moveTo(20,-5); rc.lineTo(41,-25); rc.stroke();
+    rc.strokeStyle='rgba(120,220,255,0.25)'; rc.lineWidth=7;
+    rc.beginPath(); rc.arc(9,-13,20,-Math.PI*0.6+slashAngle,-Math.PI*0.1+slashAngle); rc.stroke();
+    rc.restore();
+  } else {
+    const armBob = isMarching ? Math.sin(t*0.25)*4 : 0;
+    rc.strokeStyle='#c8e8ff'; rc.lineWidth=4.5; rc.lineCap='round';
+    rc.beginPath(); rc.moveTo(8,-16); rc.lineTo(16+armBob,-9+armBob*0.3); rc.stroke();
+    rc.save(); rc.shadowColor='#00eeff'; rc.shadowBlur=12;
+    const sGrad2=rc.createLinearGradient(16,-9,32,-27);
+    sGrad2.addColorStop(0,'#dff8ff'); sGrad2.addColorStop(0.5,'#33bbee'); sGrad2.addColorStop(1,'#005577');
+    rc.strokeStyle=sGrad2; rc.lineWidth=3;
+    rc.beginPath(); rc.moveTo(16+armBob,-9); rc.lineTo(32+armBob,-27); rc.stroke();
+    rc.restore();
+  }
+
+  // HEAD
+  rc.fillStyle='#fff0e8'; rc.beginPath(); rc.ellipse(0,-25,6,7,0,0,Math.PI*2); rc.fill();
+  for(const ex of [-2,2]){
+    const eg=rc.createRadialGradient(ex,-25,0,ex,-25,isAttacking?3.5:2.2);
+    eg.addColorStop(0,'#fff'); eg.addColorStop(0.5,'#44ddff'); eg.addColorStop(1,'transparent');
+    rc.fillStyle=eg; rc.beginPath(); rc.arc(ex,-25,isAttacking?3.5:2.2,0,Math.PI*2); rc.fill();
+  }
+
+  // HELMET — crested, legion-styled
+  const hmG=rc.createLinearGradient(-7,-36,7,-24);
+  hmG.addColorStop(0,'#dff0ff'); hmG.addColorStop(1,'#5a9ac0');
+  rc.fillStyle=hmG; rc.beginPath(); rc.ellipse(0,-30,7,8,0,Math.PI,Math.PI*2); rc.fill();
+  rc.strokeStyle='rgba(0,200,255,0.5)'; rc.lineWidth=0.8; rc.stroke();
+  rc.fillStyle='#a8ccdd'; rc.beginPath(); rc.moveTo(-7,-30); rc.lineTo(-7,-22); rc.lineTo(-4,-24); rc.closePath(); rc.fill();
+  rc.beginPath(); rc.moveTo(7,-30); rc.lineTo(7,-22); rc.lineTo(4,-24); rc.closePath(); rc.fill();
+  // crest plume
+  rc.fillStyle='#00ddff'; rc.shadowColor='#00eeff'; rc.shadowBlur=10;
+  rc.beginPath();
+  rc.moveTo(-1,-36); rc.quadraticCurveTo(-6,-44,-2,-50); rc.quadraticCurveTo(2,-44,1,-36);
+  rc.closePath(); rc.fill();
 }
 
 function drawRTSProjectiles(rc){
