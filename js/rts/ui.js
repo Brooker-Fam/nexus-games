@@ -33,6 +33,27 @@ function updateTrainingProgress(){
   if(remaining) remaining.textContent=`${progress.seconds}s`;
 }
 
+function baseTrainingTypes(cfg, faction){
+  const types = [
+    { icon:cfg.workerIcon, label:cfg.workerLabel, desc:'Gathers gold from mines', cost:cfg.workerCost, oilCost:0, unitType:'worker' },
+  ];
+  // The Princess is the Prism Armada's royal Temple unit. Other elite units
+  // continue to train from their faction's advanced structure.
+  if(faction==='prism'){
+    types.push({ icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost, oilCost:cfg.eliteOilCost||0, unitType:'elite' });
+  }
+  return types;
+}
+
+function structureEliteTypes(cfg, faction){
+  const types=[];
+  if(faction!=='prism'){
+    types.push({ icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost, oilCost:cfg.eliteOilCost||0, unitType:'elite' });
+  }
+  types.push({ icon:cfg.elite2Icon, label:cfg.elite2Label, desc:cfg.elite2Desc, cost:cfg.elite2Cost, oilCost:cfg.tankOilCost||cfg.elite2OilCost||0, unitType:'elite2' });
+  return types;
+}
+
 // Structure build costs — advanced-unit and air-unit buildings cost the most
 // gold and require oil; the main base (TEMPLE/FACTORY) costs the most of all.
 const STRUCT_COSTS = {
@@ -89,8 +110,12 @@ function openBuildPopup(screenX, screenY, context){
   if(context==='base'){
     title.textContent = cfg.buildingName;
     const sel=S.selected[0];
-    addOpt(cfg.workerIcon, cfg.workerLabel, 'Gathers gold from mines', cfg.workerCost,
-      ()=>trainCmd(sel?sel.id:S.buildingSource?.id, 'worker', 'base'));
+    for(const u of baseTrainingTypes(cfg,myFaction())){
+      addOpt(u.icon, u.label, u.desc, u.cost,
+        ()=>trainCmd(sel?sel.id:S.buildingSource?.id, u.unitType, 'base'),
+        myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
+        u.oilCost);
+    }
 
   } else if(context==='barracks'){
     const sel=S.selected[0]; if(!sel) return;
@@ -209,10 +234,7 @@ function openBuildPopup(screenX, screenY, context){
     if(!sel) return;
     title.textContent = cfg.structLabel;
 
-    const eliteTypes = [
-      { icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost, oilCost:cfg.eliteOilCost||0, unitType:'elite' },
-      { icon:cfg.elite2Icon, label:cfg.elite2Label, desc:cfg.elite2Desc, cost:cfg.elite2Cost, oilCost:cfg.tankOilCost||cfg.elite2OilCost||0, unitType:'elite2' },
-    ];
+    const eliteTypes = structureEliteTypes(cfg,myFaction());
 
     for(const u of eliteTypes){
       addOpt(u.icon, u.label, u.desc, u.cost,
