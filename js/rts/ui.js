@@ -5,6 +5,34 @@ const CLICK_RADII = { base:70, structure:50, cannon:36, warrior:20, worker:14 };
 let _buildModeCost = 0;
 let _buildModeOilCost = 0;
 
+function trainingProgress(timer, totalTime){
+  if(!Number.isFinite(totalTime) || totalTime<=0) return {pct:0, seconds:0};
+  const elapsed=Math.max(0,Math.min(timer||0,totalTime));
+  return {
+    pct:Math.floor((elapsed/totalTime)*100),
+    seconds:Math.ceil((totalTime-elapsed)/60),
+  };
+}
+
+function updateTrainingProgress(){
+  if(!S.buildPopupOpen) return;
+  const popup=document.getElementById('rts-build-popup');
+  const status=document.querySelector('#rbp-options .rbp-queue-status');
+  if(!status) return;
+  const src=S.entities.find(e=>String(e.id)===status.dataset.buildingId);
+  const item=src?.queue?.[0];
+  const queueSignature=(src?.queue||[]).map(entry=>`${entry.label}:${entry.time}`).join('|');
+  if(!item || queueSignature!==status.dataset.queueSignature){
+    openBuildPopup(0,0,popup.dataset.context);
+    return;
+  }
+  const progress=trainingProgress(src.trainTimer,item.time);
+  const fill=status.querySelector('.rbp-training-fill');
+  const remaining=status.querySelector('.rbp-training-remaining');
+  if(fill) fill.style.width=`${progress.pct}%`;
+  if(remaining) remaining.textContent=`${progress.seconds}s`;
+}
+
 // Structure build costs — advanced-unit and air-unit buildings cost the most
 // gold and require oil; the main base (TEMPLE/FACTORY) costs the most of all.
 const STRUCT_COSTS = {
@@ -21,6 +49,7 @@ function openBuildPopup(screenX, screenY, context){
   S.buildingSource = S.selected[0] || null;
   const cfg = FACTION_CFG[myFaction()];
   const popup = document.getElementById('rts-build-popup');
+  popup.dataset.context=context;
   const title = document.getElementById('rbp-title');
   const opts  = document.getElementById('rbp-options');
   opts.innerHTML='';
@@ -196,6 +225,9 @@ function openBuildPopup(screenX, screenY, context){
       opts.appendChild(info);
     } else if(src.queue && src.queue.length>0){
       const qDiv=document.createElement('div');
+      qDiv.className='rbp-queue-status';
+      qDiv.dataset.buildingId=String(src.id);
+      qDiv.dataset.queueSignature=src.queue.map(item=>`${item.label}:${item.time}`).join('|');
       qDiv.style.cssText='margin-top:8px;padding:6px 8px;background:rgba(0,20,40,0.8);border:1px solid rgba(0,245,255,0.15);';
       const qTitle=document.createElement('div');
       qTitle.style.cssText='font-family:Orbitron,sans-serif;font-size:8px;letter-spacing:2px;color:rgba(0,245,255,0.5);margin-bottom:4px;';
@@ -206,11 +238,11 @@ function openBuildPopup(screenX, screenY, context){
         row.style.cssText='font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:6px;margin-bottom:2px;';
         if(i===0){
           // show progress bar for item being trained
-          const pct=item.time>0 ? Math.floor(((src.trainTimer||0)/item.time)*100) : 0;
+          const progress=trainingProgress(src.trainTimer,item.time);
           row.innerHTML=`<span style="color:var(--neon-cyan)">▶</span><span>${item.label}</span>
             <div style="flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
-              <div style="width:${pct}%;height:100%;background:var(--neon-cyan);transition:width 0.3s;"></div>
-            </div><span style="font-size:9px;color:var(--neon-cyan)">${pct}%</span>`;
+              <div class="rbp-training-fill" style="width:${progress.pct}%;height:100%;background:var(--neon-cyan);"></div>
+            </div><span class="rbp-training-remaining" style="font-size:9px;color:var(--neon-cyan);min-width:24px;text-align:right">${progress.seconds}s</span>`;
         } else {
           row.innerHTML=`<span style="color:rgba(255,255,255,0.2)">${i+1}</span><span>${item.label}</span>`;
         }
@@ -476,6 +508,7 @@ function updateRtsHUD(){
   }
   // refresh popup options if open so gold costs update
   if(S.buildPopupOpen){
+    updateTrainingProgress();
     const opts=document.getElementById('rbp-options');
     if(opts) opts.querySelectorAll('.rbp-option').forEach(btn=>{
       const forceDisabled = btn.dataset.forceDisabled === '1';
