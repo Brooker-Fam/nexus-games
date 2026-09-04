@@ -190,6 +190,7 @@ function spawnEnemy(){
     speed: isBoss ? spd*TD_CONFIG.bossSpeedMultiplier : spd,
     slow: 0, boss: isBoss,
     reward: isBoss ? 60 : 10 + state.wave * 2,
+    angle: 0, walkDist: 0,
   });
 }
 
@@ -199,9 +200,11 @@ function moveEnemy(e){
   const spd = e.slow > 0 ? e.speed * TD_CONFIG.slowFactor : e.speed;
   const dx = target.x - e.x, dy = target.y - e.y;
   const dist = Math.hypot(dx,dy);
+  e.angle = Math.atan2(dy,dx);
   if(dist < spd+1){ e.x=target.x; e.y=target.y; e.wpIdx++; return false; }
   e.x += (dx/dist)*spd;
   e.y += (dy/dist)*spd;
+  e.walkDist = (e.walkDist||0) + spd;
   if(e.slow>0) e.slow--;
   return false;
 }
