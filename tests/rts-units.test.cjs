@@ -32,3 +32,18 @@ test('Roboto warship uses a spaceship icon',()=>{
   const icon=vm.runInContext('FACTION_CFG.roboto.aerial2Icon',context);
   assert.equal(icon,'🚀');
 });
+
+test('Prism elite is a Princess that summons Legionnaires',()=>{
+  const context=makeContext();
+  const princess=vm.runInContext("makeElite('player','prism',100,100)",context);
+
+  assert.equal(princess.summonsLegionnaires,true);
+  assert.equal(princess.fireRate,180);
+
+  const factionContext=vm.createContext({});
+  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8');
+  vm.runInContext(source,factionContext);
+  const presentation=vm.runInContext('({label:FACTION_CFG.prism.eliteLabel,desc:FACTION_CFG.prism.eliteDesc})',factionContext);
+  assert.equal(presentation.label,'PRINCESS');
+  assert.match(presentation.desc,/Legionnaires/);
+});
