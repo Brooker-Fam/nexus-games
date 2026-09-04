@@ -138,8 +138,8 @@ function openBuildPopup(screenX, screenY, context){
     title.textContent = cfg.structLabel;
 
     const eliteTypes = [
-      { icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost, oilCost:0, unitType:'elite' },
-      { icon:cfg.elite2Icon, label:cfg.elite2Label, desc:cfg.elite2Desc, cost:cfg.elite2Cost, oilCost:cfg.tankOilCost||0, unitType:'elite2' },
+      { icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost, oilCost:cfg.eliteOilCost||0, unitType:'elite' },
+      { icon:cfg.elite2Icon, label:cfg.elite2Label, desc:cfg.elite2Desc, cost:cfg.elite2Cost, oilCost:cfg.tankOilCost||cfg.elite2OilCost||0, unitType:'elite2' },
     ];
 
     for(const u of eliteTypes){

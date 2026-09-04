@@ -49,7 +49,8 @@ function executeCommand(cmd){
       if(S.gold[side] < cost) break;
       // second resource costs (oil / essence / light)
       const oilCost = cmd.unitType==='elite2' ? (cfg.tankOilCost||cfg.elite2OilCost||0)
-                    : cmd.unitType==='aerial'  ? (cfg.aerialOilCost||0) : 0;
+                    : cmd.unitType==='aerial'  ? (cfg.aerialOilCost||0)
+                    : cmd.unitType==='elite'   ? (cfg.eliteOilCost||0) : 0;
       if(oilCost > 0 && (S.oil[side]||0) < oilCost) break;
 
       const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite2, aerial:BUILD_TIMES[cfg.aerialFn==='makeSkyAttacker'?'skyattacker':'starfighter'] };
