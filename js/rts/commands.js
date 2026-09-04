@@ -203,12 +203,21 @@ function executeCommand(cmd){
     }
 
     case 'toggle_weapon': {
-      const bh=S.entities.find(e=>e.id===cmd.unitId);
-      if(!bh||bh.side!==side||bh.subtype!=='bloodhound') break;
-      bh.bowMode=!bh.bowMode;
-      if(bh.bowMode){ bh.ranged=true; bh.range=260; bh.speed=0.9; bh.fireRate=38; bh.damage=28; }
-      else           { bh.ranged=false; bh.range=50;  bh.speed=3.2; bh.fireRate=22; bh.damage=35; }
-      if(side==='player') rtsSetLog(`Bloodhound switched to ${bh.bowMode?'bow':'sword'} mode!`);
+      const unit=S.entities.find(e=>e.id===cmd.unitId);
+      if(!unit||unit.side!==side||!['bloodhound','legionnaire'].includes(unit.subtype)) break;
+      unit.bowMode=!unit.bowMode;
+      if(unit.subtype==='bloodhound'){
+        if(unit.bowMode){ unit.ranged=true; unit.range=260; unit.speed=0.9; unit.fireRate=38; unit.damage=28; }
+        else            { unit.ranged=false; unit.range=50;  unit.speed=3.2; unit.fireRate=22; unit.damage=35; }
+      } else {
+        if(unit.bowMode){ unit.ranged=true; unit.range=210; unit.speed=0.8; unit.fireRate=48; unit.damage=10; }
+        else            { unit.ranged=false; unit.range=50;  unit.speed=1.0; unit.fireRate=0;  unit.damage=14; }
+      }
+      unit.attackTimer=0;
+      if(side==='player'){
+        const label=unit.subtype==='bloodhound'?'Bloodhound':'Legionnaire';
+        rtsSetLog(`${label} switched to ${unit.bowMode?'bow':'sword'} mode!`);
+      }
       break;
     }
 
