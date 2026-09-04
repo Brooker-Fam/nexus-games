@@ -34,9 +34,9 @@ const FACTION_CFG={
     warriorCost:10, warriorDesc:'Melee — fast sword charge',
     structName:'DARK SHRINE', structLabel:'DARK SHRINE',
     eliteLabel:'DARK WARRIOR', eliteDesc:'Ranged — black magic bolts that chain',
-    eliteCost:30, eliteIcon:'🌑',
+    eliteCost:20, eliteIcon:'🌑', eliteOilCost:25,
     elite2Label:'NECROMANCER', elite2Desc:'Raises dead Swordsmen — fast revive, strong damage',
-    elite2Cost:22, elite2Icon:'💀', elite2Fn:'makeNecromancer', elite2OilCost:12,
+    elite2Cost:15, elite2Icon:'💀', elite2Fn:'makeNecromancer', elite2OilCost:20,
     // UI icons
     workerIcon:'🥷', warriorIcon:'⚔',
     barracksIcon:'⚔', structIcon:'⚡', baseIcon:'🏰',

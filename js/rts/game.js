@@ -161,8 +161,13 @@ function aiTick(){
         if(tfn && aiQueueAt(eliteStruct,eCfg3.elite2Label,BUILD_TIMES.elite2,()=>tfn('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),eCfg3.elite2Cost)){
           if(tankOilNeeded>0) S.oil.enemy=Math.max(0,(S.oil.enemy||0)-tankOilNeeded);
         }
-      } else if(S.gold.enemy>=AI_CONFIG.eliteCost){
-        aiQueueAt(eliteStruct,eCfg3.eliteLabel||'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),AI_CONFIG.eliteCost);
+      } else {
+        const eliteOilNeeded=eCfg3.eliteOilCost||0;
+        if(S.gold.enemy>=AI_CONFIG.eliteCost && (S.oil.enemy||0)>=eliteOilNeeded){
+          if(aiQueueAt(eliteStruct,eCfg3.eliteLabel||'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),AI_CONFIG.eliteCost)){
+            if(eliteOilNeeded>0) S.oil.enemy=Math.max(0,(S.oil.enemy||0)-eliteOilNeeded);
+          }
+        }
       }
     }
 
