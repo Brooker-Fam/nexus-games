@@ -3,6 +3,18 @@ const CLICK_RADII = { base:70, structure:50, cannon:36, warrior:20, worker:14 };
 
 // ── BUILD POPUP ──
 let _buildModeCost = 0;
+let _buildModeOilCost = 0;
+
+// Structure build costs — advanced-unit and air-unit buildings cost the most
+// gold and require oil; the main base (TEMPLE/FACTORY) costs the most of all.
+const STRUCT_COSTS = {
+  cannon:    { gold:35,  oil:0  },
+  barracks:  { gold:55,  oil:0  },
+  oilrig:    { gold:45,  oil:0  },
+  structure: { gold:100, oil:35 },
+  aerial:    { gold:110, oil:40 },
+  base:      { gold:160, oil:0  },
+};
 
 function openBuildPopup(screenX, screenY, context){
   // remember which entity spawned this popup so units spawn there
@@ -59,32 +71,36 @@ function openBuildPopup(screenX, screenY, context){
 
   } else if(context==='worker'){
     title.textContent = 'WORKER ACTIONS';
-    addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Click to place — trains ${cfg.warriorLabel}s (20g)`, 20, ()=>{
-      S.buildStructureMode='barracks'; _buildModeCost=20;
+    const resCfg=FACTION_CFG[S.playerFaction||'prism'];
+    const oilName=resCfg.oilResourceName||'oil';
+    const bc=STRUCT_COSTS.barracks, sc=STRUCT_COSTS.structure, cc=STRUCT_COSTS.cannon,
+          ac=STRUCT_COSTS.aerial, oc=STRUCT_COSTS.oilrig, baseC=STRUCT_COSTS.base;
+    addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Click to place — trains ${cfg.warriorLabel}s (${bc.gold}g)`, bc.gold, ()=>{
+      S.buildStructureMode='barracks'; _buildModeCost=bc.gold; _buildModeOilCost=bc.oil;
       rtsSetLog(`Click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
-    });
-    addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Click to place — trains elite units (30g)`, 30, ()=>{
-      S.buildStructureMode=true; _buildModeCost=30;
+    }, myGold()<bc.gold||myOil()<bc.oil, bc.oil);
+    addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Click to place — trains elite units (${sc.gold}g +${sc.oil}${oilName})`, sc.gold, ()=>{
+      S.buildStructureMode=true; _buildModeCost=sc.gold; _buildModeOilCost=sc.oil;
       rtsSetLog(`Click to place your ${cfg.structLabel}!`); closeBuildPopup();
-    });
-    addOpt('💣', 'Build CANNON', 'Auto-attacks nearby enemies (15g)', 15, ()=>{
-      S.buildStructureMode='cannon'; _buildModeCost=15;
+    }, myGold()<sc.gold||myOil()<sc.oil, sc.oil);
+    addOpt('💣', 'Build CANNON', `Auto-attacks nearby enemies (${cc.gold}g)`, cc.gold, ()=>{
+      S.buildStructureMode='cannon'; _buildModeCost=cc.gold; _buildModeOilCost=cc.oil;
       rtsSetLog('Click to place your CANNON!'); closeBuildPopup();
-    });
-    addOpt(cfg.aerialIcon, `Build ${cfg.aerialLabel}`, `Click to place — aerial units (25g)`, 25, ()=>{
-      S.buildStructureMode='aerial'; _buildModeCost=25;
+    }, myGold()<cc.gold||myOil()<cc.oil, cc.oil);
+    addOpt(cfg.aerialIcon, `Build ${cfg.aerialLabel}`, `Click to place — aerial units (${ac.gold}g +${ac.oil}${oilName})`, ac.gold, ()=>{
+      S.buildStructureMode='aerial'; _buildModeCost=ac.gold; _buildModeOilCost=ac.oil;
       rtsSetLog(`Click to place your ${cfg.aerialLabel}!`); closeBuildPopup();
-    });
+    }, myGold()<ac.gold||myOil()<ac.oil, ac.oil);
     if(cfg.oilRigLabel){
-      addOpt(cfg.oilRigIcon, `Build ${cfg.oilRigLabel}`, `Click to place — workers harvest ${cfg.oilResourceName||'oil'} needed for advanced units (20g)`, 20, ()=>{
-        S.buildStructureMode='oilrig'; _buildModeCost=20;
+      addOpt(cfg.oilRigIcon, `Build ${cfg.oilRigLabel}`, `Click to place — workers harvest ${oilName} needed for advanced units (${oc.gold}g)`, oc.gold, ()=>{
+        S.buildStructureMode='oilrig'; _buildModeCost=oc.gold; _buildModeOilCost=oc.oil;
         rtsSetLog(`Click to place your ${cfg.oilRigLabel}!`); closeBuildPopup();
-      });
+      }, myGold()<oc.gold||myOil()<oc.oil, oc.oil);
     }
-    addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Click to place — trains more workers (35g)`, 35, ()=>{
-      S.buildStructureMode='base'; _buildModeCost=35;
+    addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Click to place — trains more workers (${baseC.gold}g)`, baseC.gold, ()=>{
+      S.buildStructureMode='base'; _buildModeCost=baseC.gold; _buildModeOilCost=baseC.oil;
       rtsSetLog(`Click to place your new ${cfg.buildingName}!`); closeBuildPopup();
-    });
+    }, myGold()<baseC.gold||myOil()<baseC.oil, baseC.oil);
 
   } else if(context==='aerial'){
     const sel=S.selected[0];
@@ -266,9 +282,9 @@ function rtsHandleClick(e){
       return;
     }
     if(S.buildStructureMode==='base'){
-      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:'base' });
+      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, oilCost:_buildModeOilCost, buildType:'base' });
     } else {
-      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, buildType:
+      issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, oilCost:_buildModeOilCost, buildType:
         S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':S.buildStructureMode==='oilrig'?'oilrig':'structure' });
     }
     S.buildStructureMode=false;
