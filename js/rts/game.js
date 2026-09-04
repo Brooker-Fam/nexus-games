@@ -17,6 +17,8 @@ const AI_CONFIG = {
   // tactical micro
   focusFireChance: 0,        // chance to target lowest-HP enemy (0 in MP)
   kiteChance: 0,             // chance for ranged AI to retreat from melee (0 in MP)
+  strategicTargetChance: 0,  // chance for an attack wave to prioritize production/economy
+  counterAttackRatio: 1.15,  // required army-strength advantage before an early attack
   // mistakes & coordination
   mistakeChance: 0,          // chance to skip a decision cycle
   attackPartialChance: 0,    // chance to only send some warriors
@@ -73,6 +75,71 @@ function aiBuild(type, nearX, nearY, cost, oilCost=0){
   return true;
 }
 
+function aiCombatPower(unit){
+  if(!unit || unit.type!=='warrior') return 0;
+  const healthRatio=Math.max(0,unit.hp)/Math.max(1,unit.maxHp||unit.hp||1);
+  const damagePerSecond=(unit.damage||1)*60/Math.max(1,unit.ranged?(unit.fireRate||50):MELEE_ATTACK_TICKS);
+  const rangeBonus=unit.ranged ? 1+Math.min(unit.range||0,300)/600 : 1;
+  return damagePerSecond*rangeBonus*(0.35+healthRatio*0.65);
+}
+
+function aiArmyPower(side, onlyIdle=false){
+  return S.entities.reduce((total,e)=>{
+    if(e.side!==side||e.type!=='warrior'||(onlyIdle&&e.state!=='idle')) return total;
+    return total+aiCombatPower(e);
+  },0);
+}
+
+function aiNearestTarget(unit, candidates){
+  let best=null, bestDist=Infinity;
+  for(const candidate of candidates){
+    if(candidate.aerial&&!canTargetAerial(unit)) continue;
+    const distance=_dist(candidate.x-unit.x,candidate.y-unit.y);
+    if(distance<bestDist){ best=candidate; bestDist=distance; }
+  }
+  return best;
+}
+
+function aiDefendBase(threats){
+  const defenders=S.entities
+    .filter(e=>e.side==='enemy'&&e.type==='warrior'&&e.state==='idle')
+    .sort((a,b)=>_dist(a.x-S.enemyBase.x,a.y-S.enemyBase.y)-_dist(b.x-S.enemyBase.x,b.y-S.enemyBase.y));
+  const requiredPower=threats.reduce((sum,e)=>sum+aiCombatPower(e),0)*1.2;
+  let committedPower=0;
+  for(const defender of defenders){
+    const target=aiNearestTarget(defender,threats);
+    if(!target) continue;
+    defender.forcedTarget=target;
+    defender.moveTarget=null;
+    defender.attackMoveTarget=null;
+    defender.state='march';
+    committedPower+=aiCombatPower(defender);
+    if(committedPower>=requiredPower) break;
+  }
+}
+
+function aiChooseAttackTarget(){
+  const candidates=S.entities.filter(e=>e.side==='player'&&e!==S.playerBase&&(
+    e.type==='structure'||e.type==='cannon'||e.type==='worker'
+  ));
+  if(!candidates.length) return S.playerBase;
+  // Production first, then static defence, tech/economy, and exposed workers.
+  const priority=e=>e.isBarracks?0:e.type==='cannon'?1:e.isAerialHangar?2:e.type==='structure'?3:4;
+  candidates.sort((a,b)=>priority(a)-priority(b)||a.hp-b.hp||a.id-b.id);
+  return candidates[0];
+}
+
+function aiLaunchAttack(warriors){
+  const strategic=!window._mpMultiplayer&&Math.random()<AI_CONFIG.strategicTargetChance;
+  const objective=strategic?aiChooseAttackTarget():S.playerBase;
+  for(const warrior of warriors){
+    warrior.moveTarget=null;
+    warrior.attackMoveTarget=null;
+    warrior.forcedTarget=objective;
+    warrior.state='march';
+  }
+}
+
 function aiTick(){
   S.aiTimer++;
   const eb=S.enemyBase;
@@ -85,13 +152,12 @@ function aiTick(){
   const eliteStructs = aiCount('structure', e=>!e.isBarracks&&!e.isAerialHangar);
   const aerialHangars = aiCount('structure', e=>e.isAerialHangar);
   const cannons   = aiCount('cannon');
-  const playerWarriors = S.entities.filter(e=>e.side==='player'&&e.type==='warrior').length;
   const idleWarriors = S.entities.filter(e=>e.side==='enemy'&&e.type==='warrior'&&e.state==='idle').length;
 
   // Detect threats near base
-  const baseThreat = S.entities.filter(e=>
+  const baseThreats = S.entities.filter(e=>
     e.side==='player'&&e.type==='warrior'&&_dist(e.x-eb.x,e.y-eb.y)<400
-  ).length;
+  );
 
   // In multiplayer, skip economy/building AI (guest player handles that manually)
   if(!window._mpMultiplayer){
@@ -199,29 +265,20 @@ function aiTick(){
 
   // === ATTACK DECISIONS (always run, including multiplayer) ===
   // Defend base when threatened
-  if(baseThreat>0 && S.aiTimer%60===0){
-    for(const e of S.entities){
-      if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle'){
-        e.state='march';
-      }
-    }
+  if(baseThreats.length>0 && S.aiTimer%60===0){
+    aiDefendBase(baseThreats);
   }
 
   // Attack when we have a decent army (thresholds set by difficulty)
   if(S.aiTimer%AI_CONFIG.attackInterval===0){
-    const shouldAttack = idleWarriors>=AI_CONFIG.attackMinWarriors || (idleWarriors>=AI_CONFIG.attackMatchMin && idleWarriors>=playerWarriors);
+    const idleArmy=S.entities.filter(e=>e.side==='enemy'&&e.type==='warrior'&&e.state==='idle');
+    const powerAdvantage=aiArmyPower('enemy',true)>=aiArmyPower('player')*AI_CONFIG.counterAttackRatio;
+    const shouldAttack = idleWarriors>=AI_CONFIG.attackMinWarriors || (idleWarriors>=AI_CONFIG.attackMatchMin && powerAdvantage);
     if(shouldAttack){
       // Partial attack: easy AI sometimes only sends a portion (singleplayer only)
       const sendAll = window._mpMultiplayer || Math.random() >= AI_CONFIG.attackPartialChance;
-      let sent = 0;
-      for(const e of S.entities){
-        if(e.type==='warrior'&&e.side==='enemy'&&e.state==='idle'){
-          if(sendAll || sent < Math.ceil(idleWarriors * 0.5)){
-            e.state='march';
-            sent++;
-          }
-        }
-      }
+      const wave=sendAll?idleArmy:idleArmy.slice(0,Math.ceil(idleArmy.length*0.5));
+      aiLaunchAttack(wave);
     }
   }
 }
