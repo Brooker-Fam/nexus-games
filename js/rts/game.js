@@ -712,17 +712,19 @@ function summonLegionnaire(princess, target){
   // makeLegionnaire normally offsets a unit from a production building; adjust
   // its origin so the summoned soldier appears directly in front of Princess.
   const productionOffset=princess.side==='player'?80:-80;
-  const legionnaire=makeLegionnaire(
-    princess.side,
-    princess.faction,
-    princess.x+spawnOffset-productionOffset,
-    princess.y
-  );
-  legionnaire.y=princess.y+(rtsRand()-0.5)*36;
-  legionnaire.forcedTarget=target;
-  legionnaire.state='march';
-  S.entities.push(legionnaire);
-  spawnMagicBurst(legionnaire.x,legionnaire.y,FACTION_CFG.prism.color);
+  for(let i=0;i<10;i++){
+    const legionnaire=makeLegionnaire(
+      princess.side,
+      princess.faction,
+      princess.x+spawnOffset-productionOffset,
+      princess.y
+    );
+    legionnaire.y=princess.y+(rtsRand()-0.5)*36;
+    legionnaire.forcedTarget=target;
+    legionnaire.state='march';
+    S.entities.push(legionnaire);
+    spawnMagicBurst(legionnaire.x,legionnaire.y,FACTION_CFG.prism.color);
+  }
   sfx('rtsMagicFire',80);
 }
 
