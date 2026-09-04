@@ -33,6 +33,15 @@ test('Roboto warship uses a spaceship icon',()=>{
   assert.equal(icon,'🚀');
 });
 
+test('Roboto warship has a premium resource cost',()=>{
+  const context=vm.createContext({});
+  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8');
+  vm.runInContext(source,context);
+
+  const costs=vm.runInContext('({gold:FACTION_CFG.roboto.aerial2Cost,oil:FACTION_CFG.roboto.aerial2OilCost})',context);
+  assert.deepEqual({...costs},{gold:60,oil:30});
+});
+
 test('Prism elite is a Princess that summons Legionnaires',()=>{
   const context=makeContext();
   const princess=vm.runInContext("makeElite('player','prism',100,100)",context);
