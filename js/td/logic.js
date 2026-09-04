@@ -178,6 +178,10 @@ function setSpeed(s, btn){
   btn.classList.add('active');
 }
 
+function isBossWave(wave){
+  return wave > 0 && wave % TD_CONFIG.bossWaveInterval === 0;
+}
+
 function startWave(){
   if(state.waveActive || state.gameOver) return;
   state.wave++;
@@ -188,15 +192,18 @@ function startWave(){
   state.waveMultiplier = TD_CONFIG.waveScaling.multiplier;
   document.getElementById('waveBtn').disabled = true;
   sfx('tdWave');
-  addLog(`▶ WAVE ${state.wave} INCOMING — ${count} enemies`,'info');
+  const bossNotice = isBossWave(state.wave) ? ' + BOSS' : '';
+  addLog(`▶ WAVE ${state.wave} INCOMING — ${count} enemies${bossNotice}`,'info');
   updateHUD();
-  if(window.posthog) posthog.capture('td_wave_started', { wave: state.wave, map: activeMap.name, enemy_count: count, towers: state.towers.length, gold: state.gold, score: state.score });
+  if(window.posthog) posthog.capture('td_wave_started', { wave: state.wave, map: activeMap.name, enemy_count: count, boss_wave: isBossWave(state.wave), towers: state.towers.length, gold: state.gold, score: state.score });
 }
 
 function spawnEnemy(){
   const hp = TD_CONFIG.enemyBaseHp + state.wave * TD_CONFIG.enemyHpScaling + Math.random()*20;
   const spd = TD_CONFIG.enemyBaseSpeed + state.wave * TD_CONFIG.enemySpeedScaling + Math.random()*0.2;
-  const isBoss = state.waveEnemiesLeft === 1 && state.wave % TD_CONFIG.bossWaveInterval === 0;
+  // The final enemy in every fifth wave is the boss, guaranteeing one boss per boss wave.
+  const isBoss = state.waveEnemiesLeft === 1 && isBossWave(state.wave);
+  if(isBoss) addLog('⚠ BOSS INCOMING','bad');
   state.enemies.push({
     ...wpPx(PATH_WAYPOINTS[0]),
     wpIdx: 0, progress: 0,
