@@ -52,9 +52,42 @@ test('Prism elite is a Princess that summons Legionnaires',()=>{
   const factionContext=vm.createContext({});
   const source=fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8');
   vm.runInContext(source,factionContext);
-  const presentation=vm.runInContext('({label:FACTION_CFG.prism.eliteLabel,desc:FACTION_CFG.prism.eliteDesc})',factionContext);
+  const presentation=vm.runInContext('({label:FACTION_CFG.prism.eliteLabel,desc:FACTION_CFG.prism.eliteDesc,gold:FACTION_CFG.prism.eliteCost,light:FACTION_CFG.prism.eliteOilCost})',factionContext);
   assert.equal(presentation.label,'PRINCESS');
   assert.match(presentation.desc,/Legionnaires/);
+  assert.match(presentation.desc,/limit 1/);
+  assert.equal(presentation.gold,200);
+  assert.equal(presentation.light,75);
+});
+
+test('Prism Princess is limited to one existing or queued unit',()=>{
+  const context=makeContext();
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  Object.assign(context,{
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},playerFaction:'prism',enemyFaction:'shadow'},
+    makeWorker:()=>{}, makeWarrior:()=>{}, makeWarbot:()=>{}, makeLegionnaireSquad:()=>{},
+    makeWizard:()=>{}, makeNecromancer:()=>{}, makeTank:()=>{}, makeStarFighter:()=>{},
+    makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>{},
+    updateRtsHUD:()=>{}, rtsSetLog:()=>{},
+    queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  const result=vm.runInContext(`(() => {
+    const temple={id:1,type:'base',side:'player',faction:'prism',x:0,y:0,queue:[]};
+    S.entities=[temple];
+    executeCommand({type:'train_unit',buildingId:1,unitType:'elite',side:'player'});
+    const afterFirst={gold:S.gold.player,light:S.oil.player,queued:temple.queue.length};
+    executeCommand({type:'train_unit',buildingId:1,unitType:'elite',side:'player'});
+    const afterQueuedAttempt={gold:S.gold.player,light:S.oil.player,queued:temple.queue.length};
+    temple.queue=[];
+    S.entities.push(makeElite('player','prism',10,10));
+    executeCommand({type:'train_unit',buildingId:1,unitType:'elite',side:'player'});
+    return {afterFirst,afterQueuedAttempt,afterExistingAttempt:{gold:S.gold.player,light:S.oil.player,queued:temple.queue.length}};
+  })()`,context);
+  assert.deepEqual({...result.afterFirst},{gold:800,light:925,queued:1});
+  assert.deepEqual({...result.afterQueuedAttempt},{gold:800,light:925,queued:1});
+  assert.deepEqual({...result.afterExistingAttempt},{gold:800,light:925,queued:0});
 });
 
 test('Prism Princess trains at the Temple rather than the Shrine',()=>{

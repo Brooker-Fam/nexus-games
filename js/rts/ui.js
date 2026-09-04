@@ -111,9 +111,12 @@ function openBuildPopup(screenX, screenY, context){
     title.textContent = cfg.buildingName;
     const sel=S.selected[0];
     for(const u of baseTrainingTypes(cfg,myFaction())){
+      const princessUnavailable=u.unitType==='elite' && myFaction()==='prism' && S.entities.some(e=>
+        e.side===mySide() && ((e.faction==='prism' && e.subtype==='elite') || e.queue?.some(q=>q.unitType==='elite' || q.label===cfg.eliteLabel))
+      );
       addOpt(u.icon, u.label, u.desc, u.cost,
         ()=>trainCmd(sel?sel.id:S.buildingSource?.id, u.unitType, 'base'),
-        myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
+        princessUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
         u.oilCost);
     }
 

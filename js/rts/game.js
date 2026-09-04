@@ -51,12 +51,12 @@ function aiCount(type, subFilter){
   }).length;
 }
 
-function aiQueueAt(building, label, time, fn, cost){
+function aiQueueAt(building, label, time, fn, cost, unitType){
   if(!building || building.underConstruction) return false;
   if(building.queue && building.queue.length>=QUEUE_MAX) return false;
   if(S.gold.enemy<cost) return false;
   S.gold.enemy-=cost;
-  queueUnit(building, label, time, fn);
+  queueUnit(building, label, time, fn, unitType);
   return true;
 }
 
@@ -237,8 +237,17 @@ function aiTick(){
 
     // Train elites (and elite2/tanks for Roboto)
     const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.isOilRig&&!e.underConstruction);
-    if(eliteStruct){
-      const eCfg3=FACTION_CFG[S.enemyFaction];
+    const eCfg3=FACTION_CFG[S.enemyFaction];
+    if(S.enemyFaction==='prism'){
+      const princessExists=S.entities.some(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='elite');
+      const princessQueued=S.entities.some(e=>e.side==='enemy' && e.queue?.some(q=>q.unitType==='elite' || q.label===eCfg3.eliteLabel));
+      const princessOil=eCfg3.eliteOilCost||0;
+      if(!princessExists && !princessQueued && S.gold.enemy>=eCfg3.eliteCost && (S.oil.enemy||0)>=princessOil){
+        if(aiQueueAt(eb,eCfg3.eliteLabel,BUILD_TIMES.elite,()=>makeElite('enemy','prism',eb.x,eb.y),eCfg3.eliteCost,'elite')){
+          S.oil.enemy=Math.max(0,(S.oil.enemy||0)-princessOil);
+        }
+      }
+    } else if(eliteStruct){
       const tankOilNeeded=eCfg3.tankOilCost||0;
       const canAffordTank=eCfg3.elite2Fn==='makeTank' && S.gold.enemy>=eCfg3.elite2Cost && (S.oil.enemy||0)>=tankOilNeeded;
       if(canAffordTank){
@@ -589,10 +598,10 @@ function buildingTick(b){
   }
 }
 
-function queueUnit(building, label, time, fn){
+function queueUnit(building, label, time, fn, unitType){
   if(!building.queue) building.queue=[];
   if(building.queue.length>=QUEUE_MAX){ rtsSetLog('Queue full!'); return false; }
-  building.queue.push({label,time,fn});
+  building.queue.push({label,time,fn,unitType});
   return true;
 }
 

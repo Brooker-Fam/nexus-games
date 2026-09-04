@@ -12,8 +12,8 @@ const FACTION_CFG={
     warrior2Label:'LEGIONNAIRES', warrior2Desc:'Melee — sword squad, trained four at a time',
     warrior2Cost:34, warrior2Icon:'🗡', warrior2Fn:'makeLegionnaireSquad', warrior2Count:4,
     structName:'SHRINE', structLabel:'SHRINE',
-    eliteLabel:'PRINCESS', eliteDesc:'Summoner — conjures Legionnaires while engaging enemies',
-    eliteCost:30, eliteIcon:'👸',
+    eliteLabel:'PRINCESS', eliteDesc:'Unique royal summoner — conjures Legionnaires while engaging enemies (limit 1)',
+    eliteCost:200, eliteOilCost:75, eliteIcon:'👸',
     elite2Label:'WIZARD', elite2Desc:'Ranged — chain lightning bounces between enemies',
     elite2Cost:18, elite2Icon:'⚡', elite2Fn:'makeWizard',
     // UI icons

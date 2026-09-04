@@ -49,6 +49,12 @@ function executeCommand(cmd){
       const aerialFnMap = { makeStarFighter, makeSkyAttacker };
       const costMap = { worker:cfg.workerCost, warrior:cfg.warriorCost, warrior2:cfg.warrior2Cost, elite:cfg.eliteCost, elite2:cfg.elite2Cost, aerial:cfg.aerialUnitCost, aerial2:cfg.aerial2Cost };
       const cost = costMap[cmd.unitType] || 0;
+      if(cmd.unitType==='elite' && faction==='prism'){
+        if(building.type!=='base') break;
+        const princessExists=S.entities.some(e=>e.side===side && e.faction==='prism' && e.subtype==='elite');
+        const princessQueued=S.entities.some(e=>e.side===side && e.queue?.some(q=>q.unitType==='elite' || q.label===cfg.eliteLabel));
+        if(princessExists || princessQueued) break;
+      }
       if(S.gold[side] < cost) break;
       // second resource costs (oil / essence / light)
       const oilCost = cmd.unitType==='elite2' ? (cfg.tankOilCost||cfg.elite2OilCost||0)
@@ -84,7 +90,7 @@ function executeCommand(cmd){
         : cmd.unitType==='aerial2' ? cfg.aerial2Label
         : cfg.elite2Label;
 
-      if(!queueUnit(building, label, time, fn)) break;
+      if(!queueUnit(building, label, time, fn, cmd.unitType)) break;
       S.gold[side] -= cost;
       if(oilCost>0) S.oil[side]=Math.max(0,(S.oil[side]||0)-oilCost);
       updateRtsHUD();
