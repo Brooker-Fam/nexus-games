@@ -63,7 +63,7 @@ test('army evaluation accounts for health, damage rate, and range', () => {
   assert.ok(powers[2] > powers[0], 'fast ranged damage should count for more');
 });
 
-test('Princess attack summons a Legionnaire focused on her target', () => {
+test('Princess attack summons 10 Legionnaires focused on her target', () => {
   const context=makeContext();
   const entitiesSource=fs.readFileSync(path.join(__dirname,'..','js','rts','entities.js'),'utf8');
   vm.runInContext(entitiesSource,context);
@@ -77,23 +77,25 @@ test('Princess attack summons a Legionnaire focused on her target', () => {
     princess.attackTimer=princess.fireRate-1;
     S.entities=[princess,target];
     advanceRangedAttack(princess,target);
-    const summoned=S.entities[2];
+    const summoned=S.entities.slice(2);
     return {
       count:S.entities.length,
-      subtype:summoned.subtype,
-      side:summoned.side,
-      targetId:summoned.forcedTarget.id,
-      state:summoned.state,
+      summonedCount:summoned.length,
+      allLegionnaires:summoned.every(unit=>unit.subtype==='legionnaire'),
+      allPlayerUnits:summoned.every(unit=>unit.side==='player'),
+      allTargetEnemy:summoned.every(unit=>unit.forcedTarget.id===target.id),
+      allMarching:summoned.every(unit=>unit.state==='march'),
       projectiles:S.projectiles ? S.projectiles.length : 0,
     };
   })()`,context);
 
   assert.deepEqual({...result},{
-    count:3,
-    subtype:'legionnaire',
-    side:'player',
-    targetId:9,
-    state:'march',
+    count:12,
+    summonedCount:10,
+    allLegionnaires:true,
+    allPlayerUnits:true,
+    allTargetEnemy:true,
+    allMarching:true,
     projectiles:0,
   });
 });
