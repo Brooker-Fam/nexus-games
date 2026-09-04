@@ -57,6 +57,26 @@ test('Prism elite is a Princess that summons Legionnaires',()=>{
   assert.match(presentation.desc,/Legionnaires/);
 });
 
+test('Prism Princess trains at the Temple rather than the Shrine',()=>{
+  const context=vm.createContext({});
+  for(const file of ['factions.js','ui.js']){
+    vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts',file),'utf8'),context);
+  }
+
+  const locations=vm.runInContext(`(() => {
+    const cfg=FACTION_CFG.prism;
+    return {
+      temple:baseTrainingTypes(cfg,'prism').map(unit=>unit.label),
+      shrine:structureEliteTypes(cfg,'prism').map(unit=>unit.label),
+      shadowTemple:baseTrainingTypes(FACTION_CFG.shadow,'shadow').map(unit=>unit.label),
+    };
+  })()`,context);
+
+  assert.deepEqual([...locations.temple],['ACOLYTE','PRINCESS']);
+  assert.deepEqual([...locations.shrine],['WIZARD']);
+  assert.deepEqual([...locations.shadowTemple],['SHADE']);
+});
+
 test('Legionnaire starts in sword mode and can switch to bow mode',()=>{
   const context=makeContext();
   const initial=vm.runInContext(`(() => {
