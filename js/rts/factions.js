@@ -15,9 +15,9 @@ const FACTION_CFG={
     princessLabel:'PRINCESS', princessDesc:'Unique royal summoner — conjures Legionnaires while engaging enemies (limit 1)',
     princessCost:200, princessOilCost:75, princessIcon:'👸',
     eliteLabel:'ORACLE', eliteDesc:'Ranged — high damage prismatic bolts',
-    eliteCost:30, eliteIcon:'🔮',
+    eliteCost:30, eliteIcon:'🔮', eliteOilCost:20,
     elite2Label:'WIZARD', elite2Desc:'Ranged — chain lightning bounces between enemies',
-    elite2Cost:18, elite2Icon:'⚡', elite2Fn:'makeWizard',
+    elite2Cost:18, elite2Icon:'⚡', elite2Fn:'makeWizard', elite2OilCost:25,
     // UI icons
     workerIcon:'🧙', warriorIcon:'✨',
     barracksIcon:'🌀', structIcon:'🏛', baseIcon:'🏰',
