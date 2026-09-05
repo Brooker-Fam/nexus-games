@@ -229,6 +229,14 @@ function openBuildPopup(screenX, screenY, context){
       isBow?'Close ranks for stronger melee attacks':'Fire at range and target aerial units',
       0, ()=>{ issueCommand({type:'toggle_weapon',unitId:sel.id}); closeBuildPopup(); }, false);
 
+  } else if(context==='warship'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='WARSHIP';
+    const isSingle=sel.attackMode==='single';
+    addOpt(isSingle?'✦':'🎯', isSingle?'Switch to MULTIPLE':'Switch to SINGLE',
+      isSingle?'Fire one bullet at every enemy in range at a slower rate':'Focus one target with one bullet at 112 BPM',
+      0, ()=>{ issueCommand({type:'toggle_warship_attack_mode',unitId:sel.id}); closeBuildPopup(); }, false);
+
   } else if(context==='structure'){
     const sel=S.selected[0];
     if(!sel) return;
@@ -442,6 +450,9 @@ function rtsHandleClick(e){
     } else if(hit.type==='warrior' && hit.subtype==='legionnaire'){
       openBuildPopup(sx,sy,'legionnaire');
       rtsSetLog(`LEGIONNAIRE — ${hit.bowMode?'bow':'sword'} mode  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
+    } else if(hit.type==='warrior' && hit.subtype==='warship'){
+      openBuildPopup(sx,sy,'warship');
+      rtsSetLog(`WARSHIP — ${hit.attackMode} attack mode  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior' && hit.subtype==='assaultbot'){
       openBuildPopup(sx,sy,'assaultbot');
       rtsSetLog(`ASSAULT BOT — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);

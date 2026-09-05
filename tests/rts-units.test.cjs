@@ -14,14 +14,65 @@ function makeContext(){
   return context;
 }
 
-test('warship has another tenfold attack-rate increase',()=>{
+test('warship starts in slower multiple-target mode and defines a 112 BPM single-target rate',()=>{
   const context=makeContext();
   const stats=vm.runInContext(`(() => {
     const warship=makeWarship('player','roboto',100,100);
-    return {damage:warship.damage,fireRate:warship.fireRate,burstCount:warship.burstCount};
+    return {damage:warship.damage,attackMode:warship.attackMode,fireRate:warship.fireRate,singleFireRate:warship.singleFireRate,multipleFireRate:warship.multipleFireRate};
   })()`,context);
 
-  assert.deepEqual({...stats},{damage:4,fireRate:0.7,burstCount:3});
+  assert.deepEqual({...stats},{damage:4,attackMode:'multiple',fireRate:60,singleFireRate:3600/112,multipleFireRate:60});
+});
+
+test('warship attack-mode command switches its rate and resets its firing cycle',()=>{
+  const context=makeContext();
+  Object.assign(context,{
+    S:{frame:0,entities:[],playerFaction:'roboto',enemyFaction:'shadow'},
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    FACTION_CFG:{roboto:{},shadow:{}}, rtsSetLog:()=>{}, updateRtsHUD:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  const modes=vm.runInContext(`(() => {
+    const warship=makeWarship('player','roboto',100,100);
+    warship.attackTimer=20;
+    S.entities=[warship];
+    executeCommand({type:'toggle_warship_attack_mode',unitId:warship.id,side:'player'});
+    const single={mode:warship.attackMode,rate:warship.fireRate,timer:warship.attackTimer};
+    executeCommand({type:'toggle_warship_attack_mode',unitId:warship.id,side:'player'});
+    return {single,multiple:{mode:warship.attackMode,rate:warship.fireRate,timer:warship.attackTimer}};
+  })()`,context);
+
+  assert.deepEqual({...modes.single},{mode:'single',rate:3600/112,timer:0});
+  assert.deepEqual({...modes.multiple},{mode:'multiple',rate:60,timer:0});
+});
+
+test('warship multiple mode fires one bullet at every enemy in range',()=>{
+  const context=makeContext();
+  Object.assign(context,{
+    window:{_mpMultiplayer:false},
+    S:{entities:[],projectiles:[]},
+    STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0}},
+    FACTION_CFG:{roboto:{color:'#fff'}},
+    sfx:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+  const targets=vm.runInContext(`(() => {
+    const warship=makeWarship('player','roboto',100,100);
+    const nearA={id:20,side:'enemy',hp:10,x:150,y:100};
+    const nearB={id:21,side:'enemy',hp:10,x:100,y:250};
+    const far={id:22,side:'enemy',hp:10,x:500,y:100};
+    const friendly={id:23,side:'player',hp:10,x:120,y:100};
+    S.entities=[warship,nearA,nearB,far,friendly];
+    fireWarriorProjectiles(warship,nearA);
+    const multiple=S.projectiles.map(projectile=>projectile.tx.id);
+    S.projectiles=[];
+    warship.attackMode='single';
+    fireWarriorProjectiles(warship,nearA);
+    return {multiple,single:S.projectiles.map(projectile=>projectile.tx.id)};
+  })()`,context);
+
+  assert.deepEqual([...targets.multiple],[20,21]);
+  assert.deepEqual([...targets.single],[20]);
 });
 
 test('Roboto warship uses a spaceship icon',()=>{

@@ -1,7 +1,7 @@
 // ── RTS MULTIPLAYER (PeerJS WebRTC) ──
 // Version hash — both clients must match or desync is guaranteed.
 // Bump this whenever game logic, costs, stats, or balance changes.
-const MP_VERSION = 'v11-warship-cost';
+const MP_VERSION = 'v12-warship-attack-modes';
 
 let mpPeer=null, mpConn=null, mpIsHost=false, mpConnected=false;
 let mpLocalFaction=null, mpRemoteFaction=null;
