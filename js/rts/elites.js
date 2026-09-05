@@ -29,23 +29,24 @@ function drawEliteOracle(rc,cfg,w){
     rc.fillStyle=og; rc.shadowColor='#aaffee'; rc.shadowBlur=isAtt?20:10;
     rc.beginPath(); rc.arc(ox,-8,8*castPulse,0,Math.PI*2); rc.fill();
   }
-  // head
-  rc.fillStyle='#fff5f0'; rc.beginPath(); rc.ellipse(0,-30,7,8,0,0,Math.PI*2); rc.fill();
-  // silver hair long
-  rc.fillStyle='#ddf4ff';
-  rc.beginPath(); rc.moveTo(-6,-36); rc.bezierCurveTo(-12,-24,-10,-8,-7,5); rc.lineTo(-4,5); rc.bezierCurveTo(-7,-8,-8,-24,-3,-36); rc.closePath(); rc.fill();
+  // Faceless crystal hood. Keeping royal hair and crowns off the Oracle makes
+  // its silhouette read as a mystic rather than another Princess.
+  rc.fillStyle='#b9eaff';
+  rc.beginPath(); rc.moveTo(0,-43); rc.lineTo(10,-31); rc.lineTo(6,-20);
+  rc.lineTo(-6,-20); rc.lineTo(-10,-31); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(110,230,255,0.8)'; rc.lineWidth=1; rc.stroke();
+  rc.fillStyle='#15334f'; rc.beginPath(); rc.ellipse(0,-30,6,8,0,0,Math.PI*2); rc.fill();
   // eyes
   for(const ex of [-2.5,2.5]){
     const eg=rc.createRadialGradient(ex,-30,0,ex,-30,isAtt?5:3);
     eg.addColorStop(0,'#ffffff'); eg.addColorStop(0.5,'#44ffcc'); eg.addColorStop(1,'transparent');
     rc.fillStyle=eg; rc.beginPath(); rc.arc(ex,-30,isAtt?5:3,0,Math.PI*2); rc.fill();
   }
-  // grand crown with 5 points
-  rc.fillStyle='#ffe066'; rc.shadowColor='#ffcc00'; rc.shadowBlur=14;
-  rc.beginPath();
-  rc.moveTo(-8,-37); rc.lineTo(-8,-42); rc.lineTo(-4,-39); rc.lineTo(0,-45);
-  rc.lineTo(4,-39); rc.lineTo(8,-42); rc.lineTo(8,-37); rc.closePath(); rc.fill();
-  rc.strokeStyle='rgba(255,200,50,0.7)'; rc.lineWidth=0.8; rc.stroke();
+  // Floating cyan halo — deliberately unlike the Princess's solid gold crown.
+  rc.strokeStyle='#8ffff1'; rc.shadowColor='#55ffee'; rc.shadowBlur=14; rc.lineWidth=2;
+  rc.beginPath(); rc.ellipse(0,-46,13,4,0,0,Math.PI*2); rc.stroke();
+  rc.fillStyle='#eaffff';
+  for(const hx of [-10,0,10]){rc.beginPath();rc.arc(hx,-46,2,0,Math.PI*2);rc.fill();}
   // elite glow aura
   rc.strokeStyle=`rgba(180,255,220,${0.2+Math.sin(t*0.05)*0.1})`; rc.lineWidth=3;
   rc.beginPath(); rc.ellipse(0,-10,28,38,0,0,Math.PI*2); rc.stroke();
@@ -56,7 +57,7 @@ function drawPrincess(rc,cfg,w){
   const t=w.frame, isAtt=w.state==='attack', isMarch=w.state==='march';
   const step=isMarch?Math.sin(t*0.2)*4:0;
 
-  // Slippered legs and a wide rose gown give her a distinct royal silhouette.
+  // Slippered legs and a broad rose gown create an unmistakable royal silhouette.
   rc.strokeStyle='#f4b6cf'; rc.lineWidth=3; rc.lineCap='round';
   rc.beginPath(); rc.moveTo(-4,8); rc.lineTo(-5+step,18); rc.stroke();
   rc.beginPath(); rc.moveTo(4,8); rc.lineTo(5-step,18); rc.stroke();
@@ -65,20 +66,27 @@ function drawPrincess(rc,cfg,w){
   const cape=rc.createLinearGradient(-13,-25,13,13);
   cape.addColorStop(0,'#69308f'); cape.addColorStop(1,'#32134f');
   rc.fillStyle=cape;
-  rc.beginPath(); rc.moveTo(-8,-23); rc.quadraticCurveTo(-18,-2,-14,14);
-  rc.lineTo(14,14); rc.quadraticCurveTo(18,-2,8,-23); rc.closePath(); rc.fill();
+  rc.beginPath(); rc.moveTo(-8,-23); rc.quadraticCurveTo(-22,-2,-19,15);
+  rc.lineTo(19,15); rc.quadraticCurveTo(22,-2,8,-23); rc.closePath(); rc.fill();
   rc.strokeStyle='rgba(224,170,255,0.65)'; rc.lineWidth=1; rc.stroke();
 
   // Layered pink ball gown with bright gold royal trim.
   const gown=rc.createLinearGradient(-12,-22,12,12);
   gown.addColorStop(0,'#fff0f7'); gown.addColorStop(0.45,'#f08fbd'); gown.addColorStop(1,'#b43f87');
   rc.fillStyle=gown;
-  rc.beginPath(); rc.moveTo(-5,-23); rc.lineTo(-9,-8);
-  rc.quadraticCurveTo(-17,2,-15,12); rc.quadraticCurveTo(0,18,15,12);
-  rc.quadraticCurveTo(17,2,9,-8); rc.lineTo(5,-23); rc.closePath(); rc.fill();
+  rc.beginPath(); rc.moveTo(-5,-23); rc.lineTo(-10,-8);
+  rc.quadraticCurveTo(-22,2,-20,13); rc.quadraticCurveTo(0,21,20,13);
+  rc.quadraticCurveTo(22,2,10,-8); rc.lineTo(5,-23); rc.closePath(); rc.fill();
   rc.strokeStyle='#ffd96a'; rc.lineWidth=2;
-  rc.beginPath(); rc.moveTo(-14,10); rc.quadraticCurveTo(0,16,14,10); rc.stroke();
+  rc.beginPath(); rc.moveTo(-19,11); rc.quadraticCurveTo(0,19,19,11); rc.stroke();
   rc.beginPath(); rc.moveTo(-8,-7); rc.quadraticCurveTo(0,-2,8,-7); rc.stroke();
+
+  // Exaggerated puff sleeves stay readable even when the battlefield is zoomed out.
+  for(const sx of [-1,1]){
+    rc.fillStyle='#ffb7d7'; rc.shadowColor='#ff69ad'; rc.shadowBlur=5;
+    rc.beginPath(); rc.arc(sx*9,-19,6,0,Math.PI*2); rc.fill();
+    rc.strokeStyle='#ffd96a'; rc.lineWidth=1; rc.stroke();
+  }
 
   // One hand raises a star-tipped royal scepter when summoning her Legionnaires.
   const armX=isAtt?18:12, armY=isAtt?-18:-8;
@@ -100,7 +108,7 @@ function drawPrincess(rc,cfg,w){
   rc.strokeStyle='#f6c7d8'; rc.lineWidth=3;
   rc.beginPath(); rc.moveTo(-7,-18); rc.lineTo(isAtt?-18:-12,isAtt?-12:-7); rc.stroke();
 
-  // Face, flowing auburn hair, and a small jeweled tiara.
+  // Face, flowing auburn hair, and an oversized jeweled crown.
   rc.fillStyle='#8b3f4f';
   rc.beginPath(); rc.ellipse(0,-29,9,13,0,0,Math.PI*2); rc.fill();
   rc.fillStyle='#ffe1d6'; rc.beginPath(); rc.ellipse(0,-30,7,8,0,0,Math.PI*2); rc.fill();
@@ -109,9 +117,11 @@ function drawPrincess(rc,cfg,w){
   rc.fillStyle='#4f2443';
   for(const ex of [-2.5,2.5]){rc.beginPath();rc.arc(ex,-30,1,0,Math.PI*2);rc.fill();}
   rc.fillStyle='#ffd75e'; rc.shadowColor='#ffbf2f'; rc.shadowBlur=9;
-  rc.beginPath(); rc.moveTo(-7,-37); rc.lineTo(-5,-43); rc.lineTo(-1,-39);
-  rc.lineTo(0,-46); rc.lineTo(2,-39); rc.lineTo(6,-43); rc.lineTo(7,-37); rc.closePath(); rc.fill();
-  rc.fillStyle='#ff4fa0'; rc.beginPath(); rc.arc(0,-40,2,0,Math.PI*2); rc.fill();
+  rc.beginPath(); rc.moveTo(-9,-36); rc.lineTo(-9,-48); rc.lineTo(-5,-43);
+  rc.lineTo(0,-53); rc.lineTo(5,-43); rc.lineTo(9,-48); rc.lineTo(9,-36); rc.closePath(); rc.fill();
+  rc.strokeStyle='#fff0a5'; rc.lineWidth=1.5; rc.stroke();
+  rc.fillStyle='#ff2f91';
+  for(const [jx,jy] of [[-5,-43],[0,-47],[5,-43]]){rc.beginPath();rc.arc(jx,jy,2,0,Math.PI*2);rc.fill();}
 
   // A warm heart-shaped aura replaces the Oracle's cool oval glow.
   rc.strokeStyle=`rgba(255,126,190,${0.25+Math.sin(t*0.06)*0.1})`; rc.lineWidth=2.5;
