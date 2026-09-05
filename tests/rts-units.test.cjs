@@ -42,18 +42,26 @@ test('Roboto warship has a premium resource cost',()=>{
   assert.deepEqual({...costs},{gold:60,oil:30});
 });
 
-test('Prism elite is a Princess that summons Legionnaires',()=>{
+test('Prism Oracle and Princess remain distinct units',()=>{
   const context=makeContext();
-  const princess=vm.runInContext("makeElite('player','prism',100,100)",context);
+  const units=vm.runInContext(`(() => ({
+    oracle:makeElite('player','prism',100,100),
+    princess:makePrincess('player','prism',100,100),
+  }))()`,context);
 
-  assert.equal(princess.summonsLegionnaires,true);
-  assert.equal(princess.fireRate,180);
+  assert.equal(units.oracle.subtype,'elite');
+  assert.equal(units.oracle.summonsLegionnaires,undefined);
+  assert.equal(units.oracle.fireRate,60);
+  assert.equal(units.princess.subtype,'princess');
+  assert.equal(units.princess.summonsLegionnaires,true);
+  assert.equal(units.princess.fireRate,180);
 
   const factionContext=vm.createContext({});
   const source=fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8');
   vm.runInContext(source,factionContext);
-  const presentation=vm.runInContext('({label:FACTION_CFG.prism.eliteLabel,desc:FACTION_CFG.prism.eliteDesc,gold:FACTION_CFG.prism.eliteCost,light:FACTION_CFG.prism.eliteOilCost})',factionContext);
-  assert.equal(presentation.label,'PRINCESS');
+  const presentation=vm.runInContext('({oracle:FACTION_CFG.prism.eliteLabel,princess:FACTION_CFG.prism.princessLabel,desc:FACTION_CFG.prism.princessDesc,gold:FACTION_CFG.prism.princessCost,light:FACTION_CFG.prism.princessOilCost})',factionContext);
+  assert.equal(presentation.oracle,'ORACLE');
+  assert.equal(presentation.princess,'PRINCESS');
   assert.match(presentation.desc,/Legionnaires/);
   assert.match(presentation.desc,/limit 1/);
   assert.equal(presentation.gold,200);
@@ -76,13 +84,13 @@ test('Prism Princess is limited to one existing or queued unit',()=>{
   const result=vm.runInContext(`(() => {
     const temple={id:1,type:'base',side:'player',faction:'prism',x:0,y:0,queue:[]};
     S.entities=[temple];
-    executeCommand({type:'train_unit',buildingId:1,unitType:'elite',side:'player'});
+    executeCommand({type:'train_unit',buildingId:1,unitType:'princess',side:'player'});
     const afterFirst={gold:S.gold.player,light:S.oil.player,queued:temple.queue.length};
-    executeCommand({type:'train_unit',buildingId:1,unitType:'elite',side:'player'});
+    executeCommand({type:'train_unit',buildingId:1,unitType:'princess',side:'player'});
     const afterQueuedAttempt={gold:S.gold.player,light:S.oil.player,queued:temple.queue.length};
     temple.queue=[];
-    S.entities.push(makeElite('player','prism',10,10));
-    executeCommand({type:'train_unit',buildingId:1,unitType:'elite',side:'player'});
+    S.entities.push(makePrincess('player','prism',10,10));
+    executeCommand({type:'train_unit',buildingId:1,unitType:'princess',side:'player'});
     return {afterFirst,afterQueuedAttempt,afterExistingAttempt:{gold:S.gold.player,light:S.oil.player,queued:temple.queue.length}};
   })()`,context);
   assert.deepEqual({...result.afterFirst},{gold:800,light:925,queued:1});
@@ -106,7 +114,7 @@ test('Prism Princess trains at the Temple rather than the Shrine',()=>{
   })()`,context);
 
   assert.deepEqual([...locations.temple],['ACOLYTE','PRINCESS']);
-  assert.deepEqual([...locations.shrine],['WIZARD']);
+  assert.deepEqual([...locations.shrine],['ORACLE','WIZARD']);
   assert.deepEqual([...locations.shadowTemple],['SHADE']);
 });
 

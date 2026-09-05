@@ -277,7 +277,6 @@ function makeElite(side, faction, nearX, nearY){
   const isPlayer=side==='player';
   // speeds match faction standard (shadow elite is dark warrior — not swordsman, so standard speed)
   const speed = faction==='prism'?0.7 : faction==='roboto'?0.7 : 0.75;
-  const isPrincess=faction==='prism';
   return {
     id:nextId(), type:'warrior', subtype:'elite', side, faction,
     x: nearX+(isPlayer?50:-50), y: nearY+spread,
@@ -288,13 +287,18 @@ function makeElite(side, faction, nearX, nearY){
     damage: faction==='roboto'?10:22,
     range:240,
     ranged:true,
-    // The Prism Princess attacks by summoning a Legionnaire instead of
-    // launching a projectile. A longer cadence keeps each summon meaningful.
-    fireRate: faction==='roboto'?20:isPrincess?180:60,
-    summonsLegionnaires:isPrincess,
+    fireRate: faction==='roboto'?20:60,
     frame:0, selected:false,
     forcedTarget:null, moveTarget:null,
   };
+}
+function makePrincess(side, faction, nearX, nearY){
+  const princess=makeElite(side,faction,nearX,nearY);
+  princess.subtype='princess';
+  // A longer cadence keeps each ten-unit summon meaningful.
+  princess.fireRate=180;
+  princess.summonsLegionnaires=true;
+  return princess;
 }
 function makeWizard(side, faction, nearX, nearY){
   const isPlayer=side==='player';

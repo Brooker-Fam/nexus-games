@@ -41,9 +41,7 @@ function drawRTSWarrior(rc,w){
     drawWarbot(rc,cfg,w);
   } else if(w.subtype==='legionnaire'){
     drawLegionnaire(rc,cfg,w);
-  } else if(w.subtype==='elite'){
-    // Keep the established renderer entry point; the Prism elite is presented
-    // and behaves as the Princess while retaining its compatible draw hook.
+  } else if(w.subtype==='elite'||w.subtype==='princess'){
     if(w.faction==='prism') drawEliteOracle(rc,cfg,w);
     else if(w.faction==='shadow') drawEliteDarkWarrior(rc,cfg,w);
     else drawEliteShockbot(rc,cfg,w);

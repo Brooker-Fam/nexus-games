@@ -1,7 +1,7 @@
 // ── ELITE DRAW FUNCTIONS ──
 
 function drawEliteOracle(rc,cfg,w){
-  // Princess — a crowned Prism summoner whose twin orbs call her Legionnaires
+  // Oracle / Princess — a crowned Prism caster wielding twin orbs
   const t=w.frame, isAtt=w.state==='attack';
   // legs
   rc.strokeStyle='#aad0e8'; rc.lineWidth=3; rc.lineCap='round';
