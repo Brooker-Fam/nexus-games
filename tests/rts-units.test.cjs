@@ -180,6 +180,35 @@ test('Prism Princess uses a distinct renderer from the Oracle',()=>{
   assert.match(source,/w\.subtype==='elite'[\s\S]*?drawEliteOracle\(rc,cfg,w\)/);
 });
 
+test('Prism Princess keeps a broader, taller silhouette than the Oracle',()=>{
+  const context=vm.createContext({console});
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','elites.js'),'utf8'),context);
+  const silhouettes=vm.runInContext(`(() => {
+    function trace(draw){
+      const points=[];
+      const gradient={addColorStop(){}};
+      const rc={
+        beginPath(){},closePath(){},fill(){},stroke(){},
+        createLinearGradient(){return gradient;},createRadialGradient(){return gradient;},
+        moveTo(x,y){points.push([x,y]);},lineTo(x,y){points.push([x,y]);},
+        quadraticCurveTo(cx,cy,x,y){points.push([cx,cy],[x,y]);},
+        bezierCurveTo(a,b,c,d,x,y){points.push([a,b],[c,d],[x,y]);},
+        arc(x,y,r){points.push([x-r,y-r],[x+r,y+r]);},
+        ellipse(x,y,rx,ry){points.push([x-rx,y-ry],[x+rx,y+ry]);},
+      };
+      draw(rc,{}, {frame:0,state:'idle'});
+      return {
+        width:Math.max(...points.map(([x])=>x))-Math.min(...points.map(([x])=>x)),
+        top:Math.min(...points.map(([,y])=>y)),
+      };
+    }
+    return {oracle:trace(drawEliteOracle),princess:trace(drawPrincess)};
+  })()`,context);
+
+  assert.ok(silhouettes.princess.width>silhouettes.oracle.width);
+  assert.ok(silhouettes.princess.top<silhouettes.oracle.top);
+});
+
 test('Prism Princess is limited to one existing or queued unit',()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
