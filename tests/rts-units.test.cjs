@@ -119,6 +119,13 @@ test('Prism Oracle and Princess remain distinct units',()=>{
   assert.equal(presentation.light,75);
 });
 
+test('Prism Princess uses a distinct renderer from the Oracle',()=>{
+  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','warriors.js'),'utf8');
+
+  assert.match(source,/w\.subtype==='princess'[\s\S]*?drawPrincess\(rc,cfg,w\)/);
+  assert.match(source,/w\.subtype==='elite'[\s\S]*?drawEliteOracle\(rc,cfg,w\)/);
+});
+
 test('Prism Princess is limited to one existing or queued unit',()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
