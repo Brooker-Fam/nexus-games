@@ -198,6 +198,25 @@ test('Legionnaire starts in sword mode and can switch to bow mode',()=>{
   assert.deepEqual({...sword},{bowMode:false,ranged:false,damage:14,range:50,fireRate:0,speed:1.0});
 });
 
+test('Legionnaire squads spawn with an even mix of swords and bows',()=>{
+  const context=makeContext();
+  const squad=vm.runInContext(`makeLegionnaireSquad('player','prism',100,100).map(unit => ({
+    bowMode:unit.bowMode,
+    ranged:unit.ranged,
+    damage:unit.damage,
+    range:unit.range,
+    fireRate:unit.fireRate,
+    speed:unit.speed,
+  }))`,context);
+
+  assert.equal(squad.length,4);
+  assert.equal(squad.filter(unit=>unit.bowMode).length,2);
+  assert.deepEqual({...squad.find(unit=>unit.bowMode)},
+    {bowMode:true,ranged:true,damage:10,range:210,fireRate:48,speed:0.8});
+  assert.deepEqual({...squad.find(unit=>!unit.bowMode)},
+    {bowMode:false,ranged:false,damage:14,range:50,fireRate:0,speed:1});
+});
+
 test('bow-mode legionnaire can target aerial units, sword-mode cannot',()=>{
   const context=makeContext();
   Object.assign(context,{

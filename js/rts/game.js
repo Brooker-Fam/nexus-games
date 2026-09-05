@@ -728,7 +728,8 @@ function summonLegionnaire(princess, target){
       princess.side,
       princess.faction,
       princess.x+spawnOffset-productionOffset,
-      princess.y
+      princess.y,
+      i%2===1
     );
     legionnaire.y=princess.y+(rtsRand()-0.5)*36;
     legionnaire.forcedTarget=target;
