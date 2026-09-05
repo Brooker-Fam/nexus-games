@@ -57,7 +57,7 @@ function drawPrincess(rc,cfg,w){
   const t=w.frame, isAtt=w.state==='attack', isMarch=w.state==='march';
   const step=isMarch?Math.sin(t*0.2)*4:0;
 
-  // Slippered legs and an oversized rose gown create a broad royal silhouette.
+  // Slippered legs and a broad rose gown create an unmistakable royal silhouette.
   rc.strokeStyle='#f4b6cf'; rc.lineWidth=3; rc.lineCap='round';
   rc.beginPath(); rc.moveTo(-4,8); rc.lineTo(-5+step,18); rc.stroke();
   rc.beginPath(); rc.moveTo(4,8); rc.lineTo(5-step,18); rc.stroke();
