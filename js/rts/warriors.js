@@ -39,6 +39,14 @@ function drawRTSWarrior(rc,w){
     drawDestroyerUnit(rc,cfg,w);
   } else if(w.subtype==='warbot'){
     drawWarbot(rc,cfg,w);
+  } else if(w.subtype==='infestedGunbot'){
+    rc.save();
+    rc.shadowColor='#62ff45'; rc.shadowBlur=22;
+    drawWarriorRoboto(rc,{...cfg,color:'#62ff45'},w);
+    rc.fillStyle='rgba(98,255,69,0.75)';
+    rc.beginPath(); rc.arc(-7,-13,3,0,Math.PI*2); rc.fill();
+    rc.beginPath(); rc.arc(5,-23,2,0,Math.PI*2); rc.fill();
+    rc.restore();
   } else if(w.subtype==='legionnaire'){
     drawLegionnaire(rc,cfg,w);
   } else if(w.subtype==='princess'){

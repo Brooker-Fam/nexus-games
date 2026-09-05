@@ -93,6 +93,46 @@ test('Roboto warship has a premium resource cost',()=>{
   assert.deepEqual({...costs},{gold:60,oil:30});
 });
 
+test('Roboto Factory infestation is permanent, blocks Drones, and continuously makes Infested GunBots',()=>{
+  const context=makeContext();
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  Object.assign(context,{
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    S:{frame:0,entities:[],gold:{player:1000},oil:{player:0},stats:{unitsBuilt:0},playerFaction:'roboto',enemyFaction:'shadow'},
+    STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0}},
+    rtsSetLog:()=>{}, updateRtsHUD:()=>{}, sfx:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const factory={id:1,type:'base',side:'player',faction:'roboto',x:100,y:100,hp:100,maxHp:100,queue:[],trainTimer:0};
+    S.entities=[factory];
+    executeCommand({type:'infest_factory',buildingId:factory.id,side:'player'});
+    const afterInfest={infested:factory.infested,queue:factory.queue.map(item=>item.unitType)};
+
+    executeCommand({type:'train_unit',buildingId:factory.id,unitType:'worker',side:'player'});
+    const afterDroneAttempt={gold:S.gold.player,queue:factory.queue.map(item=>item.unitType)};
+
+    factory.trainTimer=BUILD_TIMES.infestedGunbot-1;
+    buildingTick(factory);
+    const first=S.entities.find(entity=>entity.subtype==='infestedGunbot');
+    return {
+      afterInfest,
+      afterDroneAttempt,
+      spawned:{subtype:first.subtype,faction:first.faction,infested:first.infested},
+      nextQueue:factory.queue.map(item=>item.unitType),
+    };
+  })()`,context);
+
+  assert.equal(result.afterInfest.infested,true);
+  assert.deepEqual([...result.afterInfest.queue],['infestedGunbot']);
+  assert.equal(result.afterDroneAttempt.gold,1000);
+  assert.deepEqual([...result.afterDroneAttempt.queue],['infestedGunbot']);
+  assert.deepEqual({...result.spawned},{subtype:'infestedGunbot',faction:'roboto',infested:true});
+  assert.deepEqual([...result.nextQueue],['infestedGunbot']);
+});
+
 test('Prism Oracle and Princess remain distinct units',()=>{
   const context=makeContext();
   const units=vm.runInContext(`(() => ({

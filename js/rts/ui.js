@@ -105,16 +105,26 @@ function openBuildPopup(screenX, screenY, context){
   }
 
   if(context==='base'){
-    title.textContent = cfg.buildingName;
     const sel=S.selected[0];
-    for(const u of baseTrainingTypes(cfg,myFaction())){
-      const princessUnavailable=u.unitType==='princess' && S.entities.some(e=>
-        e.side===mySide() && (e.subtype==='princess' || e.queue?.some(q=>q.unitType==='princess' || q.label===cfg.princessLabel))
-      );
-      addOpt(u.icon, u.label, u.desc, u.cost,
-        ()=>trainCmd(sel?sel.id:S.buildingSource?.id, u.unitType, 'base'),
-        princessUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
-        u.oilCost);
+    title.textContent = sel?.infested ? 'INFESTED FACTORY' : cfg.buildingName;
+    if(sel?.infested){
+      addOpt('☣', 'INFEST MODE ACTIVE', 'Permanently auto-producing Infested GunBots — Drone production disabled', 0, ()=>{}, true);
+    } else {
+      for(const u of baseTrainingTypes(cfg,myFaction())){
+        const princessUnavailable=u.unitType==='princess' && S.entities.some(e=>
+          e.side===mySide() && (e.subtype==='princess' || e.queue?.some(q=>q.unitType==='princess' || q.label===cfg.princessLabel))
+        );
+        addOpt(u.icon, u.label, u.desc, u.cost,
+          ()=>trainCmd(sel?sel.id:S.buildingSource?.id, u.unitType, 'base'),
+          princessUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
+          u.oilCost);
+      }
+      if(myFaction()==='roboto'){
+        addOpt('☣', 'INFEST FACTORY', 'Permanent — continuously produces free Infested GunBots and can no longer make Drones', 0, ()=>{
+          issueCommand({type:'infest_factory',buildingId:sel?sel.id:S.buildingSource?.id});
+          closeBuildPopup();
+        }, !!sel?.underConstruction);
+      }
     }
 
   } else if(context==='barracks'){

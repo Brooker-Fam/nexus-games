@@ -23,7 +23,7 @@ function drawRTSBase(rc, base){
   }
 
   if(base.side==='player'?S.playerFaction==='roboto':S.enemyFaction==='roboto'){
-    drawRTSFactory(rc,x,y,cfg);
+    drawRTSFactory(rc,x,y,cfg,base);
   } else if(base.side==='player'?S.playerFaction==='shadow':S.enemyFaction==='shadow'){
     drawRTSTemple(rc,x,y,cfg,'shadow');
   } else {
@@ -72,7 +72,7 @@ function drawRTSTemple(rc,x,y,cfg,variant){
   rc.strokeStyle=cfg.color; rc.lineWidth=0.6; rc.stroke();
 }
 
-function drawRTSFactory(rc,x,y,cfg){
+function drawRTSFactory(rc,x,y,cfg,factory){
   // base slab
   rc.fillStyle='#111118';
   rc.beginPath(); rc.roundRect(x-32,y+26,64,12,2); rc.fill();
@@ -102,6 +102,22 @@ function drawRTSFactory(rc,x,y,cfg){
   // door
   rc.fillStyle='rgba(0,0,0,0.7)'; rc.beginPath(); rc.roundRect(x-9,y+6,18,22,1); rc.fill();
   rc.strokeStyle=cfg.color; rc.lineWidth=0.7; rc.stroke();
+
+  if(factory?.infested){
+    rc.save();
+    rc.shadowColor='#62ff45'; rc.shadowBlur=18;
+    rc.strokeStyle='rgba(98,255,69,0.85)'; rc.lineWidth=2;
+    for(let i=0;i<4;i++){
+      const phase=S.frame*0.025+i*1.7;
+      rc.beginPath();
+      rc.moveTo(x-27+i*18,y+25);
+      rc.bezierCurveTo(x-38+Math.sin(phase)*8,y+5,x+24*Math.sin(phase+1),y-18,x-25+i*17,y-38);
+      rc.stroke();
+    }
+    rc.fillStyle='#8cff66'; rc.font='bold 9px Orbitron,sans-serif'; rc.textAlign='center';
+    rc.fillText('INFESTED',x,y+50);
+    rc.restore();
+  }
 }
 
 function drawRTSStructure(rc, s){

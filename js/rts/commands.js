@@ -42,10 +42,25 @@ function executeCommand(cmd){
 
   switch(cmd.type){
 
+    case 'infest_factory': {
+      const factory=S.entities.find(e=>e.id===cmd.buildingId);
+      // Infestation is a one-way Roboto Factory conversion. Validate it here
+      // as well as in the UI so remote/lockstep commands cannot bypass it.
+      if(!factory || factory.type!=='base' || factory.side!==side ||
+          faction!=='roboto' || factory.underConstruction || factory.infested) break;
+      factory.infested=true;
+      factory.queue=[];
+      factory.trainTimer=0;
+      ensureInfestedProduction(factory);
+      if(side==='player') rtsSetLog('Factory infested — GunBot production is now permanent!');
+      break;
+    }
+
     case 'train_unit': {
       const building = S.entities.find(e=>e.id===cmd.buildingId);
       if(!building || building.underConstruction) break;
       if(building.side !== side) break; // can't train from enemy building
+      if(building.infested) break; // infested Factories only auto-produce Infested GunBots
       const aerialFnMap = { makeStarFighter, makeSkyAttacker };
       const costMap = { worker:cfg.workerCost, warrior:cfg.warriorCost, warrior2:cfg.warrior2Cost, princess:cfg.princessCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost, aerial:cfg.aerialUnitCost, aerial2:cfg.aerial2Cost };
       const cost = costMap[cmd.unitType] || 0;

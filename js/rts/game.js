@@ -583,6 +583,7 @@ function cannonTick(c){
 // ── BUILDING TICK — processes train queues ──
 function buildingTick(b){
   if(b.underConstruction) return; // can't train while being built
+  if(b.infested) ensureInfestedProduction(b);
   if(!b.queue || b.queue.length===0) return;
   b.trainTimer=(b.trainTimer||0)+1;
   const item=b.queue[0];
@@ -597,7 +598,16 @@ function buildingTick(b){
       S.stats.unitsBuilt+=spawned.length;
       rtsSetLog(spawned.length>1 ? `${item.label} squad ready! (×${spawned.length})` : `${item.label} ready!`);
     }
+    if(b.infested) ensureInfestedProduction(b);
   }
+}
+
+function ensureInfestedProduction(factory){
+  if(!factory?.infested || factory.underConstruction) return false;
+  if(!factory.queue) factory.queue=[];
+  if(factory.queue.length>0) return false;
+  return queueUnit(factory, 'INFESTED GUNBOT', BUILD_TIMES.infestedGunbot,
+    ()=>makeInfestedGunbot(factory.side, factory.x, factory.y), 'infestedGunbot');
 }
 
 function queueUnit(building, label, time, fn, unitType){
