@@ -9,7 +9,7 @@ const FACTION_CFG={
     buildingColor:'#c0e8ff',
     barracksName:'PORTAL', barracksLabel:'PORTAL',
     warriorCost:10, warriorDesc:'Ranged — magic projectiles',
-    warrior2Label:'LEGIONNAIRES', warrior2Desc:'Melee — sword squad, trained four at a time',
+    warrior2Label:'LEGIONNAIRES', warrior2Desc:'Mixed sword and bow squad, trained four at a time',
     warrior2Cost:34, warrior2Icon:'🗡', warrior2Fn:'makeLegionnaireSquad', warrior2Count:4,
     structName:'SHRINE', structLabel:'SHRINE',
     princessLabel:'PRINCESS', princessDesc:'Unique royal summoner — conjures Legionnaires while engaging enemies (limit 1)',

@@ -85,6 +85,7 @@ test('Princess attack summons 10 Legionnaires focused on her target', () => {
       allPlayerUnits:summoned.every(unit=>unit.side==='player'),
       allTargetEnemy:summoned.every(unit=>unit.forcedTarget.id===target.id),
       allMarching:summoned.every(unit=>unit.state==='march'),
+      bowCount:summoned.filter(unit=>unit.bowMode).length,
       projectiles:S.projectiles ? S.projectiles.length : 0,
     };
   })()`,context);
@@ -96,6 +97,7 @@ test('Princess attack summons 10 Legionnaires focused on her target', () => {
     allPlayerUnits:true,
     allTargetEnemy:true,
     allMarching:true,
+    bowCount:5,
     projectiles:0,
   });
 });
