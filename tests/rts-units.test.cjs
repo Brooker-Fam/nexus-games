@@ -120,7 +120,7 @@ test('Roboto Factory infestation is permanent, blocks Drones, and continuously m
     return {
       afterInfest,
       afterDroneAttempt,
-      spawned:{subtype:first.subtype,faction:first.faction,infested:first.infested},
+      spawned:{subtype:first.subtype,faction:first.faction,infested:first.infested,hp:first.hp,maxHp:first.maxHp,damage:first.damage},
       nextQueue:factory.queue.map(item=>item.unitType),
     };
   })()`,context);
@@ -129,7 +129,7 @@ test('Roboto Factory infestation is permanent, blocks Drones, and continuously m
   assert.deepEqual([...result.afterInfest.queue],['infestedGunbot']);
   assert.equal(result.afterDroneAttempt.gold,1000);
   assert.deepEqual([...result.afterDroneAttempt.queue],['infestedGunbot']);
-  assert.deepEqual({...result.spawned},{subtype:'infestedGunbot',faction:'roboto',infested:true});
+  assert.deepEqual({...result.spawned},{subtype:'infestedGunbot',faction:'roboto',infested:true,hp:15,maxHp:15,damage:3});
   assert.deepEqual([...result.nextQueue],['infestedGunbot']);
 });
 
