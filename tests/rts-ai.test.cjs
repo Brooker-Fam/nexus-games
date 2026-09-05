@@ -73,7 +73,7 @@ test('Princess attack summons 10 Legionnaires focused on her target', () => {
 
   const result=vm.runInContext(`(() => {
     const target={id:9,type:'warrior',side:'enemy',x:300,y:100,hp:40};
-    const princess=makeElite('player','prism',100,100);
+    const princess=makePrincess('player','prism',100,100);
     princess.attackTimer=princess.fireRate-1;
     S.entities=[princess,target];
     advanceRangedAttack(princess,target);

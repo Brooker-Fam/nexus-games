@@ -37,19 +37,16 @@ function baseTrainingTypes(cfg, faction){
   const types = [
     { icon:cfg.workerIcon, label:cfg.workerLabel, desc:'Gathers gold from mines', cost:cfg.workerCost, oilCost:0, unitType:'worker' },
   ];
-  // The Princess is the Prism Armada's royal Temple unit. Other elite units
-  // continue to train from their faction's advanced structure.
+  // The Princess is the Prism Armada's unique royal Temple unit.
   if(faction==='prism'){
-    types.push({ icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost, oilCost:cfg.eliteOilCost||0, unitType:'elite' });
+    types.push({ icon:cfg.princessIcon, label:cfg.princessLabel, desc:cfg.princessDesc, cost:cfg.princessCost, oilCost:cfg.princessOilCost||0, unitType:'princess' });
   }
   return types;
 }
 
 function structureEliteTypes(cfg, faction){
   const types=[];
-  if(faction!=='prism'){
-    types.push({ icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost, oilCost:cfg.eliteOilCost||0, unitType:'elite' });
-  }
+  types.push({ icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost, oilCost:cfg.eliteOilCost||0, unitType:'elite' });
   types.push({ icon:cfg.elite2Icon, label:cfg.elite2Label, desc:cfg.elite2Desc, cost:cfg.elite2Cost, oilCost:cfg.tankOilCost||cfg.elite2OilCost||0, unitType:'elite2' });
   return types;
 }
@@ -111,8 +108,8 @@ function openBuildPopup(screenX, screenY, context){
     title.textContent = cfg.buildingName;
     const sel=S.selected[0];
     for(const u of baseTrainingTypes(cfg,myFaction())){
-      const princessUnavailable=u.unitType==='elite' && myFaction()==='prism' && S.entities.some(e=>
-        e.side===mySide() && ((e.faction==='prism' && e.subtype==='elite') || e.queue?.some(q=>q.unitType==='elite' || q.label===cfg.eliteLabel))
+      const princessUnavailable=u.unitType==='princess' && S.entities.some(e=>
+        e.side===mySide() && (e.subtype==='princess' || e.queue?.some(q=>q.unitType==='princess' || q.label===cfg.princessLabel))
       );
       addOpt(u.icon, u.label, u.desc, u.cost,
         ()=>trainCmd(sel?sel.id:S.buildingSource?.id, u.unitType, 'base'),
@@ -452,7 +449,7 @@ function rtsHandleClick(e){
       openBuildPopup(sx,sy,'psionic');
       rtsSetLog(`PSIONIC WARRIOR — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior'){
-      const UNIT_LABELS={elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label',warbot:'warrior2Label'};
+      const UNIT_LABELS={princess:'princessLabel',elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label',warbot:'warrior2Label'};
       const lbl=cfg[UNIT_LABELS[hit.subtype]]||cfg.warriorLabel;
       rtsSetLog(`${lbl} selected — click to move or attack.`);
     }

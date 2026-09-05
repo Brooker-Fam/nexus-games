@@ -239,15 +239,16 @@ function aiTick(){
     const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.isOilRig&&!e.underConstruction);
     const eCfg3=FACTION_CFG[S.enemyFaction];
     if(S.enemyFaction==='prism'){
-      const princessExists=S.entities.some(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='elite');
-      const princessQueued=S.entities.some(e=>e.side==='enemy' && e.queue?.some(q=>q.unitType==='elite' || q.label===eCfg3.eliteLabel));
-      const princessOil=eCfg3.eliteOilCost||0;
-      if(!princessExists && !princessQueued && S.gold.enemy>=eCfg3.eliteCost && (S.oil.enemy||0)>=princessOil){
-        if(aiQueueAt(eb,eCfg3.eliteLabel,BUILD_TIMES.elite,()=>makeElite('enemy','prism',eb.x,eb.y),eCfg3.eliteCost,'elite')){
+      const princessExists=S.entities.some(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='princess');
+      const princessQueued=S.entities.some(e=>e.side==='enemy' && e.queue?.some(q=>q.unitType==='princess' || q.label===eCfg3.princessLabel));
+      const princessOil=eCfg3.princessOilCost||0;
+      if(!princessExists && !princessQueued && S.gold.enemy>=eCfg3.princessCost && (S.oil.enemy||0)>=princessOil){
+        if(aiQueueAt(eb,eCfg3.princessLabel,BUILD_TIMES.elite,()=>makePrincess('enemy','prism',eb.x,eb.y),eCfg3.princessCost,'princess')){
           S.oil.enemy=Math.max(0,(S.oil.enemy||0)-princessOil);
         }
       }
-    } else if(eliteStruct){
+    }
+    if(eliteStruct){
       const tankOilNeeded=eCfg3.tankOilCost||0;
       const canAffordTank=eCfg3.elite2Fn==='makeTank' && S.gold.enemy>=eCfg3.elite2Cost && (S.oil.enemy||0)>=tankOilNeeded;
       if(canAffordTank){
@@ -258,8 +259,9 @@ function aiTick(){
         }
       } else {
         const eliteOilNeeded=eCfg3.eliteOilCost||0;
-        if(S.gold.enemy>=AI_CONFIG.eliteCost && (S.oil.enemy||0)>=eliteOilNeeded){
-          if(aiQueueAt(eliteStruct,eCfg3.eliteLabel||'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),AI_CONFIG.eliteCost)){
+        const eliteGoldNeeded=eCfg3.eliteCost||AI_CONFIG.eliteCost;
+        if(S.gold.enemy>=eliteGoldNeeded && (S.oil.enemy||0)>=eliteOilNeeded){
+          if(aiQueueAt(eliteStruct,eCfg3.eliteLabel||'Elite',BUILD_TIMES.elite,()=>makeElite('enemy',S.enemyFaction,eliteStruct.x,eliteStruct.y),eliteGoldNeeded)){
             if(eliteOilNeeded>0) S.oil.enemy=Math.max(0,(S.oil.enemy||0)-eliteOilNeeded);
           }
         }
