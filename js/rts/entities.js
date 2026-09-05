@@ -49,6 +49,16 @@ function makeWarrior(side, faction, nearX, nearY){
   };
 }
 
+// Infested GunBots are produced automatically by a Roboto Factory that has
+// permanently entered infest mode. They retain the normal GunBot combat
+// profile, while the subtype/flag gives the renderer and UI a distinct unit.
+function makeInfestedGunbot(side, nearX, nearY){
+  const unit=makeWarrior(side, 'roboto', nearX, nearY);
+  unit.subtype='infestedGunbot';
+  unit.infested=true;
+  return unit;
+}
+
 // ── 2ND-TIER BARRACKS UNITS ──
 // Warbot (Roboto) — heavier armored GunBot variant, more HP and damage
 function makeWarbot(side, faction, nearX, nearY){
@@ -96,6 +106,7 @@ const BUILD_TIMES={
   aerial:    1080,   // 18s — warp conduit / shipyard
   worker:    480,    // 8s
   warrior:   720,    // 12s
+  infestedGunbot: 720, // 12s — automatically repeated by an infested Factory
   elite:     960,    // 16s
   elite2:    1200,   // 20s
   starfighter: 720,  // 12s
