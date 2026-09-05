@@ -41,7 +41,9 @@ function drawRTSWarrior(rc,w){
     drawWarbot(rc,cfg,w);
   } else if(w.subtype==='legionnaire'){
     drawLegionnaire(rc,cfg,w);
-  } else if(w.subtype==='elite'||w.subtype==='princess'){
+  } else if(w.subtype==='princess'){
+    if(w.faction==='prism') drawPrincess(rc,cfg,w);
+  } else if(w.subtype==='elite'){
     if(w.faction==='prism') drawEliteOracle(rc,cfg,w);
     else if(w.faction==='shadow') drawEliteDarkWarrior(rc,cfg,w);
     else drawEliteShockbot(rc,cfg,w);

@@ -1,7 +1,7 @@
 // ── ELITE DRAW FUNCTIONS ──
 
 function drawEliteOracle(rc,cfg,w){
-  // Oracle / Princess — a crowned Prism caster wielding twin orbs
+  // Oracle — a crowned Prism caster wielding twin orbs
   const t=w.frame, isAtt=w.state==='attack';
   // legs
   rc.strokeStyle='#aad0e8'; rc.lineWidth=3; rc.lineCap='round';
@@ -49,6 +49,74 @@ function drawEliteOracle(rc,cfg,w){
   // elite glow aura
   rc.strokeStyle=`rgba(180,255,220,${0.2+Math.sin(t*0.05)*0.1})`; rc.lineWidth=3;
   rc.beginPath(); rc.ellipse(0,-10,28,38,0,0,Math.PI*2); rc.stroke();
+}
+
+// ── PRINCESS (Prism Temple) ──
+function drawPrincess(rc,cfg,w){
+  const t=w.frame, isAtt=w.state==='attack', isMarch=w.state==='march';
+  const step=isMarch?Math.sin(t*0.2)*4:0;
+
+  // Slippered legs and a wide rose gown give her a distinct royal silhouette.
+  rc.strokeStyle='#f4b6cf'; rc.lineWidth=3; rc.lineCap='round';
+  rc.beginPath(); rc.moveTo(-4,8); rc.lineTo(-5+step,18); rc.stroke();
+  rc.beginPath(); rc.moveTo(4,8); rc.lineTo(5-step,18); rc.stroke();
+
+  // Long violet cape behind the dress.
+  const cape=rc.createLinearGradient(-13,-25,13,13);
+  cape.addColorStop(0,'#69308f'); cape.addColorStop(1,'#32134f');
+  rc.fillStyle=cape;
+  rc.beginPath(); rc.moveTo(-8,-23); rc.quadraticCurveTo(-18,-2,-14,14);
+  rc.lineTo(14,14); rc.quadraticCurveTo(18,-2,8,-23); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(224,170,255,0.65)'; rc.lineWidth=1; rc.stroke();
+
+  // Layered pink ball gown with bright gold royal trim.
+  const gown=rc.createLinearGradient(-12,-22,12,12);
+  gown.addColorStop(0,'#fff0f7'); gown.addColorStop(0.45,'#f08fbd'); gown.addColorStop(1,'#b43f87');
+  rc.fillStyle=gown;
+  rc.beginPath(); rc.moveTo(-5,-23); rc.lineTo(-9,-8);
+  rc.quadraticCurveTo(-17,2,-15,12); rc.quadraticCurveTo(0,18,15,12);
+  rc.quadraticCurveTo(17,2,9,-8); rc.lineTo(5,-23); rc.closePath(); rc.fill();
+  rc.strokeStyle='#ffd96a'; rc.lineWidth=2;
+  rc.beginPath(); rc.moveTo(-14,10); rc.quadraticCurveTo(0,16,14,10); rc.stroke();
+  rc.beginPath(); rc.moveTo(-8,-7); rc.quadraticCurveTo(0,-2,8,-7); rc.stroke();
+
+  // One hand raises a star-tipped royal scepter when summoning her Legionnaires.
+  const armX=isAtt?18:12, armY=isAtt?-18:-8;
+  rc.strokeStyle='#f6c7d8'; rc.lineWidth=3; rc.lineCap='round';
+  rc.beginPath(); rc.moveTo(7,-18); rc.lineTo(armX,armY); rc.stroke();
+  rc.strokeStyle='#f2c94c'; rc.lineWidth=2;
+  rc.beginPath(); rc.moveTo(armX,armY+5); rc.lineTo(armX,isAtt?-36:-25); rc.stroke();
+  const starY=isAtt?-39:-28, starPulse=isAtt?1+Math.sin(t*0.3)*0.18:1;
+  rc.fillStyle='#fff3a0'; rc.shadowColor='#ffd84d'; rc.shadowBlur=isAtt?22:10;
+  rc.beginPath();
+  for(let i=0;i<10;i++){
+    const a=-Math.PI/2+i*Math.PI/5, radius=(i%2?3:7)*starPulse;
+    const x=armX+Math.cos(a)*radius, y=starY+Math.sin(a)*radius;
+    if(i===0) rc.moveTo(x,y); else rc.lineTo(x,y);
+  }
+  rc.closePath(); rc.fill();
+
+  // Her free hand gestures forward rather than carrying the Oracle's second orb.
+  rc.strokeStyle='#f6c7d8'; rc.lineWidth=3;
+  rc.beginPath(); rc.moveTo(-7,-18); rc.lineTo(isAtt?-18:-12,isAtt?-12:-7); rc.stroke();
+
+  // Face, flowing auburn hair, and a small jeweled tiara.
+  rc.fillStyle='#8b3f4f';
+  rc.beginPath(); rc.ellipse(0,-29,9,13,0,0,Math.PI*2); rc.fill();
+  rc.fillStyle='#ffe1d6'; rc.beginPath(); rc.ellipse(0,-30,7,8,0,0,Math.PI*2); rc.fill();
+  rc.fillStyle='#7b3145';
+  rc.beginPath(); rc.arc(0,-33,7,Math.PI,Math.PI*2); rc.fill();
+  rc.fillStyle='#4f2443';
+  for(const ex of [-2.5,2.5]){rc.beginPath();rc.arc(ex,-30,1,0,Math.PI*2);rc.fill();}
+  rc.fillStyle='#ffd75e'; rc.shadowColor='#ffbf2f'; rc.shadowBlur=9;
+  rc.beginPath(); rc.moveTo(-7,-37); rc.lineTo(-5,-43); rc.lineTo(-1,-39);
+  rc.lineTo(0,-46); rc.lineTo(2,-39); rc.lineTo(6,-43); rc.lineTo(7,-37); rc.closePath(); rc.fill();
+  rc.fillStyle='#ff4fa0'; rc.beginPath(); rc.arc(0,-40,2,0,Math.PI*2); rc.fill();
+
+  // A warm heart-shaped aura replaces the Oracle's cool oval glow.
+  rc.strokeStyle=`rgba(255,126,190,${0.25+Math.sin(t*0.06)*0.1})`; rc.lineWidth=2.5;
+  rc.beginPath(); rc.moveTo(0,13); rc.bezierCurveTo(-34,-5,-24,-34,0,-17);
+  rc.bezierCurveTo(24,-34,34,-5,0,13); rc.stroke();
 }
 
 function drawEliteDarkWarrior(rc,cfg,w){
