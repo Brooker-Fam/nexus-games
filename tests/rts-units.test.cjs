@@ -119,6 +119,20 @@ test('Prism Oracle and Princess remain distinct units',()=>{
   assert.equal(presentation.light,75);
 });
 
+test('Prism Oracle and Wizard cost Light, with Wizard favoring Light over Gold',()=>{
+  const context=vm.createContext({});
+  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8');
+  vm.runInContext(source,context);
+
+  const costs=vm.runInContext(`({
+    oracle:{gold:FACTION_CFG.prism.eliteCost,light:FACTION_CFG.prism.eliteOilCost},
+    wizard:{gold:FACTION_CFG.prism.elite2Cost,light:FACTION_CFG.prism.elite2OilCost},
+  })`,context);
+  assert.deepEqual({...costs.oracle},{gold:30,light:20});
+  assert.deepEqual({...costs.wizard},{gold:18,light:25});
+  assert.ok(costs.wizard.light>costs.wizard.gold);
+});
+
 test('Prism Princess uses a distinct renderer from the Oracle',()=>{
   const source=fs.readFileSync(path.join(__dirname,'..','js','rts','warriors.js'),'utf8');
 
