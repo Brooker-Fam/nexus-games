@@ -929,13 +929,22 @@ function spawnProjectile(shooter, target, burstOffset){
   sfx(pCfg.sound||'rtsBullet', 80);
 }
 
-// Fires one shot, or (for units with burstCount>1, e.g. Warship) several
-// simultaneous bullets fanned out around the target.
+// Warships in multiple mode engage every enemy in range simultaneously;
+// every other ranged attack sends one projectile at its selected target.
 function fireWarriorProjectiles(w, target){
-  const n = w.burstCount||1;
-  if(n<=1){ spawnProjectile(w, target); return; }
-  const mid=(n-1)/2;
-  for(let i=0;i<n;i++) spawnProjectile(w, target, i-mid);
+  if(w.subtype==='warship' && w.attackMode==='multiple'){
+    const targets=S.entities.filter(e=>
+      e.side!==w.side && e.hp>0 && _dist(e.x-w.x,e.y-w.y)<=w.range
+    );
+    // The target selected by warriorFindTarget can be a base that is stored
+    // separately from S.entities, so retain it when it is the only valid aim.
+    if(!targets.includes(target) && target?.hp>0 && _dist(target.x-w.x,target.y-w.y)<=w.range){
+      targets.push(target);
+    }
+    for(const enemy of targets) spawnProjectile(w, enemy);
+    return;
+  }
+  spawnProjectile(w, target);
 }
 
 function updateProjectiles(){

@@ -227,6 +227,18 @@ function executeCommand(cmd){
       break;
     }
 
+    case 'toggle_warship_attack_mode': {
+      const unit=S.entities.find(e=>e.id===cmd.unitId);
+      if(!unit||unit.side!==side||unit.subtype!=='warship') break;
+      unit.attackMode=unit.attackMode==='single'?'multiple':'single';
+      unit.fireRate=unit.attackMode==='single'?unit.singleFireRate:unit.multipleFireRate;
+      unit.attackTimer=0;
+      if(side==='player'){
+        rtsSetLog(`Warship switched to ${unit.attackMode} attack mode!`);
+      }
+      break;
+    }
+
     case 'attack_all': {
       let count = 0;
       for(const e of S.entities){

@@ -208,7 +208,7 @@ function makeSkyAttacker(side, faction, nearX, nearY){
 }
 
 // ── 2ND-TIER AERIAL UNITS ──
-// Warship (Roboto) — heavy gunship, fires a spread of bullets at once
+// Warship (Roboto) — switches between rapid focus fire and slower multi-target volleys
 function makeWarship(side, faction, nearX, nearY){
   const isPlayer=side==='player';
   return {
@@ -216,7 +216,8 @@ function makeWarship(side, faction, nearX, nearY){
     x: nearX+(isPlayer?70:-70), y: nearY+(rtsRand()-0.5)*120,
     hp:130, maxHp:130, speed:1.3,
     state:'idle', target:null, attackTimer:0,
-    damage:4, range:200, ranged:true, fireRate:0.7, burstCount:3,
+    damage:4, range:200, ranged:true,
+    attackMode:'multiple', fireRate:60, singleFireRate:3600/112, multipleFireRate:60,
     aerial:true,
     frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };
