@@ -50,12 +50,16 @@ function makeWarrior(side, faction, nearX, nearY){
 }
 
 // Infested GunBots are produced automatically by a Roboto Factory that has
-// permanently entered infest mode. They retain the normal GunBot combat
-// profile, while the subtype/flag gives the renderer and UI a distinct unit.
+// permanently entered infest mode. Their unstable infestation leaves them
+// frailer and weaker than normal GunBots, while the subtype/flag gives the
+// renderer and UI a distinct unit.
 function makeInfestedGunbot(side, nearX, nearY){
   const unit=makeWarrior(side, 'roboto', nearX, nearY);
   unit.subtype='infestedGunbot';
   unit.infested=true;
+  unit.hp=15;
+  unit.maxHp=15;
+  unit.damage=3;
   return unit;
 }
 
