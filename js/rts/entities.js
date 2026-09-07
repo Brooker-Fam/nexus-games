@@ -63,6 +63,16 @@ function makeInfestedGunbot(side, nearX, nearY){
   return unit;
 }
 
+// Ling — a swift, dog-like allied infested creature called down by Shadow Temples.
+function makeLing(side, x, y){
+  return { id:nextId(), type:'warrior', subtype:'ling', side, faction:'shadow',
+    x, y, hp:45, maxHp:45, speed:2.6,
+    state:'idle', target:null, attackTimer:0,
+    damage:12, range:52, ranged:false, fireRate:20,
+    frame:0, selected:false, forcedTarget:null, moveTarget:null,
+  };
+}
+
 // ── 2ND-TIER BARRACKS UNITS ──
 // Warbot (Roboto) — heavier armored GunBot variant, more HP and damage
 function makeWarbot(side, faction, nearX, nearY){

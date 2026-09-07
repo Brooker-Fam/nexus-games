@@ -47,6 +47,8 @@ function drawRTSWarrior(rc,w){
     rc.beginPath(); rc.arc(-7,-13,3,0,Math.PI*2); rc.fill();
     rc.beginPath(); rc.arc(5,-23,2,0,Math.PI*2); rc.fill();
     rc.restore();
+  } else if(w.subtype==='ling'){
+    drawLing(rc,w);
   } else if(w.subtype==='legionnaire'){
     drawLegionnaire(rc,cfg,w);
   } else if(w.subtype==='princess'){
@@ -77,6 +79,37 @@ function drawRTSWarrior(rc,w){
   // selection ring
   if(w.selected) drawSelectionRing(rc, w.x, w.y, 18, 8, 2.5);
   if(w.hp<w.maxHp) drawHealthBar(rc, w.x, w.y-26, 20, 3, w.hp, w.maxHp);
+}
+
+// Dog-like infested anatomy: airborne wings and antennae frame a low body,
+// while the oversized third claw-arm is visibly held clear of the ground.
+function drawLing(rc,w){
+  const t=w.frame;
+  const stride=w.state==='march'?Math.sin(t*.42)*5:Math.sin(t*.12);
+  rc.save();
+  rc.shadowColor='#71ff4e'; rc.shadowBlur=15;
+  // wings
+  rc.fillStyle='rgba(174,112,255,.48)'; rc.strokeStyle='#cf91ff'; rc.lineWidth=1.2;
+  for(const sy of [-1,1]){
+    rc.beginPath(); rc.moveTo(-5,-15); rc.quadraticCurveTo(-19,-31+sy*stride,-27,-17+sy*3); rc.quadraticCurveTo(-14,-12,-3,-8); rc.fill(); rc.stroke();
+  }
+  // four running legs
+  rc.strokeStyle='#36134d'; rc.lineWidth=4; rc.lineCap='round';
+  for(const lx of [-12,-4,6,14]){ rc.beginPath(); rc.moveTo(lx,-2); rc.lineTo(lx+stride*(lx%3?1:-1),13); rc.stroke(); }
+  // dog-like body and muzzle
+  const body=rc.createLinearGradient(-18,-16,20,5); body.addColorStop(0,'#7d28a8'); body.addColorStop(1,'#2d7b35');
+  rc.fillStyle=body; rc.beginPath(); rc.ellipse(0,-8,21,11,0,0,Math.PI*2); rc.fill();
+  rc.beginPath(); rc.ellipse(19,-13,10,8,-.2,0,Math.PI*2); rc.fill();
+  rc.fillStyle='#15101b'; rc.beginPath(); rc.ellipse(28,-12,5,3,0,0,Math.PI*2); rc.fill();
+  rc.fillStyle='#b7ff62'; rc.beginPath(); rc.arc(21,-16,2,0,Math.PI*2); rc.fill();
+  // antennae
+  rc.strokeStyle='#8cff68'; rc.lineWidth=1.5;
+  for(const ay of [-1,1]){ rc.beginPath(); rc.moveTo(18,-20); rc.quadraticCurveTo(22,-32,31,-29+ay*5); rc.stroke(); }
+  // extra raised arm and its exceptionally long nails (never touches the ground)
+  rc.strokeStyle='#5b236f'; rc.lineWidth=6; rc.beginPath(); rc.moveTo(3,-10); rc.quadraticCurveTo(13,-27,24,-24); rc.stroke();
+  rc.strokeStyle='#d9ff9a'; rc.lineWidth=1.7;
+  for(let i=0;i<3;i++){ rc.beginPath(); rc.moveTo(23,-27+i*3); rc.lineTo(42,-35+i*5); rc.stroke(); }
+  rc.restore();
 }
 
 function drawWarriorPrism(rc,cfg,w){

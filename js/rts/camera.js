@@ -31,6 +31,7 @@ const S = {
   map: null, mapDecor: [], mapSeed: 1,
   // selection / UI
   selected: [], buildPopupOpen: false, buildStructureMode: false, buildingSource: null, attackMoveMode: false,
+  callDownLingMode: false,
   // AI
   aiTimer: 0,
   // camera
@@ -45,7 +46,7 @@ function resetRtsState(){
   S.entities=[]; S.playerBase=null; S.enemyBase=null;
   S.particles=[]; S.goldNodes=[]; S.projectiles=[];
   S.map=null; S.mapDecor=[];
-  S.selected=[]; S.buildPopupOpen=false; S.buildStructureMode=false; S.buildingSource=null; S.attackMoveMode=false;
+  S.selected=[]; S.buildPopupOpen=false; S.buildStructureMode=false; S.buildingSource=null; S.attackMoveMode=false; S.callDownLingMode=false;
   S.aiTimer=0;
   S.stats={ kills:0, deaths:0, goldEarned:0, oilEarned:0, unitsBuilt:0 };
   S.camX=0; S.camY=RH/2-VH/2; S.camZoom=1; S.mouseWorld=null;
@@ -186,7 +187,7 @@ function rtsUpdateViewportCursor(){
   if(!wrap) return;
   wrap.classList.toggle('rts-attack-move-armed', S.attackMoveMode);
   if(!S.attackMoveMode){
-    wrap.style.cursor=S.buildStructureMode||dragSelActive?'crosshair':'default';
+    wrap.style.cursor=S.buildStructureMode||S.callDownLingMode||dragSelActive?'crosshair':'default';
   } else {
     wrap.style.cursor='';
   }
