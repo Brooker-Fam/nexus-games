@@ -133,6 +133,35 @@ test('Roboto Factory infestation is permanent, blocks Drones, and continuously m
   assert.deepEqual([...result.nextQueue],['infestedGunbot']);
 });
 
+test('Shadow Temple calls down three allied infested Lings at a chosen location with a cooldown',()=>{
+  const context=makeContext();
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  Object.assign(context,{
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    S:{frame:120,entities:[],particles:[],playerFaction:'shadow',enemyFaction:'prism'},
+    STRUCT_COSTS:{}, rtsSetLog:()=>{}, updateRtsHUD:()=>{}, rtsRand:()=>0.5,
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const temple={id:1,type:'base',side:'player',x:20,y:30};
+    S.entities=[temple];
+    executeCommand({type:'call_down_lings',buildingId:1,x:400,y:250,side:'player'});
+    const firstCall=S.entities.filter(entity=>entity.subtype==='ling');
+    executeCommand({type:'call_down_lings',buildingId:1,x:500,y:350,side:'player'});
+    return {lings:firstCall.map(ling=>({side:ling.side,faction:ling.faction,x:ling.x,y:ling.y})),cooldown:temple.lingCallCooldown,particles:S.particles.length,total:S.entities.filter(entity=>entity.subtype==='ling').length};
+  })()`,context);
+
+  assert.deepEqual(Array.from(result.lings,ling=>({...ling})),[
+    {side:'player',faction:'shadow',x:376,y:262},
+    {side:'player',faction:'shadow',x:400,y:232},
+    {side:'player',faction:'shadow',x:424,y:262},
+  ]);
+  assert.equal(result.cooldown,1920);
+  assert.equal(result.particles,18);
+  assert.equal(result.total,3);
+});
+
 test('Prism Oracle and Princess remain distinct units',()=>{
   const context=makeContext();
   const units=vm.runInContext(`(() => ({

@@ -119,6 +119,17 @@ function openBuildPopup(screenX, screenY, context){
           princessUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
           u.oilCost);
       }
+      if(myFaction()==='shadow'){
+        const cooldown=Math.max(0,(sel?.lingCallCooldown||0)-S.frame);
+        addOpt('☄', 'CALL DOWN ALLIED INFESTED', cooldown>0
+          ? `Temple is recovering — ${Math.ceil(cooldown/60)}s`
+          : 'Choose a location to call down three allied Lings', 0, ()=>{
+          S.callDownLingMode={templeId:sel?sel.id:S.buildingSource?.id};
+          rtsSetLog('Choose a location to call down allied infested Lings.');
+          closeBuildPopup();
+          rtsUpdateViewportCursor();
+        }, !!sel?.underConstruction||cooldown>0);
+      }
       if(myFaction()==='roboto'){
         addOpt('☣', 'INFEST FACTORY', 'Permanent — continuously produces free Infested GunBots and can no longer make Drones', 0, ()=>{
           issueCommand({type:'infest_factory',buildingId:sel?sel.id:S.buildingSource?.id});
@@ -347,6 +358,13 @@ function rtsHandleClick(e){
   const sp=canvasPos(e);
   const wp=screenToWorld(sp.x, sp.y);
   if(e.target.closest && e.target.closest('#rts-build-popup')) return;
+  if(S.callDownLingMode){
+    issueCommand({type:'call_down_lings',buildingId:S.callDownLingMode.templeId,x:wp.x,y:wp.y});
+    S.callDownLingMode=false;
+    rtsSetLog('Allied infested Lings are incoming!');
+    rtsUpdateViewportCursor();
+    return;
+  }
   if(S.attackMoveMode){
     const selectedWarriorIds=S.selected.filter(s=>s.side===mySide()&&s.type==='warrior').map(s=>s.id);
     if(selectedWarriorIds.length>0){
