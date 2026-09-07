@@ -63,6 +63,18 @@ function makeInfestedGunbot(side, nearX, nearY){
   return unit;
 }
 
+// A structure killed by an Infested GunBot is replaced by one of these nests.
+// Nests use the normal building queue machinery, but their production can never
+// be changed or stopped while the nest is alive.
+function makeLingNest(side, x, y){
+  return {
+    id:nextId(), type:'structure', structType:'lingnest', side, faction:'roboto',
+    x, y, hp:BUILDING_HEALTH.structure, maxHp:BUILDING_HEALTH.structure,
+    label:'LING NEST', selected:false, frame:0,
+    infested:true, isLingNest:true, queue:[], trainTimer:0,
+  };
+}
+
 // ── 2ND-TIER BARRACKS UNITS ──
 // Warbot (Roboto) — heavier armored GunBot variant, more HP and damage
 function makeWarbot(side, faction, nearX, nearY){

@@ -128,7 +128,28 @@ function drawRTSStructure(rc, s){
 
   if(s.selected) drawSelectionRing(rc, x, y, 52, 26, 2.5);
 
-  if(s.structType==='shrine'){
+  if(s.structType==='lingnest'){
+    const pulse=0.75+Math.sin((s.frame||0)*0.08)*0.15;
+    rc.fillStyle='rgba(25,45,12,0.85)';
+    rc.beginPath(); rc.ellipse(x,y+15,38,17,0,0,Math.PI*2); rc.fill();
+    rc.strokeStyle='#62ff45'; rc.lineWidth=2; rc.stroke();
+    const core=rc.createRadialGradient(x,y-5,2,x,y-5,25);
+    core.addColorStop(0,`rgba(210,255,120,${pulse})`);
+    core.addColorStop(0.45,'rgba(70,180,35,0.9)');
+    core.addColorStop(1,'rgba(8,30,5,0.95)');
+    rc.fillStyle=core; rc.shadowColor='#62ff45'; rc.shadowBlur=18;
+    rc.beginPath(); rc.ellipse(x,y-5,27,25,0,0,Math.PI*2); rc.fill();
+    for(let i=0;i<5;i++){
+      const a=i*Math.PI*2/5+(s.frame||0)*0.012;
+      rc.strokeStyle='rgba(120,255,75,0.75)'; rc.lineWidth=2;
+      rc.beginPath(); rc.moveTo(x+Math.cos(a)*13,y-5+Math.sin(a)*11);
+      rc.quadraticCurveTo(x+Math.cos(a+0.35)*30,y+Math.sin(a+0.35)*20,x+Math.cos(a)*39,y+17+Math.sin(a)*7); rc.stroke();
+    }
+    rc.font='bold 7px Orbitron,sans-serif'; rc.textAlign='center'; rc.fillStyle='#aaff88';
+    rc.fillText('LING NEST',x,y+43);
+  }
+
+  else if(s.structType==='shrine'){
     // ── SHRINE (Prism) ── circular crystal altar
     // base ring
     rc.fillStyle='rgba(180,240,255,0.12)';

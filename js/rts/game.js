@@ -363,6 +363,9 @@ function rtsTick(){
     // Skip primary bases (handled by game-over check below)
     if(e===playerBase || e===enemyBase) continue;
     if(e.hp<=0){
+      const becomesLingNest=e.destroyedByLing &&
+        (e.type==='base'||e.type==='structure'||e.type==='cannon') &&
+        e!==playerBase && e!==enemyBase;
       if(e.type==='warrior' && e.faction==='shadow' && !e.subtype && e.state!=='duel'){
         deadSwordsmenPool.push({x:e.x, y:e.y, side:e.side});
         if(deadSwordsmenPool.length>12) deadSwordsmenPool.shift();
@@ -375,6 +378,12 @@ function rtsTick(){
       spawnDeathParticles(e.x,e.y,FACTION_CFG[e.faction]?.color||'#886633');
       sfx('rtsUnitDie',120);
       S.entities.splice(i,1);
+      if(becomesLingNest){
+        const nest=makeLingNest(e.destroyedByLing.side,e.x,e.y);
+        ensureInfestedProduction(nest);
+        S.entities.push(nest);
+        if(nest.side==='player') rtsSetLog('The destroyed building has become a Ling Nest!');
+      }
     }
   }
 
@@ -606,7 +615,7 @@ function ensureInfestedProduction(factory){
   if(!factory?.infested || factory.underConstruction) return false;
   if(!factory.queue) factory.queue=[];
   if(factory.queue.length>0) return false;
-  return queueUnit(factory, 'INFESTED GUNBOT', BUILD_TIMES.infestedGunbot,
+  return queueUnit(factory, factory.isLingNest?'LING':'INFESTED GUNBOT', BUILD_TIMES.infestedGunbot,
     ()=>makeInfestedGunbot(factory.side, factory.x, factory.y), 'infestedGunbot');
 }
 
@@ -786,6 +795,7 @@ function warriorMeleeAttack(w, target, targetDist){
     if(w.attackTimer>=MELEE_ATTACK_TICKS){
       w.attackTimer=0;
       target.hp-=w.damage;
+      if(target.hp<=0 && w.subtype==='infestedGunbot') target.destroyedByLing={side:w.side};
       if(target.type==='base') spawnHitFlash(target.x+(w.side==='player'?-30:30),target.y+(Math.random()-0.5)*60,'#ff4444');
       else spawnHitFlash(target.x,target.y,FACTION_CFG[w.faction].color);
     }
@@ -938,6 +948,7 @@ function spawnProjectile(shooter, target, burstOffset){
     aoeRadius: pCfg.aoeRadius,
     aoeFactor: pCfg.aoeFactor,
     side:shooter.side,
+    createsLingNest:shooter.subtype==='infestedGunbot',
   });
   sfx(pCfg.sound||'rtsBullet', 80);
 }
@@ -969,6 +980,7 @@ function updateProjectiles(){
     const dx=p.tx.x-p.x, dy=p.tx.y-p.y, d=_dist(dx,dy);
     if(d<p.speed+4){
       p.tx.hp-=p.damage;
+      if(p.tx.hp<=0 && p.createsLingNest) p.tx.destroyedByLing={side:p.side};
       if(p.type==='bullet') spawnHitFlash(p.tx.x,p.tx.y,'#ffcc44');
       else if(p.type==='cannonball'){
         spawnHitParticles2(p.tx.x,p.tx.y);

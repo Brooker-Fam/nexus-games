@@ -133,6 +133,43 @@ test('Roboto Factory infestation is permanent, blocks Drones, and continuously m
   assert.deepEqual([...result.nextQueue],['infestedGunbot']);
 });
 
+test('buildings destroyed by Infested GunBots become Ling Nests that continuously produce lings',()=>{
+  const context=makeContext();
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  Object.assign(context,{
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    BUILDING_HEALTH:{base:500,structure:300,cannon:200},
+    S:{frame:0,entities:[],projectiles:[],particles:[],goldNodes:[],stats:{kills:0,deaths:0,unitsBuilt:0},gold:{player:0,enemy:0},oil:{player:0,enemy:0},gameOver:false},
+    STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0}},
+    AI_CONFIG:{focusFireChance:0}, COMBAT:{},
+    tickCamera:()=>{}, aiTick:()=>{}, processCommands:()=>{}, updateRtsHUD:()=>{}, rtsSetLog:()=>{}, sfx:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const playerBase=makeBase('player','roboto',50,50);
+    const enemyBase=makeBase('enemy','shadow',950,50);
+    const victim=makeCannon('enemy','shadow',200,200);
+    victim.underConstruction=false; victim.hp=1;
+    const ling=makeInfestedGunbot('player',100,200);
+    S.playerBase=playerBase; S.enemyBase=enemyBase;
+    S.entities=[playerBase,enemyBase,victim,ling];
+    S.projectiles=[{x:victim.x,y:victim.y,tx:victim,speed:10,damage:3,type:'bullet',trail:[],side:'player',createsLingNest:true}];
+    updateProjectiles();
+    rtsTick();
+    const nest=S.entities.find(e=>e.isLingNest);
+    nest.trainTimer=BUILD_TIMES.infestedGunbot-1;
+    buildingTick(nest);
+    return {nest:{side:nest.side,label:nest.label,hp:nest.hp,queue:nest.queue.map(q=>q.unitType)},lings:S.entities.filter(e=>e.subtype==='infestedGunbot').length};
+  })()`,context);
+
+  assert.equal(result.nest.side,'player');
+  assert.equal(result.nest.label,'LING NEST');
+  assert.ok(result.nest.hp>0);
+  assert.deepEqual([...result.nest.queue],['infestedGunbot']);
+  assert.equal(result.lings,2);
+});
+
 test('Prism Oracle and Princess remain distinct units',()=>{
   const context=makeContext();
   const units=vm.runInContext(`(() => ({
