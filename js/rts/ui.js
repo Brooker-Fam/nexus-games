@@ -57,6 +57,7 @@ const STRUCT_COSTS = {
   cannon:    { gold:35,  oil:0  },
   barracks:  { gold:55,  oil:0  },
   oilrig:    { gold:45,  oil:0  },
+  lingnest:  { gold:90,  oil:30 },
   structure: { gold:100, oil:35 },
   aerial:    { gold:110, oil:40 },
   base:      { gold:160, oil:0  },
@@ -186,6 +187,13 @@ function openBuildPopup(screenX, screenY, context){
         S.buildStructureMode='oilrig'; _buildModeCost=oc.gold; _buildModeOilCost=oc.oil;
         rtsSetLog(`Click to place your ${cfg.oilRigLabel}!`); closeBuildPopup();
       }, myGold()<oc.gold||myOil()<oc.oil, oc.oil);
+    }
+    if(cfg.lingNestLabel){
+      const lc=STRUCT_COSTS.lingnest;
+      addOpt(cfg.lingNestIcon, `Build ${cfg.lingNestLabel}`, `Click to place — ${(cfg.lingNestDesc||'passively spawns free Lings').toLowerCase()} (${lc.gold}g +${lc.oil}${oilName})`, lc.gold, ()=>{
+        S.buildStructureMode='lingnest'; _buildModeCost=lc.gold; _buildModeOilCost=lc.oil;
+        rtsSetLog(`Click to place your ${cfg.lingNestLabel}!`); closeBuildPopup();
+      }, myGold()<lc.gold||myOil()<lc.oil, lc.oil);
     }
     addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Click to place — trains more workers (${baseC.gold}g)`, baseC.gold, ()=>{
       S.buildStructureMode='base'; _buildModeCost=baseC.gold; _buildModeOilCost=baseC.oil;
@@ -400,7 +408,7 @@ function rtsHandleClick(e){
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, oilCost:_buildModeOilCost, buildType:'base' });
     } else {
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, oilCost:_buildModeOilCost, buildType:
-        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':S.buildStructureMode==='oilrig'?'oilrig':'structure' });
+        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':S.buildStructureMode==='oilrig'?'oilrig':S.buildStructureMode==='lingnest'?'lingnest':'structure' });
     }
     S.buildStructureMode=false;
     S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#ffdd00',size:0,isRing:true,radius:4});
@@ -455,6 +463,16 @@ function rtsHandleClick(e){
         const rigCfg2=FACTION_CFG[S.playerFaction||'prism'];
         const resName=(rigCfg2.oilResourceName||'oil').toLowerCase();
         rtsSetLog(`${rigCfg2.oilRigLabel||'OIL RIG'} — ${resName}: ${hit.oil||0}/${hit.maxOil||200}  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
+      }
+    } else if(hit.type==='structure' && hit.isLingNest){
+      const nestLabel=cfg.lingNestLabel||'LING NEST';
+      if(hit.underConstruction){
+        const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
+        rtsSetLog(`${nestLabel} — under construction ${pct}%`);
+      } else {
+        const item=hit.queue?.[0];
+        const nextLing=item ? `  Next Ling: ${trainingProgress(hit.trainTimer,item.time).seconds}s` : '';
+        rtsSetLog(`${nestLabel} — HP: ${Math.floor(hit.hp)}/${hit.maxHp}${nextLing}`);
       }
     } else if(hit.type==='structure'){
       if(hit.underConstruction){
