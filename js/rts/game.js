@@ -739,7 +739,7 @@ const MELEE_ATTACK_TICKS = 45;
 // Allowed: gunbot (roboto warrior), warbot, shockbot, dark warrior (shadow elite),
 //          witch (prism warrior), princess (prism elite), wizard, starfighter, skyattacker,
 //          bow-mode legionnaire, bow-mode bloodhound.
-// Blocked: workers, swordsman (shadow melee warrior), sword-mode legionnaire, necromancer, tank.
+// Blocked: workers, swordsman (shadow melee warrior), sword-mode legionnaire, necromancer, tank, ling.
 function canTargetAerial(w){
   if(w.type==='cannon') return true;
   if(w.type!=='warrior') return false;
@@ -748,6 +748,7 @@ function canTargetAerial(w){
   if(w.subtype==='bloodhound') return w.bowMode===true; // bow mode can hit aerial
   if(w.subtype==='necromancer') return false;
   if(w.subtype==='tank') return false;
+  if(w.subtype==='ling') return false; // ground-only melee creature
   return true;
 }
 

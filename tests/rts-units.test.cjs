@@ -429,3 +429,22 @@ test('bow-mode legionnaire can target aerial units, sword-mode cannot',()=>{
   })()`,context);
   assert.deepEqual({...result},{sword:false,bow:true});
 });
+
+test('Ling cannot target aerial units',()=>{
+  const context=makeContext();
+  Object.assign(context,{
+    STRUCT_COSTS:{
+      barracks:{gold:20}, cannon:{gold:20},
+      structure:{gold:20,oil:0}, aerial:{gold:20,oil:0},
+      oilrig:{gold:20},
+    },
+    window:{_mpMultiplayer:false}, S:{entities:[],playerBase:null,enemyBase:null},
+  });
+  const gameSource=fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8');
+  vm.runInContext(gameSource,context);
+  const result=vm.runInContext(`(() => {
+    const unit=makeLing('player',100,100);
+    return canTargetAerial(unit);
+  })()`,context);
+  assert.equal(result,false);
+});
