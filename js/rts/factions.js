@@ -52,6 +52,7 @@ const FACTION_CFG={
     aerialUnitCost:22, aerialUnitIcon:'✦', aerialFn:'makeStarFighter', aerialOilCost:8,
     aerial2Label:'DESTROYER', aerial2Desc:'Aerial — hurls slow orbs of darkness that damage an area',
     aerial2Cost:34, aerial2Icon:'🌌', aerial2Fn:'makeDestroyer', aerial2OilCost:18,
+    lingCallGoldCost:50, lingCallOilCost:25, lingCallCount:12,
     oilRigName:'GARDEN', oilRigLabel:'GARDEN', oilRigIcon:'🌺',
     oilResourceName:'ESSENCE', oilResourceIcon:'💜',
   },

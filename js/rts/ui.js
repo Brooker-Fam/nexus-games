@@ -121,14 +121,17 @@ function openBuildPopup(screenX, screenY, context){
       }
       if(myFaction()==='shadow'){
         const cooldown=Math.max(0,(sel?.lingCallCooldown||0)-S.frame);
+        const goldCost=cfg.lingCallGoldCost||0;
+        const essenceCost=cfg.lingCallOilCost||0;
+        const lingCount=cfg.lingCallCount||12;
         addOpt('☄', 'CALL DOWN ALLIED INFESTED', cooldown>0
           ? `Temple is recovering — ${Math.ceil(cooldown/60)}s`
-          : 'Choose a location to call down three allied Lings', 0, ()=>{
+          : `Choose a location to call down ${lingCount} allied Lings`, goldCost, ()=>{
           S.callDownLingMode={templeId:sel?sel.id:S.buildingSource?.id};
           rtsSetLog('Choose a location to call down allied infested Lings.');
           closeBuildPopup();
           rtsUpdateViewportCursor();
-        }, !!sel?.underConstruction||cooldown>0);
+        }, !!sel?.underConstruction||cooldown>0||myGold()<goldCost||myOil()<essenceCost, essenceCost);
       }
       if(myFaction()==='roboto'){
         addOpt('☣', 'INFEST FACTORY', 'Permanent — continuously produces free Infested GunBots and can no longer make Drones', 0, ()=>{

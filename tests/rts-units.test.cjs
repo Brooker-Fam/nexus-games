@@ -133,12 +133,12 @@ test('Roboto Factory infestation is permanent, blocks Drones, and continuously m
   assert.deepEqual([...result.nextQueue],['infestedGunbot']);
 });
 
-test('Shadow Temple calls down three allied infested Lings at a chosen location with a cooldown',()=>{
+test('Shadow Temple spends gold and essence to call down twelve allied infested Lings',()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
-    S:{frame:120,entities:[],particles:[],playerFaction:'shadow',enemyFaction:'prism'},
+    S:{frame:120,entities:[],particles:[],gold:{player:100},oil:{player:50},playerFaction:'shadow',enemyFaction:'prism'},
     STRUCT_COSTS:{}, rtsSetLog:()=>{}, updateRtsHUD:()=>{}, rtsRand:()=>0.5,
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
@@ -149,17 +149,39 @@ test('Shadow Temple calls down three allied infested Lings at a chosen location 
     executeCommand({type:'call_down_lings',buildingId:1,x:400,y:250,side:'player'});
     const firstCall=S.entities.filter(entity=>entity.subtype==='ling');
     executeCommand({type:'call_down_lings',buildingId:1,x:500,y:350,side:'player'});
-    return {lings:firstCall.map(ling=>({side:ling.side,faction:ling.faction,x:ling.x,y:ling.y})),cooldown:temple.lingCallCooldown,particles:S.particles.length,total:S.entities.filter(entity=>entity.subtype==='ling').length};
+    return {lings:firstCall.map(ling=>({side:ling.side,faction:ling.faction})),cooldown:temple.lingCallCooldown,particles:S.particles.length,total:S.entities.filter(entity=>entity.subtype==='ling').length,gold:S.gold.player,essence:S.oil.player};
   })()`,context);
 
-  assert.deepEqual(Array.from(result.lings,ling=>({...ling})),[
-    {side:'player',faction:'shadow',x:376,y:262},
-    {side:'player',faction:'shadow',x:400,y:232},
-    {side:'player',faction:'shadow',x:424,y:262},
-  ]);
+  assert.equal(result.lings.length,12);
+  assert.ok(result.lings.every(ling=>ling.side==='player' && ling.faction==='shadow'));
   assert.equal(result.cooldown,1920);
   assert.equal(result.particles,18);
-  assert.equal(result.total,3);
+  assert.equal(result.total,12);
+  assert.equal(result.gold,50);
+  assert.equal(result.essence,25);
+});
+
+test('Shadow Temple rejects a Ling call when either resource is insufficient',()=>{
+  const context=makeContext();
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  Object.assign(context,{
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    S:{frame:120,entities:[],particles:[],gold:{player:49},oil:{player:100},playerFaction:'shadow',enemyFaction:'prism'},
+    STRUCT_COSTS:{}, rtsSetLog:()=>{}, updateRtsHUD:()=>{}, rtsRand:()=>0.5,
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const temple={id:1,type:'base',side:'player'};
+    S.entities=[temple];
+    executeCommand({type:'call_down_lings',buildingId:1,x:400,y:250,side:'player'});
+    S.gold.player=100;
+    S.oil.player=24;
+    executeCommand({type:'call_down_lings',buildingId:1,x:400,y:250,side:'player'});
+    return {entities:S.entities.length,cooldown:temple.lingCallCooldown,gold:S.gold.player,essence:S.oil.player};
+  })()`,context);
+
+  assert.deepEqual({...result},{entities:1,cooldown:undefined,gold:100,essence:24});
 });
 
 test('Prism Oracle and Princess remain distinct units',()=>{
