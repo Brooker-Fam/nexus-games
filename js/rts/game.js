@@ -30,6 +30,8 @@ const AI_CONFIG = {
   aerialCost: STRUCT_COSTS.aerial.gold,
   aerialOilCost: STRUCT_COSTS.aerial.oil,
   oilRigCost: STRUCT_COSTS.oilrig.gold,
+  lingNestCost: STRUCT_COSTS.lingnest?.gold||0,
+  lingNestOilCost: STRUCT_COSTS.lingnest?.oil||0,
   eliteCost: 30,
   warriorCost: 10,
   warrior2Cost: 16,
@@ -150,7 +152,7 @@ function aiTick(){
   const workers   = aiCount('worker');
   const warriors  = aiCount('warrior');
   const barracks  = aiCount('structure', e=>e.isBarracks);
-  const eliteStructs = aiCount('structure', e=>!e.isBarracks&&!e.isAerialHangar);
+  const eliteStructs = aiCount('structure', e=>!e.isBarracks&&!e.isAerialHangar&&!e.isLingNest);
   const aerialHangars = aiCount('structure', e=>e.isAerialHangar);
   const cannons   = aiCount('cannon');
   const idleWarriors = S.entities.filter(e=>e.side==='enemy'&&e.type==='warrior'&&e.state==='idle').length;
@@ -207,6 +209,15 @@ function aiTick(){
       }
     }
 
+    // Build a Ling Nest once a barracks exists — it then passively trickles
+    // free Lings with no further AI upkeep.
+    if(eCfg2.lingNestLabel){
+      const lingNests=aiCount('structure',e=>e.isLingNest);
+      if(lingNests===0 && barracks>=1 && workers>=3){
+        aiBuild('lingnest', eb.x-160, eb.y-200, AI_CONFIG.lingNestCost, AI_CONFIG.lingNestOilCost);
+      }
+    }
+
     } // end mistake check
   }
 
@@ -236,7 +247,7 @@ function aiTick(){
     }
 
     // Train elites (and elite2/tanks for Roboto)
-    const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.isOilRig&&!e.underConstruction);
+    const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.isOilRig&&!e.isLingNest&&!e.underConstruction);
     const eCfg3=FACTION_CFG[S.enemyFaction];
     if(S.enemyFaction==='prism'){
       const princessExists=S.entities.some(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='princess');
@@ -425,7 +436,7 @@ function workerBuild(w){
   if(moveToward(w, w.buildTarget.x, w.buildTarget.y, BUILD_ARRIVE_DIST)) {
     const bt=w.buildTarget.buildType||'structure';
     if(!w.buildTarget.ghost){
-      const makers={cannon:makeCannon, barracks:makeBarracks, base:makeBase, aerial:makeAerialBuilding, oilrig:makeOilRig};
+      const makers={cannon:makeCannon, barracks:makeBarracks, base:makeBase, aerial:makeAerialBuilding, oilrig:makeOilRig, lingnest:makeLingNest};
       const ghost=(makers[bt]||makeStructure)(w.side, w.faction, w.buildTarget.x, w.buildTarget.y);
       S.entities.push(ghost);
       w.buildTarget.ghost=ghost;
@@ -441,7 +452,7 @@ function workerBuild(w){
       ghost.hp=ghost.maxHp;
       sfx('rtsBuildDone');
       if(w.side==='player'){
-        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:bt==='aerial'?FACTION_CFG[w.faction].aerialLabel:bt==='oilrig'?(FACTION_CFG[w.faction].oilRigLabel||'OIL RIG'):FACTION_CFG[w.faction].structLabel;
+        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:bt==='aerial'?FACTION_CFG[w.faction].aerialLabel:bt==='oilrig'?(FACTION_CFG[w.faction].oilRigLabel||'OIL RIG'):bt==='lingnest'?(FACTION_CFG[w.faction].lingNestLabel||'LING NEST'):FACTION_CFG[w.faction].structLabel;
         rtsSetLog(`${lbl} complete!`);
       }
       w.state='idle'; w.buildTarget=null; w.hammerSwing=0; w.buildTimer=0;
@@ -584,6 +595,7 @@ function cannonTick(c){
 function buildingTick(b){
   if(b.underConstruction) return; // can't train while being built
   if(b.infested) ensureInfestedProduction(b);
+  if(b.isLingNest) ensureLingNestProduction(b);
   if(!b.queue || b.queue.length===0) return;
   b.trainTimer=(b.trainTimer||0)+1;
   const item=b.queue[0];
@@ -599,6 +611,7 @@ function buildingTick(b){
       rtsSetLog(spawned.length>1 ? `${item.label} squad ready! (×${spawned.length})` : `${item.label} ready!`);
     }
     if(b.infested) ensureInfestedProduction(b);
+    if(b.isLingNest) ensureLingNestProduction(b);
   }
 }
 
@@ -608,6 +621,14 @@ function ensureInfestedProduction(factory){
   if(factory.queue.length>0) return false;
   return queueUnit(factory, 'INFESTED GUNBOT', BUILD_TIMES.infestedGunbot,
     ()=>makeInfestedGunbot(factory.side, factory.x, factory.y), 'infestedGunbot');
+}
+
+function ensureLingNestProduction(nest){
+  if(!nest?.isLingNest || nest.underConstruction) return false;
+  if(!nest.queue) nest.queue=[];
+  if(nest.queue.length>0) return false;
+  return queueUnit(nest, 'LING', BUILD_TIMES.ling,
+    ()=>makeLing(nest.side, nest.x, nest.y), 'ling');
 }
 
 function queueUnit(building, label, time, fn, unitType){

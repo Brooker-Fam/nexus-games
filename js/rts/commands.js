@@ -37,6 +37,7 @@ function executeCommand(cmd){
     if(ent.isBarracks) return 'barracks';
     if(ent.isAerialHangar) return 'aerial';
     if(ent.isOilRig) return 'oilrig';
+    if(ent.isLingNest) return 'lingnest';
     return 'structure';
   };
 

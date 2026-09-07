@@ -161,6 +161,56 @@ test('Shadow Temple spends gold and essence to call down twelve allied infested 
   assert.equal(result.essence,25);
 });
 
+test('Shadow Ling Nest is a free-standing structure that continuously spawns Lings with no cost',()=>{
+  const context=makeContext();
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  Object.assign(context,{
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},stats:{unitsBuilt:0},playerFaction:'shadow',enemyFaction:'prism'},
+    STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0},lingnest:{gold:0,oil:0}},
+    BUILDING_HEALTH:{base:300,structure:160,cannon:120,aerial:140},
+    rtsSetLog:()=>{}, updateRtsHUD:()=>{}, sfx:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const nest=makeLingNest('player','shadow',100,100);
+    S.entities=[nest];
+    const beforeGold=S.gold.player, beforeOil=S.oil.player;
+    const afterConstruction={isLingNest:nest.isLingNest,queue:nest.queue.map(item=>item.unitType)};
+
+    // still under construction — no production yet
+    buildingTick(nest);
+    const duringConstruction=nest.queue.length;
+
+    nest.underConstruction=false;
+    nest.hp=nest.maxHp;
+    buildingTick(nest);
+    const queuedAfterOpen=nest.queue.map(item=>item.unitType);
+
+    nest.trainTimer=BUILD_TIMES.ling-1;
+    buildingTick(nest);
+    const spawned=S.entities.find(entity=>entity.subtype==='ling');
+    return {
+      afterConstruction, duringConstruction,
+      queuedAfterOpen,
+      spawned:{side:spawned.side,faction:spawned.faction,subtype:spawned.subtype},
+      nextQueue:nest.queue.map(item=>item.unitType),
+      goldSpent:beforeGold-S.gold.player, oilSpent:beforeOil-S.oil.player,
+    };
+  })()`,context);
+
+  assert.equal(result.afterConstruction.isLingNest,true);
+  assert.deepEqual([...result.afterConstruction.queue],[]);
+  assert.equal(result.duringConstruction,0);
+  assert.deepEqual([...result.queuedAfterOpen],['ling']);
+  assert.deepEqual({...result.spawned},{side:'player',faction:'shadow',subtype:'ling'});
+  assert.deepEqual([...result.nextQueue],['ling']);
+  assert.equal(result.goldSpent,0);
+  assert.equal(result.oilSpent,0);
+});
+
 test('Shadow Temple rejects a Ling call when either resource is insufficient',()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);

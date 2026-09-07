@@ -130,6 +130,7 @@ const BUILD_TIMES={
   destroyer:   1260, // 21s — Shadow 2nd air unit
   warbot:      780,  // 13s — Roboto 2nd barracks unit
   legionnairesquad: 1500, // 25s — Prism 2nd barracks unit, trains 4 at once
+  ling:        600,  // 10s — automatically repeated by a Shadow Ling Nest
 };
 const QUEUE_MAX = 5; // max units queued per building
 
@@ -188,6 +189,20 @@ function makeOilRig(side, faction, x, y){
     label:(cfg&&cfg.oilRigLabel)||'OIL RIG', isOilRig:true,
     oil:200, maxOil:200,
     underConstruction:true, buildProgress:0, buildTime:BUILD_TIMES.structure,
+  };
+}
+
+// ── LING NEST (Shadow) ── passive structure, free-running Ling production
+function makeLingNest(side, faction, x, y){
+  const cfg=FACTION_CFG[faction];
+  return {
+    id:nextId(), type:'structure', side, faction,
+    x, y, hp:BUILDING_HEALTH.structure, maxHp:BUILDING_HEALTH.structure,
+    structType:'lingnest',
+    selected:false, frame:0,
+    label:(cfg&&cfg.lingNestLabel)||'LING NEST', isLingNest:true,
+    underConstruction:true, buildProgress:0, buildTime:BUILD_TIMES.structure,
+    queue:[], trainTimer:0,
   };
 }
 

@@ -53,6 +53,7 @@ const FACTION_CFG={
     aerial2Label:'DESTROYER', aerial2Desc:'Aerial — hurls slow orbs of darkness that damage an area',
     aerial2Cost:34, aerial2Icon:'🌌', aerial2Fn:'makeDestroyer', aerial2OilCost:18,
     lingCallGoldCost:50, lingCallOilCost:25, lingCallCount:12,
+    lingNestLabel:'LING NEST', lingNestIcon:'🥚', lingNestDesc:'Passively spawns a free Ling every few seconds',
     oilRigName:'GARDEN', oilRigLabel:'GARDEN', oilRigIcon:'🌺',
     oilResourceName:'ESSENCE', oilResourceIcon:'💜',
   },
