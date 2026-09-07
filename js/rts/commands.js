@@ -44,18 +44,28 @@ function executeCommand(cmd){
 
     case 'call_down_lings': {
       const temple=S.entities.find(e=>e.id===cmd.buildingId);
+      const goldCost=cfg.lingCallGoldCost||0;
+      const essenceCost=cfg.lingCallOilCost||0;
       if(!temple || temple.type!=='base' || temple.side!==side || faction!=='shadow' ||
           temple.underConstruction || (temple.lingCallCooldown||0)>S.frame ||
-          !Number.isFinite(cmd.x) || !Number.isFinite(cmd.y)) break;
+          !Number.isFinite(cmd.x) || !Number.isFinite(cmd.y) ||
+          (S.gold[side]||0)<goldCost || (S.oil[side]||0)<essenceCost) break;
+      S.gold[side]-=goldCost;
+      S.oil[side]-=essenceCost;
       temple.lingCallCooldown=S.frame+1800;
-      const offsets=[[-24,12],[0,-18],[24,12]];
-      for(const [ox,oy] of offsets) S.entities.push(makeLing(side,cmd.x+ox,cmd.y+oy));
+      const lingCount=cfg.lingCallCount||12;
+      for(let i=0;i<lingCount;i++){
+        const angle=(Math.PI*2*i)/lingCount;
+        const radius=30+18*(i%2);
+        S.entities.push(makeLing(side,cmd.x+Math.cos(angle)*radius,cmd.y+Math.sin(angle)*radius));
+      }
       for(let i=0;i<18;i++) S.particles.push({
         x:cmd.x+(rtsRand()-.5)*55,y:cmd.y+(rtsRand()-.5)*55,
         vx:(rtsRand()-.5)*1.5,vy:-1-rtsRand()*2,life:35+rtsRand()*20,
         color:i%2?'#79ff57':'#9922ff',size:2+rtsRand()*3,
       });
-      if(side==='player') rtsSetLog('Three allied infested Lings answered the call!');
+      updateRtsHUD();
+      if(side==='player') rtsSetLog(`${lingCount} allied infested Lings answered the call!`);
       break;
     }
 
