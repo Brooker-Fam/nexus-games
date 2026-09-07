@@ -626,7 +626,7 @@ function ensureLingProduction(nest){
   if(!nest.queue) nest.queue=[];
   if(nest.queue.length>0) return false;
   return queueUnit(nest, 'LING', BUILD_TIMES.warrior,
-    ()=>makeLegionnaire(nest.side, 'prism', nest.x, nest.y), 'legionnaire');
+    ()=>makeLing(nest.side, nest.x, nest.y), 'ling');
 }
 
 function queueUnit(building, label, time, fn, unitType){
@@ -805,7 +805,7 @@ function warriorMeleeAttack(w, target, targetDist){
     if(w.attackTimer>=MELEE_ATTACK_TICKS){
       w.attackTimer=0;
       target.hp-=w.damage;
-      if(target.hp<=0 && w.subtype==='legionnaire') target.destroyedByLing={side:w.side};
+      if(target.hp<=0 && w.subtype==='ling') target.destroyedByLing={side:w.side};
       if(target.type==='base') spawnHitFlash(target.x+(w.side==='player'?-30:30),target.y+(Math.random()-0.5)*60,'#ff4444');
       else spawnHitFlash(target.x,target.y,FACTION_CFG[w.faction].color);
     }
@@ -958,7 +958,7 @@ function spawnProjectile(shooter, target, burstOffset){
     aoeRadius: pCfg.aoeRadius,
     aoeFactor: pCfg.aoeFactor,
     side:shooter.side,
-    createsLingNest:shooter.subtype==='legionnaire',
+    createsLingNest:shooter.subtype==='ling',
   });
   sfx(pCfg.sound||'rtsBullet', 80);
 }

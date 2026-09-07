@@ -47,6 +47,20 @@ function drawRTSWarrior(rc,w){
     rc.beginPath(); rc.arc(-7,-13,3,0,Math.PI*2); rc.fill();
     rc.beginPath(); rc.arc(5,-23,2,0,Math.PI*2); rc.fill();
     rc.restore();
+  } else if(w.subtype==='ling'){
+    rc.save();
+    rc.shadowColor='#62ff45'; rc.shadowBlur=16;
+    rc.fillStyle='#173d12';
+    rc.beginPath(); rc.ellipse(0,-5,13,8,0,0,Math.PI*2); rc.fill();
+    rc.strokeStyle='#62ff45'; rc.lineWidth=2; rc.stroke();
+    rc.fillStyle='#9dff70';
+    rc.beginPath(); rc.moveTo(8,-9); rc.lineTo(19,-17); rc.lineTo(12,-3); rc.fill();
+    rc.beginPath(); rc.moveTo(-8,-9); rc.lineTo(-19,-17); rc.lineTo(-12,-3); rc.fill();
+    for(const lx of [-9,-3,3,9]){
+      rc.strokeStyle='#4fc43a'; rc.lineWidth=2;
+      rc.beginPath(); rc.moveTo(lx,-1); rc.lineTo(lx+(lx<0?-7:7),8); rc.stroke();
+    }
+    rc.restore();
   } else if(w.subtype==='legionnaire'){
     drawLegionnaire(rc,cfg,w);
   } else if(w.subtype==='princess'){

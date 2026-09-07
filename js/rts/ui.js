@@ -125,6 +125,13 @@ function openBuildPopup(screenX, screenY, context){
           closeBuildPopup();
         }, !!sel?.underConstruction);
       }
+      if(myFaction()==='shadow'){
+        const cooldown=Math.max(0,(sel?.lingCallCooldownUntil||0)-S.frame);
+        addOpt('☣', 'CALL DOWN ALLIED INFESTED', cooldown?`Lings available in ${Math.ceil(cooldown/60)}s`:'Deploy six allied Lings', 0, ()=>{
+          issueCommand({type:'call_down_allied_infested',buildingId:sel?sel.id:S.buildingSource?.id});
+          closeBuildPopup();
+        }, !!sel?.underConstruction||cooldown>0);
+      }
     }
 
   } else if(context==='barracks'){

@@ -42,6 +42,16 @@ function executeCommand(cmd){
 
   switch(cmd.type){
 
+    case 'call_down_allied_infested': {
+      const temple=S.entities.find(e=>e.id===cmd.buildingId);
+      if(!temple || temple.type!=='base' || temple.side!==side || faction!=='shadow' ||
+          temple.underConstruction || (temple.lingCallCooldownUntil||0)>S.frame) break;
+      for(let i=0;i<6;i++) S.entities.push(makeLing(side,temple.x,temple.y));
+      temple.lingCallCooldownUntil=S.frame+1800;
+      if(side==='player') rtsSetLog('Allied Infested inbound — six Lings deployed!');
+      break;
+    }
+
     case 'infest_factory': {
       const factory=S.entities.find(e=>e.id===cmd.buildingId);
       // Infestation is a one-way Roboto Factory conversion. Validate it here

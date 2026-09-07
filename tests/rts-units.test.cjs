@@ -133,7 +133,7 @@ test('Roboto Factory infestation is permanent, blocks Drones, and continuously m
   assert.deepEqual([...result.nextQueue],['infestedGunbot']);
 });
 
-test('buildings destroyed by Legionnaires become Ling Nests that continuously produce lings',()=>{
+test('buildings destroyed by called-down Lings become Ling Nests that continuously produce Lings',()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
@@ -151,28 +151,53 @@ test('buildings destroyed by Legionnaires become Ling Nests that continuously pr
     const enemyBase=makeBase('enemy','shadow',950,50);
     const victim=makeCannon('enemy','shadow',200,200);
     victim.underConstruction=false; victim.hp=1;
-    const ling=makeLegionnaire('player','prism',100,200,true);
+    const ling=makeLing('player',100,200);
     const gunbot=makeInfestedGunbot('player',100,240);
+    const legionnaire=makeLegionnaire('player','prism',100,260,true);
     S.playerBase=playerBase; S.enemyBase=enemyBase;
     S.entities=[playerBase,enemyBase,victim,ling];
     spawnProjectile(gunbot,victim);
     const gunbotCreatesNest=S.projectiles.pop().createsLingNest;
-    spawnProjectile(ling,victim);
-    S.projectiles[0].x=victim.x; S.projectiles[0].y=victim.y;
-    updateProjectiles();
+    spawnProjectile(legionnaire,victim);
+    const legionnaireCreatesNest=S.projectiles.pop().createsLingNest;
+    ling.attackTimer=MELEE_ATTACK_TICKS-1;
+    warriorMeleeAttack(ling,victim,0);
     rtsTick();
     const nest=S.entities.find(e=>e.isLingNest);
     nest.trainTimer=BUILD_TIMES.warrior-1;
     buildingTick(nest);
-    return {gunbotCreatesNest,nest:{side:nest.side,label:nest.label,hp:nest.hp,queue:nest.queue.map(q=>q.unitType)},lings:S.entities.filter(e=>e.subtype==='legionnaire').length};
+    return {gunbotCreatesNest,legionnaireCreatesNest,nest:{side:nest.side,label:nest.label,hp:nest.hp,queue:nest.queue.map(q=>q.unitType)},lings:S.entities.filter(e=>e.subtype==='ling').length};
   })()`,context);
 
   assert.equal(result.gunbotCreatesNest,false);
+  assert.equal(result.legionnaireCreatesNest,false);
   assert.equal(result.nest.side,'player');
   assert.equal(result.nest.label,'LING NEST');
   assert.ok(result.nest.hp>0);
-  assert.deepEqual([...result.nest.queue],['legionnaire']);
+  assert.deepEqual([...result.nest.queue],['ling']);
   assert.equal(result.lings,2);
+});
+
+test('Shadow Temple calls down allied Lings and enforces the ability cooldown',()=>{
+  const context=makeContext();
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  Object.assign(context,{
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    S:{frame:100,entities:[],playerFaction:'shadow',enemyFaction:'roboto'},
+    rtsSetLog:()=>{}, updateRtsHUD:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const temple={id:1,type:'base',side:'player',x:100,y:100};
+    S.entities=[temple];
+    executeCommand({type:'call_down_allied_infested',buildingId:temple.id,side:'player'});
+    const firstCall=S.entities.filter(e=>e.subtype==='ling').length;
+    executeCommand({type:'call_down_allied_infested',buildingId:temple.id,side:'player'});
+    return {firstCall,afterImmediateRetry:S.entities.filter(e=>e.subtype==='ling').length,cooldown:temple.lingCallCooldownUntil-S.frame};
+  })()`,context);
+
+  assert.deepEqual({...result},{firstCall:6,afterImmediateRetry:6,cooldown:1800});
 });
 
 test('Prism Oracle and Princess remain distinct units',()=>{

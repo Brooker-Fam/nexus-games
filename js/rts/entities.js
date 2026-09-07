@@ -63,12 +63,25 @@ function makeInfestedGunbot(side, nearX, nearY){
   return unit;
 }
 
-// A structure killed by a Ling (Legionnaire) is replaced by one of these nests.
+function makeLing(side, nearX, nearY){
+  const bx=nearX!==undefined?nearX:(side==='player'?PLAYER_BASE_X+120:ENEMY_BASE_X-120);
+  const by=nearY!==undefined?nearY:BASE_Y;
+  const offsetX=side==='player'?35:-35;
+  return {
+    id:nextId(), type:'warrior', subtype:'ling', side, faction:'shadow',
+    x:bx+offsetX, y:by+(rtsRand()-0.5)*90,
+    hp:18, maxHp:18, speed:2.6, damage:7, range:42, ranged:false,
+    state:'idle', target:null, attackTimer:0, frame:0, selected:false,
+    forcedTarget:null, moveTarget:null,
+  };
+}
+
+// A structure killed by a Ling is replaced by one of these nests.
 // Nests use the normal building queue machinery, but their production can never
 // be changed or stopped while the nest is alive.
 function makeLingNest(side, x, y){
   return {
-    id:nextId(), type:'structure', structType:'lingnest', side, faction:'prism',
+    id:nextId(), type:'structure', structType:'lingnest', side, faction:'shadow',
     x, y, hp:BUILDING_HEALTH.structure, maxHp:BUILDING_HEALTH.structure,
     label:'LING NEST', selected:false, frame:0,
     isLingNest:true, queue:[], trainTimer:0,
