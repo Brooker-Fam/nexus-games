@@ -380,7 +380,7 @@ function rtsTick(){
       S.entities.splice(i,1);
       if(becomesLingNest){
         const nest=makeLingNest(e.destroyedByLing.side,e.x,e.y);
-        ensureInfestedProduction(nest);
+        ensureLingProduction(nest);
         S.entities.push(nest);
         if(nest.side==='player') rtsSetLog('The destroyed building has become a Ling Nest!');
       }
@@ -593,6 +593,7 @@ function cannonTick(c){
 function buildingTick(b){
   if(b.underConstruction) return; // can't train while being built
   if(b.infested) ensureInfestedProduction(b);
+  if(b.isLingNest) ensureLingProduction(b);
   if(!b.queue || b.queue.length===0) return;
   b.trainTimer=(b.trainTimer||0)+1;
   const item=b.queue[0];
@@ -608,6 +609,7 @@ function buildingTick(b){
       rtsSetLog(spawned.length>1 ? `${item.label} squad ready! (×${spawned.length})` : `${item.label} ready!`);
     }
     if(b.infested) ensureInfestedProduction(b);
+    if(b.isLingNest) ensureLingProduction(b);
   }
 }
 
@@ -615,8 +617,16 @@ function ensureInfestedProduction(factory){
   if(!factory?.infested || factory.underConstruction) return false;
   if(!factory.queue) factory.queue=[];
   if(factory.queue.length>0) return false;
-  return queueUnit(factory, factory.isLingNest?'LING':'INFESTED GUNBOT', BUILD_TIMES.infestedGunbot,
+  return queueUnit(factory, 'INFESTED GUNBOT', BUILD_TIMES.infestedGunbot,
     ()=>makeInfestedGunbot(factory.side, factory.x, factory.y), 'infestedGunbot');
+}
+
+function ensureLingProduction(nest){
+  if(!nest?.isLingNest || nest.underConstruction) return false;
+  if(!nest.queue) nest.queue=[];
+  if(nest.queue.length>0) return false;
+  return queueUnit(nest, 'LING', BUILD_TIMES.warrior,
+    ()=>makeLegionnaire(nest.side, 'prism', nest.x, nest.y), 'legionnaire');
 }
 
 function queueUnit(building, label, time, fn, unitType){
@@ -795,7 +805,7 @@ function warriorMeleeAttack(w, target, targetDist){
     if(w.attackTimer>=MELEE_ATTACK_TICKS){
       w.attackTimer=0;
       target.hp-=w.damage;
-      if(target.hp<=0 && w.subtype==='infestedGunbot') target.destroyedByLing={side:w.side};
+      if(target.hp<=0 && w.subtype==='legionnaire') target.destroyedByLing={side:w.side};
       if(target.type==='base') spawnHitFlash(target.x+(w.side==='player'?-30:30),target.y+(Math.random()-0.5)*60,'#ff4444');
       else spawnHitFlash(target.x,target.y,FACTION_CFG[w.faction].color);
     }
@@ -948,7 +958,7 @@ function spawnProjectile(shooter, target, burstOffset){
     aoeRadius: pCfg.aoeRadius,
     aoeFactor: pCfg.aoeFactor,
     side:shooter.side,
-    createsLingNest:shooter.subtype==='infestedGunbot',
+    createsLingNest:shooter.subtype==='legionnaire',
   });
   sfx(pCfg.sound||'rtsBullet', 80);
 }

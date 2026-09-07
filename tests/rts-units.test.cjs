@@ -133,7 +133,7 @@ test('Roboto Factory infestation is permanent, blocks Drones, and continuously m
   assert.deepEqual([...result.nextQueue],['infestedGunbot']);
 });
 
-test('buildings destroyed by Infested GunBots become Ling Nests that continuously produce lings',()=>{
+test('buildings destroyed by Legionnaires become Ling Nests that continuously produce lings',()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
@@ -151,22 +151,27 @@ test('buildings destroyed by Infested GunBots become Ling Nests that continuousl
     const enemyBase=makeBase('enemy','shadow',950,50);
     const victim=makeCannon('enemy','shadow',200,200);
     victim.underConstruction=false; victim.hp=1;
-    const ling=makeInfestedGunbot('player',100,200);
+    const ling=makeLegionnaire('player','prism',100,200,true);
+    const gunbot=makeInfestedGunbot('player',100,240);
     S.playerBase=playerBase; S.enemyBase=enemyBase;
     S.entities=[playerBase,enemyBase,victim,ling];
-    S.projectiles=[{x:victim.x,y:victim.y,tx:victim,speed:10,damage:3,type:'bullet',trail:[],side:'player',createsLingNest:true}];
+    spawnProjectile(gunbot,victim);
+    const gunbotCreatesNest=S.projectiles.pop().createsLingNest;
+    spawnProjectile(ling,victim);
+    S.projectiles[0].x=victim.x; S.projectiles[0].y=victim.y;
     updateProjectiles();
     rtsTick();
     const nest=S.entities.find(e=>e.isLingNest);
-    nest.trainTimer=BUILD_TIMES.infestedGunbot-1;
+    nest.trainTimer=BUILD_TIMES.warrior-1;
     buildingTick(nest);
-    return {nest:{side:nest.side,label:nest.label,hp:nest.hp,queue:nest.queue.map(q=>q.unitType)},lings:S.entities.filter(e=>e.subtype==='infestedGunbot').length};
+    return {gunbotCreatesNest,nest:{side:nest.side,label:nest.label,hp:nest.hp,queue:nest.queue.map(q=>q.unitType)},lings:S.entities.filter(e=>e.subtype==='legionnaire').length};
   })()`,context);
 
+  assert.equal(result.gunbotCreatesNest,false);
   assert.equal(result.nest.side,'player');
   assert.equal(result.nest.label,'LING NEST');
   assert.ok(result.nest.hp>0);
-  assert.deepEqual([...result.nest.queue],['infestedGunbot']);
+  assert.deepEqual([...result.nest.queue],['legionnaire']);
   assert.equal(result.lings,2);
 });
 
