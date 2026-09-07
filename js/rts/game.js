@@ -43,6 +43,98 @@ function resetAIConfig(){ Object.assign(AI_CONFIG, _AI_DEFAULTS); }
 // Math.sqrt is IEEE 754 correctly-rounded, so dx*dx+dy*dy → sqrt is portable.
 function _dist(dx,dy){ return Math.sqrt(dx*dx+dy*dy); }
 
+// ── COLLISION DETECTION ──
+// Ground units (workers/warriors) occupy physical space: they push each
+// other apart when they overlap and can't walk through buildings. Aerial
+// units fly above the battlefield and are exempt from ground collision.
+// Radii are kept well under standard melee attack range (50) so a unit
+// can always close to attack a building without being shoved back out.
+function unitCollisionRadius(e){
+  if(e.aerial) return 0;
+  if(e.type==='worker') return 9;
+  if(e.type==='warrior'){
+    if(e.subtype==='tank') return 18;
+    if(e.subtype==='warbot'||e.subtype==='assaultbot'||e.subtype==='bloodhound') return 13;
+    if(e.subtype==='ling') return 8;
+    return 11;
+  }
+  return 0;
+}
+
+function buildingCollisionRadius(e){
+  if(e.type==='base') return 28;
+  if(e.type==='cannon') return 20;
+  if(e.type==='structure') return e.isAerialHangar ? 24 : 22;
+  return 0;
+}
+
+// A worker docked at its own build/mine target passes through that
+// building's collision so it can actually reach it.
+function _isDockedAt(unit, building){
+  if(unit.target===building) return true;
+  const bt=unit.buildTarget;
+  return !!bt && (bt===building || bt.ghost===building);
+}
+
+function resolveUnitCollisions(){
+  const units=[];
+  for(const e of S.entities){
+    if(e.hp<=0) continue;
+    if(unitCollisionRadius(e)>0) units.push(e);
+  }
+
+  // push overlapping ground units apart
+  for(let i=0;i<units.length;i++){
+    const a=units[i], ar=unitCollisionRadius(a);
+    for(let j=i+1;j<units.length;j++){
+      const b=units[j], br=unitCollisionRadius(b);
+      const minDist=ar+br;
+      const dx=b.x-a.x, dy=b.y-a.y, d=_dist(dx,dy);
+      if(d>=minDist) continue;
+      let nx, ny;
+      if(d<0.0001){
+        // Exact overlap (e.g. a stack spawned on the same point): fan pairs
+        // out at a deterministic angle derived from their ids, rather than
+        // always the same axis, so a dense stack separates in 2D instead of
+        // collapsing onto a line.
+        const seed=((a.id*2654435761)^(b.id*40503))>>>0;
+        const angle=(seed%3600)/3600*Math.PI*2;
+        nx=Math.cos(angle); ny=Math.sin(angle);
+      } else {
+        nx=dx/d; ny=dy/d;
+      }
+      const overlap=(minDist-d)/2;
+      a.x-=nx*overlap; a.y-=ny*overlap;
+      b.x+=nx*overlap; b.y+=ny*overlap;
+    }
+  }
+
+  // keep ground units out of buildings (buildings never move)
+  for(const e of S.entities){
+    if(e.hp<=0) continue;
+    const br=buildingCollisionRadius(e);
+    if(br<=0) continue;
+    for(const u of units){
+      if(_isDockedAt(u,e)) continue;
+      const ur=unitCollisionRadius(u);
+      const minDist=br+ur;
+      const dx=u.x-e.x, dy=u.y-e.y, d=_dist(dx,dy);
+      if(d>=minDist || d<0.0001) continue;
+      const overlap=minDist-d;
+      const nx=dx/d, ny=dy/d;
+      u.x+=nx*overlap; u.y+=ny*overlap;
+    }
+  }
+
+  // keep everyone inside the map
+  for(const e of S.entities){
+    if(e.hp<=0 || e.type!=='worker' && e.type!=='warrior') continue;
+    const r=unitCollisionRadius(e)||10;
+    if(e.x<r) e.x=r; else if(e.x>RW-r) e.x=RW-r;
+    if(e.y<r) e.y=r; else if(e.y>RH-r) e.y=RH-r;
+  }
+}
+
 function aiCount(type, subFilter){
   return S.entities.filter(e=>{
     if(e.side!=='enemy') return false;
@@ -356,6 +448,8 @@ function rtsTick(){
       }
     }
   }
+
+  resolveUnitCollisions();
 
   // remove dead units — record fallen swordsmen for necromancer
   for(let i=S.entities.length-1;i>=0;i--){
