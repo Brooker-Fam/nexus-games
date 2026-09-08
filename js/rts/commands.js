@@ -267,7 +267,7 @@ function executeCommand(cmd){
       const needLabel={shadow:'Swordsman',roboto:'GunBot',prism:'Witch'};
       const label=pairLabels[s1.faction]||'Warriors';
       if(!nearest){ if(side==='player') rtsSetLog(`Need another ${needLabel[s1.faction]||'warrior'} to start a duel!`); break; }
-      const s1Wins = Math.random() < 0.5;
+      const s1Wins = rtsRand() < 0.5;
       s1.state='duel'; s1.duelOpponentId=nearest.id; s1.duelAttacker=s1Wins;
       nearest.state='duel'; nearest.duelOpponentId=s1.id; nearest.duelAttacker=!s1Wins;
       if(side==='player') rtsSetLog(`Two ${label} enter the duel ring...`);
