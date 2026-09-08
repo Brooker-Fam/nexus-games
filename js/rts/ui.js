@@ -44,6 +44,14 @@ function baseTrainingTypes(cfg, faction){
   return types;
 }
 
+// True when unitType is one of the Research Lab-gated 2nd-tier units
+// (Warbot/Tank/Warship) and this side hasn't completed research yet.
+function unitNeedsResearch(cfg, unitType){
+  return !!cfg.researchLabLabel
+    && (unitType==='warrior2'||unitType==='elite2'||unitType==='aerial2')
+    && !S.research[mySide()];
+}
+
 function structureEliteTypes(cfg, faction){
   const types=[];
   types.push({ icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost, oilCost:cfg.eliteOilCost||0, unitType:'elite' });
@@ -151,10 +159,10 @@ function openBuildPopup(screenX, screenY, context){
       { icon:cfg.warriorIcon, label:cfg.warriorLabel, desc:cfg.warriorDesc, cost:cfg.warriorCost, oilCost:cfg.warriorOilCost||0, unitType:'warrior' },
     ];
     if(cfg.warrior2Label){
-      const needsLab=!!cfg.researchLabLabel && !S.entities.some(e=>e.side===mySide()&&e.isResearchLab&&!e.underConstruction);
+      const needsResearch=unitNeedsResearch(cfg,'warrior2');
       barracksTypes.push({ icon:cfg.warrior2Icon, label:cfg.warrior2Label,
-        desc: needsLab ? `Requires a completed ${cfg.researchLabLabel}` : cfg.warrior2Desc,
-        cost:cfg.warrior2Cost, oilCost:cfg.warrior2OilCost||0, unitType:'warrior2', locked:needsLab });
+        desc: needsResearch ? `Requires completed research at the ${cfg.researchLabLabel}` : cfg.warrior2Desc,
+        cost:cfg.warrior2Cost, oilCost:cfg.warrior2OilCost||0, unitType:'warrior2', locked:needsResearch });
     }
 
     for(const u of barracksTypes){
@@ -233,9 +241,10 @@ function openBuildPopup(screenX, screenY, context){
     ];
 
     for(const u of aerialTypes){
-      addOpt(u.icon, u.label, u.desc, u.cost,
+      const locked=unitNeedsResearch(cfg,u.unitType);
+      addOpt(u.icon, u.label, locked ? `Requires completed research at the ${cfg.researchLabLabel}` : u.desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'aerial'),
-        myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        locked||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
         u.oilCost);
     }
 
@@ -299,10 +308,33 @@ function openBuildPopup(screenX, screenY, context){
     const eliteTypes = structureEliteTypes(cfg,myFaction());
 
     for(const u of eliteTypes){
-      addOpt(u.icon, u.label, u.desc, u.cost,
+      const locked=unitNeedsResearch(cfg,u.unitType);
+      addOpt(u.icon, u.label, locked ? `Requires completed research at the ${cfg.researchLabLabel}` : u.desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'structure'),
-        myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        locked||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
         u.oilCost);
+    }
+
+  } else if(context==='researchlab'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent = cfg.researchLabLabel||'RESEARCH LAB';
+    const side=mySide();
+    const cost=cfg.researchCost||0;
+    if(S.research[side]){
+      addOpt(cfg.researchLabIcon||'🔬', 'RESEARCH COMPLETE',
+        cfg.researchDesc||'Advanced units unlocked', 0, ()=>{}, true);
+    } else {
+      const researching = sel.queue?.some(q=>q.unitType==='research');
+      addOpt(cfg.researchLabIcon||'🔬', cfg.researchLabel||'RESEARCH',
+        researching ? 'Research in progress...' : `${cfg.researchDesc||'Unlocks advanced units'} (${cost}g)`,
+        cost,
+        ()=>{
+          issueCommand({ type:'start_research', buildingId:sel.id });
+          rtsSetLog(`${cfg.researchLabel||'Research'} started!`);
+          sfx('rtsQueueUnit');
+          setTimeout(()=>openBuildPopup((sel.x-S.camX)*S.camZoom,(sel.y-S.camY)*S.camZoom,'researchlab'), window._mpMultiplayer && !mpIsHost ? 200 : 0);
+        },
+        researching||sel.underConstruction||myGold()<cost);
     }
   }
 
@@ -508,7 +540,10 @@ function rtsHandleClick(e){
         const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
         rtsSetLog(`${labLabel} — under construction ${pct}%`);
       } else {
-        rtsSetLog(`${labLabel} — HP: ${Math.floor(hit.hp)}/${hit.maxHp}  ${cfg.warrior2Label||'advanced units'} unlocked!`);
+        openBuildPopup(sx,sy,'researchlab');
+        rtsSetLog(S.research[mySide()]
+          ? `${labLabel} — research complete, advanced units unlocked!`
+          : `${labLabel} — research required to unlock advanced units.`);
       }
     } else if(hit.type==='structure'){
       if(hit.underConstruction){

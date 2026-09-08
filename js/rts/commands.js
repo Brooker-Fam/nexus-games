@@ -108,9 +108,8 @@ function executeCommand(cmd){
                     : cmd.unitType==='elite'   ? (cfg.eliteOilCost||0)
                     : cmd.unitType==='warrior2' ? (cfg.warrior2OilCost||0) : 0;
       if(oilCost > 0 && (S.oil[side]||0) < oilCost) break;
-      if(cmd.unitType==='warrior2' && cfg.researchLabLabel){
-        const hasResearchLab = S.entities.some(e=>e.side===side && e.isResearchLab && !e.underConstruction);
-        if(!hasResearchLab) break;
+      if((cmd.unitType==='warrior2'||cmd.unitType==='elite2'||cmd.unitType==='aerial2') && cfg.researchLabLabel){
+        if(!S.research[side]) break; // Warbot/Tank/Warship require completed research
       }
 
       const aerial2TimeMap = { makeWarship:BUILD_TIMES.warship, makeLightFighter:BUILD_TIMES.lightfighter, makeDestroyer:BUILD_TIMES.destroyer };
@@ -146,6 +145,22 @@ function executeCommand(cmd){
       if(oilCost>0) S.oil[side]=Math.max(0,(S.oil[side]||0)-oilCost);
       updateRtsHUD();
       rtsSetLog(`${label} queued (${building.queue.length}/${QUEUE_MAX})`);
+      break;
+    }
+
+    case 'start_research': {
+      if(!cfg.researchLabLabel || S.research[side]) break;
+      const lab = S.entities.find(e=>e.id===cmd.buildingId);
+      if(!lab || lab.side!==side || !lab.isResearchLab || lab.underConstruction) break;
+      const alreadyResearching = S.entities.some(e=>e.side===side && e.isResearchLab && e.queue?.some(q=>q.unitType==='research'));
+      if(alreadyResearching) break;
+      const cost = cfg.researchCost||0;
+      if(S.gold[side] < cost) break;
+      const label = cfg.researchLabel||'RESEARCH';
+      if(!queueUnit(lab, label, BUILD_TIMES.research, ()=>{ S.research[side]=true; return []; }, 'research')) break;
+      S.gold[side] -= cost;
+      updateRtsHUD();
+      rtsSetLog(`${label} started at the ${cfg.researchLabLabel}!`);
       break;
     }
 

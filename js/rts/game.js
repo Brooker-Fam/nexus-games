@@ -305,12 +305,20 @@ function aiTick(){
       }
     }
 
-    // Build a Research Lab once a barracks exists — required before the AI
-    // can train Warbots.
+    // Build a Research Lab once a barracks exists, then pay to research
+    // military tech there — required before the AI can train Warbots,
+    // Tanks, and Warships.
     if(eCfg2.researchLabLabel){
-      const researchLabs=aiCount('structure',e=>e.isResearchLab);
-      if(researchLabs===0 && barracks>=1 && workers>=3){
+      const researchLabs=S.entities.filter(e=>e.side==='enemy'&&e.isResearchLab);
+      if(researchLabs.length===0 && barracks>=1 && workers>=3){
         aiBuild('researchlab', eb.x-160, eb.y+150, AI_CONFIG.researchLabCost, AI_CONFIG.researchLabOilCost);
+      } else if(!S.research.enemy){
+        const completedLab=researchLabs.find(e=>!e.underConstruction);
+        const alreadyResearching=researchLabs.some(e=>e.queue?.some(q=>q.unitType==='research'));
+        if(completedLab && !alreadyResearching){
+          aiQueueAt(completedLab, eCfg2.researchLabel||'RESEARCH', BUILD_TIMES.research,
+            ()=>{ S.research.enemy=true; return []; }, eCfg2.researchCost||0, 'research');
+        }
       }
     }
 
@@ -328,10 +336,9 @@ function aiTick(){
     const eCfgW=FACTION_CFG[S.enemyFaction];
     const warrior2FnMap2={makeWarbot,makeLegionnaireSquad};
     const warrior2OilNeeded=eCfgW.warrior2OilCost||0;
-    const hasResearchLab = !eCfgW.researchLabLabel
-      || S.entities.some(e=>e.side==='enemy'&&e.isResearchLab&&!e.underConstruction);
+    const researchDone = !eCfgW.researchLabLabel || S.research.enemy;
     for(const bar of allBarracks){
-      const wantWarrior2 = eCfgW.warrior2Fn && hasResearchLab && Math.random()<0.35
+      const wantWarrior2 = eCfgW.warrior2Fn && researchDone && Math.random()<0.35
         && S.gold.enemy>=AI_CONFIG.warrior2Cost && (S.oil.enemy||0)>=warrior2OilNeeded;
       if(wantWarrior2){
         const w2fn=warrior2FnMap2[eCfgW.warrior2Fn];
@@ -359,7 +366,8 @@ function aiTick(){
     }
     if(eliteStruct){
       const tankOilNeeded=eCfg3.tankOilCost||0;
-      const canAffordTank=eCfg3.elite2Fn==='makeTank' && S.gold.enemy>=eCfg3.elite2Cost && (S.oil.enemy||0)>=tankOilNeeded;
+      const canAffordTank=eCfg3.elite2Fn==='makeTank' && (!eCfg3.researchLabLabel||S.research.enemy)
+        && S.gold.enemy>=eCfg3.elite2Cost && (S.oil.enemy||0)>=tankOilNeeded;
       if(canAffordTank){
         const elite2FnMap2={makeTank};
         const tfn=elite2FnMap2[eCfg3.elite2Fn];
@@ -385,7 +393,8 @@ function aiTick(){
     const aerial2BuildTimeMap={makeWarship:BUILD_TIMES.warship,makeLightFighter:BUILD_TIMES.lightfighter,makeDestroyer:BUILD_TIMES.destroyer};
     const aerialOilNeeded=eCfg.aerialOilCost||0;
     const aerial2OilNeeded=eCfg.aerial2OilCost||0;
-    if(aerialHangar && eCfg.aerial2Fn && S.gold.enemy>=eCfg.aerial2Cost && (S.oil.enemy||0)>=aerial2OilNeeded){
+    if(aerialHangar && eCfg.aerial2Fn && (!eCfg.researchLabLabel||S.research.enemy)
+      && S.gold.enemy>=eCfg.aerial2Cost && (S.oil.enemy||0)>=aerial2OilNeeded){
       const a2fn=aerial2FnMap2[eCfg.aerial2Fn];
       if(a2fn && aiQueueAt(aerialHangar,eCfg.aerial2Label,
         aerial2BuildTimeMap[eCfg.aerial2Fn],
