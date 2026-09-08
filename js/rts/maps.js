@@ -2,15 +2,15 @@
 // Maps are mirrored around the centre line so random layouts remain fair.
 const RTS_MAPS = [
   { id:'orion', name:'ORION DIVIDE', colors:['#061321','#020913','#061321'], accent:'#00c8ff',
-    lanes:[-310,0,310], quarters:[-220,220], center:[-340,-170,0,170,340], decor:'nebula' },
+    lanes:[-310,0,310], flanks:[-460,-100,100,460], quarters:[-220,0,220,440], center:[-340,-170,0,170,340], decor:'nebula' },
   { id:'helix', name:'HELIX CROSSING', colors:['#130a20','#060713','#130a20'], accent:'#a866ff',
-    lanes:[-360,-120,120,360], quarters:[-330,0,330], center:[-260,-90,90,260], decor:'rift' },
+    lanes:[-360,-120,120,360], flanks:[-520,-180,180,520], quarters:[-330,-110,110,330], center:[-260,-90,0,90,260], decor:'rift' },
   { id:'ember', name:'EMBER REACH', colors:['#1b0c0a','#09080e','#1b0c0a'], accent:'#ff6b35',
-    lanes:[-260,0,260], quarters:[-360,-120,120,360], center:[-380,-190,0,190,380], decor:'embers' },
+    lanes:[-260,0,260], flanks:[-480,-160,160,480], quarters:[-360,-120,120,360], center:[-380,-190,0,190,380], decor:'embers' },
   { id:'verdant', name:'VERDANT EXPANSE', colors:['#061712','#04100f','#061712'], accent:'#38e09b',
-    lanes:[-380,-190,0,190,380], quarters:[-250,250], center:[-300,-100,100,300], decor:'clouds' },
+    lanes:[-380,-190,0,190,380], flanks:[-440,-140,140,440], quarters:[-250,0,250], center:[-300,-100,100,300], decor:'clouds' },
   { id:'nova', name:'SHATTERED NOVA', colors:['#151407','#080b12','#151407'], accent:'#ffe066',
-    lanes:[-330,-110,110,330], quarters:[-380,0,380], center:[-320,-160,0,160,320], decor:'shards' },
+    lanes:[-330,-110,110,330], flanks:[-500,-170,170,500], quarters:[-380,-130,0,130,380], center:[-320,-160,0,160,320], decor:'shards' },
 ];
 const GOLD_MINE_CAPACITY = 1600;
 
@@ -58,6 +58,8 @@ function makeMapGoldNodes(){
     addBaseGoldPair(angle,rtsMapRand(215,235));
   }
   // The preset defines the strategy; jitter and distance make repeat visits fresh.
+  // Flank deposits sit just past the starting arc, giving early expansions a nearby target.
+  for(const dy of (map.flanks||[])) addMirroredGoldPair(rtsMapRand(RW*.15,RW*.20),BASE_Y+dy);
   for(const dy of map.quarters) addMirroredGoldPair(rtsMapRand(RW*.25,RW*.32),BASE_Y+dy);
   for(const dy of map.center){
     S.goldNodes.push({x:RW/2,y:BASE_Y+dy+rtsMapRand(-28,28),gold:GOLD_MINE_CAPACITY,maxGold:GOLD_MINE_CAPACITY,owner:'neutral'});
