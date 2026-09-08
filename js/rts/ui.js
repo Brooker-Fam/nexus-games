@@ -166,22 +166,33 @@ function openBuildPopup(screenX, screenY, context){
     const oilName=resCfg.oilResourceName||'oil';
     const bc=STRUCT_COSTS.barracks, sc=STRUCT_COSTS.structure, cc=STRUCT_COSTS.cannon,
           ac=STRUCT_COSTS.aerial, oc=STRUCT_COSTS.oilrig, baseC=STRUCT_COSTS.base;
+    // Tech-tree gating: the elite structure (shrine/armory/dark shrine) needs a
+    // completed barracks (portal/barracks/training field) first, and the aerial
+    // hangar needs a completed elite structure first.
+    const hasBarracks = S.entities.some(e=>e.side===mySide() && e.type==='structure' && e.isBarracks && !e.underConstruction);
+    const hasEliteStruct = S.entities.some(e=>e.side===mySide() && e.type==='structure' && !e.isBarracks && !e.isAerialHangar && !e.isOilRig && !e.isLingNest && !e.underConstruction);
     addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Click to place — trains ${cfg.warriorLabel}s (${bc.gold}g)`, bc.gold, ()=>{
       S.buildStructureMode='barracks'; _buildModeCost=bc.gold; _buildModeOilCost=bc.oil;
       rtsSetLog(`Click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
     }, myGold()<bc.gold||myOil()<bc.oil, bc.oil);
-    addOpt(cfg.structIcon, `Build ${cfg.structLabel}`, `Click to place — trains elite units (${sc.gold}g +${sc.oil}${oilName})`, sc.gold, ()=>{
+    addOpt(cfg.structIcon, `Build ${cfg.structLabel}`,
+      hasBarracks ? `Click to place — trains elite units (${sc.gold}g +${sc.oil}${oilName})` : `Requires a completed ${cfg.barracksLabel} first`,
+      sc.gold, ()=>{
+      if(!hasBarracks) return;
       S.buildStructureMode=true; _buildModeCost=sc.gold; _buildModeOilCost=sc.oil;
       rtsSetLog(`Click to place your ${cfg.structLabel}!`); closeBuildPopup();
-    }, myGold()<sc.gold||myOil()<sc.oil, sc.oil);
+    }, myGold()<sc.gold||myOil()<sc.oil||!hasBarracks, sc.oil);
     addOpt('💣', 'Build CANNON', `Auto-attacks nearby enemies (${cc.gold}g)`, cc.gold, ()=>{
       S.buildStructureMode='cannon'; _buildModeCost=cc.gold; _buildModeOilCost=cc.oil;
       rtsSetLog('Click to place your CANNON!'); closeBuildPopup();
     }, myGold()<cc.gold||myOil()<cc.oil, cc.oil);
-    addOpt(cfg.aerialIcon, `Build ${cfg.aerialLabel}`, `Click to place — aerial units (${ac.gold}g +${ac.oil}${oilName})`, ac.gold, ()=>{
+    addOpt(cfg.aerialIcon, `Build ${cfg.aerialLabel}`,
+      hasEliteStruct ? `Click to place — aerial units (${ac.gold}g +${ac.oil}${oilName})` : `Requires a completed ${cfg.structLabel} first`,
+      ac.gold, ()=>{
+      if(!hasEliteStruct) return;
       S.buildStructureMode='aerial'; _buildModeCost=ac.gold; _buildModeOilCost=ac.oil;
       rtsSetLog(`Click to place your ${cfg.aerialLabel}!`); closeBuildPopup();
-    }, myGold()<ac.gold||myOil()<ac.oil, ac.oil);
+    }, myGold()<ac.gold||myOil()<ac.oil||!hasEliteStruct, ac.oil);
     if(cfg.oilRigLabel){
       addOpt(cfg.oilRigIcon, `Build ${cfg.oilRigLabel}`, `Click to place — workers harvest ${oilName} needed for advanced units (${oc.gold}g)`, oc.gold, ()=>{
         S.buildStructureMode='oilrig'; _buildModeCost=oc.gold; _buildModeOilCost=oc.oil;
