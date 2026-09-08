@@ -283,21 +283,36 @@
       <!-- RTS GAME SCREEN -->
       <div id="dso-game" style="display:none">
         <div class="rts-hud">
-          <div class="rts-hud-minimap">
-            <canvas id="rts-minimap" width="240" height="98"></canvas>
+          <div class="rts-hud-top">
+            <div class="rts-hud-left">
+              <div class="rts-faction-badge" id="rts-faction-badge">PRISM ARMADA</div>
+              <div class="rts-resource"><span class="rts-res-icon">◈</span> GOLD: <span id="rts-gold">0</span></div>
+              <div class="rts-resource" id="rts-oil-row" style="display:none"><span class="rts-res-icon">🛢</span> OIL: <span id="rts-oil">0</span></div>
+              <div class="rts-resource"><span class="rts-res-icon">⚔</span> UNITS: <span id="rts-units">0</span></div>
+              <div class="rts-resource rts-diff-row"><span class="rts-res-icon">⚙</span> AI LEVEL: <span id="rts-difficulty" class="rts-diff-val">5</span><span class="rts-diff-max">/10</span></div>
+            </div>
+            <div class="rts-hud-right">
+              <div class="rts-resource">ENEMY: <span id="rts-enemy-faction" class="rts-enemy-color">???</span></div>
+              <div class="rts-resource">MAP: <span id="rts-map-name" class="rts-map-name">ORION DIVIDE</span></div>
+              <div class="rts-resource">BASE HP: <span id="rts-base-hp" class="rts-hp-color">150</span></div>
+              <button class="rts-retreat-btn" id="btn-rts-menu">◂ MENU</button>
+            </div>
           </div>
-          <div class="rts-hud-left">
-            <div class="rts-faction-badge" id="rts-faction-badge">PRISM ARMADA</div>
-            <div class="rts-resource"><span class="rts-res-icon">◈</span> GOLD: <span id="rts-gold">0</span></div>
-            <div class="rts-resource" id="rts-oil-row" style="display:none"><span class="rts-res-icon">🛢</span> OIL: <span id="rts-oil">0</span></div>
-            <div class="rts-resource"><span class="rts-res-icon">⚔</span> UNITS: <span id="rts-units">0</span></div>
-            <div class="rts-resource rts-diff-row"><span class="rts-res-icon">⚙</span> AI LEVEL: <span id="rts-difficulty" class="rts-diff-val">5</span><span class="rts-diff-max">/10</span></div>
-          </div>
-          <div class="rts-hud-mid">
-            <div class="rts-build-panel">
-              <div class="rts-build-label rts-build-hint">
-                Click your <span id="hud-building-name">TEMPLE</span> to build
+          <div class="rts-hud-bottom">
+            <div class="rts-hud-minimap">
+              <canvas id="rts-minimap" width="240" height="98"></canvas>
+            </div>
+            <!-- WORKER ACTIONS / BUILD PANEL — always visible, shows contextual options for whatever is selected -->
+            <div class="rts-action-panel" id="rts-build-popup">
+              <div class="rbp-header">
+                <div class="rbp-title" id="rbp-title">NO SELECTION</div>
+                <button class="rbp-close" id="btn-popup-close" title="Deselect">✕</button>
               </div>
+              <div class="rbp-options" id="rbp-options">
+                <div class="rbp-idle-hint">Click your <span id="hud-building-name">TEMPLE</span> or a worker to build</div>
+              </div>
+            </div>
+            <div class="rts-hud-army">
               <button class="rts-build-btn rts-army-btn" id="btn-select-army">
                 <span class="rts-build-icon">⚔</span>
                 SELECT ARMY
@@ -309,22 +324,10 @@
               </div>
             </div>
           </div>
-          <div class="rts-hud-right">
-            <div class="rts-resource">ENEMY: <span id="rts-enemy-faction" class="rts-enemy-color">???</span></div>
-            <div class="rts-resource">MAP: <span id="rts-map-name" class="rts-map-name">ORION DIVIDE</span></div>
-            <div class="rts-resource">BASE HP: <span id="rts-base-hp" class="rts-hp-color">150</span></div>
-            <button class="rts-retreat-btn" id="btn-rts-menu">◂ MENU</button>
-          </div>
         </div>
         <div id="rts-viewport-wrap">
           <canvas id="rts-canvas" width="1200" height="580"></canvas>
           <div id="rts-scroll-hint">Click your base to build · Right-click to move/attack</div>
-          <!-- BUILD POPUP MENU -->
-          <div id="rts-build-popup" style="display:none">
-            <div class="rbp-title" id="rbp-title">TEMPLE</div>
-            <div class="rbp-options" id="rbp-options"></div>
-            <button class="rbp-close" id="btn-popup-close">✕ CLOSE</button>
-          </div>
         </div>
         <div class="rts-log-bar"><span id="rts-log">Click your base to build units!</span></div>
         <div id="rts-gameover-overlay" style="display:none" class="rts-over-overlay">

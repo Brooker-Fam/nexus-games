@@ -333,17 +333,23 @@ function openBuildPopup(screenX, screenY, context){
     }
   }
 
-  // The build menu is anchored below the action, so every option stays in a
-  // predictable grid instead of obscuring a different part of the battlefield.
-  popup.style.display='block';
   S.buildPopupOpen=true;
 
-  // Prevent popup clicks from bubbling to the canvas click handler
+  // Prevent panel clicks from bubbling to the canvas click handler
   popup.onclick=function(ev){ ev.stopPropagation(); };
 }
 
+// Resets the action panel to its idle state (shown whenever nothing is selected)
+// rather than hiding it — the panel is a permanent part of the bottom HUD.
 function closeBuildPopup(){
-  document.getElementById('rts-build-popup').style.display='none';
+  const popup=document.getElementById('rts-build-popup');
+  popup.dataset.context='';
+  popup.onclick=null;
+  document.getElementById('rbp-title').textContent='NO SELECTION';
+  document.getElementById('rbp-options').innerHTML=
+    '<div class="rbp-idle-hint">Click your <span id="hud-building-name">'+
+    (FACTION_CFG[myFaction()].buildingName||'TEMPLE')+
+    '</span> or a worker to build</div>';
   S.buildPopupOpen = false;
   S.buildingSource = null;
 }
