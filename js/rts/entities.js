@@ -207,6 +207,21 @@ function makeResearchLab(side, faction, x, y){
   };
 }
 
+// ── COUNCIL OF DARKNESS (Shadow) ── tech structure; must be built and completed
+// before the Dark Shrine can train Necromancers or the Warp Conduit can train
+// Destroyers.
+function makeCouncilOfDarkness(side, faction, x, y){
+  const cfg=FACTION_CFG[faction];
+  return {
+    id:nextId(), type:'structure', side, faction,
+    x, y, hp:BUILDING_HEALTH.structure, maxHp:BUILDING_HEALTH.structure,
+    structType:'councildark',
+    selected:false, frame:0,
+    label:(cfg&&cfg.councilOfDarknessLabel)||'COUNCIL OF DARKNESS', isCouncilOfDarkness:true,
+    underConstruction:true, buildProgress:0, buildTime:BUILD_TIMES.structure,
+  };
+}
+
 // ── LING NEST (Shadow) ── passive structure, free-running Ling production
 function makeLingNest(side, faction, x, y){
   const cfg=FACTION_CFG[faction];

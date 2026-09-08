@@ -59,6 +59,7 @@ const STRUCT_COSTS = {
   oilrig:    { gold:45,  oil:0  },
   lingnest:  { gold:90,  oil:30 },
   researchlab: { gold:65, oil:20 },
+  councildark: { gold:65, oil:20 },
   structure: { gold:100, oil:35 },
   aerial:    { gold:110, oil:40 },
   base:      { gold:160, oil:0  },
@@ -217,6 +218,13 @@ function openBuildPopup(screenX, screenY, context){
         rtsSetLog(`Click to place your ${cfg.researchLabLabel}!`); closeBuildPopup();
       }, myGold()<rl.gold||myOil()<rl.oil, rl.oil);
     }
+    if(cfg.councilOfDarknessLabel){
+      const cd=STRUCT_COSTS.councildark;
+      addOpt(cfg.councilOfDarknessIcon, `Build ${cfg.councilOfDarknessLabel}`, `Click to place — ${(cfg.councilOfDarknessDesc||'unlocks advanced units').toLowerCase()} (${cd.gold}g +${cd.oil}${oilName})`, cd.gold, ()=>{
+        S.buildStructureMode='councildark'; _buildModeCost=cd.gold; _buildModeOilCost=cd.oil;
+        rtsSetLog(`Click to place your ${cfg.councilOfDarknessLabel}!`); closeBuildPopup();
+      }, myGold()<cd.gold||myOil()<cd.oil, cd.oil);
+    }
     addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Click to place — trains more workers (${baseC.gold}g)`, baseC.gold, ()=>{
       S.buildStructureMode='base'; _buildModeCost=baseC.gold; _buildModeOilCost=baseC.oil;
       rtsSetLog(`Click to place your new ${cfg.buildingName}!`); closeBuildPopup();
@@ -227,15 +235,18 @@ function openBuildPopup(screenX, screenY, context){
     if(!sel) return;
     title.textContent = cfg.aerialLabel;
 
+    const needsCouncilDarkAerial=!!cfg.councilOfDarknessLabel && !S.entities.some(e=>e.side===mySide()&&e.isCouncilOfDarkness&&!e.underConstruction);
     const aerialTypes = [
       { icon:cfg.aerialUnitIcon, label:cfg.aerialUnitLabel, desc:cfg.aerialUnitDesc, cost:cfg.aerialUnitCost, oilCost:cfg.aerialOilCost||0, unitType:'aerial' },
-      { icon:cfg.aerial2Icon, label:cfg.aerial2Label, desc:cfg.aerial2Desc, cost:cfg.aerial2Cost, oilCost:cfg.aerial2OilCost||0, unitType:'aerial2' },
+      { icon:cfg.aerial2Icon, label:cfg.aerial2Label,
+        desc: needsCouncilDarkAerial ? `Requires a completed ${cfg.councilOfDarknessLabel}` : cfg.aerial2Desc,
+        cost:cfg.aerial2Cost, oilCost:cfg.aerial2OilCost||0, unitType:'aerial2', locked:needsCouncilDarkAerial },
     ];
 
     for(const u of aerialTypes){
       addOpt(u.icon, u.label, u.desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'aerial'),
-        myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        u.locked||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
         u.oilCost);
     }
 
@@ -297,11 +308,13 @@ function openBuildPopup(screenX, screenY, context){
     title.textContent = cfg.structLabel;
 
     const eliteTypes = structureEliteTypes(cfg,myFaction());
+    const needsCouncilDarkElite=!!cfg.councilOfDarknessLabel && !S.entities.some(e=>e.side===mySide()&&e.isCouncilOfDarkness&&!e.underConstruction);
 
     for(const u of eliteTypes){
-      addOpt(u.icon, u.label, u.desc, u.cost,
+      const locked = u.unitType==='elite2' && needsCouncilDarkElite;
+      addOpt(u.icon, u.label, locked ? `Requires a completed ${cfg.councilOfDarknessLabel}` : u.desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'structure'),
-        myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        locked||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
         u.oilCost);
     }
   }
@@ -436,7 +449,7 @@ function rtsHandleClick(e){
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, oilCost:_buildModeOilCost, buildType:'base' });
     } else {
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, oilCost:_buildModeOilCost, buildType:
-        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':S.buildStructureMode==='oilrig'?'oilrig':S.buildStructureMode==='lingnest'?'lingnest':S.buildStructureMode==='researchlab'?'researchlab':'structure' });
+        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':S.buildStructureMode==='oilrig'?'oilrig':S.buildStructureMode==='lingnest'?'lingnest':S.buildStructureMode==='researchlab'?'researchlab':S.buildStructureMode==='councildark'?'councildark':'structure' });
     }
     S.buildStructureMode=false;
     S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#ffdd00',size:0,isRing:true,radius:4});
@@ -509,6 +522,14 @@ function rtsHandleClick(e){
         rtsSetLog(`${labLabel} — under construction ${pct}%`);
       } else {
         rtsSetLog(`${labLabel} — HP: ${Math.floor(hit.hp)}/${hit.maxHp}  ${cfg.warrior2Label||'advanced units'} unlocked!`);
+      }
+    } else if(hit.type==='structure' && hit.isCouncilOfDarkness){
+      const cdLabel=cfg.councilOfDarknessLabel||'COUNCIL OF DARKNESS';
+      if(hit.underConstruction){
+        const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
+        rtsSetLog(`${cdLabel} — under construction ${pct}%`);
+      } else {
+        rtsSetLog(`${cdLabel} — HP: ${Math.floor(hit.hp)}/${hit.maxHp}  ${cfg.elite2Label||'advanced'} and ${cfg.aerial2Label||'advanced aerial'} units unlocked!`);
       }
     } else if(hit.type==='structure'){
       if(hit.underConstruction){

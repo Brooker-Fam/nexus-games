@@ -625,57 +625,153 @@ function drawRTSStructure(rc, s){
   }
 
   if(s.structType==='researchlab'){
-    // ── RESEARCH LAB (Roboto) ── low tech bunker with a scanning dish and data screens
-    const t=S.frame*0.04;
-    // base slab
-    rc.fillStyle='#111118';
-    rc.beginPath(); rc.roundRect(x-30,y+20,60,10,2); rc.fill();
-    rc.strokeStyle='rgba(255,140,0,0.4)'; rc.lineWidth=1; rc.stroke();
-    // main block
-    const lGrad=rc.createLinearGradient(x-26,y-24,x+26,y+20);
-    lGrad.addColorStop(0,'#242018'); lGrad.addColorStop(1,'#0c0a06');
-    rc.fillStyle=lGrad; rc.beginPath(); rc.roundRect(x-26,y-22,52,42,3); rc.fill();
-    rc.strokeStyle='rgba(255,150,0,0.5)'; rc.lineWidth=1.2; rc.stroke();
-    // data screens flickering with scrolling readouts
-    for(const [wx,wy] of [[-14,-10],[14,-10]]){
-      const flicker=0.5+Math.sin(t*5+wx)*0.3;
-      rc.fillStyle=`rgba(0,220,255,${flicker})`;
-      rc.beginPath(); rc.roundRect(x+wx-8,y+wy-6,16,12,1); rc.fill();
-      rc.strokeStyle='rgba(255,160,0,0.5)'; rc.lineWidth=0.6; rc.strokeRect(x+wx-8,y+wy-6,16,12);
-      rc.strokeStyle='rgba(0,60,80,0.6)'; rc.lineWidth=0.5;
-      for(const ly of [-2,2]){ rc.beginPath(); rc.moveTo(x+wx-6,y+wy+ly); rc.lineTo(x+wx+6,y+wy+ly); rc.stroke(); }
+    const labFaction=s.faction||(s.side==='player'?S.playerFaction:S.enemyFaction);
+
+    if(labFaction==='prism'){
+      // ── COUNCIL OF LIGHT (Prism) ── ring of luminous crystal spires around a hovering sun-orb
+      const t=S.frame*0.04;
+      // base platform
+      rc.fillStyle='rgba(180,240,255,0.12)';
+      rc.beginPath(); rc.ellipse(x,y+22,32,9,0,0,Math.PI*2); rc.fill();
+      rc.strokeStyle='rgba(120,210,255,0.4)'; rc.lineWidth=1; rc.stroke();
+      // ring of small crystal spires standing council
+      for(let i=0;i<5;i++){
+        const a=(i/5)*Math.PI*2;
+        const px=x+Math.cos(a)*24, py=y+14+Math.sin(a)*8;
+        const spGrad=rc.createLinearGradient(px,py-20,px,py+4);
+        spGrad.addColorStop(0,'#ffffff'); spGrad.addColorStop(0.5,'#bfe8ff'); spGrad.addColorStop(1,'#5aa0d0');
+        rc.fillStyle=spGrad;
+        rc.beginPath(); rc.moveTo(px,py-20); rc.lineTo(px-4,py); rc.lineTo(px+4,py); rc.closePath(); rc.fill();
+        rc.strokeStyle='rgba(200,240,255,0.6)'; rc.lineWidth=0.7; rc.stroke();
+      }
+      // central dais
+      const dGrad2=rc.createRadialGradient(x,y+8,2,x,y+8,16);
+      dGrad2.addColorStop(0,'#eaf8ff'); dGrad2.addColorStop(1,'#8fc8ea');
+      rc.fillStyle=dGrad2; rc.beginPath(); rc.ellipse(x,y+8,16,7,0,0,Math.PI*2); rc.fill();
+      rc.strokeStyle='rgba(150,220,255,0.6)'; rc.lineWidth=1; rc.stroke();
+      // hovering radiant orb — the council's shared light
+      const orbY=y-24+Math.sin(t)*2;
+      const glow=0.6+Math.sin(t*3)*0.4;
+      const og=rc.createRadialGradient(x,orbY,0,x,orbY,14);
+      og.addColorStop(0,`rgba(255,255,255,${glow})`); og.addColorStop(0.4,'rgba(200,240,255,0.85)'); og.addColorStop(1,'transparent');
+      rc.fillStyle=og; rc.shadowColor='#aaffff'; rc.shadowBlur=18;
+      rc.beginPath(); rc.arc(x,orbY,10,0,Math.PI*2); rc.fill();
+      rc.shadowBlur=0;
+      // rays down onto the dais
+      rc.strokeStyle=`rgba(220,250,255,${0.3+glow*0.3})`; rc.lineWidth=1;
+      for(const rx of [-5,0,5]){ rc.beginPath(); rc.moveTo(x+rx*0.4,orbY+8); rc.lineTo(x+rx,y+2); rc.stroke(); }
+      // orbiting sparks circling the orb
+      for(let i=0;i<3;i++){
+        const a=(t*0.06+i*2.1)%(Math.PI*2);
+        rc.fillStyle='rgba(255,255,255,0.9)'; rc.shadowColor='#aaffff'; rc.shadowBlur=8;
+        rc.beginPath(); rc.arc(x+Math.cos(a)*16,orbY+Math.sin(a)*6,2,0,Math.PI*2); rc.fill();
+      }
+      rc.shadowBlur=0;
+      rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
+      rc.fillStyle=cfg.color; rc.fillText('COUNCIL',x,y+34); rc.fillText('OF LIGHT',x,y+42);
+
+    } else {
+      // ── RESEARCH LAB (Roboto) ── low tech bunker with a scanning dish and data screens
+      const t=S.frame*0.04;
+      // base slab
+      rc.fillStyle='#111118';
+      rc.beginPath(); rc.roundRect(x-30,y+20,60,10,2); rc.fill();
+      rc.strokeStyle='rgba(255,140,0,0.4)'; rc.lineWidth=1; rc.stroke();
+      // main block
+      const lGrad=rc.createLinearGradient(x-26,y-24,x+26,y+20);
+      lGrad.addColorStop(0,'#242018'); lGrad.addColorStop(1,'#0c0a06');
+      rc.fillStyle=lGrad; rc.beginPath(); rc.roundRect(x-26,y-22,52,42,3); rc.fill();
+      rc.strokeStyle='rgba(255,150,0,0.5)'; rc.lineWidth=1.2; rc.stroke();
+      // data screens flickering with scrolling readouts
+      for(const [wx,wy] of [[-14,-10],[14,-10]]){
+        const flicker=0.5+Math.sin(t*5+wx)*0.3;
+        rc.fillStyle=`rgba(0,220,255,${flicker})`;
+        rc.beginPath(); rc.roundRect(x+wx-8,y+wy-6,16,12,1); rc.fill();
+        rc.strokeStyle='rgba(255,160,0,0.5)'; rc.lineWidth=0.6; rc.strokeRect(x+wx-8,y+wy-6,16,12);
+        rc.strokeStyle='rgba(0,60,80,0.6)'; rc.lineWidth=0.5;
+        for(const ly of [-2,2]){ rc.beginPath(); rc.moveTo(x+wx-6,y+wy+ly); rc.lineTo(x+wx+6,y+wy+ly); rc.stroke(); }
+      }
+      // satellite dish mast on roof
+      rc.strokeStyle='#3a3020'; rc.lineWidth=2.5;
+      rc.beginPath(); rc.moveTo(x,y-22); rc.lineTo(x,y-40); rc.stroke();
+      rc.save();
+      rc.translate(x,y-40);
+      rc.rotate(Math.sin(t*0.6)*0.5-0.2);
+      const dishGrad=rc.createLinearGradient(-12,-4,12,4);
+      dishGrad.addColorStop(0,'#3a3020'); dishGrad.addColorStop(1,'#1a1408');
+      rc.fillStyle=dishGrad;
+      rc.beginPath(); rc.ellipse(0,0,12,5,0,Math.PI,0); rc.fill();
+      rc.strokeStyle='rgba(255,160,0,0.6)'; rc.lineWidth=0.8; rc.stroke();
+      rc.restore();
+      // pulsing signal orb at dish focus
+      const sigPulse=0.5+Math.sin(t*3)*0.5;
+      const sg=rc.createRadialGradient(x,y-46,0,x,y-46,6);
+      sg.addColorStop(0,`rgba(255,255,255,${sigPulse})`); sg.addColorStop(0.5,'rgba(0,220,255,0.7)'); sg.addColorStop(1,'transparent');
+      rc.fillStyle=sg; rc.shadowColor='#00ddff'; rc.shadowBlur=12;
+      rc.beginPath(); rc.arc(x,y-46,4,0,Math.PI*2); rc.fill();
+      rc.shadowBlur=0;
+      // bubbling coolant flask on the side
+      rc.fillStyle='rgba(20,10,0,0.6)';
+      rc.beginPath(); rc.roundRect(x-38,y+2,12,16,2); rc.fill();
+      rc.strokeStyle='rgba(255,140,0,0.5)'; rc.lineWidth=1; rc.stroke();
+      const bubblePulse=0.5+Math.sin(t*6)*0.5;
+      rc.fillStyle=`rgba(0,220,255,${0.4+bubblePulse*0.4})`;
+      rc.beginPath(); rc.arc(x-32,y+10-bubblePulse*4,2,0,Math.PI*2); rc.fill();
+      // door
+      rc.fillStyle='rgba(0,0,0,0.7)'; rc.beginPath(); rc.roundRect(x-8,y+4,16,16,1); rc.fill();
+      rc.strokeStyle='rgba(255,140,0,0.5)'; rc.lineWidth=0.6; rc.stroke();
+      rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
+      rc.fillStyle=cfg.color; rc.fillText('RESEARCH',x,y+34); rc.fillText('LAB',x,y+42);
     }
-    // satellite dish mast on roof
-    rc.strokeStyle='#3a3020'; rc.lineWidth=2.5;
-    rc.beginPath(); rc.moveTo(x,y-22); rc.lineTo(x,y-40); rc.stroke();
-    rc.save();
-    rc.translate(x,y-40);
-    rc.rotate(Math.sin(t*0.6)*0.5-0.2);
-    const dishGrad=rc.createLinearGradient(-12,-4,12,4);
-    dishGrad.addColorStop(0,'#3a3020'); dishGrad.addColorStop(1,'#1a1408');
-    rc.fillStyle=dishGrad;
-    rc.beginPath(); rc.ellipse(0,0,12,5,0,Math.PI,0); rc.fill();
-    rc.strokeStyle='rgba(255,160,0,0.6)'; rc.lineWidth=0.8; rc.stroke();
-    rc.restore();
-    // pulsing signal orb at dish focus
-    const sigPulse=0.5+Math.sin(t*3)*0.5;
-    const sg=rc.createRadialGradient(x,y-46,0,x,y-46,6);
-    sg.addColorStop(0,`rgba(255,255,255,${sigPulse})`); sg.addColorStop(0.5,'rgba(0,220,255,0.7)'); sg.addColorStop(1,'transparent');
-    rc.fillStyle=sg; rc.shadowColor='#00ddff'; rc.shadowBlur=12;
-    rc.beginPath(); rc.arc(x,y-46,4,0,Math.PI*2); rc.fill();
+  }
+
+  if(s.structType==='councildark'){
+    // ── COUNCIL OF DARKNESS (Shadow) ── ring of hooded dark pillars around a black flame
+    const t=S.frame*0.04;
+    // ground shadow
+    rc.fillStyle='rgba(80,0,150,0.14)';
+    rc.beginPath(); rc.ellipse(x,y+22,32,9,0,0,Math.PI*2); rc.fill();
+    rc.strokeStyle='rgba(120,0,200,0.4)'; rc.lineWidth=1; rc.stroke();
+    // ring of hooded council pillars
+    for(let i=0;i<5;i++){
+      const a=(i/5)*Math.PI*2;
+      const px=x+Math.cos(a)*24, py=y+14+Math.sin(a)*8;
+      const pGrad=rc.createLinearGradient(px,py-22,px,py+2);
+      pGrad.addColorStop(0,'#2a0050'); pGrad.addColorStop(0.6,'#160028'); pGrad.addColorStop(1,'#05000a');
+      rc.fillStyle=pGrad;
+      rc.beginPath(); rc.moveTo(px,py-22); rc.lineTo(px-5,py); rc.lineTo(px+5,py); rc.closePath(); rc.fill();
+      rc.strokeStyle='rgba(150,60,255,0.5)'; rc.lineWidth=0.7; rc.stroke();
+      // glowing eye
+      const eyePulse=0.4+Math.sin(t*2+i*1.3)*0.3;
+      rc.fillStyle=`rgba(200,80,255,${eyePulse})`; rc.shadowColor='#aa00ff'; rc.shadowBlur=6;
+      rc.beginPath(); rc.arc(px,py-14,1.6,0,Math.PI*2); rc.fill();
+    }
     rc.shadowBlur=0;
-    // bubbling coolant flask on the side
-    rc.fillStyle='rgba(20,10,0,0.6)';
-    rc.beginPath(); rc.roundRect(x-38,y+2,12,16,2); rc.fill();
-    rc.strokeStyle='rgba(255,140,0,0.5)'; rc.lineWidth=1; rc.stroke();
-    const bubblePulse=0.5+Math.sin(t*6)*0.5;
-    rc.fillStyle=`rgba(0,220,255,${0.4+bubblePulse*0.4})`;
-    rc.beginPath(); rc.arc(x-32,y+10-bubblePulse*4,2,0,Math.PI*2); rc.fill();
-    // door
-    rc.fillStyle='rgba(0,0,0,0.7)'; rc.beginPath(); rc.roundRect(x-8,y+4,16,16,1); rc.fill();
-    rc.strokeStyle='rgba(255,140,0,0.5)'; rc.lineWidth=0.6; rc.stroke();
+    // central dais
+    const dGrad=rc.createRadialGradient(x,y+8,2,x,y+8,16);
+    dGrad.addColorStop(0,'#2a0a40'); dGrad.addColorStop(1,'#0a0212');
+    rc.fillStyle=dGrad; rc.beginPath(); rc.ellipse(x,y+8,16,7,0,0,Math.PI*2); rc.fill();
+    rc.strokeStyle='rgba(150,60,255,0.5)'; rc.lineWidth=1; rc.stroke();
+    // black flame rising from the dais
+    const flicker=0.5+Math.sin(t*7)*0.5;
+    const fg=rc.createRadialGradient(x,y-14,0,x,y-14,16);
+    fg.addColorStop(0,`rgba(230,180,255,${flicker})`); fg.addColorStop(0.4,'rgba(140,20,220,0.75)'); fg.addColorStop(1,'transparent');
+    rc.fillStyle=fg; rc.shadowColor='#aa00ff'; rc.shadowBlur=20;
+    rc.beginPath();
+    rc.moveTo(x,y-30-flicker*4); rc.quadraticCurveTo(x+9,y-14,x+4,y+2);
+    rc.quadraticCurveTo(x,y-6,x-4,y+2); rc.quadraticCurveTo(x-9,y-14,x,y-30-flicker*4);
+    rc.closePath(); rc.fill();
+    rc.shadowBlur=0;
+    // drifting embers
+    for(let i=0;i<3;i++){
+      const a=(t*0.7+i*2.1)%(Math.PI*2);
+      const mx=x+Math.cos(a)*18, my=y-4+Math.sin(a)*8;
+      rc.fillStyle='rgba(190,100,255,0.6)'; rc.shadowColor='#cc66ff'; rc.shadowBlur=6;
+      rc.beginPath(); rc.arc(mx,my,1.5,0,Math.PI*2); rc.fill();
+    }
+    rc.shadowBlur=0;
     rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
-    rc.fillStyle=cfg.color; rc.fillText('RESEARCH',x,y+34); rc.fillText('LAB',x,y+42);
+    rc.fillStyle=cfg.color; rc.fillText('COUNCIL OF',x,y+34); rc.fillText('DARKNESS',x,y+42);
   }
 
   // HP bar

@@ -39,6 +39,7 @@ function executeCommand(cmd){
     if(ent.isOilRig) return 'oilrig';
     if(ent.isLingNest) return 'lingnest';
     if(ent.isResearchLab) return 'researchlab';
+    if(ent.isCouncilOfDarkness) return 'councildark';
     return 'structure';
   };
 
@@ -111,6 +112,10 @@ function executeCommand(cmd){
       if(cmd.unitType==='warrior2' && cfg.researchLabLabel){
         const hasResearchLab = S.entities.some(e=>e.side===side && e.isResearchLab && !e.underConstruction);
         if(!hasResearchLab) break;
+      }
+      if((cmd.unitType==='elite2'||cmd.unitType==='aerial2') && cfg.councilOfDarknessLabel){
+        const hasCouncilDark = S.entities.some(e=>e.side===side && e.isCouncilOfDarkness && !e.underConstruction);
+        if(!hasCouncilDark) break;
       }
 
       const aerial2TimeMap = { makeWarship:BUILD_TIMES.warship, makeLightFighter:BUILD_TIMES.lightfighter, makeDestroyer:BUILD_TIMES.destroyer };
