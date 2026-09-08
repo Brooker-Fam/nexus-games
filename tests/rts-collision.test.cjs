@@ -62,18 +62,33 @@ test('aerial units fly through ground units and each other untouched', () => {
   assert.deepEqual({ ...result }, { fx: 100, fy: 100, gx: 100, gy: 100 });
 });
 
-test('ground units cannot walk into an enemy building', () => {
+test('warriors cannot walk into an enemy building', () => {
   const context = makeContext();
   const result = vm.runInContext(`(() => {
     const base={id:1,type:'base',side:'enemy',x:500,y:500,hp:300};
-    const worker={id:2,type:'worker',side:'player',x:505,y:500,hp:20};
-    S.entities=[base,worker];
+    const warrior={id:2,type:'warrior',side:'player',x:505,y:500,hp:40};
+    S.entities=[base,warrior];
     resolveUnitCollisions();
-    return {bx:base.x,by:base.y,dist:Math.hypot(worker.x-base.x,worker.y-base.y)};
+    return {bx:base.x,by:base.y,dist:Math.hypot(warrior.x-base.x,warrior.y-base.y)};
   })()`, context);
   assert.equal(result.bx, 500); // buildings never move
   assert.equal(result.by, 500);
-  assert.ok(result.dist >= 37, `worker should be pushed outside the base footprint, got dist ${result.dist}`);
+  assert.ok(result.dist >= 39, `warrior should be pushed outside the base footprint, got dist ${result.dist}`);
+});
+
+test('workers are exempt from collision entirely — they pass through buildings and other units', () => {
+  const context = makeContext();
+  const result = vm.runInContext(`(() => {
+    const base={id:1,type:'base',side:'enemy',x:500,y:500,hp:300};
+    const warrior={id:2,type:'warrior',side:'player',x:500,y:500,hp:40};
+    const workerA={id:3,type:'worker',side:'player',x:500,y:500,hp:20};
+    const workerB={id:4,type:'worker',side:'player',x:500,y:500,hp:20};
+    S.entities=[base,warrior,workerA,workerB];
+    resolveUnitCollisions();
+    return {wax:workerA.x,way:workerA.y,wbx:workerB.x,wby:workerB.y};
+  })()`, context);
+  // workers never move even when exactly coincident with a building and other units
+  assert.deepEqual({ ...result }, { wax: 500, way: 500, wbx: 500, wby: 500 });
 });
 
 test('a melee warrior can still close to attack range against a building', () => {
@@ -86,30 +101,6 @@ test('a melee warrior can still close to attack range against a building', () =>
     return {dist:Math.hypot(warrior.x-base.x,warrior.y-base.y)};
   })()`, context);
   assert.ok(result.dist <= 50, `melee range should still be reachable, got dist ${result.dist}`);
-});
-
-test('a worker docked at its own build target is exempt from that building\'s collision', () => {
-  const context = makeContext();
-  const result = vm.runInContext(`(() => {
-    const ghost={id:1,type:'structure',side:'player',x:100,y:100,hp:160,underConstruction:true};
-    const worker={id:2,type:'worker',side:'player',x:105,y:100,hp:20,state:'building',buildTarget:{x:100,y:100,ghost}};
-    S.entities=[ghost,worker];
-    resolveUnitCollisions();
-    return {wx:worker.x,wy:worker.y};
-  })()`, context);
-  assert.deepEqual({ ...result }, { wx: 105, wy: 100 });
-});
-
-test('a worker mining its assigned oil rig is exempt from that rig\'s collision', () => {
-  const context = makeContext();
-  const result = vm.runInContext(`(() => {
-    const rig={id:1,type:'structure',side:'player',isOilRig:true,x:300,y:300,hp:160};
-    const worker={id:2,type:'worker',side:'player',x:305,y:300,hp:20,state:'mining',target:rig};
-    S.entities=[rig,worker];
-    resolveUnitCollisions();
-    return {wx:worker.x,wy:worker.y};
-  })()`, context);
-  assert.deepEqual({ ...result }, { wx: 305, wy: 300 });
 });
 
 test('dead units (hp<=0) do not participate in collision resolution', () => {
@@ -134,6 +125,18 @@ test('units are clamped to stay within the map bounds', () => {
   })()`, context);
   assert.equal(result.ax, 11); // default warrior collision radius
   assert.equal(result.ay, 1400 - 11);
+});
+
+test('workers are still clamped to the map bounds even though they skip unit/building collision', () => {
+  const context = makeContext();
+  const result = vm.runInContext(`(() => {
+    const w={id:1,type:'worker',side:'player',x:-40,y:2000,hp:20};
+    S.entities=[w];
+    resolveUnitCollisions();
+    return {wx:w.x,wy:w.y};
+  })()`, context);
+  assert.equal(result.wx, 10); // fallback radius used for workers (collision radius is 0)
+  assert.equal(result.wy, 1400 - 10);
 });
 
 test('exact-overlap ties are broken deterministically by entity id, not randomness', () => {
