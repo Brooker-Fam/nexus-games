@@ -58,6 +58,7 @@ const STRUCT_COSTS = {
   barracks:  { gold:55,  oil:0  },
   oilrig:    { gold:45,  oil:0  },
   lingnest:  { gold:90,  oil:30 },
+  researchlab: { gold:65, oil:20 },
   structure: { gold:100, oil:35 },
   aerial:    { gold:110, oil:40 },
   base:      { gold:160, oil:0  },
@@ -150,13 +151,16 @@ function openBuildPopup(screenX, screenY, context){
       { icon:cfg.warriorIcon, label:cfg.warriorLabel, desc:cfg.warriorDesc, cost:cfg.warriorCost, oilCost:cfg.warriorOilCost||0, unitType:'warrior' },
     ];
     if(cfg.warrior2Label){
-      barracksTypes.push({ icon:cfg.warrior2Icon, label:cfg.warrior2Label, desc:cfg.warrior2Desc, cost:cfg.warrior2Cost, oilCost:cfg.warrior2OilCost||0, unitType:'warrior2' });
+      const needsLab=!!cfg.researchLabLabel && !S.entities.some(e=>e.side===mySide()&&e.isResearchLab&&!e.underConstruction);
+      barracksTypes.push({ icon:cfg.warrior2Icon, label:cfg.warrior2Label,
+        desc: needsLab ? `Requires a completed ${cfg.researchLabLabel}` : cfg.warrior2Desc,
+        cost:cfg.warrior2Cost, oilCost:cfg.warrior2OilCost||0, unitType:'warrior2', locked:needsLab });
     }
 
     for(const u of barracksTypes){
       addOpt(u.icon, u.label, u.desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'barracks'),
-        myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        u.locked||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
         u.oilCost);
     }
 
@@ -205,6 +209,13 @@ function openBuildPopup(screenX, screenY, context){
         S.buildStructureMode='lingnest'; _buildModeCost=lc.gold; _buildModeOilCost=lc.oil;
         rtsSetLog(`Click to place your ${cfg.lingNestLabel}!`); closeBuildPopup();
       }, myGold()<lc.gold||myOil()<lc.oil, lc.oil);
+    }
+    if(cfg.researchLabLabel){
+      const rl=STRUCT_COSTS.researchlab;
+      addOpt(cfg.researchLabIcon, `Build ${cfg.researchLabLabel}`, `Click to place — ${(cfg.researchLabDesc||'unlocks advanced units').toLowerCase()} (${rl.gold}g +${rl.oil}${oilName})`, rl.gold, ()=>{
+        S.buildStructureMode='researchlab'; _buildModeCost=rl.gold; _buildModeOilCost=rl.oil;
+        rtsSetLog(`Click to place your ${cfg.researchLabLabel}!`); closeBuildPopup();
+      }, myGold()<rl.gold||myOil()<rl.oil, rl.oil);
     }
     addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Click to place — trains more workers (${baseC.gold}g)`, baseC.gold, ()=>{
       S.buildStructureMode='base'; _buildModeCost=baseC.gold; _buildModeOilCost=baseC.oil;
@@ -425,7 +436,7 @@ function rtsHandleClick(e){
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, oilCost:_buildModeOilCost, buildType:'base' });
     } else {
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, oilCost:_buildModeOilCost, buildType:
-        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':S.buildStructureMode==='oilrig'?'oilrig':S.buildStructureMode==='lingnest'?'lingnest':'structure' });
+        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':S.buildStructureMode==='oilrig'?'oilrig':S.buildStructureMode==='lingnest'?'lingnest':S.buildStructureMode==='researchlab'?'researchlab':'structure' });
     }
     S.buildStructureMode=false;
     S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#ffdd00',size:0,isRing:true,radius:4});
@@ -490,6 +501,14 @@ function rtsHandleClick(e){
         const item=hit.queue?.[0];
         const nextLing=item ? `  Next Ling: ${trainingProgress(hit.trainTimer,item.time).seconds}s` : '';
         rtsSetLog(`${nestLabel} — HP: ${Math.floor(hit.hp)}/${hit.maxHp}${nextLing}`);
+      }
+    } else if(hit.type==='structure' && hit.isResearchLab){
+      const labLabel=cfg.researchLabLabel||'RESEARCH LAB';
+      if(hit.underConstruction){
+        const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
+        rtsSetLog(`${labLabel} — under construction ${pct}%`);
+      } else {
+        rtsSetLog(`${labLabel} — HP: ${Math.floor(hit.hp)}/${hit.maxHp}  ${cfg.warrior2Label||'advanced units'} unlocked!`);
       }
     } else if(hit.type==='structure'){
       if(hit.underConstruction){

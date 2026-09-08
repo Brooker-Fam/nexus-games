@@ -38,6 +38,7 @@ function executeCommand(cmd){
     if(ent.isAerialHangar) return 'aerial';
     if(ent.isOilRig) return 'oilrig';
     if(ent.isLingNest) return 'lingnest';
+    if(ent.isResearchLab) return 'researchlab';
     return 'structure';
   };
 
@@ -107,6 +108,10 @@ function executeCommand(cmd){
                     : cmd.unitType==='elite'   ? (cfg.eliteOilCost||0)
                     : cmd.unitType==='warrior2' ? (cfg.warrior2OilCost||0) : 0;
       if(oilCost > 0 && (S.oil[side]||0) < oilCost) break;
+      if(cmd.unitType==='warrior2' && cfg.researchLabLabel){
+        const hasResearchLab = S.entities.some(e=>e.side===side && e.isResearchLab && !e.underConstruction);
+        if(!hasResearchLab) break;
+      }
 
       const aerial2TimeMap = { makeWarship:BUILD_TIMES.warship, makeLightFighter:BUILD_TIMES.lightfighter, makeDestroyer:BUILD_TIMES.destroyer };
       const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, warrior2:warrior2TimeMap[cfg.warrior2Fn], princess:BUILD_TIMES.elite, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite2,

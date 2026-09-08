@@ -624,6 +624,60 @@ function drawRTSStructure(rc, s){
     rc.fillStyle=cfg.color; rc.fillText('LING NEST',x,y+36);
   }
 
+  if(s.structType==='researchlab'){
+    // ── RESEARCH LAB (Roboto) ── low tech bunker with a scanning dish and data screens
+    const t=S.frame*0.04;
+    // base slab
+    rc.fillStyle='#111118';
+    rc.beginPath(); rc.roundRect(x-30,y+20,60,10,2); rc.fill();
+    rc.strokeStyle='rgba(255,140,0,0.4)'; rc.lineWidth=1; rc.stroke();
+    // main block
+    const lGrad=rc.createLinearGradient(x-26,y-24,x+26,y+20);
+    lGrad.addColorStop(0,'#242018'); lGrad.addColorStop(1,'#0c0a06');
+    rc.fillStyle=lGrad; rc.beginPath(); rc.roundRect(x-26,y-22,52,42,3); rc.fill();
+    rc.strokeStyle='rgba(255,150,0,0.5)'; rc.lineWidth=1.2; rc.stroke();
+    // data screens flickering with scrolling readouts
+    for(const [wx,wy] of [[-14,-10],[14,-10]]){
+      const flicker=0.5+Math.sin(t*5+wx)*0.3;
+      rc.fillStyle=`rgba(0,220,255,${flicker})`;
+      rc.beginPath(); rc.roundRect(x+wx-8,y+wy-6,16,12,1); rc.fill();
+      rc.strokeStyle='rgba(255,160,0,0.5)'; rc.lineWidth=0.6; rc.strokeRect(x+wx-8,y+wy-6,16,12);
+      rc.strokeStyle='rgba(0,60,80,0.6)'; rc.lineWidth=0.5;
+      for(const ly of [-2,2]){ rc.beginPath(); rc.moveTo(x+wx-6,y+wy+ly); rc.lineTo(x+wx+6,y+wy+ly); rc.stroke(); }
+    }
+    // satellite dish mast on roof
+    rc.strokeStyle='#3a3020'; rc.lineWidth=2.5;
+    rc.beginPath(); rc.moveTo(x,y-22); rc.lineTo(x,y-40); rc.stroke();
+    rc.save();
+    rc.translate(x,y-40);
+    rc.rotate(Math.sin(t*0.6)*0.5-0.2);
+    const dishGrad=rc.createLinearGradient(-12,-4,12,4);
+    dishGrad.addColorStop(0,'#3a3020'); dishGrad.addColorStop(1,'#1a1408');
+    rc.fillStyle=dishGrad;
+    rc.beginPath(); rc.ellipse(0,0,12,5,0,Math.PI,0); rc.fill();
+    rc.strokeStyle='rgba(255,160,0,0.6)'; rc.lineWidth=0.8; rc.stroke();
+    rc.restore();
+    // pulsing signal orb at dish focus
+    const sigPulse=0.5+Math.sin(t*3)*0.5;
+    const sg=rc.createRadialGradient(x,y-46,0,x,y-46,6);
+    sg.addColorStop(0,`rgba(255,255,255,${sigPulse})`); sg.addColorStop(0.5,'rgba(0,220,255,0.7)'); sg.addColorStop(1,'transparent');
+    rc.fillStyle=sg; rc.shadowColor='#00ddff'; rc.shadowBlur=12;
+    rc.beginPath(); rc.arc(x,y-46,4,0,Math.PI*2); rc.fill();
+    rc.shadowBlur=0;
+    // bubbling coolant flask on the side
+    rc.fillStyle='rgba(20,10,0,0.6)';
+    rc.beginPath(); rc.roundRect(x-38,y+2,12,16,2); rc.fill();
+    rc.strokeStyle='rgba(255,140,0,0.5)'; rc.lineWidth=1; rc.stroke();
+    const bubblePulse=0.5+Math.sin(t*6)*0.5;
+    rc.fillStyle=`rgba(0,220,255,${0.4+bubblePulse*0.4})`;
+    rc.beginPath(); rc.arc(x-32,y+10-bubblePulse*4,2,0,Math.PI*2); rc.fill();
+    // door
+    rc.fillStyle='rgba(0,0,0,0.7)'; rc.beginPath(); rc.roundRect(x-8,y+4,16,16,1); rc.fill();
+    rc.strokeStyle='rgba(255,140,0,0.5)'; rc.lineWidth=0.6; rc.stroke();
+    rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
+    rc.fillStyle=cfg.color; rc.fillText('RESEARCH',x,y+34); rc.fillText('LAB',x,y+42);
+  }
+
   // HP bar
   const bw=48, bh=4;
   drawHealthBar(rc, x, y-52, bw, bh, s.hp, s.maxHp);
