@@ -24,6 +24,7 @@ function makeWorker(side, faction, nearX, nearY){
     state:'idle',
     target:null, goldCarry:0, goldCap:5,
     mineTimer:0, frame:0,
+    damage:1, range:28, attackTimer:0, retaliateTimer:0, preCombatState:null,
   };
 }
 function makeWarrior(side, faction, nearX, nearY){
