@@ -671,7 +671,7 @@ function cannonTick(c){
   const cCfg=FACTION_CFG[c.faction];
   sfx(cCfg.cannonSound||'rtsCannonFire',300);
   S.projectiles.push({
-    x:c.x, y:c.y, tx:target,
+    x:c.x, y:c.y, tx:target, by:c,
     speed:8, damage:c.damage,
     faction:c.faction, color:cCfg.cannonColor||'#ffaa00',
     type:'cannonball', trail:[], side:c.side,
@@ -895,6 +895,7 @@ function warriorMeleeAttack(w, target, targetDist){
     if(w.attackTimer>=MELEE_ATTACK_TICKS){
       w.attackTimer=0;
       target.hp-=w.damage;
+      if(target.type==='warrior'){ target.lastAttacker=w; target.lastAttackedFrame=S.frame; }
       if(target.type==='base') spawnHitFlash(target.x+(w.side==='player'?-30:30),target.y+(Math.random()-0.5)*60,'#ff4444');
       else spawnHitFlash(target.x,target.y,FACTION_CFG[w.faction].color);
     }
@@ -959,6 +960,13 @@ function warriorTick(w, playerBase, enemyBase){
         break;
       }
     }
+    // Retaliate against whoever last hit us, even if they're outside our
+    // normal aggro range (e.g. long-range siege fire or splash damage).
+    if(w.state==='idle' && w.lastAttacker && w.lastAttacker.hp>0
+       && S.entities.includes(w.lastAttacker) && (S.frame-(w.lastAttackedFrame||0))<RETALIATE_WINDOW){
+      w.forcedTarget=w.lastAttacker;
+      w.state='march';
+    }
     if(w.state==='idle') return;
   }
 
@@ -980,6 +988,10 @@ function warriorTick(w, playerBase, enemyBase){
   if(w.ranged) warriorRangedAttack(w, target, dist);
   else warriorMeleeAttack(w, target, dist);
 }
+
+// How long (in ticks) an idle unit remembers who last hit it, so it can
+// retaliate even against an attacker outside its normal aggro range.
+const RETALIATE_WINDOW = 180;
 
 // ── COMBAT CONSTANTS ──
 const COMBAT = {
@@ -1034,6 +1046,7 @@ function spawnProjectile(shooter, target, burstOffset){
   S.projectiles.push({
     x:sx, y:sy,
     tx:target,
+    by:shooter,
     speed: pCfg.speed,
     damage:shooter.damage,
     faction:shooter.faction,
@@ -1078,6 +1091,7 @@ function updateProjectiles(){
     const dx=p.tx.x-p.x, dy=p.tx.y-p.y, d=_dist(dx,dy);
     if(d<p.speed+4){
       p.tx.hp-=p.damage;
+      if(p.tx.type==='warrior' && p.by){ p.tx.lastAttacker=p.by; p.tx.lastAttackedFrame=S.frame; }
       if(p.type==='bullet') spawnHitFlash(p.tx.x,p.tx.y,'#ffcc44');
       else if(p.type==='cannonball'){
         spawnHitParticles2(p.tx.x,p.tx.y);
@@ -1086,7 +1100,10 @@ function updateProjectiles(){
         // tank shell — AOE explosion
         for(const ent of S.entities){
           if(ent.side===p.side||ent.type==='base') continue;
-          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<COMBAT.tankAoeRadius) ent.hp-=p.damage*COMBAT.tankAoeDamageFactor;
+          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<COMBAT.tankAoeRadius){
+            ent.hp-=p.damage*COMBAT.tankAoeDamageFactor;
+            if(ent.type==='warrior' && p.by){ ent.lastAttacker=p.by; ent.lastAttackedFrame=S.frame; }
+          }
         }
         spawnHitParticles2(p.tx.x, p.tx.y);
       }
@@ -1100,7 +1117,10 @@ function updateProjectiles(){
         const factor = p.aoeFactor || COMBAT.darkOrbDamageFactor;
         for(const ent of S.entities){
           if(ent.side===p.side||ent.type==='base') continue;
-          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<radius) ent.hp-=p.damage*factor;
+          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<radius){
+            ent.hp-=p.damage*factor;
+            if(ent.type==='warrior' && p.by){ ent.lastAttacker=p.by; ent.lastAttackedFrame=S.frame; }
+          }
         }
         spawnDarkOrbBurst(p.tx.x, p.tx.y);
       }
