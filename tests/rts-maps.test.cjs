@@ -91,3 +91,29 @@ test('starting gold forms tight mirrored half circles around the bases',()=>{
   assert.ok(result.minRadius>=215 && result.maxRadius<=235,'gold arcs should stay compact');
   assert.equal(result.mirrored,true);
 });
+
+test('field gold mines are strung along one shared semicircle',()=>{
+  const context=makeContext();
+  const result=vm.runInContext(`(() => {
+    const cx=RW/2, cy=BASE_Y;
+    const perSeed=[];
+    for(let seed=1;seed<=30;seed++){
+      rtsRandSeed(seed); makeBattlefield(); makeMapGoldNodes();
+      const field=S.goldNodes.filter(node=>node.owner==='neutral');
+      const radii=field.map(node=>Math.hypot(node.x-cx,node.y-cy));
+      const above=field.every(node=>node.y<=cy+.001);
+      const below=field.every(node=>node.y>=cy-.001);
+      perSeed.push({
+        count:field.length,
+        spread:Math.max(...radii)-Math.min(...radii),
+        oneSide:above||below,
+      });
+    }
+    return perSeed;
+  })()`,context);
+  for(const r of result){
+    assert.ok(r.count>0,'every map should have field gold mines');
+    assert.ok(r.spread<40,'field mines should sit at roughly the same radius from the map centre');
+    assert.equal(r.oneSide,true,'field mines should bulge to only one side of the base line, like a semicircle');
+  }
+});

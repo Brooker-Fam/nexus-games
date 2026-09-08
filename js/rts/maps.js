@@ -33,12 +33,6 @@ function makeBattlefield(){
   }
 }
 
-function addMirroredGoldPair(x,y,gold=GOLD_MINE_CAPACITY){
-  const jitterX=rtsMapRand(-42,42), jitterY=rtsMapRand(-34,34);
-  S.goldNodes.push({x:x+jitterX,y:y+jitterY,gold,maxGold:gold,owner:'neutral'});
-  S.goldNodes.push({x:RW-x-jitterX,y:y+jitterY,gold,maxGold:gold,owner:'neutral'});
-}
-
 function addBaseGoldPair(angle,radius){
   const x=PLAYER_BASE_X+Math.cos(angle)*radius;
   const y=BASE_Y+Math.sin(angle)*radius;
@@ -46,22 +40,39 @@ function addBaseGoldPair(angle,radius){
   S.goldNodes.push({x:RW-x,y,gold:GOLD_MINE_CAPACITY,maxGold:GOLD_MINE_CAPACITY,owner:'enemy'});
 }
 
+// Places one contested field mine at the given angle along the shared arc, plus
+// its mirror image, unless the angle lands exactly on the arc's apex (x=RW/2).
+function addFieldGoldPair(angle,radius,bulgeSign){
+  const x=RW/2+Math.cos(angle)*radius;
+  const y=BASE_Y-bulgeSign*Math.sin(angle)*radius;
+  S.goldNodes.push({x,y,gold:GOLD_MINE_CAPACITY,maxGold:GOLD_MINE_CAPACITY,owner:'neutral'});
+  const mirrorX=RW-x;
+  if(Math.abs(mirrorX-x)>.001){
+    S.goldNodes.push({x:mirrorX,y,gold:GOLD_MINE_CAPACITY,maxGold:GOLD_MINE_CAPACITY,owner:'neutral'});
+  }
+}
+
 function makeMapGoldNodes(){
   S.goldNodes=[];
   const map=S.map||RTS_MAPS[0];
-  // Starting deposits form compact, inward-facing half circles around each base.
-  // Both players receive the same randomized radius so the arcs mirror exactly.
+  // Every gold mine on the map sits on a semicircle: tight, inward-facing arcs
+  // guard each base, and every contested field mine further out is strung
+  // along one shared semicircle arcing above (or below) the base line.
   const arcInset=.18;
   for(let i=0;i<map.lanes.length;i++){
     const t=map.lanes.length===1 ? .5 : i/(map.lanes.length-1);
     const angle=-Math.PI/2+arcInset+t*(Math.PI-arcInset*2);
     addBaseGoldPair(angle,rtsMapRand(215,235));
   }
-  // The preset defines the strategy; jitter and distance make repeat visits fresh.
-  // Flank deposits sit just past the starting arc, giving early expansions a nearby target.
-  for(const dy of (map.flanks||[])) addMirroredGoldPair(rtsMapRand(RW*.15,RW*.20),BASE_Y+dy);
-  for(const dy of map.quarters) addMirroredGoldPair(rtsMapRand(RW*.25,RW*.32),BASE_Y+dy);
-  for(const dy of map.center){
-    S.goldNodes.push({x:RW/2,y:BASE_Y+dy+rtsMapRand(-28,28),gold:GOLD_MINE_CAPACITY,maxGold:GOLD_MINE_CAPACITY,owner:'neutral'});
+  // The preset defines the strategy; jitter, radius and bulge direction make repeat visits fresh.
+  // Flank, quarter and center deposits all take a turn along the same shared arc.
+  const fieldOffsets=[...new Set([...(map.flanks||[]),...map.quarters,...map.center].map(Math.abs))].sort((a,b)=>a-b);
+  const maxOffset=Math.max(...fieldOffsets,1);
+  const fieldRadius=rtsMapRand(RW*.24,RW*.34);
+  const bulgeSign=rtsRand()<.5?1:-1;
+  for(const offset of fieldOffsets){
+    const t=.5+offset/(2*maxOffset);
+    const angle=arcInset+t*(Math.PI-arcInset*2);
+    addFieldGoldPair(angle,fieldRadius+rtsMapRand(-16,16),bulgeSign);
   }
 }
