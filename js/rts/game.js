@@ -415,9 +415,13 @@ function aiTick(){
     } // end mistake check
   }
 
-  } // end !_mpMultiplayer
+  } // end !_mpMultiplayer (build/train)
 
-  // === ATTACK DECISIONS (always run, including multiplayer) ===
+  // === ATTACK DECISIONS ===
+  // The 'enemy' side is a human guest in multiplayer, not the AI — never
+  // hijack their idle warriors into auto-attacking or auto-defending.
+  if(!window._mpMultiplayer){
+
   // Defend base when threatened
   if(baseThreats.length>0 && S.aiTimer%60===0){
     aiDefendBase(baseThreats);
@@ -429,12 +433,14 @@ function aiTick(){
     const powerAdvantage=aiArmyPower('enemy',true)>=aiArmyPower('player')*AI_CONFIG.counterAttackRatio;
     const shouldAttack = idleWarriors>=AI_CONFIG.attackMinWarriors || (idleWarriors>=AI_CONFIG.attackMatchMin && powerAdvantage);
     if(shouldAttack){
-      // Partial attack: easy AI sometimes only sends a portion (singleplayer only)
-      const sendAll = window._mpMultiplayer || Math.random() >= AI_CONFIG.attackPartialChance;
+      // Partial attack: easy AI sometimes only sends a portion
+      const sendAll = Math.random() >= AI_CONFIG.attackPartialChance;
       const wave=sendAll?idleArmy:idleArmy.slice(0,Math.ceil(idleArmy.length*0.5));
       aiLaunchAttack(wave);
     }
   }
+
+  } // end !_mpMultiplayer
 }
 
 // ── TICK ──
