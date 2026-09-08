@@ -264,7 +264,7 @@ function makeWarship(side, faction, nearX, nearY){
     frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };
 }
-// Light Fighter (Prism) — fast interceptor, fires a piercing beam of light
+// Light Fighter (Prism) — fast interceptor, projects a continuous piercing beam of light
 function makeLightFighter(side, faction, nearX, nearY){
   const isPlayer=side==='player';
   return {
@@ -272,7 +272,7 @@ function makeLightFighter(side, faction, nearX, nearY){
     x: nearX+(isPlayer?60:-60), y: nearY+(rtsRand()-0.5)*120,
     hp:60, maxHp:60, speed:2.4,
     state:'idle', target:null, attackTimer:0,
-    damage:20, range:240, ranged:true, fireRate:45,
+    damage:27, range:240, ranged:true, beam:true, beamTarget:null,
     aerial:true,
     frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };

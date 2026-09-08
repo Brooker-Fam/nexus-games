@@ -166,7 +166,7 @@ function aiBuild(type, nearX, nearY, cost, oilCost=0){
 function aiCombatPower(unit){
   if(!unit || unit.type!=='warrior') return 0;
   const healthRatio=Math.max(0,unit.hp)/Math.max(1,unit.maxHp||unit.hp||1);
-  const damagePerSecond=(unit.damage||1)*60/Math.max(1,unit.ranged?(unit.fireRate||50):MELEE_ATTACK_TICKS);
+  const damagePerSecond=unit.beam ? (unit.damage||1) : (unit.damage||1)*60/Math.max(1,unit.ranged?(unit.fireRate||50):MELEE_ATTACK_TICKS);
   const rangeBonus=unit.ranged ? 1+Math.min(unit.range||0,300)/600 : 1;
   return damagePerSecond*rangeBonus*(0.35+healthRatio*0.65);
 }
@@ -515,10 +515,13 @@ const WORKER_ATTACK_TICKS = 40;
 const WORKER_RETALIATE_WINDOW = 240; // ~4s at 60fps — how long a worker keeps fighting after being hit
 
 // Applies damage to a unit/structure. Workers that take damage start
-// retaliating against whatever enemy is close enough to hit back.
-function dealDamage(target, amount){
+// retaliating against whatever enemy is close enough to hit back; warriors
+// remember their attacker so they can retaliate even outside normal aggro
+// range (see RETALIATE_WINDOW in warriorTick).
+function dealDamage(target, amount, attacker){
   target.hp -= amount;
   if(target.type==='worker') target.retaliateTimer = WORKER_RETALIATE_WINDOW;
+  if(target.type==='warrior' && attacker){ target.lastAttacker=attacker; target.lastAttackedFrame=S.frame; }
 }
 
 function moveToward(unit, tx, ty, arrivedDist){
@@ -547,7 +550,7 @@ function workerCombatTick(w){
       w.attackTimer=(w.attackTimer||0)+1;
       if(w.attackTimer>=WORKER_ATTACK_TICKS){
         w.attackTimer=0;
-        dealDamage(nearest, w.damage);
+        dealDamage(nearest, w.damage, w);
         spawnHitFlash(nearest.x,nearest.y,FACTION_CFG[w.faction].color);
       }
       return true;
@@ -710,7 +713,7 @@ function cannonTick(c){
   const cCfg=FACTION_CFG[c.faction];
   sfx(cCfg.cannonSound||'rtsCannonFire',300);
   S.projectiles.push({
-    x:c.x, y:c.y, tx:target,
+    x:c.x, y:c.y, tx:target, by:c,
     speed:8, damage:c.damage,
     faction:c.faction, color:cCfg.cannonColor||'#ffaa00',
     type:'cannonball', trail:[], side:c.side,
@@ -867,6 +870,7 @@ function warriorMarchToward(w, target, spreadMod, spreadScale){
 }
 
 function advanceRangedAttack(w, target){
+  if(w.beam){ beamAttackTick(w, target); return; }
   const fireRate=w.fireRate||50;
   w.attackTimer++;
   while(w.attackTimer>=fireRate){
@@ -874,6 +878,18 @@ function advanceRangedAttack(w, target){
     if(w.summonsLegionnaires) summonLegionnaire(w, target);
     else fireWarriorProjectiles(w, target);
   }
+}
+
+// Continuous beam weapon (Light Fighter) — deals damage every tick instead of
+// firing discrete shots; w.damage is interpreted as damage-per-second.
+function beamAttackTick(w, target){
+  const wasBeaming=w._lastBeamFrame===S.frame-1;
+  w._lastBeamFrame=S.frame;
+  w.beamTarget=target;
+  target.hp-=w.damage/60;
+  w.beamPulse=wasBeaming?(w.beamPulse||0)+1:0;
+  if(!wasBeaming) sfx('rtsBeam', 40);
+  if(w.beamPulse%12===0) spawnHitFlash(target.x,target.y,'#ffffff');
 }
 
 function summonLegionnaire(princess, target){
@@ -933,7 +949,7 @@ function warriorMeleeAttack(w, target, targetDist){
     w.attackTimer++;
     if(w.attackTimer>=MELEE_ATTACK_TICKS){
       w.attackTimer=0;
-      dealDamage(target, w.damage);
+      dealDamage(target, w.damage, w);
       if(target.type==='base') spawnHitFlash(target.x+(w.side==='player'?-30:30),target.y+(Math.random()-0.5)*60,'#ff4444');
       else spawnHitFlash(target.x,target.y,FACTION_CFG[w.faction].color);
     }
@@ -943,6 +959,7 @@ function warriorMeleeAttack(w, target, targetDist){
 }
 
 function warriorTick(w, playerBase, enemyBase){
+  if(w.beam) w.beamTarget=null;
   const enemyBase2=w.side==='player'?enemyBase:playerBase;
 
   // DUEL STATE — two warriors fighting to become an elite
@@ -998,6 +1015,13 @@ function warriorTick(w, playerBase, enemyBase){
         break;
       }
     }
+    // Retaliate against whoever last hit us, even if they're outside our
+    // normal aggro range (e.g. long-range siege fire or splash damage).
+    if(w.state==='idle' && w.lastAttacker && w.lastAttacker.hp>0
+       && S.entities.includes(w.lastAttacker) && (S.frame-(w.lastAttackedFrame||0))<RETALIATE_WINDOW){
+      w.forcedTarget=w.lastAttacker;
+      w.state='march';
+    }
     if(w.state==='idle') return;
   }
 
@@ -1020,6 +1044,10 @@ function warriorTick(w, playerBase, enemyBase){
   else warriorMeleeAttack(w, target, dist);
 }
 
+// How long (in ticks) an idle unit remembers who last hit it, so it can
+// retaliate even against an attacker outside its normal aggro range.
+const RETALIATE_WINDOW = 180;
+
 // ── COMBAT CONSTANTS ──
 const COMBAT = {
   tankAoeRadius: 80,
@@ -1039,7 +1067,6 @@ const PROJECTILE_TYPES = {
   necromancer: { type:'darkmagic',  color:'#440088', speed:4,  sound:'rtsDarkMagic' },
   // 2nd-tier aerial units
   warship:      { type:'bullet',  color:'#ffcc44', speed:12, sound:'rtsBullet' },
-  lightfighter: { type:'beam',    color:'#ffffff', speed:26, sound:'rtsBeam' },
   destroyer:    { type:'darkorb', color:'#5500aa', speed:2.5, sound:'rtsDarkOrb',
                   aoeRadius:COMBAT.darkOrbAoeRadius, aoeFactor:COMBAT.darkOrbDamageFactor },
   // elite per-faction
@@ -1073,6 +1100,7 @@ function spawnProjectile(shooter, target, burstOffset){
   S.projectiles.push({
     x:sx, y:sy,
     tx:target,
+    by:shooter,
     speed: pCfg.speed,
     damage:shooter.damage,
     faction:shooter.faction,
@@ -1116,7 +1144,7 @@ function updateProjectiles(){
     if(!p.tx||p.tx.hp<=0){ S.projectiles.splice(i,1); continue; }
     const dx=p.tx.x-p.x, dy=p.tx.y-p.y, d=_dist(dx,dy);
     if(d<p.speed+4){
-      dealDamage(p.tx, p.damage);
+      dealDamage(p.tx, p.damage, p.by);
       if(p.type==='bullet') spawnHitFlash(p.tx.x,p.tx.y,'#ffcc44');
       else if(p.type==='cannonball'){
         spawnHitParticles2(p.tx.x,p.tx.y);
@@ -1125,7 +1153,7 @@ function updateProjectiles(){
         // tank shell — AOE explosion
         for(const ent of S.entities){
           if(ent.side===p.side||ent.type==='base') continue;
-          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<COMBAT.tankAoeRadius) dealDamage(ent, p.damage*COMBAT.tankAoeDamageFactor);
+          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<COMBAT.tankAoeRadius) dealDamage(ent, p.damage*COMBAT.tankAoeDamageFactor, p.by);
         }
         spawnHitParticles2(p.tx.x, p.tx.y);
       }
@@ -1139,13 +1167,11 @@ function updateProjectiles(){
         const factor = p.aoeFactor || COMBAT.darkOrbDamageFactor;
         for(const ent of S.entities){
           if(ent.side===p.side||ent.type==='base') continue;
-          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<radius) dealDamage(ent, p.damage*factor);
+          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<radius) dealDamage(ent, p.damage*factor, p.by);
         }
         spawnDarkOrbBurst(p.tx.x, p.tx.y);
       }
-      else if(p.type==='beam'){
-        spawnLightningHit(p.tx.x,p.tx.y,p.color);
-      } else {
+      else {
         spawnMagicBurst(p.tx.x,p.tx.y,p.color);
       }
       S.projectiles.splice(i,1);

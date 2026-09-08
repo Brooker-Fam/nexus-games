@@ -638,25 +638,6 @@ function drawRTSProjectiles(rc){
         rc.beginPath(); rc.arc(p.x,p.y,14,ra,ra+0.8); rc.stroke();
         rc.globalAlpha=1;
       }
-    } else if(p.type==='beam'){
-      // light fighter — bright laser bolt
-      if(p.trail.length>1){
-        for(let i=1;i<p.trail.length;i++){
-          const frac=i/p.trail.length;
-          rc.strokeStyle=`rgba(255,255,255,${frac*0.7})`;
-          rc.lineWidth=frac*4; rc.lineCap='round';
-          rc.beginPath(); rc.moveTo(p.trail[i-1].x,p.trail[i-1].y); rc.lineTo(p.trail[i].x,p.trail[i].y); rc.stroke();
-        }
-        const last=p.trail[p.trail.length-1];
-        rc.shadowColor='#ffffff'; rc.shadowBlur=18;
-        rc.strokeStyle='rgba(180,255,255,0.5)'; rc.lineWidth=5; rc.lineCap='round';
-        rc.beginPath(); rc.moveTo(last.x,last.y); rc.lineTo(p.x,p.y); rc.stroke();
-        rc.strokeStyle='rgba(255,255,255,0.95)'; rc.lineWidth=2.5;
-        rc.beginPath(); rc.moveTo(last.x,last.y); rc.lineTo(p.x,p.y); rc.stroke();
-      }
-      const bg=rc.createRadialGradient(p.x,p.y,0,p.x,p.y,7);
-      bg.addColorStop(0,'#ffffff'); bg.addColorStop(0.5,'#aaffff'); bg.addColorStop(1,'transparent');
-      rc.fillStyle=bg; rc.beginPath(); rc.arc(p.x,p.y,7,0,Math.PI*2); rc.fill();
     } else if(p.type==='darkorb'){
       // destroyer — slow void orb with orbiting particles
       for(let i=1;i<p.trail.length;i++){
@@ -692,6 +673,31 @@ function drawRTSProjectiles(rc){
       rc.beginPath(); rc.arc(p.x+Math.cos(a)*6,p.y+Math.sin(a)*4,2,0,Math.PI*2); rc.fill();
     }
     rc.restore();
+  }
+}
+
+// Continuous beam weapons (e.g. Light Fighter) — a persistent glowing line from
+// shooter to target, redrawn every frame while w.beamTarget is set.
+function drawRTSBeams(rc){
+  for(const w of S.entities){
+    if(w.type!=='warrior'||!w.beamTarget||w.hp<=0) continue;
+    const t=w.beamTarget;
+    if(!t||t.hp<=0) continue;
+    const ang=w.aimAngle||0;
+    const ox=w.x+Math.cos(ang)*17, oy=w.y+Math.sin(ang)*17;
+    const flicker=0.75+Math.sin(S.frame*0.9)*0.25;
+
+    rc.save();
+    rc.shadowColor='#ffffff'; rc.shadowBlur=20;
+    rc.strokeStyle=`rgba(180,255,255,${0.35*flicker})`; rc.lineWidth=7; rc.lineCap='round';
+    rc.beginPath(); rc.moveTo(ox,oy); rc.lineTo(t.x,t.y); rc.stroke();
+    rc.strokeStyle=`rgba(255,255,255,${0.9*flicker})`; rc.lineWidth=2.2; rc.lineCap='round';
+    rc.beginPath(); rc.moveTo(ox,oy); rc.lineTo(t.x,t.y); rc.stroke();
+    rc.restore();
+
+    const fg=rc.createRadialGradient(t.x,t.y,0,t.x,t.y,9);
+    fg.addColorStop(0,'#ffffff'); fg.addColorStop(0.5,'#aaffff'); fg.addColorStop(1,'transparent');
+    rc.fillStyle=fg; rc.beginPath(); rc.arc(t.x,t.y,9*flicker,0,Math.PI*2); rc.fill();
   }
 }
 
