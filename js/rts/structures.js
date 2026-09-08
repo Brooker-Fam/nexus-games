@@ -678,6 +678,99 @@ function drawRTSStructure(rc, s){
     rc.fillStyle=cfg.color; rc.fillText('RESEARCH',x,y+34); rc.fillText('LAB',x,y+42);
   }
 
+  if(s.structType==='councillight'){
+    // ── COUNCIL OF LIGHT (Prism) ── ring of luminous crystal spires around a hovering sun-orb
+    const t=S.frame*0.04;
+    // base platform
+    rc.fillStyle='rgba(180,240,255,0.12)';
+    rc.beginPath(); rc.ellipse(x,y+22,32,9,0,0,Math.PI*2); rc.fill();
+    rc.strokeStyle='rgba(120,210,255,0.4)'; rc.lineWidth=1; rc.stroke();
+    // ring of small crystal spires standing council
+    for(let i=0;i<5;i++){
+      const a=(i/5)*Math.PI*2;
+      const px=x+Math.cos(a)*24, py=y+14+Math.sin(a)*8;
+      const spGrad=rc.createLinearGradient(px,py-20,px,py+4);
+      spGrad.addColorStop(0,'#ffffff'); spGrad.addColorStop(0.5,'#bfe8ff'); spGrad.addColorStop(1,'#5aa0d0');
+      rc.fillStyle=spGrad;
+      rc.beginPath(); rc.moveTo(px,py-20); rc.lineTo(px-4,py); rc.lineTo(px+4,py); rc.closePath(); rc.fill();
+      rc.strokeStyle='rgba(200,240,255,0.6)'; rc.lineWidth=0.7; rc.stroke();
+    }
+    // central dais
+    const dGrad2=rc.createRadialGradient(x,y+8,2,x,y+8,16);
+    dGrad2.addColorStop(0,'#eaf8ff'); dGrad2.addColorStop(1,'#8fc8ea');
+    rc.fillStyle=dGrad2; rc.beginPath(); rc.ellipse(x,y+8,16,7,0,0,Math.PI*2); rc.fill();
+    rc.strokeStyle='rgba(150,220,255,0.6)'; rc.lineWidth=1; rc.stroke();
+    // hovering radiant orb — the council's shared light
+    const orbY=y-24+Math.sin(t)*2;
+    const glow=0.6+Math.sin(t*3)*0.4;
+    const og=rc.createRadialGradient(x,orbY,0,x,orbY,14);
+    og.addColorStop(0,`rgba(255,255,255,${glow})`); og.addColorStop(0.4,'rgba(200,240,255,0.85)'); og.addColorStop(1,'transparent');
+    rc.fillStyle=og; rc.shadowColor='#aaffff'; rc.shadowBlur=18;
+    rc.beginPath(); rc.arc(x,orbY,10,0,Math.PI*2); rc.fill();
+    rc.shadowBlur=0;
+    // rays down onto the dais
+    rc.strokeStyle=`rgba(220,250,255,${0.3+glow*0.3})`; rc.lineWidth=1;
+    for(const rx of [-5,0,5]){ rc.beginPath(); rc.moveTo(x+rx*0.4,orbY+8); rc.lineTo(x+rx,y+2); rc.stroke(); }
+    // orbiting sparks circling the orb
+    for(let i=0;i<3;i++){
+      const a=(t*0.06+i*2.1)%(Math.PI*2);
+      rc.fillStyle='rgba(255,255,255,0.9)'; rc.shadowColor='#aaffff'; rc.shadowBlur=8;
+      rc.beginPath(); rc.arc(x+Math.cos(a)*16,orbY+Math.sin(a)*6,2,0,Math.PI*2); rc.fill();
+    }
+    rc.shadowBlur=0;
+    rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
+    rc.fillStyle=cfg.color; rc.fillText('COUNCIL',x,y+34); rc.fillText('OF LIGHT',x,y+42);
+  }
+
+  if(s.structType==='councildark'){
+    // ── COUNCIL OF DARKNESS (Shadow) ── ring of hooded dark pillars around a black flame
+    const t=S.frame*0.04;
+    // ground shadow
+    rc.fillStyle='rgba(80,0,150,0.14)';
+    rc.beginPath(); rc.ellipse(x,y+22,32,9,0,0,Math.PI*2); rc.fill();
+    rc.strokeStyle='rgba(120,0,200,0.4)'; rc.lineWidth=1; rc.stroke();
+    // ring of hooded council pillars
+    for(let i=0;i<5;i++){
+      const a=(i/5)*Math.PI*2;
+      const px=x+Math.cos(a)*24, py=y+14+Math.sin(a)*8;
+      const pGrad=rc.createLinearGradient(px,py-22,px,py+2);
+      pGrad.addColorStop(0,'#2a0050'); pGrad.addColorStop(0.6,'#160028'); pGrad.addColorStop(1,'#05000a');
+      rc.fillStyle=pGrad;
+      rc.beginPath(); rc.moveTo(px,py-22); rc.lineTo(px-5,py); rc.lineTo(px+5,py); rc.closePath(); rc.fill();
+      rc.strokeStyle='rgba(150,60,255,0.5)'; rc.lineWidth=0.7; rc.stroke();
+      // glowing eye
+      const eyePulse=0.4+Math.sin(t*2+i*1.3)*0.3;
+      rc.fillStyle=`rgba(200,80,255,${eyePulse})`; rc.shadowColor='#aa00ff'; rc.shadowBlur=6;
+      rc.beginPath(); rc.arc(px,py-14,1.6,0,Math.PI*2); rc.fill();
+    }
+    rc.shadowBlur=0;
+    // central dais
+    const dGrad=rc.createRadialGradient(x,y+8,2,x,y+8,16);
+    dGrad.addColorStop(0,'#2a0a40'); dGrad.addColorStop(1,'#0a0212');
+    rc.fillStyle=dGrad; rc.beginPath(); rc.ellipse(x,y+8,16,7,0,0,Math.PI*2); rc.fill();
+    rc.strokeStyle='rgba(150,60,255,0.5)'; rc.lineWidth=1; rc.stroke();
+    // black flame rising from the dais
+    const flicker=0.5+Math.sin(t*7)*0.5;
+    const fg=rc.createRadialGradient(x,y-14,0,x,y-14,16);
+    fg.addColorStop(0,`rgba(230,180,255,${flicker})`); fg.addColorStop(0.4,'rgba(140,20,220,0.75)'); fg.addColorStop(1,'transparent');
+    rc.fillStyle=fg; rc.shadowColor='#aa00ff'; rc.shadowBlur=20;
+    rc.beginPath();
+    rc.moveTo(x,y-30-flicker*4); rc.quadraticCurveTo(x+9,y-14,x+4,y+2);
+    rc.quadraticCurveTo(x,y-6,x-4,y+2); rc.quadraticCurveTo(x-9,y-14,x,y-30-flicker*4);
+    rc.closePath(); rc.fill();
+    rc.shadowBlur=0;
+    // drifting embers
+    for(let i=0;i<3;i++){
+      const a=(t*0.7+i*2.1)%(Math.PI*2);
+      const mx=x+Math.cos(a)*18, my=y-4+Math.sin(a)*8;
+      rc.fillStyle='rgba(190,100,255,0.6)'; rc.shadowColor='#cc66ff'; rc.shadowBlur=6;
+      rc.beginPath(); rc.arc(mx,my,1.5,0,Math.PI*2); rc.fill();
+    }
+    rc.shadowBlur=0;
+    rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
+    rc.fillStyle=cfg.color; rc.fillText('COUNCIL OF',x,y+34); rc.fillText('DARKNESS',x,y+42);
+  }
+
   // HP bar
   const bw=48, bh=4;
   drawHealthBar(rc, x, y-52, bw, bh, s.hp, s.maxHp);

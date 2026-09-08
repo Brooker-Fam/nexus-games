@@ -234,7 +234,7 @@ test('Shadow Temple rejects a Ling call when either resource is insufficient',()
   assert.deepEqual({...result},{entities:1,cooldown:undefined,gold:100,essence:24});
 });
 
-test('Roboto Warbot, Tank, and Warship require completed (gold-cost) research at the Research Lab, but Legionnaires need no such research',()=>{
+test('Roboto Warbot, Tank, and Warship require completed (gold-cost) research at the Research Lab, and Prism Legionnaires require a completed Council of Light',()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
@@ -300,9 +300,68 @@ test('Roboto Warbot, Tank, and Warship require completed (gold-cost) research at
     S.gold.player=1000;
     S.entities=[portal];
     executeCommand({type:'train_unit',buildingId:2,unitType:'warrior2',side:'player'});
-    return {queued:portal.queue.length,gold:S.gold.player};
+    const withoutCouncil={queued:portal.queue.length,gold:S.gold.player};
+
+    const council=makeCouncilOfLight('player','prism',50,50);
+    S.entities.push(council);
+    portal.queue=[];
+    executeCommand({type:'train_unit',buildingId:2,unitType:'warrior2',side:'player'});
+    const withUnfinishedCouncil={queued:portal.queue.length,gold:S.gold.player};
+
+    council.underConstruction=false;
+    portal.queue=[];
+    executeCommand({type:'train_unit',buildingId:2,unitType:'warrior2',side:'player'});
+    const withFinishedCouncil={queued:portal.queue.length,gold:S.gold.player};
+
+    return {withoutCouncil,withUnfinishedCouncil,withFinishedCouncil};
   })()`,context);
-  assert.equal(prismResult.queued,1);
+  assert.equal(prismResult.withoutCouncil.queued,0);
+  assert.equal(prismResult.withUnfinishedCouncil.queued,0);
+  assert.equal(prismResult.withFinishedCouncil.queued,1);
+});
+
+test('Shadow Necromancer and Destroyer both require a completed Council of Darkness',()=>{
+  const context=makeContext();
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  Object.assign(context,{
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},playerFaction:'shadow',enemyFaction:'roboto'},
+    BUILDING_HEALTH:{structure:160},
+    updateRtsHUD:()=>{}, rtsSetLog:()=>{},
+    queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
+    makeWizard:()=>{}, makeNecromancer:()=>({id:99}), makeTank:()=>{},
+    makeStarFighter:()=>{}, makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>({id:98}),
+    makePrincess:()=>{}, makeElite:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const shrine={id:1,type:'structure',side:'player',faction:'shadow',x:0,y:0,queue:[]};
+    const conduit={id:2,type:'structure',side:'player',faction:'shadow',x:0,y:0,queue:[],isAerialHangar:true};
+    S.entities=[shrine,conduit];
+    executeCommand({type:'train_unit',buildingId:1,unitType:'elite2',side:'player'});
+    executeCommand({type:'train_unit',buildingId:2,unitType:'aerial2',side:'player'});
+    const withoutCouncil={elite2:shrine.queue.length,aerial2:conduit.queue.length};
+
+    const council=makeCouncilOfDarkness('player','shadow',50,50);
+    S.entities.push(council);
+    shrine.queue=[]; conduit.queue=[];
+    executeCommand({type:'train_unit',buildingId:1,unitType:'elite2',side:'player'});
+    executeCommand({type:'train_unit',buildingId:2,unitType:'aerial2',side:'player'});
+    const withUnfinishedCouncil={elite2:shrine.queue.length,aerial2:conduit.queue.length};
+
+    council.underConstruction=false;
+    shrine.queue=[]; conduit.queue=[];
+    executeCommand({type:'train_unit',buildingId:1,unitType:'elite2',side:'player'});
+    executeCommand({type:'train_unit',buildingId:2,unitType:'aerial2',side:'player'});
+    const withFinishedCouncil={elite2:shrine.queue.length,aerial2:conduit.queue.length};
+
+    return {withoutCouncil,withUnfinishedCouncil,withFinishedCouncil};
+  })()`,context);
+
+  assert.deepEqual({...result.withoutCouncil},{elite2:0,aerial2:0});
+  assert.deepEqual({...result.withUnfinishedCouncil},{elite2:0,aerial2:0});
+  assert.deepEqual({...result.withFinishedCouncil},{elite2:1,aerial2:1});
 });
 
 test('start_research is gold-gated, one-shot, and unlocks Warbot/Tank/Warship together',()=>{

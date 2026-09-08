@@ -34,6 +34,10 @@ const AI_CONFIG = {
   lingNestOilCost: STRUCT_COSTS.lingnest?.oil||0,
   researchLabCost: STRUCT_COSTS.researchlab?.gold||0,
   researchLabOilCost: STRUCT_COSTS.researchlab?.oil||0,
+  councilLightCost: STRUCT_COSTS.councillight?.gold||0,
+  councilLightOilCost: STRUCT_COSTS.councillight?.oil||0,
+  councilDarkCost: STRUCT_COSTS.councildark?.gold||0,
+  councilDarkOilCost: STRUCT_COSTS.councildark?.oil||0,
   eliteCost: 30,
   warriorCost: 10,
   warrior2Cost: 16,
@@ -239,7 +243,7 @@ function aiTick(){
   const workers   = aiCount('worker');
   const warriors  = aiCount('warrior');
   const barracks  = aiCount('structure', e=>e.isBarracks);
-  const eliteStructs = aiCount('structure', e=>!e.isBarracks&&!e.isAerialHangar&&!e.isLingNest&&!e.isResearchLab);
+  const eliteStructs = aiCount('structure', e=>!e.isBarracks&&!e.isAerialHangar&&!e.isLingNest&&!e.isResearchLab&&!e.isCouncilOfLight&&!e.isCouncilOfDarkness);
   const aerialHangars = aiCount('structure', e=>e.isAerialHangar);
   const cannons   = aiCount('cannon');
   const idleWarriors = S.entities.filter(e=>e.side==='enemy'&&e.type==='warrior'&&e.state==='idle').length;
@@ -322,6 +326,24 @@ function aiTick(){
       }
     }
 
+    // Build a Council of Light once a barracks exists — required before the
+    // AI can train Legionnaires at the Portal.
+    if(eCfg2.councilOfLightLabel){
+      const councilsLight=aiCount('structure',e=>e.isCouncilOfLight);
+      if(councilsLight===0 && barracks>=1 && workers>=3){
+        aiBuild('councillight', eb.x-140, eb.y+260, AI_CONFIG.councilLightCost, AI_CONFIG.councilLightOilCost);
+      }
+    }
+
+    // Build a Council of Darkness once a barracks exists — required before
+    // the AI can train Necromancers (Dark Shrine) or Destroyers (Warp Conduit).
+    if(eCfg2.councilOfDarknessLabel){
+      const councilsDark=aiCount('structure',e=>e.isCouncilOfDarkness);
+      if(councilsDark===0 && barracks>=1 && workers>=3){
+        aiBuild('councildark', eb.x-140, eb.y-260, AI_CONFIG.councilDarkCost, AI_CONFIG.councilDarkOilCost);
+      }
+    }
+
     } // end mistake check
   }
 
@@ -337,8 +359,10 @@ function aiTick(){
     const warrior2FnMap2={makeWarbot,makeLegionnaireSquad};
     const warrior2OilNeeded=eCfgW.warrior2OilCost||0;
     const researchDone = !eCfgW.researchLabLabel || S.research.enemy;
+    const councilLightDone = !eCfgW.councilOfLightLabel
+      || S.entities.some(e=>e.side==='enemy'&&e.isCouncilOfLight&&!e.underConstruction);
     for(const bar of allBarracks){
-      const wantWarrior2 = eCfgW.warrior2Fn && researchDone && Math.random()<0.35
+      const wantWarrior2 = eCfgW.warrior2Fn && researchDone && councilLightDone && Math.random()<0.35
         && S.gold.enemy>=AI_CONFIG.warrior2Cost && (S.oil.enemy||0)>=warrior2OilNeeded;
       if(wantWarrior2){
         const w2fn=warrior2FnMap2[eCfgW.warrior2Fn];
@@ -352,7 +376,7 @@ function aiTick(){
     }
 
     // Train elites (and elite2/tanks for Roboto)
-    const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.isOilRig&&!e.isLingNest&&!e.isResearchLab&&!e.underConstruction);
+    const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.isOilRig&&!e.isLingNest&&!e.isResearchLab&&!e.isCouncilOfLight&&!e.isCouncilOfDarkness&&!e.underConstruction);
     const eCfg3=FACTION_CFG[S.enemyFaction];
     if(S.enemyFaction==='prism'){
       const princessExists=S.entities.some(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='princess');
@@ -393,7 +417,9 @@ function aiTick(){
     const aerial2BuildTimeMap={makeWarship:BUILD_TIMES.warship,makeLightFighter:BUILD_TIMES.lightfighter,makeDestroyer:BUILD_TIMES.destroyer};
     const aerialOilNeeded=eCfg.aerialOilCost||0;
     const aerial2OilNeeded=eCfg.aerial2OilCost||0;
-    if(aerialHangar && eCfg.aerial2Fn && (!eCfg.researchLabLabel||S.research.enemy)
+    const hasCouncilDarkAerial = !eCfg.councilOfDarknessLabel
+      || S.entities.some(e=>e.side==='enemy'&&e.isCouncilOfDarkness&&!e.underConstruction);
+    if(aerialHangar && eCfg.aerial2Fn && hasCouncilDarkAerial && (!eCfg.researchLabLabel||S.research.enemy)
       && S.gold.enemy>=eCfg.aerial2Cost && (S.oil.enemy||0)>=aerial2OilNeeded){
       const a2fn=aerial2FnMap2[eCfg.aerial2Fn];
       if(a2fn && aiQueueAt(aerialHangar,eCfg.aerial2Label,
@@ -592,7 +618,7 @@ function workerBuild(w){
   if(moveToward(w, w.buildTarget.x, w.buildTarget.y, BUILD_ARRIVE_DIST)) {
     const bt=w.buildTarget.buildType||'structure';
     if(!w.buildTarget.ghost){
-      const makers={cannon:makeCannon, barracks:makeBarracks, base:makeBase, aerial:makeAerialBuilding, oilrig:makeOilRig, lingnest:makeLingNest, researchlab:makeResearchLab};
+      const makers={cannon:makeCannon, barracks:makeBarracks, base:makeBase, aerial:makeAerialBuilding, oilrig:makeOilRig, lingnest:makeLingNest, researchlab:makeResearchLab, councillight:makeCouncilOfLight, councildark:makeCouncilOfDarkness};
       const ghost=(makers[bt]||makeStructure)(w.side, w.faction, w.buildTarget.x, w.buildTarget.y);
       S.entities.push(ghost);
       w.buildTarget.ghost=ghost;
@@ -608,7 +634,7 @@ function workerBuild(w){
       ghost.hp=ghost.maxHp;
       sfx('rtsBuildDone');
       if(w.side==='player'){
-        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:bt==='aerial'?FACTION_CFG[w.faction].aerialLabel:bt==='oilrig'?(FACTION_CFG[w.faction].oilRigLabel||'OIL RIG'):bt==='lingnest'?(FACTION_CFG[w.faction].lingNestLabel||'LING NEST'):bt==='researchlab'?(FACTION_CFG[w.faction].researchLabLabel||'RESEARCH LAB'):FACTION_CFG[w.faction].structLabel;
+        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:bt==='aerial'?FACTION_CFG[w.faction].aerialLabel:bt==='oilrig'?(FACTION_CFG[w.faction].oilRigLabel||'OIL RIG'):bt==='lingnest'?(FACTION_CFG[w.faction].lingNestLabel||'LING NEST'):bt==='researchlab'?(FACTION_CFG[w.faction].researchLabLabel||'RESEARCH LAB'):bt==='councillight'?(FACTION_CFG[w.faction].councilOfLightLabel||'COUNCIL OF LIGHT'):bt==='councildark'?(FACTION_CFG[w.faction].councilOfDarknessLabel||'COUNCIL OF DARKNESS'):FACTION_CFG[w.faction].structLabel;
         rtsSetLog(`${lbl} complete!`);
       }
       w.state='idle'; w.buildTarget=null; w.hammerSwing=0; w.buildTimer=0;
