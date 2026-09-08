@@ -125,17 +125,18 @@
     flex-direction:column;
   }
   .rts-hud {
-    display:grid;
-    grid-template-columns:minmax(160px,1fr) minmax(280px,2fr) minmax(160px,1fr);
+    display:flex;
+    flex-wrap:wrap;
     align-items:center;
     padding:5px 10px;
     background:rgba(2,8,16,0.95);
     border:1px solid rgba(0,245,255,0.15);
     border-top:none;
-    gap:6px;
+    gap:10px;
     order:3;
   }
-  .rts-hud-left,.rts-hud-right { display:flex; flex-direction:column; gap:2px; min-width:160px; }
+  .rts-hud-minimap { flex:0 0 auto; display:flex; }
+  .rts-hud-left,.rts-hud-right { display:flex; flex-direction:column; gap:2px; min-width:160px; flex:1 1 160px; }
   .rts-hud-right { align-items:flex-end; }
   .rts-faction-badge {
     font-family:'Orbitron',sans-serif; font-size:9px; letter-spacing:2px;
@@ -145,7 +146,7 @@
   }
   .rts-resource { font-size:10px; letter-spacing:1px; color:var(--text-dim); }
   .rts-res-icon { color:gold; }
-  .rts-hud-mid { flex:1; display:flex; justify-content:center; }
+  .rts-hud-mid { flex:2 1 280px; display:flex; justify-content:center; }
   .rts-build-panel {
     width:100%; display:grid;
     grid-template-columns:minmax(120px,1fr) minmax(120px,1fr) minmax(100px,auto);
@@ -254,10 +255,10 @@
     position:absolute; top:0; left:0;
   }
   #rts-minimap {
-    position:absolute; bottom:10px; right:10px;
+    display:block;
+    width:160px; height:65px;
     border:1px solid rgba(0,245,255,0.35);
     background:rgba(2,8,16,0.9);
-    z-index:10; pointer-events:none;
     box-shadow:0 0 10px rgba(0,245,255,0.15);
   }
   #rts-scroll-hint {
@@ -372,9 +373,10 @@
     .dso-pre { font-size: 9px; letter-spacing: 4px; }
     .faction-cards { gap: 12px; }
     .faction-card { width: 180px; }
-    .rts-hud { grid-template-columns:repeat(2,minmax(0,1fr)); padding: 6px 10px; }
+    .rts-hud { padding: 6px 10px; }
     .rts-hud-left, .rts-hud-right { min-width: 120px; }
-    .rts-hud-mid { grid-column:1 / -1; grid-row:1; }
+    .rts-hud-mid { flex-basis:100%; order:-1; }
+    #rts-minimap { width: 130px; height: 53px; }
     .rts-build-panel { gap: 6px; }
     #rts-viewport-wrap { height: 50vw; min-height: 300px; max-height: min(580px, 70vh); }
     #rv-canvas { width: 100%; height: auto; }
@@ -385,8 +387,9 @@
     .dso-title { font-size: 18px; letter-spacing: 2px; }
     .faction-cards { flex-direction: column; align-items: center; }
     .faction-card { width: 90%; max-width: 280px; }
-    .rts-hud { grid-template-columns:minmax(0,1fr); }
-    .rts-hud-mid { width: 100%; grid-column:auto; grid-row:auto; justify-content: center; }
+    .rts-hud { flex-direction:column; align-items:stretch; }
+    .rts-hud-minimap { justify-content:center; }
+    .rts-hud-mid { width: 100%; justify-content: center; }
     .rts-build-panel { grid-template-columns:minmax(0,1fr); }
     .rts-hud-right { align-items:flex-start; }
     .rts-build-btn { padding: 5px 10px; font-size: 8px; }
@@ -402,7 +405,7 @@
     .rts-faction-badge { font-size: 8px; padding: 2px 8px; }
     .rts-resource { font-size: 10px; }
     .rts-log-bar { padding: 3px 10px; font-size: 10px; min-height: 18px; }
-    #rts-minimap { transform: scale(0.7); transform-origin: bottom right; }
+    #rts-minimap { width: 112px; height: 46px; }
     .rts-build-btn { padding: 4px 8px; font-size: 7px; }
     .rts-build-icon { font-size: 13px; }
   }
