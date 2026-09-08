@@ -166,7 +166,7 @@ function aiBuild(type, nearX, nearY, cost, oilCost=0){
 function aiCombatPower(unit){
   if(!unit || unit.type!=='warrior') return 0;
   const healthRatio=Math.max(0,unit.hp)/Math.max(1,unit.maxHp||unit.hp||1);
-  const damagePerSecond=(unit.damage||1)*60/Math.max(1,unit.ranged?(unit.fireRate||50):MELEE_ATTACK_TICKS);
+  const damagePerSecond=unit.beam ? (unit.damage||1) : (unit.damage||1)*60/Math.max(1,unit.ranged?(unit.fireRate||50):MELEE_ATTACK_TICKS);
   const rangeBonus=unit.ranged ? 1+Math.min(unit.range||0,300)/600 : 1;
   return damagePerSecond*rangeBonus*(0.35+healthRatio*0.65);
 }
@@ -828,6 +828,7 @@ function warriorMarchToward(w, target, spreadMod, spreadScale){
 }
 
 function advanceRangedAttack(w, target){
+  if(w.beam){ beamAttackTick(w, target); return; }
   const fireRate=w.fireRate||50;
   w.attackTimer++;
   while(w.attackTimer>=fireRate){
@@ -835,6 +836,18 @@ function advanceRangedAttack(w, target){
     if(w.summonsLegionnaires) summonLegionnaire(w, target);
     else fireWarriorProjectiles(w, target);
   }
+}
+
+// Continuous beam weapon (Light Fighter) — deals damage every tick instead of
+// firing discrete shots; w.damage is interpreted as damage-per-second.
+function beamAttackTick(w, target){
+  const wasBeaming=w._lastBeamFrame===S.frame-1;
+  w._lastBeamFrame=S.frame;
+  w.beamTarget=target;
+  target.hp-=w.damage/60;
+  w.beamPulse=wasBeaming?(w.beamPulse||0)+1:0;
+  if(!wasBeaming) sfx('rtsBeam', 40);
+  if(w.beamPulse%12===0) spawnHitFlash(target.x,target.y,'#ffffff');
 }
 
 function summonLegionnaire(princess, target){
@@ -904,6 +917,7 @@ function warriorMeleeAttack(w, target, targetDist){
 }
 
 function warriorTick(w, playerBase, enemyBase){
+  if(w.beam) w.beamTarget=null;
   const enemyBase2=w.side==='player'?enemyBase:playerBase;
 
   // DUEL STATE — two warriors fighting to become an elite
@@ -1000,7 +1014,6 @@ const PROJECTILE_TYPES = {
   necromancer: { type:'darkmagic',  color:'#440088', speed:4,  sound:'rtsDarkMagic' },
   // 2nd-tier aerial units
   warship:      { type:'bullet',  color:'#ffcc44', speed:12, sound:'rtsBullet' },
-  lightfighter: { type:'beam',    color:'#ffffff', speed:26, sound:'rtsBeam' },
   destroyer:    { type:'darkorb', color:'#5500aa', speed:2.5, sound:'rtsDarkOrb',
                   aoeRadius:COMBAT.darkOrbAoeRadius, aoeFactor:COMBAT.darkOrbDamageFactor },
   // elite per-faction
@@ -1104,9 +1117,7 @@ function updateProjectiles(){
         }
         spawnDarkOrbBurst(p.tx.x, p.tx.y);
       }
-      else if(p.type==='beam'){
-        spawnLightningHit(p.tx.x,p.tx.y,p.color);
-      } else {
+      else {
         spawnMagicBurst(p.tx.x,p.tx.y,p.color);
       }
       S.projectiles.splice(i,1);

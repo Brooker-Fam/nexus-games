@@ -39,6 +39,7 @@ function rtsDraw(){
     if(e.type==='warrior') drawRTSWarrior(rc,e);
   }
   drawRTSProjectiles(rc);
+  drawRTSBeams(rc);
   drawRTSBaseHP(rc);
 
   rc.restore();
