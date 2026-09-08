@@ -22,6 +22,8 @@ const S = {
   // resources & factions
   gold: {player:0, enemy:0},
   oil:  {player:0, enemy:0},
+  // completed Research Lab tech — unlocks Warbot/Tank/Warship production
+  research: {player:false, enemy:false},
   playerFaction: 'prism', enemyFaction: 'shadow',
   // base HP
   baseHP: BUILDING_HEALTH.base, enemyBaseHP: BUILDING_HEALTH.base,
@@ -42,7 +44,7 @@ const S = {
 
 function resetRtsState(){
   S.raf=null; S.frame=0; S.speed=1; S.gameOver=false; S.log='';
-  S.gold={player:0, enemy:0}; S.oil={player:0, enemy:0}; S.baseHP=BUILDING_HEALTH.base; S.enemyBaseHP=BUILDING_HEALTH.base;
+  S.gold={player:0, enemy:0}; S.oil={player:0, enemy:0}; S.research={player:false, enemy:false}; S.baseHP=BUILDING_HEALTH.base; S.enemyBaseHP=BUILDING_HEALTH.base;
   S.entities=[]; S.playerBase=null; S.enemyBase=null;
   S.particles=[]; S.goldNodes=[]; S.projectiles=[];
   S.map=null; S.mapDecor=[];

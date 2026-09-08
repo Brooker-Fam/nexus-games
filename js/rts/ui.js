@@ -44,6 +44,14 @@ function baseTrainingTypes(cfg, faction){
   return types;
 }
 
+// True when unitType is one of the Research Lab-gated 2nd-tier units
+// (Warbot/Tank/Warship) and this side hasn't completed research yet.
+function unitNeedsResearch(cfg, unitType){
+  return !!cfg.researchLabLabel
+    && (unitType==='warrior2'||unitType==='elite2'||unitType==='aerial2')
+    && !S.research[mySide()];
+}
+
 function structureEliteTypes(cfg, faction){
   const types=[];
   types.push({ icon:cfg.eliteIcon, label:cfg.eliteLabel, desc:cfg.eliteDesc, cost:cfg.eliteCost, oilCost:cfg.eliteOilCost||0, unitType:'elite' });
@@ -59,6 +67,7 @@ const STRUCT_COSTS = {
   oilrig:    { gold:45,  oil:0  },
   lingnest:  { gold:90,  oil:30 },
   researchlab: { gold:65, oil:20 },
+  councillight: { gold:65, oil:20 },
   councildark: { gold:65, oil:20 },
   structure: { gold:100, oil:35 },
   aerial:    { gold:110, oil:40 },
@@ -152,10 +161,14 @@ function openBuildPopup(screenX, screenY, context){
       { icon:cfg.warriorIcon, label:cfg.warriorLabel, desc:cfg.warriorDesc, cost:cfg.warriorCost, oilCost:cfg.warriorOilCost||0, unitType:'warrior' },
     ];
     if(cfg.warrior2Label){
-      const needsLab=!!cfg.researchLabLabel && !S.entities.some(e=>e.side===mySide()&&e.isResearchLab&&!e.underConstruction);
+      const needsResearch=unitNeedsResearch(cfg,'warrior2');
+      const needsCouncilLight=!!cfg.councilOfLightLabel && !S.entities.some(e=>e.side===mySide()&&e.isCouncilOfLight&&!e.underConstruction);
+      const locked=needsResearch||needsCouncilLight;
+      const desc = needsResearch ? `Requires completed research at the ${cfg.researchLabLabel}`
+        : needsCouncilLight ? `Requires a completed ${cfg.councilOfLightLabel}`
+        : cfg.warrior2Desc;
       barracksTypes.push({ icon:cfg.warrior2Icon, label:cfg.warrior2Label,
-        desc: needsLab ? `Requires a completed ${cfg.researchLabLabel}` : cfg.warrior2Desc,
-        cost:cfg.warrior2Cost, oilCost:cfg.warrior2OilCost||0, unitType:'warrior2', locked:needsLab });
+        desc, cost:cfg.warrior2Cost, oilCost:cfg.warrior2OilCost||0, unitType:'warrior2', locked });
     }
 
     for(const u of barracksTypes){
@@ -175,7 +188,7 @@ function openBuildPopup(screenX, screenY, context){
     // completed barracks (portal/barracks/training field) first, and the aerial
     // hangar needs a completed elite structure first.
     const hasBarracks = S.entities.some(e=>e.side===mySide() && e.type==='structure' && e.isBarracks && !e.underConstruction);
-    const hasEliteStruct = S.entities.some(e=>e.side===mySide() && e.type==='structure' && !e.isBarracks && !e.isAerialHangar && !e.isOilRig && !e.isLingNest && !e.underConstruction);
+    const hasEliteStruct = S.entities.some(e=>e.side===mySide() && e.type==='structure' && !e.isBarracks && !e.isAerialHangar && !e.isOilRig && !e.isLingNest && !e.isResearchLab && !e.isCouncilOfLight && !e.isCouncilOfDarkness && !e.underConstruction);
     addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Click to place — trains ${cfg.warriorLabel}s (${bc.gold}g)`, bc.gold, ()=>{
       S.buildStructureMode='barracks'; _buildModeCost=bc.gold; _buildModeOilCost=bc.oil;
       rtsSetLog(`Click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
@@ -218,6 +231,13 @@ function openBuildPopup(screenX, screenY, context){
         rtsSetLog(`Click to place your ${cfg.researchLabLabel}!`); closeBuildPopup();
       }, myGold()<rl.gold||myOil()<rl.oil, rl.oil);
     }
+    if(cfg.councilOfLightLabel){
+      const cl=STRUCT_COSTS.councillight;
+      addOpt(cfg.councilOfLightIcon, `Build ${cfg.councilOfLightLabel}`, `Click to place — ${(cfg.councilOfLightDesc||'unlocks advanced units').toLowerCase()} (${cl.gold}g +${cl.oil}${oilName})`, cl.gold, ()=>{
+        S.buildStructureMode='councillight'; _buildModeCost=cl.gold; _buildModeOilCost=cl.oil;
+        rtsSetLog(`Click to place your ${cfg.councilOfLightLabel}!`); closeBuildPopup();
+      }, myGold()<cl.gold||myOil()<cl.oil, cl.oil);
+    }
     if(cfg.councilOfDarknessLabel){
       const cd=STRUCT_COSTS.councildark;
       addOpt(cfg.councilOfDarknessIcon, `Build ${cfg.councilOfDarknessLabel}`, `Click to place — ${(cfg.councilOfDarknessDesc||'unlocks advanced units').toLowerCase()} (${cd.gold}g +${cd.oil}${oilName})`, cd.gold, ()=>{
@@ -244,9 +264,11 @@ function openBuildPopup(screenX, screenY, context){
     ];
 
     for(const u of aerialTypes){
-      addOpt(u.icon, u.label, u.desc, u.cost,
+      const needsResearch=unitNeedsResearch(cfg,u.unitType);
+      const desc = needsResearch ? `Requires completed research at the ${cfg.researchLabLabel}` : u.desc;
+      addOpt(u.icon, u.label, desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'aerial'),
-        u.locked||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        u.locked||needsResearch||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
         u.oilCost);
     }
 
@@ -311,11 +333,38 @@ function openBuildPopup(screenX, screenY, context){
     const needsCouncilDarkElite=!!cfg.councilOfDarknessLabel && !S.entities.some(e=>e.side===mySide()&&e.isCouncilOfDarkness&&!e.underConstruction);
 
     for(const u of eliteTypes){
-      const locked = u.unitType==='elite2' && needsCouncilDarkElite;
-      addOpt(u.icon, u.label, locked ? `Requires a completed ${cfg.councilOfDarknessLabel}` : u.desc, u.cost,
+      const needsCouncilDark = u.unitType==='elite2' && needsCouncilDarkElite;
+      const needsResearch=unitNeedsResearch(cfg,u.unitType);
+      const locked = needsCouncilDark||needsResearch;
+      const desc = needsCouncilDark ? `Requires a completed ${cfg.councilOfDarknessLabel}`
+        : needsResearch ? `Requires completed research at the ${cfg.researchLabLabel}`
+        : u.desc;
+      addOpt(u.icon, u.label, desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'structure'),
         locked||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
         u.oilCost);
+    }
+
+  } else if(context==='researchlab'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent = cfg.researchLabLabel||'RESEARCH LAB';
+    const side=mySide();
+    const cost=cfg.researchCost||0;
+    if(S.research[side]){
+      addOpt(cfg.researchLabIcon||'🔬', 'RESEARCH COMPLETE',
+        cfg.researchDesc||'Advanced units unlocked', 0, ()=>{}, true);
+    } else {
+      const researching = sel.queue?.some(q=>q.unitType==='research');
+      addOpt(cfg.researchLabIcon||'🔬', cfg.researchLabel||'RESEARCH',
+        researching ? 'Research in progress...' : `${cfg.researchDesc||'Unlocks advanced units'} (${cost}g)`,
+        cost,
+        ()=>{
+          issueCommand({ type:'start_research', buildingId:sel.id });
+          rtsSetLog(`${cfg.researchLabel||'Research'} started!`);
+          sfx('rtsQueueUnit');
+          setTimeout(()=>openBuildPopup((sel.x-S.camX)*S.camZoom,(sel.y-S.camY)*S.camZoom,'researchlab'), window._mpMultiplayer && !mpIsHost ? 200 : 0);
+        },
+        researching||sel.underConstruction||myGold()<cost);
     }
   }
 
@@ -449,7 +498,7 @@ function rtsHandleClick(e){
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, oilCost:_buildModeOilCost, buildType:'base' });
     } else {
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, oilCost:_buildModeOilCost, buildType:
-        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':S.buildStructureMode==='oilrig'?'oilrig':S.buildStructureMode==='lingnest'?'lingnest':S.buildStructureMode==='researchlab'?'researchlab':S.buildStructureMode==='councildark'?'councildark':'structure' });
+        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':S.buildStructureMode==='oilrig'?'oilrig':S.buildStructureMode==='lingnest'?'lingnest':S.buildStructureMode==='researchlab'?'researchlab':S.buildStructureMode==='councillight'?'councillight':S.buildStructureMode==='councildark'?'councildark':'structure' });
     }
     S.buildStructureMode=false;
     S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#ffdd00',size:0,isRing:true,radius:4});
@@ -521,7 +570,18 @@ function rtsHandleClick(e){
         const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
         rtsSetLog(`${labLabel} — under construction ${pct}%`);
       } else {
-        rtsSetLog(`${labLabel} — HP: ${Math.floor(hit.hp)}/${hit.maxHp}  ${cfg.warrior2Label||'advanced units'} unlocked!`);
+        openBuildPopup(sx,sy,'researchlab');
+        rtsSetLog(S.research[mySide()]
+          ? `${labLabel} — research complete, advanced units unlocked!`
+          : `${labLabel} — research required to unlock advanced units.`);
+      }
+    } else if(hit.type==='structure' && hit.isCouncilOfLight){
+      const clLabel=cfg.councilOfLightLabel||'COUNCIL OF LIGHT';
+      if(hit.underConstruction){
+        const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
+        rtsSetLog(`${clLabel} — under construction ${pct}%`);
+      } else {
+        rtsSetLog(`${clLabel} — HP: ${Math.floor(hit.hp)}/${hit.maxHp}  ${cfg.warrior2Label||'advanced units'} unlocked!`);
       }
     } else if(hit.type==='structure' && hit.isCouncilOfDarkness){
       const cdLabel=cfg.councilOfDarknessLabel||'COUNCIL OF DARKNESS';
