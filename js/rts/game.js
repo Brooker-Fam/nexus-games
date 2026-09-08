@@ -46,14 +46,16 @@ function resetAIConfig(){ Object.assign(AI_CONFIG, _AI_DEFAULTS); }
 function _dist(dx,dy){ return Math.sqrt(dx*dx+dy*dy); }
 
 // ── COLLISION DETECTION ──
-// Ground units (workers/warriors) occupy physical space: they push each
-// other apart when they overlap and can't walk through buildings. Aerial
-// units fly above the battlefield and are exempt from ground collision.
+// Ground warriors occupy physical space: they push each other apart when
+// they overlap and can't walk through buildings. Aerial units fly above
+// the battlefield and are exempt from ground collision, and so are
+// workers — they dart in and out of build/mine targets constantly, and
+// solid collision against warriors and buildings made them get stuck.
 // Radii are kept well under standard melee attack range (50) so a unit
 // can always close to attack a building without being shoved back out.
 function unitCollisionRadius(e){
   if(e.aerial) return 0;
-  if(e.type==='worker') return 9;
+  if(e.type==='worker') return 0;
   if(e.type==='warrior'){
     if(e.subtype==='tank') return 18;
     if(e.subtype==='warbot'||e.subtype==='assaultbot'||e.subtype==='bloodhound') return 13;
@@ -68,14 +70,6 @@ function buildingCollisionRadius(e){
   if(e.type==='cannon') return 20;
   if(e.type==='structure') return e.isAerialHangar ? 24 : 22;
   return 0;
-}
-
-// A worker docked at its own build/mine target passes through that
-// building's collision so it can actually reach it.
-function _isDockedAt(unit, building){
-  if(unit.target===building) return true;
-  const bt=unit.buildTarget;
-  return !!bt && (bt===building || bt.ghost===building);
 }
 
 function resolveUnitCollisions(){
@@ -117,7 +111,6 @@ function resolveUnitCollisions(){
     const br=buildingCollisionRadius(e);
     if(br<=0) continue;
     for(const u of units){
-      if(_isDockedAt(u,e)) continue;
       const ur=unitCollisionRadius(u);
       const minDist=br+ur;
       const dx=u.x-e.x, dy=u.y-e.y, d=_dist(dx,dy);
