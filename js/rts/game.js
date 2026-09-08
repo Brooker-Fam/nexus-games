@@ -511,11 +511,52 @@ const BUILD_ARRIVE_DIST = 20;
 const MOVE_ARRIVE_DIST = 10;
 const MINE_ARRIVE_DIST = 8;
 const GOLD_NODE_PENALTIES = { neutral:200, player:0, enemy:400 };
+const WORKER_ATTACK_TICKS = 40;
+const WORKER_RETALIATE_WINDOW = 240; // ~4s at 60fps — how long a worker keeps fighting after being hit
+
+// Applies damage to a unit/structure. Workers that take damage start
+// retaliating against whatever enemy is close enough to hit back; warriors
+// remember their attacker so they can retaliate even outside normal aggro
+// range (see RETALIATE_WINDOW in warriorTick).
+function dealDamage(target, amount, attacker){
+  target.hp -= amount;
+  if(target.type==='worker') target.retaliateTimer = WORKER_RETALIATE_WINDOW;
+  if(target.type==='warrior' && attacker){ target.lastAttacker=attacker; target.lastAttackedFrame=S.frame; }
+}
 
 function moveToward(unit, tx, ty, arrivedDist){
   const dx=tx-unit.x, dy=ty-unit.y, d=_dist(dx,dy);
   if(d<arrivedDist) return true;
   unit.x+=dx/d*unit.speed; unit.y+=dy/d*unit.speed;
+  return false;
+}
+
+// Workers can't seek out fights, but once hit they'll swing back at
+// whatever enemy is in melee range for very low damage until it backs
+// off or the retaliation window runs out. Returns true while fighting,
+// so workerTick can skip the worker's normal gather/build/move logic.
+function workerCombatTick(w){
+  if((w.retaliateTimer||0)>0){
+    w.retaliateTimer--;
+    let nearest=null, nearestDist=Infinity;
+    for(const e of S.entities){
+      if(e.side===w.side) continue;
+      if(e===S.playerBase||e===S.enemyBase) continue;
+      const d=_dist(e.x-w.x,e.y-w.y);
+      if(d<=w.range && d<nearestDist){ nearest=e; nearestDist=d; }
+    }
+    if(nearest){
+      if(w.state!=='defending'){ w.preCombatState=w.state; w.state='defending'; }
+      w.attackTimer=(w.attackTimer||0)+1;
+      if(w.attackTimer>=WORKER_ATTACK_TICKS){
+        w.attackTimer=0;
+        dealDamage(nearest, w.damage, w);
+        spawnHitFlash(nearest.x,nearest.y,FACTION_CFG[w.faction].color);
+      }
+      return true;
+    }
+  }
+  if(w.state==='defending'){ w.state=w.preCombatState||'idle'; w.preCombatState=null; }
   return false;
 }
 
@@ -620,6 +661,7 @@ function workerReturn(w, myBase){
 
 function workerTick(w, playerBase, enemyBase){
   const myBase=w.side==='player'?playerBase:enemyBase;
+  if(workerCombatTick(w)) return;
   if(w.state==='building' && w.buildTarget){ workerBuild(w); return; }
   if(w.moveTarget){
     if(moveToward(w, w.moveTarget.x, w.moveTarget.y, MOVE_ARRIVE_DIST)){
@@ -907,8 +949,7 @@ function warriorMeleeAttack(w, target, targetDist){
     w.attackTimer++;
     if(w.attackTimer>=MELEE_ATTACK_TICKS){
       w.attackTimer=0;
-      target.hp-=w.damage;
-      if(target.type==='warrior'){ target.lastAttacker=w; target.lastAttackedFrame=S.frame; }
+      dealDamage(target, w.damage, w);
       if(target.type==='base') spawnHitFlash(target.x+(w.side==='player'?-30:30),target.y+(Math.random()-0.5)*60,'#ff4444');
       else spawnHitFlash(target.x,target.y,FACTION_CFG[w.faction].color);
     }
@@ -1103,8 +1144,7 @@ function updateProjectiles(){
     if(!p.tx||p.tx.hp<=0){ S.projectiles.splice(i,1); continue; }
     const dx=p.tx.x-p.x, dy=p.tx.y-p.y, d=_dist(dx,dy);
     if(d<p.speed+4){
-      p.tx.hp-=p.damage;
-      if(p.tx.type==='warrior' && p.by){ p.tx.lastAttacker=p.by; p.tx.lastAttackedFrame=S.frame; }
+      dealDamage(p.tx, p.damage, p.by);
       if(p.type==='bullet') spawnHitFlash(p.tx.x,p.tx.y,'#ffcc44');
       else if(p.type==='cannonball'){
         spawnHitParticles2(p.tx.x,p.tx.y);
@@ -1113,10 +1153,7 @@ function updateProjectiles(){
         // tank shell — AOE explosion
         for(const ent of S.entities){
           if(ent.side===p.side||ent.type==='base') continue;
-          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<COMBAT.tankAoeRadius){
-            ent.hp-=p.damage*COMBAT.tankAoeDamageFactor;
-            if(ent.type==='warrior' && p.by){ ent.lastAttacker=p.by; ent.lastAttackedFrame=S.frame; }
-          }
+          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<COMBAT.tankAoeRadius) dealDamage(ent, p.damage*COMBAT.tankAoeDamageFactor, p.by);
         }
         spawnHitParticles2(p.tx.x, p.tx.y);
       }
@@ -1130,10 +1167,7 @@ function updateProjectiles(){
         const factor = p.aoeFactor || COMBAT.darkOrbDamageFactor;
         for(const ent of S.entities){
           if(ent.side===p.side||ent.type==='base') continue;
-          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<radius){
-            ent.hp-=p.damage*factor;
-            if(ent.type==='warrior' && p.by){ ent.lastAttacker=p.by; ent.lastAttackedFrame=S.frame; }
-          }
+          if(_dist(ent.x-p.tx.x,ent.y-p.tx.y)<radius) dealDamage(ent, p.damage*factor, p.by);
         }
         spawnDarkOrbBurst(p.tx.x, p.tx.y);
       }
@@ -1161,7 +1195,7 @@ function chainLightning(origin, damage, color, shooterSide, bounces){
     if(d<bestD){ bestD=d; best=e; }
   }
   if(!best) return;
-  best.hp-=damage;
+  dealDamage(best, damage);
   // draw arc between origin and best as a particle trail
   const steps=8;
   for(let s=0;s<=steps;s++){
