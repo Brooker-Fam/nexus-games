@@ -132,6 +132,7 @@ const BUILD_TIMES={
   warbot:      780,  // 13s — Roboto 2nd barracks unit
   legionnairesquad: 1500, // 25s — Prism 2nd barracks unit, trains 4 at once
   ling:        600,  // 10s — automatically repeated by a Shadow Ling Nest
+  research:    1500, // 25s — Research Lab military tech (unlocks Warbot/Tank/Warship)
 };
 const QUEUE_MAX = 5; // max units queued per building
 
@@ -193,8 +194,9 @@ function makeOilRig(side, faction, x, y){
   };
 }
 
-// ── RESEARCH LAB (Roboto) ── tech structure; must be built and completed
-// before the Barracks can train Warbots.
+// ── RESEARCH LAB (Roboto) ── tech structure; once built, a gold-cost research
+// project must be completed here before the Barracks/Armory/Shipyard can
+// build Warbots, Tanks, and Warships.
 function makeResearchLab(side, faction, x, y){
   const cfg=FACTION_CFG[faction];
   return {
@@ -204,6 +206,7 @@ function makeResearchLab(side, faction, x, y){
     selected:false, frame:0,
     label:(cfg&&cfg.researchLabLabel)||'RESEARCH LAB', isResearchLab:true,
     underConstruction:true, buildProgress:0, buildTime:BUILD_TIMES.structure,
+    queue:[], trainTimer:0,
   };
 }
 

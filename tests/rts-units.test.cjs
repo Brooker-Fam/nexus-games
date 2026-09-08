@@ -234,13 +234,14 @@ test('Shadow Temple rejects a Ling call when either resource is insufficient',()
   assert.deepEqual({...result},{entities:1,cooldown:undefined,gold:100,essence:24});
 });
 
-test('Roboto Warbot requires a completed Research Lab, but Legionnaires need no such building',()=>{
+test('Roboto Warbot, Tank, and Warship require completed (gold-cost) research at the Research Lab, but Legionnaires need no such research',()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
-    S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},playerFaction:'roboto',enemyFaction:'shadow'},
+    S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},research:{player:false},playerFaction:'roboto',enemyFaction:'shadow'},
     BUILDING_HEALTH:{structure:160},
+    BUILD_TIMES:{research:1500},
     updateRtsHUD:()=>{}, rtsSetLog:()=>{},
     queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
     makeWizard:()=>{}, makeNecromancer:()=>{}, makeTank:()=>{},
@@ -250,30 +251,48 @@ test('Roboto Warbot requires a completed Research Lab, but Legionnaires need no 
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
 
   const result=vm.runInContext(`(() => {
-    const barracks={id:1,type:'structure',side:'player',faction:'roboto',x:0,y:0,queue:[],isBarracks:true};
+    const barracks={id:'barracks',type:'structure',side:'player',faction:'roboto',x:0,y:0,queue:[],isBarracks:true};
     S.entities=[barracks];
-    executeCommand({type:'train_unit',buildingId:1,unitType:'warrior2',side:'player'});
+    executeCommand({type:'train_unit',buildingId:'barracks',unitType:'warrior2',side:'player'});
     const withoutLab={queued:barracks.queue.length,gold:S.gold.player};
 
     const lab=makeResearchLab('player','roboto',50,50);
     S.entities.push(lab);
     barracks.queue=[];
-    executeCommand({type:'train_unit',buildingId:1,unitType:'warrior2',side:'player'});
+    executeCommand({type:'train_unit',buildingId:'barracks',unitType:'warrior2',side:'player'});
     const withUnfinishedLab={queued:barracks.queue.length,gold:S.gold.player};
 
     lab.underConstruction=false;
     barracks.queue=[];
-    executeCommand({type:'train_unit',buildingId:1,unitType:'warrior2',side:'player'});
-    const withFinishedLab={queued:barracks.queue.length,gold:S.gold.player};
+    executeCommand({type:'train_unit',buildingId:'barracks',unitType:'warrior2',side:'player'});
+    const withFinishedLabNoResearch={queued:barracks.queue.length,gold:S.gold.player};
 
-    return {withoutLab,withUnfinishedLab,withFinishedLab};
+    // Starting research costs gold and queues at the lab, but doesn't
+    // unlock anything until it completes.
+    executeCommand({type:'start_research',buildingId:lab.id,side:'player'});
+    const goldAfterStartingResearch=S.gold.player;
+    barracks.queue=[];
+    executeCommand({type:'train_unit',buildingId:'barracks',unitType:'warrior2',side:'player'});
+    const whileResearching={queued:barracks.queue.length,gold:S.gold.player};
+
+    // Once research completes (simulated directly), Warbot unlocks.
+    S.research.player=true;
+    barracks.queue=[];
+    executeCommand({type:'train_unit',buildingId:'barracks',unitType:'warrior2',side:'player'});
+    const withFinishedResearch={queued:barracks.queue.length,gold:S.gold.player};
+
+    return {withoutLab,withUnfinishedLab,withFinishedLabNoResearch,goldAfterStartingResearch,whileResearching,withFinishedResearch};
   })()`,context);
 
   const warrior2Cost=vm.runInContext('FACTION_CFG.roboto.warrior2Cost',context);
+  const researchCost=vm.runInContext('FACTION_CFG.roboto.researchCost',context);
   assert.deepEqual({...result.withoutLab},{queued:0,gold:1000});
   assert.deepEqual({...result.withUnfinishedLab},{queued:0,gold:1000});
-  assert.equal(result.withFinishedLab.queued,1);
-  assert.equal(result.withFinishedLab.gold,1000-warrior2Cost);
+  assert.deepEqual({...result.withFinishedLabNoResearch},{queued:0,gold:1000});
+  assert.equal(result.goldAfterStartingResearch,1000-researchCost);
+  assert.deepEqual({...result.whileResearching},{queued:0,gold:1000-researchCost});
+  assert.equal(result.withFinishedResearch.queued,1);
+  assert.equal(result.withFinishedResearch.gold,1000-researchCost-warrior2Cost);
 
   const prismResult=vm.runInContext(`(() => {
     const portal={id:2,type:'structure',side:'player',faction:'prism',x:0,y:0,queue:[],isBarracks:true};
@@ -284,6 +303,48 @@ test('Roboto Warbot requires a completed Research Lab, but Legionnaires need no 
     return {queued:portal.queue.length,gold:S.gold.player};
   })()`,context);
   assert.equal(prismResult.queued,1);
+});
+
+test('start_research is gold-gated, one-shot, and unlocks Warbot/Tank/Warship together',()=>{
+  const context=makeContext();
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  Object.assign(context,{
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    S:{frame:0,entities:[],gold:{player:50},oil:{player:1000},research:{player:false},playerFaction:'roboto',enemyFaction:'shadow'},
+    BUILDING_HEALTH:{structure:160},
+    BUILD_TIMES:{research:1500},
+    updateRtsHUD:()=>{}, rtsSetLog:()=>{},
+    queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
+    makeWizard:()=>{}, makeNecromancer:()=>{}, makeTank:()=>{},
+    makeStarFighter:()=>{}, makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>{},
+    makePrincess:()=>{}, makeElite:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const lab=makeResearchLab('player','roboto',50,50);
+    lab.underConstruction=false;
+    S.entities=[lab];
+
+    // Too poor to afford it.
+    executeCommand({type:'start_research',buildingId:lab.id,side:'player'});
+    const tooPoor={queued:lab.queue.length,gold:S.gold.player};
+
+    S.gold.player=1000;
+    executeCommand({type:'start_research',buildingId:lab.id,side:'player'});
+    const started={queued:lab.queue.length,gold:S.gold.player};
+
+    // Can't start a second research run while one is queued.
+    executeCommand({type:'start_research',buildingId:lab.id,side:'player'});
+    const secondAttempt={queued:lab.queue.length,gold:S.gold.player};
+
+    return {tooPoor,started,secondAttempt};
+  })()`,context);
+
+  const researchCost=vm.runInContext('FACTION_CFG.roboto.researchCost',context);
+  assert.deepEqual({...result.tooPoor},{queued:0,gold:50});
+  assert.deepEqual({...result.started},{queued:1,gold:1000-researchCost});
+  assert.deepEqual({...result.secondAttempt},{queued:1,gold:1000-researchCost});
 });
 
 test('Prism Oracle and Princess remain distinct units',()=>{
