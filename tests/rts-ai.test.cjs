@@ -101,3 +101,56 @@ test('Princess attack summons 10 Legionnaires focused on her target', () => {
     projectiles:0,
   });
 });
+
+test('idle unit retaliates against whoever last hit it, even from outside its aggro range', () => {
+  const context = makeContext();
+  const result = vm.runInContext(`(() => {
+    S.frame=500;
+    S.playerBase={id:1,type:'base',side:'player',x:-1000,y:0,hp:300};
+    S.enemyBase={id:2,type:'base',side:'enemy',x:1000,y:0,hp:300};
+    const victim={id:3,type:'warrior',side:'player',x:0,y:0,state:'idle',hp:50,maxHp:50,damage:10,range:50,ranged:false,speed:1,attackTimer:0};
+    const attacker={id:4,type:'warrior',side:'enemy',x:600,y:0,hp:40,maxHp:40,damage:20,range:600,ranged:true,fireRate:100,speed:0.5,attackTimer:0};
+    victim.lastAttacker=attacker;
+    victim.lastAttackedFrame=490; // 10 ticks ago, still within the retaliation window
+    S.entities=[S.playerBase,S.enemyBase,victim,attacker];
+    warriorTick(victim, S.playerBase, S.enemyBase);
+    return {state:victim.state, targetId:victim.forcedTarget&&victim.forcedTarget.id};
+  })()`, context);
+  assert.deepEqual({ ...result }, { state:'march', targetId:4 });
+});
+
+test('idle unit ignores a stale attacker once the retaliation window has passed', () => {
+  const context = makeContext();
+  const result = vm.runInContext(`(() => {
+    S.frame=500;
+    S.playerBase={id:1,type:'base',side:'player',x:-1000,y:0,hp:300};
+    S.enemyBase={id:2,type:'base',side:'enemy',x:1000,y:0,hp:300};
+    const victim={id:3,type:'warrior',side:'player',x:0,y:0,state:'idle',hp:50,maxHp:50,damage:10,range:50,ranged:false,speed:1,attackTimer:0};
+    const attacker={id:4,type:'warrior',side:'enemy',x:600,y:0,hp:40,maxHp:40,damage:20,range:600,ranged:true,fireRate:100,speed:0.5,attackTimer:0};
+    victim.lastAttacker=attacker;
+    victim.lastAttackedFrame=200; // long past the retaliation window
+    S.entities=[S.playerBase,S.enemyBase,victim,attacker];
+    warriorTick(victim, S.playerBase, S.enemyBase);
+    return {state:victim.state, forcedTarget:victim.forcedTarget||null};
+  })()`, context);
+  assert.deepEqual({ ...result }, { state:'idle', forcedTarget:null });
+});
+
+test('a direct projectile hit records the shooter as the last attacker, triggering retaliation', () => {
+  const context = makeContext();
+  Object.assign(context, { spawnHitFlash:()=>{}, spawnHitParticles2:()=>{}, spawnLightningHit:()=>{}, spawnMagicBurst:()=>{}, spawnDarkOrbBurst:()=>{} });
+  const result = vm.runInContext(`(() => {
+    S.frame=500;
+    S.particles=[];
+    S.playerBase={id:1,type:'base',side:'player',x:-1000,y:0,hp:300};
+    S.enemyBase={id:2,type:'base',side:'enemy',x:1000,y:0,hp:300};
+    const victim={id:3,type:'warrior',side:'player',x:0,y:0,state:'idle',hp:50,maxHp:50,damage:10,range:50,ranged:false,speed:1,attackTimer:0};
+    const shooter={id:4,type:'warrior',side:'enemy',x:600,y:0,hp:40,maxHp:40,damage:20,range:600,ranged:true,fireRate:100,speed:0.5,attackTimer:0};
+    S.entities=[S.playerBase,S.enemyBase,victim,shooter];
+    S.projectiles=[{x:1,y:0,tx:victim,by:shooter,speed:8,damage:20,type:'bullet',trail:[],side:'enemy'}];
+    updateProjectiles();
+    warriorTick(victim, S.playerBase, S.enemyBase);
+    return {hp:victim.hp, state:victim.state, targetId:victim.forcedTarget&&victim.forcedTarget.id};
+  })()`, context);
+  assert.deepEqual({ ...result }, { hp:30, state:'march', targetId:4 });
+});
