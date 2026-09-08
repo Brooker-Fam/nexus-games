@@ -67,6 +67,8 @@ const FACTION_CFG={
     warriorCost:6, warriorDesc:'Ranged — rapid fire gun',
     warrior2Label:'WARBOT', warrior2Desc:'Ranged — heavier armor, harder-hitting rifle than GunBot',
     warrior2Cost:14, warrior2Icon:'🦿', warrior2Fn:'makeWarbot',
+    researchLabName:'RESEARCH LAB', researchLabLabel:'RESEARCH LAB',
+    researchLabDesc:'Unlocks WARBOT production at the BARRACKS', researchLabIcon:'🔬',
     structName:'ARMORY', structLabel:'ARMORY',
     eliteLabel:'SHOCKBOT', eliteDesc:'Ranged — chain lightning hits multiple enemies',
     eliteCost:24, eliteIcon:'⚡',

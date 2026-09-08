@@ -193,6 +193,20 @@ function makeOilRig(side, faction, x, y){
   };
 }
 
+// ── RESEARCH LAB (Roboto) ── tech structure; must be built and completed
+// before the Barracks can train Warbots.
+function makeResearchLab(side, faction, x, y){
+  const cfg=FACTION_CFG[faction];
+  return {
+    id:nextId(), type:'structure', side, faction,
+    x, y, hp:BUILDING_HEALTH.structure, maxHp:BUILDING_HEALTH.structure,
+    structType:'researchlab',
+    selected:false, frame:0,
+    label:(cfg&&cfg.researchLabLabel)||'RESEARCH LAB', isResearchLab:true,
+    underConstruction:true, buildProgress:0, buildTime:BUILD_TIMES.structure,
+  };
+}
+
 // ── LING NEST (Shadow) ── passive structure, free-running Ling production
 function makeLingNest(side, faction, x, y){
   const cfg=FACTION_CFG[faction];

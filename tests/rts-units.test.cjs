@@ -234,6 +234,58 @@ test('Shadow Temple rejects a Ling call when either resource is insufficient',()
   assert.deepEqual({...result},{entities:1,cooldown:undefined,gold:100,essence:24});
 });
 
+test('Roboto Warbot requires a completed Research Lab, but Legionnaires need no such building',()=>{
+  const context=makeContext();
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  Object.assign(context,{
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},playerFaction:'roboto',enemyFaction:'shadow'},
+    BUILDING_HEALTH:{structure:160},
+    updateRtsHUD:()=>{}, rtsSetLog:()=>{},
+    queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
+    makeWizard:()=>{}, makeNecromancer:()=>{}, makeTank:()=>{},
+    makeStarFighter:()=>{}, makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>{},
+    makePrincess:()=>{}, makeElite:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const barracks={id:1,type:'structure',side:'player',faction:'roboto',x:0,y:0,queue:[],isBarracks:true};
+    S.entities=[barracks];
+    executeCommand({type:'train_unit',buildingId:1,unitType:'warrior2',side:'player'});
+    const withoutLab={queued:barracks.queue.length,gold:S.gold.player};
+
+    const lab=makeResearchLab('player','roboto',50,50);
+    S.entities.push(lab);
+    barracks.queue=[];
+    executeCommand({type:'train_unit',buildingId:1,unitType:'warrior2',side:'player'});
+    const withUnfinishedLab={queued:barracks.queue.length,gold:S.gold.player};
+
+    lab.underConstruction=false;
+    barracks.queue=[];
+    executeCommand({type:'train_unit',buildingId:1,unitType:'warrior2',side:'player'});
+    const withFinishedLab={queued:barracks.queue.length,gold:S.gold.player};
+
+    return {withoutLab,withUnfinishedLab,withFinishedLab};
+  })()`,context);
+
+  const warrior2Cost=vm.runInContext('FACTION_CFG.roboto.warrior2Cost',context);
+  assert.deepEqual({...result.withoutLab},{queued:0,gold:1000});
+  assert.deepEqual({...result.withUnfinishedLab},{queued:0,gold:1000});
+  assert.equal(result.withFinishedLab.queued,1);
+  assert.equal(result.withFinishedLab.gold,1000-warrior2Cost);
+
+  const prismResult=vm.runInContext(`(() => {
+    const portal={id:2,type:'structure',side:'player',faction:'prism',x:0,y:0,queue:[],isBarracks:true};
+    S.playerFaction='prism';
+    S.gold.player=1000;
+    S.entities=[portal];
+    executeCommand({type:'train_unit',buildingId:2,unitType:'warrior2',side:'player'});
+    return {queued:portal.queue.length,gold:S.gold.player};
+  })()`,context);
+  assert.equal(prismResult.queued,1);
+});
+
 test('Prism Oracle and Princess remain distinct units',()=>{
   const context=makeContext();
   const units=vm.runInContext(`(() => ({
