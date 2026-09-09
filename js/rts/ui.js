@@ -40,6 +40,7 @@ function baseTrainingTypes(cfg, faction){
   // Prism is the Prism Armada's unique royal Temple unit.
   if(faction==='prism'){
     types.push({ icon:cfg.prismIcon, label:cfg.prismLabel, desc:cfg.prismDesc, cost:cfg.prismCost, oilCost:cfg.prismOilCost||0, unitType:'prism' });
+    types.push({ icon:cfg.arkshipIcon, label:cfg.arkshipLabel, desc:cfg.arkshipDesc, cost:cfg.arkshipCost, oilCost:cfg.arkshipOilCost||0, unitType:'arkship' });
   }
   return types;
 }
@@ -122,13 +123,18 @@ function openBuildPopup(screenX, screenY, context){
     if(sel?.infested){
       addOpt('☣', 'INFEST MODE ACTIVE', 'Permanently auto-producing Infested GunBots — Drone production disabled', 0, ()=>{}, true);
     } else {
+      const hasPrism=S.entities.some(e=>e.side===mySide() && e.faction==='prism' && e.subtype==='prism');
       for(const u of baseTrainingTypes(cfg,myFaction())){
         const prismUnavailable=u.unitType==='prism' && S.entities.some(e=>
           e.side===mySide() && (e.subtype==='prism' || e.queue?.some(q=>q.unitType==='prism' || q.label===cfg.prismLabel))
         );
-        addOpt(u.icon, u.label, u.desc, u.cost,
+        const arkshipUnavailable=u.unitType==='arkship' && (!hasPrism || S.entities.some(e=>
+          e.side===mySide() && (e.subtype==='arkship' || e.queue?.some(q=>q.unitType==='arkship' || q.label===cfg.arkshipLabel))
+        ));
+        const desc = (u.unitType==='arkship' && !hasPrism) ? 'Requires an existing Prism to build' : u.desc;
+        addOpt(u.icon, u.label, desc, u.cost,
           ()=>trainCmd(sel?sel.id:S.buildingSource?.id, u.unitType, 'base'),
-          prismUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
+          prismUnavailable||arkshipUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
           u.oilCost);
       }
       if(myFaction()==='shadow'){
@@ -323,6 +329,15 @@ function openBuildPopup(screenX, screenY, context){
     addOpt(isSingle?'✦':'🎯', isSingle?'Switch to MULTIPLE':'Switch to SINGLE',
       isSingle?'Fire one bullet at every enemy in range at a slower rate':'Focus one target with one bullet at 112 BPM',
       0, ()=>{ issueCommand({type:'toggle_warship_attack_mode',unitId:sel.id}); closeBuildPopup(); }, false);
+
+  } else if(context==='arkship'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='ARKSHIP';
+    const isPhasing=sel.arkMode==='phasing';
+    addOpt(isPhasing?'⚔':'🌀', isPhasing?'Switch to ATTACKING':'Switch to PHASING',
+      isPhasing?'Reform and fire twin beams at nearby enemies'
+        : (sel.deployedCrew?'Phase out — Prism and her Witches have already been deployed':'Phase out and deploy Prism with 5 Witches'),
+      0, ()=>{ issueCommand({type:'toggle_arkship_mode',unitId:sel.id}); closeBuildPopup(); }, false);
 
   } else if(context==='structure'){
     const sel=S.selected[0];
@@ -619,6 +634,9 @@ function rtsHandleClick(e){
     } else if(hit.type==='warrior' && hit.subtype==='warship'){
       openBuildPopup(sx,sy,'warship');
       rtsSetLog(`WARSHIP — ${hit.attackMode} attack mode  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
+    } else if(hit.type==='warrior' && hit.subtype==='arkship'){
+      openBuildPopup(sx,sy,'arkship');
+      rtsSetLog(`ARKSHIP — ${hit.arkMode} mode  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior' && hit.subtype==='assaultbot'){
       openBuildPopup(sx,sy,'assaultbot');
       rtsSetLog(`ASSAULT BOT — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
@@ -626,7 +644,7 @@ function rtsHandleClick(e){
       openBuildPopup(sx,sy,'psionic');
       rtsSetLog(`PSIONIC WARRIOR — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior'){
-      const UNIT_LABELS={prism:'prismLabel',elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label',warbot:'warrior2Label'};
+      const UNIT_LABELS={prism:'prismLabel',arkship:'arkshipLabel',elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label',warbot:'warrior2Label'};
       const lbl=cfg[UNIT_LABELS[hit.subtype]]||cfg.warriorLabel;
       rtsSetLog(`${lbl} selected — click to move or attack.`);
     }
