@@ -9,7 +9,7 @@ function drawRTSWarrior(rc,w){
   if(w.aerial){
     // Aerial units rotate to face their target.
     // Hover bob is applied in screen-space (before rotation) so it always moves up/down.
-    const isHeavyAerial = w.subtype==='skyattacker'||w.subtype==='warship'||w.subtype==='destroyer';
+    const isHeavyAerial = w.subtype==='skyattacker'||w.subtype==='warship'||w.subtype==='destroyer'||w.subtype==='arkship';
     const hover = isHeavyAerial ? Math.sin(w.frame*0.1)*2.5 : Math.sin(w.frame*0.12)*3;
     // Ground shadow — drawn before rotation so it stays flat below the unit.
     rc.fillStyle='rgba(0,0,0,0.18)';
@@ -37,6 +37,8 @@ function drawRTSWarrior(rc,w){
     drawLightFighterUnit(rc,cfg,w);
   } else if(w.subtype==='destroyer'){
     drawDestroyerUnit(rc,cfg,w);
+  } else if(w.subtype==='arkship'){
+    drawArkshipUnit(rc,cfg,w);
   } else if(w.subtype==='warbot'){
     drawWarbot(rc,cfg,w);
   } else if(w.subtype==='infestedGunbot'){
@@ -681,6 +683,7 @@ function drawRTSProjectiles(rc){
 function drawRTSBeams(rc){
   for(const w of S.entities){
     if(w.type!=='warrior'||!w.beamTarget||w.hp<=0) continue;
+    if(w.subtype==='arkship'){ drawArkshipBeams(rc,w); continue; }
     const t=w.beamTarget;
     if(!t||t.hp<=0) continue;
     const ang=w.aimAngle||0;
@@ -698,6 +701,31 @@ function drawRTSBeams(rc){
     const fg=rc.createRadialGradient(t.x,t.y,0,t.x,t.y,9);
     fg.addColorStop(0,'#ffffff'); fg.addColorStop(0.5,'#aaffff'); fg.addColorStop(1,'transparent');
     rc.fillStyle=fg; rc.beginPath(); rc.arc(t.x,t.y,9*flicker,0,Math.PI*2); rc.fill();
+  }
+}
+
+// Arkship twin beams — two turret emitters (offset perpendicular to aim)
+// fire at the primary and secondary target set by arkshipBeamAttackTick.
+function drawArkshipBeams(rc,w){
+  const ang=w.aimAngle||0;
+  const perp=ang+Math.PI/2;
+  const flicker=0.75+Math.sin(S.frame*0.9)*0.25;
+  const pairs=[[w.beamTarget,-7],[w.beamTarget2,7]];
+  for(const [t,off] of pairs){
+    if(!t||t.hp<=0) continue;
+    const ox=w.x+Math.cos(ang)*17+Math.cos(perp)*off, oy=w.y+Math.sin(ang)*17+Math.sin(perp)*off;
+
+    rc.save();
+    rc.shadowColor='#ffffff'; rc.shadowBlur=20;
+    rc.strokeStyle=`rgba(180,255,255,${0.35*flicker})`; rc.lineWidth=6; rc.lineCap='round';
+    rc.beginPath(); rc.moveTo(ox,oy); rc.lineTo(t.x,t.y); rc.stroke();
+    rc.strokeStyle=`rgba(255,255,255,${0.9*flicker})`; rc.lineWidth=2; rc.lineCap='round';
+    rc.beginPath(); rc.moveTo(ox,oy); rc.lineTo(t.x,t.y); rc.stroke();
+    rc.restore();
+
+    const fg=rc.createRadialGradient(t.x,t.y,0,t.x,t.y,8);
+    fg.addColorStop(0,'#ffffff'); fg.addColorStop(0.5,'#aaffff'); fg.addColorStop(1,'transparent');
+    rc.fillStyle=fg; rc.beginPath(); rc.arc(t.x,t.y,8*flicker,0,Math.PI*2); rc.fill();
   }
 }
 

@@ -155,4 +155,59 @@ function drawDestroyerUnit(rc,cfg,w){
   rc.beginPath(); rc.moveTo(2,3); rc.lineTo(-7,11); rc.stroke();
 }
 
+// ── PRISM ARKSHIP — the Princess's flagship: not a solid hull but a loose
+// swirl of jagged metal fragments orbiting a bright core. Phasing mode dims
+// the swirl (it's about to release its crew); attacking mode flares its
+// twin beam emitters at the front.
+function drawArkshipUnit(rc,cfg,w){
+  const isPhasing = w.arkMode==='phasing';
+  const t=w.frame*0.045;
+  rc.shadowColor=cfg.color; rc.shadowBlur=isPhasing?12:24;
+
+  // bright core
+  const coreR=isPhasing?7:10;
+  const coreG=rc.createRadialGradient(0,0,0,0,0,coreR*2.2);
+  coreG.addColorStop(0,'#ffffff');
+  coreG.addColorStop(0.4,isPhasing?'rgba(0,221,255,0.35)':cfg.color);
+  coreG.addColorStop(1,'transparent');
+  rc.fillStyle=coreG; rc.beginPath(); rc.arc(0,0,coreR*2.2,0,Math.PI*2); rc.fill();
+  rc.fillStyle=isPhasing?'rgba(200,240,255,0.5)':'#ffffff';
+  rc.beginPath(); rc.arc(0,0,coreR*0.5,0,Math.PI*2); rc.fill();
+
+  // a ring of jagged metal shards, each spinning on its own orbit — reads as
+  // debris held together rather than a single ship silhouette
+  const shardCount=12;
+  for(let i=0;i<shardCount;i++){
+    const baseAngle=(i/shardCount)*Math.PI*2;
+    const orbitR=20+((i%3)*6);
+    const spin=t*(i%2===0?1:-1)*(0.6+0.1*(i%3));
+    const ang=baseAngle+spin;
+    const cx=Math.cos(ang)*orbitR, cy=Math.sin(ang)*orbitR*0.55;
+    const size=3.5+(i%4);
+    rc.save();
+    rc.translate(cx,cy);
+    rc.rotate(ang+t*2);
+    rc.globalAlpha=isPhasing?0.35:0.9;
+    const sg=rc.createLinearGradient(-size,-size,size,size);
+    sg.addColorStop(0,'#e8f8ff'); sg.addColorStop(0.5,cfg.color); sg.addColorStop(1,'#245566');
+    rc.fillStyle=sg;
+    rc.beginPath();
+    rc.moveTo(size,0); rc.lineTo(size*0.2,-size*0.8); rc.lineTo(-size*0.9,-size*0.3);
+    rc.lineTo(-size*0.6,size*0.7); rc.lineTo(size*0.3,size*0.5); rc.closePath(); rc.fill();
+    rc.strokeStyle='rgba(255,255,255,0.6)'; rc.lineWidth=0.5; rc.stroke();
+    rc.restore();
+  }
+  rc.globalAlpha=1;
+
+  // twin beam-emitter nubs at the nose, lit only while attacking
+  if(!isPhasing){
+    const pulse=0.5+Math.sin(w.frame*0.3)*0.5;
+    for(const ey of [-7,7]){
+      const eg=rc.createRadialGradient(17,ey,0,17,ey,4);
+      eg.addColorStop(0,`rgba(255,255,255,${0.6+0.4*pulse})`); eg.addColorStop(1,'transparent');
+      rc.fillStyle=eg; rc.beginPath(); rc.arc(17,ey,4,0,Math.PI*2); rc.fill();
+    }
+  }
+}
+
 //# sourceMappingURL=aerial2.js.map

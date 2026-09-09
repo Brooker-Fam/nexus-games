@@ -527,7 +527,7 @@ test('Prism Princess trains at the Temple rather than the Shrine',()=>{
     };
   })()`,context);
 
-  assert.deepEqual([...locations.temple],['ACOLYTE','PRINCESS']);
+  assert.deepEqual([...locations.temple],['ACOLYTE','PRINCESS','ARKSHIP']);
   assert.deepEqual([...locations.shrine],['ORACLE','WIZARD']);
   assert.deepEqual([...locations.shadowTemple],['SHADE']);
 });
@@ -600,6 +600,156 @@ test('bow-mode legionnaire can target aerial units, sword-mode cannot',()=>{
     return {sword,bow};
   })()`,context);
   assert.deepEqual({...result},{sword:false,bow:true});
+});
+
+test('Prism Arkship is a unique flagship that starts in attacking mode with no crew deployed',()=>{
+  const context=makeContext();
+  const ark=vm.runInContext(`makeArkship('player','prism',100,100)`,context);
+  assert.equal(ark.subtype,'arkship');
+  assert.equal(ark.arkMode,'attacking');
+  assert.equal(ark.deployedCrew,false);
+  assert.equal(ark.beam,true);
+  assert.equal(ark.aerial,true);
+
+  const factionContext=vm.createContext({});
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),factionContext);
+  const presentation=vm.runInContext('({label:FACTION_CFG.prism.arkshipLabel,desc:FACTION_CFG.prism.arkshipDesc,gold:FACTION_CFG.prism.arkshipCost,light:FACTION_CFG.prism.arkshipOilCost})',factionContext);
+  assert.equal(presentation.label,'ARKSHIP');
+  assert.match(presentation.desc,/Princess/);
+  assert.match(presentation.desc,/limit 1/);
+  assert.equal(presentation.gold,150);
+  assert.equal(presentation.light,60);
+});
+
+test('Arkship requires an existing Princess to build, consumes her on completion, and is limited to one',()=>{
+  const context=makeContext();
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  Object.assign(context,{
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},playerFaction:'prism',enemyFaction:'shadow'},
+    makeWorker:()=>{}, makeWarrior:()=>{}, makeWarbot:()=>{}, makeLegionnaireSquad:()=>{},
+    makeWizard:()=>{}, makeNecromancer:()=>{}, makeTank:()=>{}, makeStarFighter:()=>{},
+    makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>{},
+    updateRtsHUD:()=>{}, rtsSetLog:()=>{},
+    queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const temple={id:1,type:'base',side:'player',faction:'prism',x:0,y:0,queue:[]};
+    S.entities=[temple];
+
+    // No Princess yet — the Arkship can't be queued.
+    executeCommand({type:'train_unit',buildingId:1,unitType:'arkship',side:'player'});
+    const withoutPrincess={gold:S.gold.player,queued:temple.queue.length};
+
+    const princess=makePrincess('player','prism',10,10);
+    S.entities.push(princess);
+    executeCommand({type:'train_unit',buildingId:1,unitType:'arkship',side:'player'});
+    const afterQueue={gold:S.gold.player,light:S.oil.player,queued:temple.queue.length};
+
+    // Can't queue a second Arkship while one is already queued.
+    executeCommand({type:'train_unit',buildingId:1,unitType:'arkship',side:'player'});
+    const secondAttempt={gold:S.gold.player,queued:temple.queue.length};
+
+    // Completing the build removes the Princess and the Arkship appears
+    // where she stood.
+    const ark=temple.queue[0].fn();
+    const princessGoneAfterBuild=!S.entities.includes(princess);
+
+    return {withoutPrincess,afterQueue,secondAttempt,princessGoneAfterBuild,ark:{subtype:ark.subtype,x:ark.x,y:ark.y}};
+  })()`,context);
+
+  const arkshipCost=vm.runInContext('FACTION_CFG.prism.arkshipCost',context);
+  const arkshipOil=vm.runInContext('FACTION_CFG.prism.arkshipOilCost',context);
+  assert.deepEqual({...result.withoutPrincess},{gold:1000,queued:0});
+  assert.deepEqual({...result.afterQueue},{gold:1000-arkshipCost,light:1000-arkshipOil,queued:1});
+  assert.deepEqual({...result.secondAttempt},{gold:1000-arkshipCost,queued:1});
+  assert.equal(result.princessGoneAfterBuild,true);
+  assert.deepEqual({...result.ark},{subtype:'arkship',x:60,y:10});
+});
+
+test('toggle_arkship_mode deploys the Princess with 5 Witches exactly once, and switching back keeps them on the field',()=>{
+  const context=makeContext();
+  Object.assign(context,{
+    S:{frame:0,entities:[],particles:[],gold:{player:0},oil:{player:0},playerFaction:'prism',enemyFaction:'shadow'},
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    FACTION_CFG:{prism:{color:'#00ddff'}}, rtsSetLog:()=>{}, updateRtsHUD:()=>{}, sfx:()=>{},
+    STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0}},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const ark=makeArkship('player','prism',100,100);
+    S.entities=[ark];
+    executeCommand({type:'toggle_arkship_mode',unitId:ark.id,side:'player'});
+    const afterPhasing={mode:ark.arkMode,deployed:ark.deployedCrew,count:S.entities.length,
+      subtypeCounts:S.entities.reduce((acc,e)=>{const k=e.subtype||'witch';acc[k]=(acc[k]||0)+1;return acc;},{})};
+
+    executeCommand({type:'toggle_arkship_mode',unitId:ark.id,side:'player'});
+    const afterAttacking={mode:ark.arkMode,count:S.entities.length};
+
+    executeCommand({type:'toggle_arkship_mode',unitId:ark.id,side:'player'});
+    const afterSecondPhasing={mode:ark.arkMode,count:S.entities.length};
+
+    return {afterPhasing,afterAttacking,afterSecondPhasing};
+  })()`,context);
+
+  assert.equal(result.afterPhasing.mode,'phasing');
+  assert.equal(result.afterPhasing.deployed,true);
+  assert.equal(result.afterPhasing.count,7); // arkship + princess + 5 witches
+  assert.deepEqual({...result.afterPhasing.subtypeCounts},{arkship:1,princess:1,witch:5});
+
+  assert.equal(result.afterAttacking.mode,'attacking');
+  assert.equal(result.afterAttacking.count,7);
+
+  assert.equal(result.afterSecondPhasing.mode,'phasing');
+  assert.equal(result.afterSecondPhasing.count,7); // no second deployment
+});
+
+test('Arkship fires twin beams in attacking mode — a second enemy in range takes a separate beam, otherwise the lone target takes both',()=>{
+  const context=makeContext();
+  Object.assign(context,{
+    S:{frame:100,entities:[],particles:[]},
+    window:{_mpMultiplayer:false},
+    STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0}},
+    FACTION_CFG:{prism:{color:'#00ddff'}}, sfx:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const ark=makeArkship('player','prism',100,100);
+    ark.x=100; ark.y=100;
+    const t1={id:1,side:'enemy',hp:100,x:150,y:100};
+    const t2={id:2,side:'enemy',hp:100,x:100,y:200};
+    S.entities=[ark,t1,t2];
+    arkshipBeamAttackTick(ark,t1);
+    const twoTargets={t1hp:t1.hp,t2hp:t2.hp,beamTarget:ark.beamTarget.id,beamTarget2:ark.beamTarget2.id};
+
+    S.entities=[ark,t1];
+    t1.hp=100;
+    arkshipBeamAttackTick(ark,t1);
+    const soloTarget={damage:100-t1.hp,beamTarget:ark.beamTarget.id,beamTarget2:ark.beamTarget2.id};
+
+    ark.arkMode='phasing';
+    t1.hp=100;
+    arkshipBeamAttackTick(ark,t1);
+    const phasing={hp:t1.hp,beamTarget:ark.beamTarget,beamTarget2:ark.beamTarget2};
+
+    return {twoTargets,soloTarget,phasing};
+  })()`,context);
+
+  assert.ok(result.twoTargets.t1hp<100 && result.twoTargets.t2hp<100);
+  assert.deepEqual({beamTarget:result.twoTargets.beamTarget,beamTarget2:result.twoTargets.beamTarget2},{beamTarget:1,beamTarget2:2});
+  assert.deepEqual({beamTarget:result.soloTarget.beamTarget,beamTarget2:result.soloTarget.beamTarget2},{beamTarget:1,beamTarget2:1});
+  assert.equal(result.soloTarget.damage,result.twoTargets.t1hp>0?(100-result.twoTargets.t1hp)*2:result.soloTarget.damage);
+  assert.deepEqual({...result.phasing},{hp:100,beamTarget:null,beamTarget2:null});
+});
+
+test('Prism Arkship uses a distinct renderer from the Warship and Light Fighter',()=>{
+  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','warriors.js'),'utf8');
+  assert.match(source,/w\.subtype==='arkship'[\s\S]*?drawArkshipUnit\(rc,cfg,w\)/);
 });
 
 test('Ling cannot target aerial units',()=>{
