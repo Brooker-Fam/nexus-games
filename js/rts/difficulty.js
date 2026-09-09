@@ -195,15 +195,15 @@ function applyDifficultyToAI(){
   // Decision cadence — exponential: hard AI reacts sharply faster
   AI_CONFIG.buildInterval     = _diffExp(420, 100);   // 7s → 1.7s
   AI_CONFIG.trainInterval     = _diffExp(240, 70);    // 4s → 1.2s
-  AI_CONFIG.attackInterval    = _diffExp(800, 150);   // 13s → 2.5s
+  AI_CONFIG.attackInterval    = _diffExp(550, 100);   // 9.2s → 1.7s
 
   // Economy — wider range for more distinct easy/hard feel
   AI_CONFIG.maxWorkers        = _diffLerp(5, 20);
   AI_CONFIG.resourceBonus     = +(0.70 + t * 0.45).toFixed(2);  // 0.70x → 1.15x
 
   // Attack thresholds
-  AI_CONFIG.attackMinWarriors = _diffLerp(8, 3);
-  AI_CONFIG.attackMatchMin    = _diffLerp(6, 2);
+  AI_CONFIG.attackMinWarriors = _diffLerp(6, 2);
+  AI_CONFIG.attackMatchMin    = _diffLerp(4, 1);
 
   // Build order quality — easy AI delays expansion, hard AI rushes
   AI_CONFIG.barracksWorkerReq   = _diffLerp(5, 2);   // workers needed for 1st barracks
@@ -215,11 +215,11 @@ function applyDifficultyToAI(){
   AI_CONFIG.focusFireChance  = +_diffSCurve(0, 0.85).toFixed(2); // target low-HP enemies
   AI_CONFIG.kiteChance       = +_diffSCurve(0, 0.7).toFixed(2);  // ranged retreat from melee
   AI_CONFIG.strategicTargetChance = +_diffSCurve(0.05, 0.9).toFixed(2);
-  AI_CONFIG.counterAttackRatio = +(1.45 - t * 0.55).toFixed(2);
+  AI_CONFIG.counterAttackRatio = +(1.25 - t * 0.55).toFixed(2);
 
   // Mistakes — easy AI sometimes skips decisions
   AI_CONFIG.mistakeChance      = +(0.30 * (1 - t)).toFixed(2);   // 30% at easy → 0% at hard
-  AI_CONFIG.attackPartialChance= +(0.50 * (1 - t)).toFixed(2);   // chance to only send some warriors
+  AI_CONFIG.attackPartialChance= +(0.35 * (1 - t)).toFixed(2);   // chance to only send some warriors
 }
 
 // ── HUD HELPERS ──

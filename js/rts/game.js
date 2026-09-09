@@ -4,10 +4,10 @@
 const AI_CONFIG = {
   buildInterval: 180,        // ticks between build decisions
   trainInterval: 120,        // ticks between train decisions
-  attackInterval: 400,       // ticks between attack waves
+  attackInterval: 280,       // ticks between attack waves
   maxWorkers: 14,
-  attackMinWarriors: 5,      // min idle warriors to launch attack
-  attackMatchMin: 3,         // min warriors for "outnumber player" attack
+  attackMinWarriors: 4,      // min idle warriors to launch attack
+  attackMatchMin: 2,         // min warriors for "outnumber player" attack
   resourceBonus: 1.0,        // gold multiplier for AI workers
   // build order quality
   barracksWorkerReq: 2,      // workers needed before 1st barracks
@@ -18,7 +18,7 @@ const AI_CONFIG = {
   focusFireChance: 0,        // chance to target lowest-HP enemy (0 in MP)
   kiteChance: 0,             // chance for ranged AI to retreat from melee (0 in MP)
   strategicTargetChance: 0,  // chance for an attack wave to prioritize production/economy
-  counterAttackRatio: 1.15,  // required army-strength advantage before an early attack
+  counterAttackRatio: 1.05,  // required army-strength advantage before an early attack
   // mistakes & coordination
   mistakeChance: 0,          // chance to skip a decision cycle
   attackPartialChance: 0,    // chance to only send some warriors
