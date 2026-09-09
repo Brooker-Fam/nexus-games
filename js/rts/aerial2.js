@@ -233,6 +233,70 @@ function drawCapitalShipUnit(rc,cfg,w){
   }
 }
 
+// ── DARK WARRIOR'S SHIP — heavier void carrier than the Destroyer, ferries Vanthel ──
+function drawDarkWarriorShip(rc,cfg,w){
+  rc.shadowColor='#aa00ff'; rc.shadowBlur=24;
+
+  const pulse=0.4+Math.sin(w.frame*0.1)*0.3;
+
+  // trailing void mist — larger than the Destroyer's
+  rc.fillStyle=`rgba(40,0,80,${0.26+Math.sin(w.frame*0.14)*0.1})`;
+  rc.beginPath(); rc.ellipse(-18,0,22,11,0,0,Math.PI*2); rc.fill();
+
+  // upper hull wing (crescent, void-forged, bulkier than the Destroyer's)
+  const ug=rc.createLinearGradient(0,-25,10,0);
+  ug.addColorStop(0,'#1c0038'); ug.addColorStop(0.5,'#5a1acc'); ug.addColorStop(1,'#050008');
+  rc.fillStyle=ug;
+  rc.beginPath();
+  rc.moveTo(13,-4);
+  rc.bezierCurveTo(3,-12,-11,-22,-20,-25);
+  rc.bezierCurveTo(-13,-16,-5,-8,13,-4);
+  rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(200,100,255,0.55)'; rc.lineWidth=1; rc.stroke();
+
+  // lower hull wing (mirrored)
+  const lg=rc.createLinearGradient(0,25,10,0);
+  lg.addColorStop(0,'#1c0038'); lg.addColorStop(0.5,'#5a1acc'); lg.addColorStop(1,'#050008');
+  rc.fillStyle=lg;
+  rc.beginPath();
+  rc.moveTo(13,4);
+  rc.bezierCurveTo(3,12,-11,22,-20,25);
+  rc.bezierCurveTo(-13,16,-5,8,13,4);
+  rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(200,100,255,0.55)'; rc.lineWidth=1; rc.stroke();
+
+  // reinforced void-core hull — wider and more armored than the Destroyer's
+  const cc=rc.createLinearGradient(-11,0,22,0);
+  cc.addColorStop(0,'#050008'); cc.addColorStop(0.5,'#7a1acc'); cc.addColorStop(1,'#1c0038');
+  rc.fillStyle=cc;
+  rc.beginPath(); rc.moveTo(23,0); rc.lineTo(7,-8); rc.lineTo(-12,-7); rc.lineTo(-12,7); rc.lineTo(7,8); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(200,100,255,0.65)'; rc.lineWidth=1.1; rc.stroke();
+
+  // cargo pod carrying Vanthel — a caged silhouette that vanishes once deployed
+  if(w.carryingVanthel){
+    const cagePulse=0.5+Math.sin(w.frame*0.18)*0.5;
+    rc.fillStyle=`rgba(220,150,255,${0.5+cagePulse*0.3})`;
+    rc.shadowColor='#ff88ff'; rc.shadowBlur=10;
+    rc.beginPath(); rc.ellipse(-2,0,4,7,0,0,Math.PI*2); rc.fill();
+    rc.strokeStyle='rgba(20,0,30,0.9)'; rc.lineWidth=0.8;
+    for(const cy of [-5,0,5]){ rc.beginPath(); rc.moveTo(-6,cy); rc.lineTo(2,cy); rc.stroke(); }
+    rc.shadowBlur=0;
+  }
+
+  // orb-launcher maw at the nose — bigger charge than the Destroyer's
+  const chargeT = w.attackTimer!==undefined && w.fireRate ? Math.min(1,w.attackTimer/w.fireRate) : pulse;
+  const maw=rc.createRadialGradient(13,0,0,13,0,6+chargeT*4);
+  maw.addColorStop(0,'#ffaaff'); maw.addColorStop(0.4,'#aa00ff'); maw.addColorStop(1,'transparent');
+  rc.fillStyle=maw; rc.shadowColor='#dd00ff'; rc.shadowBlur=20;
+  rc.beginPath(); rc.arc(13,0,6+chargeT*4,0,Math.PI*2); rc.fill();
+  rc.fillStyle='#0a0014'; rc.beginPath(); rc.arc(13,0,4,0,Math.PI*2); rc.fill();
+
+  // crackling void lines along the hull
+  rc.strokeStyle=`rgba(200,100,255,${0.4+Math.sin(w.frame*0.12)*0.25})`; rc.lineWidth=1;
+  rc.beginPath(); rc.moveTo(3,-4); rc.lineTo(-9,-14); rc.stroke();
+  rc.beginPath(); rc.moveTo(3,4); rc.lineTo(-9,14); rc.stroke();
+}
+
 // ── PRISM ARKSHIP — Prism's flagship: not a solid hull but a loose
 // swirl of jagged metal fragments orbiting a bright core. Phasing mode dims
 // the swirl (it's about to release its crew); attacking mode flares its

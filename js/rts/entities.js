@@ -60,6 +60,18 @@ function makeLing(side, x, y){
   };
 }
 
+// Vanthel — a legendary, singularly powerful dark warrior. He is never
+// trained directly; the Dark Warrior's Ship carries him to the battlefield
+// and releases him once the ship is clear of enemies (see makeDarkWarriorShip).
+function makeVanthel(side, x, y){
+  return { id:nextId(), type:'warrior', subtype:'vanthel', side, faction:'shadow',
+    x, y, hp:320, maxHp:320, speed:1.7,
+    state:'idle', target:null, attackTimer:0,
+    damage:58, range:60, ranged:false, fireRate:20,
+    frame:0, selected:false, forcedTarget:null, moveTarget:null,
+  };
+}
+
 // ── 2ND-TIER BARRACKS UNITS ──
 // Warbot (Roboto) — heavier armored GunBot variant, more HP and damage
 function makeWarbot(side, faction, nearX, nearY){
@@ -117,7 +129,6 @@ const BUILD_TIMES={
   warbot:      780,  // 13s — Roboto 2nd barracks unit
   legionnairesquad: 1500, // 25s — Prism 2nd barracks unit, trains 4 at once
   arkship:     1800, // 30s — Prism unique flagship, requires an existing Prism unit
-  ling:        600,  // 10s — automatically repeated by a Shadow Ling Nest
   research:    1500, // 25s — Research Lab military tech (unlocks Warbot/Tank/Warship)
   gongui:      1200, // 20s — unique Roboto King, trained at the Factory
   capitalship: 1500, // 25s — unique Roboto flagship, trained at the Shipyard
@@ -224,20 +235,6 @@ function makeCouncilOfDarkness(side, faction, x, y){
     selected:false, frame:0,
     label:(cfg&&cfg.councilOfDarknessLabel)||'COUNCIL OF DARKNESS', isCouncilOfDarkness:true,
     underConstruction:true, buildProgress:0, buildTime:BUILD_TIMES.structure,
-  };
-}
-
-// ── LING NEST (Shadow) ── passive structure, free-running Ling production
-function makeLingNest(side, faction, x, y){
-  const cfg=FACTION_CFG[faction];
-  return {
-    id:nextId(), type:'structure', side, faction,
-    x, y, hp:BUILDING_HEALTH.structure, maxHp:BUILDING_HEALTH.structure,
-    structType:'lingnest',
-    selected:false, frame:0,
-    label:(cfg&&cfg.lingNestLabel)||'LING NEST', isLingNest:true,
-    underConstruction:true, buildProgress:0, buildTime:BUILD_TIMES.structure,
-    queue:[], trainTimer:0,
   };
 }
 
@@ -356,6 +353,24 @@ function makeCapitalShip(side, faction, nearX, nearY){
     state:'idle', target:null, attackTimer:0,
     damage:6, range:220, ranged:true, fireRate:40,
     aerial:true, landed:false, passenger:null,
+    frame:0, selected:false, forcedTarget:null, moveTarget:null,
+  };
+}
+
+// Dark Warrior's Ship (Shadow) — a heavily armored void carrier that ferries
+// Vanthel to the battlefield. Its void-orb barrage hits harder and further
+// than a Destroyer's, and it won't release Vanthel while enemies are within
+// sight — it has to burn them down with that barrage first (see the
+// carryingVanthel check in rtsTick).
+function makeDarkWarriorShip(side, faction, nearX, nearY){
+  const isPlayer=side==='player';
+  return {
+    id:nextId(), type:'warrior', subtype:'darkwarriorship', side, faction,
+    x: nearX+(isPlayer?70:-70), y: nearY+(rtsRand()-0.5)*120,
+    hp:260, maxHp:260, speed:0.9,
+    state:'idle', target:null, attackTimer:0,
+    damage:48, range:300, ranged:true, fireRate:100,
+    aerial:true, carryingVanthel:true,
     frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };
 }
