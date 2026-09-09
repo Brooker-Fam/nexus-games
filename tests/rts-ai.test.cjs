@@ -63,7 +63,7 @@ test('army evaluation accounts for health, damage rate, and range', () => {
   assert.ok(powers[2] > powers[0], 'fast ranged damage should count for more');
 });
 
-test('Princess attack summons 10 Legionnaires focused on her target', () => {
+test('Prism attack summons 10 Legionnaires focused on her target', () => {
   const context=makeContext();
   const entitiesSource=fs.readFileSync(path.join(__dirname,'..','js','rts','entities.js'),'utf8');
   vm.runInContext(entitiesSource,context);
@@ -73,10 +73,10 @@ test('Princess attack summons 10 Legionnaires focused on her target', () => {
 
   const result=vm.runInContext(`(() => {
     const target={id:9,type:'warrior',side:'enemy',x:300,y:100,hp:40};
-    const princess=makePrincess('player','prism',100,100);
-    princess.attackTimer=princess.fireRate-1;
-    S.entities=[princess,target];
-    advanceRangedAttack(princess,target);
+    const prism=makePrism('player','prism',100,100);
+    prism.attackTimer=prism.fireRate-1;
+    S.entities=[prism,target];
+    advanceRangedAttack(prism,target);
     const summoned=S.entities.slice(2);
     return {
       count:S.entities.length,

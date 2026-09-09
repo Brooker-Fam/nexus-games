@@ -246,7 +246,7 @@ test('Roboto Warbot, Tank, and Warship require completed (gold-cost) research at
     queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
     makeWizard:()=>{}, makeNecromancer:()=>{}, makeTank:()=>{},
     makeStarFighter:()=>{}, makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>{},
-    makePrincess:()=>{}, makeElite:()=>{},
+    makePrism:()=>{}, makeElite:()=>{},
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
 
@@ -331,7 +331,7 @@ test('Shadow Necromancer and Destroyer both require a completed Council of Darkn
     queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
     makeWizard:()=>{}, makeNecromancer:()=>({id:99}), makeTank:()=>{},
     makeStarFighter:()=>{}, makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>({id:98}),
-    makePrincess:()=>{}, makeElite:()=>{},
+    makePrism:()=>{}, makeElite:()=>{},
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
 
@@ -376,7 +376,7 @@ test('start_research is gold-gated, one-shot, and unlocks Warbot/Tank/Warship to
     queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
     makeWizard:()=>{}, makeNecromancer:()=>{}, makeTank:()=>{},
     makeStarFighter:()=>{}, makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>{},
-    makePrincess:()=>{}, makeElite:()=>{},
+    makePrism:()=>{}, makeElite:()=>{},
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
 
@@ -406,26 +406,26 @@ test('start_research is gold-gated, one-shot, and unlocks Warbot/Tank/Warship to
   assert.deepEqual({...result.secondAttempt},{queued:1,gold:1000-researchCost});
 });
 
-test('Prism Oracle and Princess remain distinct units',()=>{
+test('Prism Oracle and Prism remain distinct units',()=>{
   const context=makeContext();
   const units=vm.runInContext(`(() => ({
     oracle:makeElite('player','prism',100,100),
-    princess:makePrincess('player','prism',100,100),
+    prism:makePrism('player','prism',100,100),
   }))()`,context);
 
   assert.equal(units.oracle.subtype,'elite');
   assert.equal(units.oracle.summonsLegionnaires,undefined);
   assert.equal(units.oracle.fireRate,60);
-  assert.equal(units.princess.subtype,'princess');
-  assert.equal(units.princess.summonsLegionnaires,true);
-  assert.equal(units.princess.fireRate,180);
+  assert.equal(units.prism.subtype,'prism');
+  assert.equal(units.prism.summonsLegionnaires,true);
+  assert.equal(units.prism.fireRate,180);
 
   const factionContext=vm.createContext({});
   const source=fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8');
   vm.runInContext(source,factionContext);
-  const presentation=vm.runInContext('({oracle:FACTION_CFG.prism.eliteLabel,princess:FACTION_CFG.prism.princessLabel,desc:FACTION_CFG.prism.princessDesc,gold:FACTION_CFG.prism.princessCost,light:FACTION_CFG.prism.princessOilCost})',factionContext);
+  const presentation=vm.runInContext('({oracle:FACTION_CFG.prism.eliteLabel,prism:FACTION_CFG.prism.prismLabel,desc:FACTION_CFG.prism.prismDesc,gold:FACTION_CFG.prism.prismCost,light:FACTION_CFG.prism.prismOilCost})',factionContext);
   assert.equal(presentation.oracle,'ORACLE');
-  assert.equal(presentation.princess,'PRINCESS');
+  assert.equal(presentation.prism,'PRISM');
   assert.match(presentation.desc,/Legionnaires/);
   assert.match(presentation.desc,/limit 1/);
   assert.equal(presentation.gold,200);
@@ -446,14 +446,14 @@ test('Prism Oracle and Wizard cost Light, with Wizard favoring Light over Gold',
   assert.ok(costs.wizard.light>costs.wizard.gold);
 });
 
-test('Prism Princess uses a distinct renderer from the Oracle',()=>{
+test('Prism unit uses a distinct renderer from the Oracle',()=>{
   const source=fs.readFileSync(path.join(__dirname,'..','js','rts','warriors.js'),'utf8');
 
-  assert.match(source,/w\.subtype==='princess'[\s\S]*?drawPrincess\(rc,cfg,w\)/);
+  assert.match(source,/w\.subtype==='prism'[\s\S]*?drawPrism\(rc,cfg,w\)/);
   assert.match(source,/w\.subtype==='elite'[\s\S]*?drawEliteOracle\(rc,cfg,w\)/);
 });
 
-test('Prism Princess keeps a broader, taller silhouette than the Oracle',()=>{
+test('Prism unit keeps a broader, taller silhouette than the Oracle',()=>{
   const context=vm.createContext({console});
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','elites.js'),'utf8'),context);
   const silhouettes=vm.runInContext(`(() => {
@@ -475,14 +475,14 @@ test('Prism Princess keeps a broader, taller silhouette than the Oracle',()=>{
         top:Math.min(...points.map(([,y])=>y)),
       };
     }
-    return {oracle:trace(drawEliteOracle),princess:trace(drawPrincess)};
+    return {oracle:trace(drawEliteOracle),prism:trace(drawPrism)};
   })()`,context);
 
-  assert.ok(silhouettes.princess.width>silhouettes.oracle.width);
-  assert.ok(silhouettes.princess.top<silhouettes.oracle.top);
+  assert.ok(silhouettes.prism.width>silhouettes.oracle.width);
+  assert.ok(silhouettes.prism.top<silhouettes.oracle.top);
 });
 
-test('Prism Princess is limited to one existing or queued unit',()=>{
+test('Prism unit is limited to one existing or queued unit',()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
@@ -498,13 +498,13 @@ test('Prism Princess is limited to one existing or queued unit',()=>{
   const result=vm.runInContext(`(() => {
     const temple={id:1,type:'base',side:'player',faction:'prism',x:0,y:0,queue:[]};
     S.entities=[temple];
-    executeCommand({type:'train_unit',buildingId:1,unitType:'princess',side:'player'});
+    executeCommand({type:'train_unit',buildingId:1,unitType:'prism',side:'player'});
     const afterFirst={gold:S.gold.player,light:S.oil.player,queued:temple.queue.length};
-    executeCommand({type:'train_unit',buildingId:1,unitType:'princess',side:'player'});
+    executeCommand({type:'train_unit',buildingId:1,unitType:'prism',side:'player'});
     const afterQueuedAttempt={gold:S.gold.player,light:S.oil.player,queued:temple.queue.length};
     temple.queue=[];
-    S.entities.push(makePrincess('player','prism',10,10));
-    executeCommand({type:'train_unit',buildingId:1,unitType:'princess',side:'player'});
+    S.entities.push(makePrism('player','prism',10,10));
+    executeCommand({type:'train_unit',buildingId:1,unitType:'prism',side:'player'});
     return {afterFirst,afterQueuedAttempt,afterExistingAttempt:{gold:S.gold.player,light:S.oil.player,queued:temple.queue.length}};
   })()`,context);
   assert.deepEqual({...result.afterFirst},{gold:800,light:925,queued:1});
@@ -512,7 +512,7 @@ test('Prism Princess is limited to one existing or queued unit',()=>{
   assert.deepEqual({...result.afterExistingAttempt},{gold:800,light:925,queued:0});
 });
 
-test('Prism Princess trains at the Temple rather than the Shrine',()=>{
+test('Prism unit trains at the Temple rather than the Shrine',()=>{
   const context=vm.createContext({});
   for(const file of ['factions.js','ui.js']){
     vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts',file),'utf8'),context);
@@ -527,7 +527,7 @@ test('Prism Princess trains at the Temple rather than the Shrine',()=>{
     };
   })()`,context);
 
-  assert.deepEqual([...locations.temple],['ACOLYTE','PRINCESS']);
+  assert.deepEqual([...locations.temple],['ACOLYTE','PRISM']);
   assert.deepEqual([...locations.shrine],['ORACLE','WIZARD']);
   assert.deepEqual([...locations.shadowTemple],['SHADE']);
 });

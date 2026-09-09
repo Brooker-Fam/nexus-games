@@ -381,13 +381,13 @@ function makeElite(side, faction, nearX, nearY){
     forcedTarget:null, moveTarget:null,
   };
 }
-function makePrincess(side, faction, nearX, nearY){
-  const princess=makeElite(side,faction,nearX,nearY);
-  princess.subtype='princess';
+function makePrism(side, faction, nearX, nearY){
+  const prism=makeElite(side,faction,nearX,nearY);
+  prism.subtype='prism';
   // A longer cadence keeps each ten-unit summon meaningful.
-  princess.fireRate=180;
-  princess.summonsLegionnaires=true;
-  return princess;
+  prism.fireRate=180;
+  prism.summonsLegionnaires=true;
+  return prism;
 }
 function makeWizard(side, faction, nearX, nearY){
   const isPlayer=side==='player';

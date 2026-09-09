@@ -379,12 +379,12 @@ function aiTick(){
     const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.isOilRig&&!e.isLingNest&&!e.isResearchLab&&!e.isCouncilOfLight&&!e.isCouncilOfDarkness&&!e.underConstruction);
     const eCfg3=FACTION_CFG[S.enemyFaction];
     if(S.enemyFaction==='prism'){
-      const princessExists=S.entities.some(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='princess');
-      const princessQueued=S.entities.some(e=>e.side==='enemy' && e.queue?.some(q=>q.unitType==='princess' || q.label===eCfg3.princessLabel));
-      const princessOil=eCfg3.princessOilCost||0;
-      if(!princessExists && !princessQueued && S.gold.enemy>=eCfg3.princessCost && (S.oil.enemy||0)>=princessOil){
-        if(aiQueueAt(eb,eCfg3.princessLabel,BUILD_TIMES.elite,()=>makePrincess('enemy','prism',eb.x,eb.y),eCfg3.princessCost,'princess')){
-          S.oil.enemy=Math.max(0,(S.oil.enemy||0)-princessOil);
+      const prismExists=S.entities.some(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='prism');
+      const prismQueued=S.entities.some(e=>e.side==='enemy' && e.queue?.some(q=>q.unitType==='prism' || q.label===eCfg3.prismLabel));
+      const prismOil=eCfg3.prismOilCost||0;
+      if(!prismExists && !prismQueued && S.gold.enemy>=eCfg3.prismCost && (S.oil.enemy||0)>=prismOil){
+        if(aiQueueAt(eb,eCfg3.prismLabel,BUILD_TIMES.elite,()=>makePrism('enemy','prism',eb.x,eb.y),eCfg3.prismCost,'prism')){
+          S.oil.enemy=Math.max(0,(S.oil.enemy||0)-prismOil);
         }
       }
     }
@@ -826,7 +826,7 @@ const MELEE_ATTACK_TICKS = 45;
 
 // Returns true if this attacker can hit aerial units.
 // Allowed: gunbot (roboto warrior), warbot, shockbot, dark warrior (shadow elite),
-//          witch (prism warrior), princess (prism elite), wizard, starfighter, skyattacker,
+//          witch (prism warrior), Prism (prism-faction elite), wizard, starfighter, skyattacker,
 //          bow-mode legionnaire, bow-mode bloodhound.
 // Blocked: workers, swordsman (shadow melee warrior), sword-mode legionnaire, necromancer, tank, ling.
 function canTargetAerial(w){
@@ -946,20 +946,20 @@ function beamAttackTick(w, target){
   if(w.beamPulse%12===0) spawnHitFlash(target.x,target.y,'#ffffff');
 }
 
-function summonLegionnaire(princess, target){
-  const spawnOffset=princess.side==='player'?24:-24;
+function summonLegionnaire(prism, target){
+  const spawnOffset=prism.side==='player'?24:-24;
   // makeLegionnaire normally offsets a unit from a production building; adjust
-  // its origin so the summoned soldier appears directly in front of Princess.
-  const productionOffset=princess.side==='player'?80:-80;
+  // its origin so the summoned soldier appears directly in front of Prism.
+  const productionOffset=prism.side==='player'?80:-80;
   for(let i=0;i<10;i++){
     const legionnaire=makeLegionnaire(
-      princess.side,
-      princess.faction,
-      princess.x+spawnOffset-productionOffset,
-      princess.y,
+      prism.side,
+      prism.faction,
+      prism.x+spawnOffset-productionOffset,
+      prism.y,
       i%2===1
     );
-    legionnaire.y=princess.y+(rtsRand()-0.5)*36;
+    legionnaire.y=prism.y+(rtsRand()-0.5)*36;
     legionnaire.forcedTarget=target;
     legionnaire.state='march';
     S.entities.push(legionnaire);
