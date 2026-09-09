@@ -376,6 +376,23 @@ function aiTick(){
           S.oil.enemy=Math.max(0,(S.oil.enemy||0)-princessOil);
         }
       }
+      // Once a Princess is alive, the AI may build her Arkship — this draws
+      // her inside, so the build only fires while she still exists.
+      const princessAlive=S.entities.find(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='princess');
+      const arkshipExists=S.entities.some(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='arkship');
+      const arkshipQueued=S.entities.some(e=>e.side==='enemy' && e.queue?.some(q=>q.unitType==='arkship' || q.label===eCfg3.arkshipLabel));
+      const arkshipOil=eCfg3.arkshipOilCost||0;
+      if(princessAlive && !arkshipExists && !arkshipQueued && S.gold.enemy>=eCfg3.arkshipCost && (S.oil.enemy||0)>=arkshipOil){
+        if(aiQueueAt(eb,eCfg3.arkshipLabel,BUILD_TIMES.arkship,()=>{
+          const idx=S.entities.indexOf(princessAlive);
+          if(idx!==-1) S.entities.splice(idx,1);
+          const ark=makeArkship('enemy','prism',eb.x,eb.y);
+          ark.x=princessAlive.x; ark.y=princessAlive.y;
+          return ark;
+        },eCfg3.arkshipCost,'arkship')){
+          S.oil.enemy=Math.max(0,(S.oil.enemy||0)-arkshipOil);
+        }
+      }
     }
     if(S.enemyFaction==='shadow'){
       const shipOrVanthelAlive=S.entities.some(e=>e.side==='enemy' && (e.subtype==='darkwarriorship'||e.subtype==='vanthel'));
@@ -919,6 +936,7 @@ function warriorMarchToward(w, target, spreadMod, spreadScale){
 }
 
 function advanceRangedAttack(w, target){
+  if(w.subtype==='arkship'){ arkshipBeamAttackTick(w, target); return; }
   if(w.beam){ beamAttackTick(w, target); return; }
   const fireRate=w.fireRate||50;
   w.attackTimer++;
@@ -939,6 +957,53 @@ function beamAttackTick(w, target){
   w.beamPulse=wasBeaming?(w.beamPulse||0)+1:0;
   if(!wasBeaming) sfx('rtsBeam', 40);
   if(w.beamPulse%12===0) spawnHitFlash(target.x,target.y,'#ffffff');
+}
+
+// Twin-beam weapon (Arkship, attacking mode only) — fires simultaneously at
+// its primary target and the nearest other enemy in range, doubling up on
+// the same target when no second enemy is present. Phasing mode holds fire.
+function arkshipBeamAttackTick(w, target){
+  if(w.arkMode==='phasing'){ w.beamTarget=null; w.beamTarget2=null; return; }
+  let second=null, secondDist=Infinity;
+  for(const e of S.entities){
+    if(e===target||e.side===w.side||e.hp<=0) continue;
+    if(e.aerial && !canTargetAerial(w)) continue;
+    const d=_dist(e.x-w.x,e.y-w.y);
+    if(d<=w.range && d<secondDist){ secondDist=d; second=e; }
+  }
+  const secondaryTarget=second||target;
+  const wasBeaming=w._lastBeamFrame===S.frame-1;
+  w._lastBeamFrame=S.frame;
+  w.beamTarget=target;
+  w.beamTarget2=secondaryTarget;
+  target.hp-=w.damage/60;
+  secondaryTarget.hp-=w.damage/60;
+  w.beamPulse=wasBeaming?(w.beamPulse||0)+1:0;
+  if(!wasBeaming) sfx('rtsBeam', 40);
+  if(w.beamPulse%12===0){
+    spawnHitFlash(target.x,target.y,'#ffffff');
+    if(secondaryTarget!==target) spawnHitFlash(secondaryTarget.x,secondaryTarget.y,'#ffffff');
+  }
+}
+
+// Deploys the Princess and 5 escorting Witches from an Arkship entering
+// phasing mode. One-shot per Arkship — toggling back and forth afterward
+// doesn't summon a second crew.
+function deployArkshipCrew(ark){
+  if(ark.deployedCrew) return;
+  ark.deployedCrew=true;
+  const spawnOffset=ark.side==='player'?40:-40;
+  const princess=makePrincess(ark.side, ark.faction, ark.x, ark.y);
+  princess.x=ark.x+spawnOffset; princess.y=ark.y;
+  S.entities.push(princess);
+  for(let i=0;i<5;i++){
+    const witch=makeWarrior(ark.side, ark.faction, ark.x, ark.y);
+    witch.x=ark.x+spawnOffset*0.6; witch.y=ark.y+(i-2)*22;
+    S.entities.push(witch);
+  }
+  spawnMagicBurst(ark.x,ark.y,FACTION_CFG.prism.color);
+  if(ark.side==='player') rtsSetLog('The Arkship phases open — the Princess and her Witches emerge!');
+  sfx('rtsMagicFire',80);
 }
 
 function summonLegionnaire(princess, target){
@@ -1008,7 +1073,7 @@ function warriorMeleeAttack(w, target, targetDist){
 }
 
 function warriorTick(w, playerBase, enemyBase){
-  if(w.beam) w.beamTarget=null;
+  if(w.beam){ w.beamTarget=null; w.beamTarget2=null; }
   const enemyBase2=w.side==='player'?enemyBase:playerBase;
 
   // DUEL STATE — two warriors fighting to become an elite
@@ -1049,6 +1114,13 @@ function warriorTick(w, playerBase, enemyBase){
         sfx('rtsUnitHit',50);
       }
     }
+    return;
+  }
+
+  // PHASING ARKSHIP — out of the fight while it deploys its crew; its twin
+  // beams only fire in attacking mode.
+  if(w.subtype==='arkship' && w.arkMode==='phasing'){
+    w.state='idle';
     return;
   }
 
