@@ -103,6 +103,10 @@ function updateHUD(){
   document.getElementById('livesNum').textContent = state.lives;
   document.getElementById('goldNum').textContent = state.gold;
   document.getElementById('scoreNum').textContent = state.score;
+  document.querySelectorAll('.tower-btn').forEach(btn=>{
+    const cost = TOWER_TYPES[btn.dataset.type]?.cost || 0;
+    btn.disabled = state.gold < cost;
+  });
 }
 
 function calculateBossInterest(gold){
