@@ -47,8 +47,8 @@ function drawRTSWarrior(rc,w){
     drawLing(rc,w);
   } else if(w.subtype==='legionnaire'){
     drawLegionnaire(rc,cfg,w);
-  } else if(w.subtype==='princess'){
-    if(w.faction==='prism') drawPrincess(rc,cfg,w);
+  } else if(w.subtype==='prism'){
+    if(w.faction==='prism') drawPrism(rc,cfg,w);
   } else if(w.subtype==='gongui'){
     drawGongui(rc,cfg,w);
   } else if(w.subtype==='elite'){

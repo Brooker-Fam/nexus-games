@@ -245,6 +245,7 @@
   }
   .header-top {
     display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px 12px;
     padding: 16px 0 10px;
   }
   .logo {
@@ -270,7 +271,7 @@
     margin-top: 2px; text-align: center;
   }
   .header-right {
-    display: flex; align-items: center; gap: 20px;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 10px 20px;
   }
   .status-dot {
     width: 8px; height: 8px; border-radius: 50%;
@@ -342,4 +343,27 @@
     .status-text { display: none; }
     .zoom-controls { order: 3; width: 100%; justify-content: center; margin: 8px 0 0; }
     .tab { font-size: 8px; letter-spacing: 1px; padding: 8px 10px; }
+  }
+  /* Short viewports generally (common laptop heights included) — trim the
+     chrome so the game itself has more room to breathe. */
+  @media (max-height: 850px) {
+    .header-top { padding: 8px 0 4px; }
+    .logo-sub { display: none; }
+    .tab { padding: 8px 18px; }
+    main { padding: clamp(6px, 1.5vw, 16px) clamp(12px, 3vw, 40px); }
+  }
+  /* Short/landscape viewports (e.g. a phone on its side): the header must not
+     eat the little vertical space there is, so the game stays visible. */
+  @media (max-height: 500px) and (orientation: landscape) {
+    header { padding: 0 clamp(10px, 2vw, 24px); }
+    .header-top { padding: 4px 0; }
+    .logo { font-size: 14px; letter-spacing: 2px; }
+    .logo-sub, .status-text { display: none; }
+    .header-right { gap: 6px 10px; }
+    .zoom-controls { padding: 2px; margin-right: 6px; }
+    .zoom-btn { min-width: 18px; height: 18px; font-size: 11px; }
+    .zoom-label { font-size: 8px; min-width: 30px; }
+    .auth-btn, .auth-chip { padding: 3px 8px; font-size: 9px; }
+    .tab { font-size: 8px; letter-spacing: 1px; padding: 5px 10px; }
+    main { padding: 4px clamp(10px, 2vw, 24px); }
   }

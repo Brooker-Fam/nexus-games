@@ -367,7 +367,7 @@ test('Roboto Warbot, Tank, and Warship require completed (gold-cost) research at
     queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
     makeWizard:()=>{}, makeNecromancer:()=>{}, makeTank:()=>{},
     makeStarFighter:()=>{}, makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>{},
-    makePrincess:()=>{}, makeElite:()=>{},
+    makePrism:()=>{}, makeElite:()=>{},
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
 
@@ -452,7 +452,7 @@ test('Shadow Necromancer and Destroyer both require a completed Council of Darkn
     queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
     makeWizard:()=>{}, makeNecromancer:()=>({id:99}), makeTank:()=>{},
     makeStarFighter:()=>{}, makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>({id:98}),
-    makePrincess:()=>{}, makeElite:()=>{},
+    makePrism:()=>{}, makeElite:()=>{},
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
 
@@ -497,7 +497,7 @@ test('start_research is gold-gated, one-shot, and unlocks Warbot/Tank/Warship to
     queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
     makeWizard:()=>{}, makeNecromancer:()=>{}, makeTank:()=>{},
     makeStarFighter:()=>{}, makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>{},
-    makePrincess:()=>{}, makeElite:()=>{},
+    makePrism:()=>{}, makeElite:()=>{},
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
 
@@ -527,26 +527,26 @@ test('start_research is gold-gated, one-shot, and unlocks Warbot/Tank/Warship to
   assert.deepEqual({...result.secondAttempt},{queued:1,gold:1000-researchCost});
 });
 
-test('Prism Oracle and Princess remain distinct units',()=>{
+test('Prism Oracle and Prism remain distinct units',()=>{
   const context=makeContext();
   const units=vm.runInContext(`(() => ({
     oracle:makeElite('player','prism',100,100),
-    princess:makePrincess('player','prism',100,100),
+    prism:makePrism('player','prism',100,100),
   }))()`,context);
 
   assert.equal(units.oracle.subtype,'elite');
   assert.equal(units.oracle.summonsLegionnaires,undefined);
   assert.equal(units.oracle.fireRate,60);
-  assert.equal(units.princess.subtype,'princess');
-  assert.equal(units.princess.summonsLegionnaires,true);
-  assert.equal(units.princess.fireRate,180);
+  assert.equal(units.prism.subtype,'prism');
+  assert.equal(units.prism.summonsLegionnaires,true);
+  assert.equal(units.prism.fireRate,180);
 
   const factionContext=vm.createContext({});
   const source=fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8');
   vm.runInContext(source,factionContext);
-  const presentation=vm.runInContext('({oracle:FACTION_CFG.prism.eliteLabel,princess:FACTION_CFG.prism.princessLabel,desc:FACTION_CFG.prism.princessDesc,gold:FACTION_CFG.prism.princessCost,light:FACTION_CFG.prism.princessOilCost})',factionContext);
+  const presentation=vm.runInContext('({oracle:FACTION_CFG.prism.eliteLabel,prism:FACTION_CFG.prism.prismLabel,desc:FACTION_CFG.prism.prismDesc,gold:FACTION_CFG.prism.prismCost,light:FACTION_CFG.prism.prismOilCost})',factionContext);
   assert.equal(presentation.oracle,'ORACLE');
-  assert.equal(presentation.princess,'PRINCESS');
+  assert.equal(presentation.prism,'PRISM');
   assert.match(presentation.desc,/Legionnaires/);
   assert.match(presentation.desc,/limit 1/);
   assert.equal(presentation.gold,200);
@@ -567,14 +567,14 @@ test('Prism Oracle and Wizard cost Light, with Wizard favoring Light over Gold',
   assert.ok(costs.wizard.light>costs.wizard.gold);
 });
 
-test('Prism Princess uses a distinct renderer from the Oracle',()=>{
+test('Prism unit uses a distinct renderer from the Oracle',()=>{
   const source=fs.readFileSync(path.join(__dirname,'..','js','rts','warriors.js'),'utf8');
 
-  assert.match(source,/w\.subtype==='princess'[\s\S]*?drawPrincess\(rc,cfg,w\)/);
+  assert.match(source,/w\.subtype==='prism'[\s\S]*?drawPrism\(rc,cfg,w\)/);
   assert.match(source,/w\.subtype==='elite'[\s\S]*?drawEliteOracle\(rc,cfg,w\)/);
 });
 
-test('Prism Princess keeps a broader, taller silhouette than the Oracle',()=>{
+test('Prism unit keeps a broader, taller silhouette than the Oracle',()=>{
   const context=vm.createContext({console});
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','elites.js'),'utf8'),context);
   const silhouettes=vm.runInContext(`(() => {
@@ -596,14 +596,14 @@ test('Prism Princess keeps a broader, taller silhouette than the Oracle',()=>{
         top:Math.min(...points.map(([,y])=>y)),
       };
     }
-    return {oracle:trace(drawEliteOracle),princess:trace(drawPrincess)};
+    return {oracle:trace(drawEliteOracle),prism:trace(drawPrism)};
   })()`,context);
 
-  assert.ok(silhouettes.princess.width>silhouettes.oracle.width);
-  assert.ok(silhouettes.princess.top<silhouettes.oracle.top);
+  assert.ok(silhouettes.prism.width>silhouettes.oracle.width);
+  assert.ok(silhouettes.prism.top<silhouettes.oracle.top);
 });
 
-test('Prism Princess is limited to one existing or queued unit',()=>{
+test('Prism unit is limited to one existing or queued unit',()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
@@ -619,13 +619,13 @@ test('Prism Princess is limited to one existing or queued unit',()=>{
   const result=vm.runInContext(`(() => {
     const temple={id:1,type:'base',side:'player',faction:'prism',x:0,y:0,queue:[]};
     S.entities=[temple];
-    executeCommand({type:'train_unit',buildingId:1,unitType:'princess',side:'player'});
+    executeCommand({type:'train_unit',buildingId:1,unitType:'prism',side:'player'});
     const afterFirst={gold:S.gold.player,light:S.oil.player,queued:temple.queue.length};
-    executeCommand({type:'train_unit',buildingId:1,unitType:'princess',side:'player'});
+    executeCommand({type:'train_unit',buildingId:1,unitType:'prism',side:'player'});
     const afterQueuedAttempt={gold:S.gold.player,light:S.oil.player,queued:temple.queue.length};
     temple.queue=[];
-    S.entities.push(makePrincess('player','prism',10,10));
-    executeCommand({type:'train_unit',buildingId:1,unitType:'princess',side:'player'});
+    S.entities.push(makePrism('player','prism',10,10));
+    executeCommand({type:'train_unit',buildingId:1,unitType:'prism',side:'player'});
     return {afterFirst,afterQueuedAttempt,afterExistingAttempt:{gold:S.gold.player,light:S.oil.player,queued:temple.queue.length}};
   })()`,context);
   assert.deepEqual({...result.afterFirst},{gold:800,light:925,queued:1});
@@ -633,7 +633,7 @@ test('Prism Princess is limited to one existing or queued unit',()=>{
   assert.deepEqual({...result.afterExistingAttempt},{gold:800,light:925,queued:0});
 });
 
-test('Prism Princess trains at the Temple rather than the Shrine',()=>{
+test('Prism unit trains at the Temple rather than the Shrine',()=>{
   const context=vm.createContext({});
   for(const file of ['factions.js','ui.js']){
     vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts',file),'utf8'),context);
@@ -648,7 +648,7 @@ test('Prism Princess trains at the Temple rather than the Shrine',()=>{
     };
   })()`,context);
 
-  assert.deepEqual([...locations.temple],['ACOLYTE','PRINCESS','ARKSHIP']);
+  assert.deepEqual([...locations.temple],['ACOLYTE','PRISM','ARKSHIP']);
   assert.deepEqual([...locations.shrine],['ORACLE','WIZARD']);
   assert.deepEqual([...locations.shadowTemple],['SHADE']);
 });
@@ -736,13 +736,13 @@ test('Prism Arkship is a unique flagship that starts in attacking mode with no c
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),factionContext);
   const presentation=vm.runInContext('({label:FACTION_CFG.prism.arkshipLabel,desc:FACTION_CFG.prism.arkshipDesc,gold:FACTION_CFG.prism.arkshipCost,light:FACTION_CFG.prism.arkshipOilCost})',factionContext);
   assert.equal(presentation.label,'ARKSHIP');
-  assert.match(presentation.desc,/Princess/);
+  assert.match(presentation.desc,/Prism/);
   assert.match(presentation.desc,/limit 1/);
   assert.equal(presentation.gold,150);
   assert.equal(presentation.light,60);
 });
 
-test('Arkship requires an existing Princess to build, consumes her on completion, and is limited to one',()=>{
+test('Arkship requires an existing Prism to build, consumes her on completion, and is limited to one',()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
@@ -760,12 +760,12 @@ test('Arkship requires an existing Princess to build, consumes her on completion
     const temple={id:1,type:'base',side:'player',faction:'prism',x:0,y:0,queue:[]};
     S.entities=[temple];
 
-    // No Princess yet — the Arkship can't be queued.
+    // No Prism yet — the Arkship can't be queued.
     executeCommand({type:'train_unit',buildingId:1,unitType:'arkship',side:'player'});
-    const withoutPrincess={gold:S.gold.player,queued:temple.queue.length};
+    const withoutPrism={gold:S.gold.player,queued:temple.queue.length};
 
-    const princess=makePrincess('player','prism',10,10);
-    S.entities.push(princess);
+    const prism=makePrism('player','prism',10,10);
+    S.entities.push(prism);
     executeCommand({type:'train_unit',buildingId:1,unitType:'arkship',side:'player'});
     const afterQueue={gold:S.gold.player,light:S.oil.player,queued:temple.queue.length};
 
@@ -773,24 +773,24 @@ test('Arkship requires an existing Princess to build, consumes her on completion
     executeCommand({type:'train_unit',buildingId:1,unitType:'arkship',side:'player'});
     const secondAttempt={gold:S.gold.player,queued:temple.queue.length};
 
-    // Completing the build removes the Princess and the Arkship appears
+    // Completing the build removes the Prism and the Arkship appears
     // where she stood.
     const ark=temple.queue[0].fn();
-    const princessGoneAfterBuild=!S.entities.includes(princess);
+    const prismGoneAfterBuild=!S.entities.includes(prism);
 
-    return {withoutPrincess,afterQueue,secondAttempt,princessGoneAfterBuild,ark:{subtype:ark.subtype,x:ark.x,y:ark.y}};
+    return {withoutPrism,afterQueue,secondAttempt,prismGoneAfterBuild,ark:{subtype:ark.subtype,x:ark.x,y:ark.y}};
   })()`,context);
 
   const arkshipCost=vm.runInContext('FACTION_CFG.prism.arkshipCost',context);
   const arkshipOil=vm.runInContext('FACTION_CFG.prism.arkshipOilCost',context);
-  assert.deepEqual({...result.withoutPrincess},{gold:1000,queued:0});
+  assert.deepEqual({...result.withoutPrism},{gold:1000,queued:0});
   assert.deepEqual({...result.afterQueue},{gold:1000-arkshipCost,light:1000-arkshipOil,queued:1});
   assert.deepEqual({...result.secondAttempt},{gold:1000-arkshipCost,queued:1});
-  assert.equal(result.princessGoneAfterBuild,true);
+  assert.equal(result.prismGoneAfterBuild,true);
   assert.deepEqual({...result.ark},{subtype:'arkship',x:60,y:10});
 });
 
-test('toggle_arkship_mode deploys the Princess with 5 Witches exactly once, and switching back keeps them on the field',()=>{
+test('toggle_arkship_mode deploys the Prism with 5 Witches exactly once, and switching back keeps them on the field',()=>{
   const context=makeContext();
   Object.assign(context,{
     S:{frame:0,entities:[],particles:[],gold:{player:0},oil:{player:0},playerFaction:'prism',enemyFaction:'shadow'},
@@ -819,8 +819,8 @@ test('toggle_arkship_mode deploys the Princess with 5 Witches exactly once, and 
 
   assert.equal(result.afterPhasing.mode,'phasing');
   assert.equal(result.afterPhasing.deployed,true);
-  assert.equal(result.afterPhasing.count,7); // arkship + princess + 5 witches
-  assert.deepEqual({...result.afterPhasing.subtypeCounts},{arkship:1,princess:1,witch:5});
+  assert.equal(result.afterPhasing.count,7); // arkship + prism + 5 witches
+  assert.deepEqual({...result.afterPhasing.subtypeCounts},{arkship:1,prism:1,witch:5});
 
   assert.equal(result.afterAttacking.mode,'attacking');
   assert.equal(result.afterAttacking.count,7);
