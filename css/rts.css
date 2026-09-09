@@ -229,7 +229,9 @@
   #dso-game { position:relative; user-select:none; }
   #rts-viewport-wrap {
     position:relative;
-    width:100%; max-width:1200px; height:580px;
+    width:100%; max-width:1200px;
+    height: min(580px, calc(52vh / var(--ui-zoom)));
+    min-height: 300px;
     overflow:hidden;
     border:1px solid rgba(0,245,255,0.2);
     box-shadow:0 0 30px rgba(0,245,255,0.06);
@@ -365,6 +367,13 @@
   }
 
   /* ── RTS RESPONSIVE ── */
+  @media (max-height: 850px) {
+    #dso-wrapper { min-height: 0; }
+    #rts-viewport-wrap { height: min(460px, calc(42vh / var(--ui-zoom))); min-height: 220px; }
+    .rts-hud { padding: 5px 10px; gap: 4px; }
+    .rts-hud-top { gap: 6px; }
+    .rbp-options { max-height: 84px; }
+  }
   @media (max-width: 900px) {
     .dso-title { font-size: 24px; letter-spacing: 4px; }
     .dso-pre { font-size: 9px; letter-spacing: 4px; }
@@ -374,7 +383,7 @@
     .rts-hud-left, .rts-hud-right { min-width: 120px; }
     #rts-minimap { width: 130px; height: 53px; }
     .rts-action-panel { flex-basis: 100%; order: -1; }
-    #rts-viewport-wrap { height: 50vw; min-height: 300px; max-height: min(580px, 70vh); }
+    #rts-viewport-wrap { height: 50vw; min-height: 300px; max-height: min(580px, calc(70vh / var(--ui-zoom))); }
     #rv-canvas { width: 100%; height: auto; }
     .reveal-champion { font-size: 24px; letter-spacing: 4px; }
     .mp-code { font-size: 18px; letter-spacing: 4px; }
@@ -395,18 +404,35 @@
     .reveal-btns { flex-direction: column; gap: 10px; }
     .mp-buttons { flex-direction: column; gap: 10px; }
     .mp-join-row { justify-content: center; }
-    #rts-viewport-wrap { height: 60vw; min-height: 250px; max-height: 70vh; }
+    #rts-viewport-wrap { height: 60vw; min-height: 250px; max-height: calc(70vh / var(--ui-zoom)); }
   }
   /* Landscape mobile: constrain to viewport height */
   @media (max-height: 500px) and (orientation: landscape) {
-    #rts-viewport-wrap { height: 62vh; min-height: unset; max-height: unset; }
-    .rts-hud { padding: 4px 10px; gap: 6px; }
-    .rts-faction-badge { font-size: 8px; padding: 2px 8px; }
-    .rts-resource { font-size: 10px; }
-    .rts-log-bar { padding: 3px 10px; font-size: 10px; min-height: 18px; }
-    #rts-minimap { width: 112px; height: 46px; }
-    .rts-action-panel { padding: 5px 8px 6px; }
-    .rbp-options { max-height: 64px; }
-    .rts-build-btn { padding: 4px 8px; font-size: 7px; }
-    .rts-build-icon { font-size: 13px; }
+    /* That min-height reserves room for the faction-select cards; once a
+       match is running it just pads the bottom of a too-short viewport. */
+    #dso-wrapper { min-height: 0; }
+    #rts-viewport-wrap { height: calc(48vh / var(--ui-zoom)); min-height: unset; max-height: unset; }
+    .rts-hud { padding: 3px 10px; gap: 3px; }
+    .rts-hud-top { gap: 4px; }
+    /* Flow the resource readouts in a row instead of stacking them —
+       landscape has width to spare, not height. */
+    .rts-hud-left, .rts-hud-right { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 2px 8px; min-width: 0; }
+    .rts-hud-right { justify-content: flex-end; }
+    /* Plenty of width in landscape — keep the bottom bar on one row instead
+       of the narrow-viewport stack, so it doesn't double its height. */
+    .rts-hud-bottom { gap: 6px; flex-wrap: nowrap; }
+    .rts-action-panel { flex-basis: 260px; order: 0; }
+    .rts-faction-badge { font-size: 8px; padding: 1px 6px; }
+    .rts-resource { font-size: 9px; }
+    .rts-log-bar { padding: 2px 10px; font-size: 9px; min-height: 14px; }
+    #rts-minimap { width: 90px; height: 37px; }
+    .rts-action-panel { padding: 3px 8px 4px; }
+    .rbp-header { margin-bottom: 3px; padding-bottom: 3px; }
+    .rbp-title { font-size: 9px; letter-spacing: 2px; }
+    .rbp-idle-hint { font-size: 9px; padding: 2px; }
+    .rbp-options { max-height: 40px; gap: 3px; }
+    .rbp-option { padding: 3px 6px; }
+    .rts-build-btn { padding: 3px 8px; font-size: 7px; }
+    .rts-build-icon { font-size: 12px; }
+    .rts-hud-army { min-width: 0; gap: 3px; }
   }

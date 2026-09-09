@@ -40,10 +40,18 @@
   }
 
   /* CANVAS */
+  .canvas-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
   #tdCanvas {
     display: block;
     width: 100%;
     height: auto;
+    max-height: min(calc(48vh / var(--ui-zoom)), 640px);
+    max-width: 100%;
+    margin: 0 auto;
     border: 1px solid var(--panel-border);
     box-shadow: 0 0 30px rgba(0,245,255,0.1), inset 0 0 60px rgba(0,0,0,0.5);
     background: #020810;
@@ -207,11 +215,23 @@
   }
 
   /* ── TD RESPONSIVE ── */
+  @media (max-height: 850px) {
+    #tdCanvas { max-height: min(calc(38vh / var(--ui-zoom)), 640px); }
+    .game-header { margin-bottom: 10px; }
+    .game-area { gap: 10px; }
+    .panel { padding: 10px 12px; }
+    .panel-title { margin-bottom: 6px; padding-bottom: 5px; }
+    .tower-grid { gap: 6px; }
+    .place-hint { margin-top: 6px; }
+    .wave-section { margin-top: 6px; }
+  }
   @media (max-width: 900px) {
     .sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .sidebar .panel:first-child { grid-column: 1 / -1; }
     .game-header { flex-direction: column; gap: 10px; }
     .game-stats { justify-content: center; }
+    .panel { padding: 10px 12px; }
+    .log-box { height: 80px; }
   }
   @media (max-width: 600px) {
     .game-stats { gap: 8px; flex-wrap: wrap; justify-content: center; }
@@ -219,13 +239,15 @@
     .stat-val { font-size: 14px; }
     .game-title { font-size: 16px; letter-spacing: 2px; }
     .tower-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
-    .sidebar { grid-template-columns: minmax(0, 1fr); }
+    .sidebar { grid-template-columns: minmax(0, 1fr); gap: 8px; }
     .sidebar .panel:first-child { grid-column: auto; }
+    .panel { padding: 10px 12px; }
+    .log-box { height: 70px; }
   }
   /* Landscape mobile: keep the canvas compact and its menus underneath. */
   @media (max-height: 500px) and (orientation: landscape) {
     .game-area { grid-template-columns: minmax(0, 1fr); }
-    #tdCanvas { max-height: 60vh; width: auto; max-width: 100%; margin: 0 auto; }
+    #tdCanvas { max-height: calc(38vh / var(--ui-zoom)); width: auto; max-width: 100%; margin: 0 auto; }
     .game-header { flex-direction: row; margin-bottom: 8px; }
     .game-header .game-title { font-size: 14px; }
     .stat-box { padding: 4px 10px; }
@@ -233,12 +255,16 @@
     .stat-label { font-size: 8px; }
     .sidebar { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; max-height: none; overflow: visible; }
     .sidebar .panel:first-child { grid-column: auto; }
-    .sidebar .panel { padding: 8px 10px; }
-    .panel-title { font-size: 9px; margin-bottom: 6px; padding-bottom: 4px; }
-    .tower-grid { grid-template-columns: 1fr 1fr; gap: 4px; }
-    .tower-btn { padding: 6px 4px; }
+    .sidebar .panel { padding: 5px 8px; }
+    .panel-title { font-size: 8px; margin-bottom: 3px; padding-bottom: 3px; }
+    .tower-grid { grid-template-columns: 1fr 1fr; gap: 3px; }
+    .tower-btn { padding: 3px 2px; }
+    .tower-preview { width: 24px; height: 24px; }
     .tower-icon { font-size: 16px; }
     .tower-name { font-size: 7px; }
-    .wave-btn { padding: 8px; font-size: 9px; }
-    .log-box { height: 60px; }
+    .tower-cost { font-size: 8px; }
+    .place-hint { display: none; }
+    .wave-btn { padding: 6px; font-size: 9px; }
+    .wave-section { margin-top: 4px; }
+    .log-box { height: 36px; }
   }
