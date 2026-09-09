@@ -16,6 +16,8 @@ const FACTION_CFG={
     structName:'SHRINE', structLabel:'SHRINE',
     princessLabel:'PRINCESS', princessDesc:'Unique royal summoner — conjures Legionnaires while engaging enemies (limit 1)',
     princessCost:200, princessOilCost:75, princessIcon:'👸',
+    arkshipLabel:'ARKSHIP', arkshipDesc:'Unique flagship of swirling metal fragments — requires an existing Princess, who is drawn inside; phase to deploy her with 5 Witches, or attack with twin beams (limit 1)',
+    arkshipCost:150, arkshipOilCost:60, arkshipIcon:'💫',
     eliteLabel:'ORACLE', eliteDesc:'Ranged — high damage prismatic bolts',
     eliteCost:30, eliteIcon:'🔮', eliteOilCost:20,
     elite2Label:'WIZARD', elite2Desc:'Ranged — chain lightning bounces between enemies',
