@@ -47,10 +47,10 @@
   }
   #tdCanvas {
     display: block;
-    width: 100%;
+    width: auto;
     height: auto;
-    max-height: min(calc(48vh / var(--ui-zoom)), 640px);
     max-width: 100%;
+    max-height: min(calc(48vh / var(--ui-zoom)), 640px);
     margin: 0 auto;
     border: 1px solid var(--panel-border);
     box-shadow: 0 0 30px rgba(0,245,255,0.1), inset 0 0 60px rgba(0,0,0,0.5);

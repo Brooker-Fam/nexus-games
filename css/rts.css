@@ -229,9 +229,14 @@
   #dso-game { position:relative; user-select:none; }
   #rts-viewport-wrap {
     position:relative;
-    width:100%; max-width:1200px;
-    height: min(580px, calc(52vh / var(--ui-zoom)));
-    min-height: 300px;
+    /* Height is never set directly — it's derived from width via
+       aspect-ratio, so the canvas can never be stretched off-ratio.
+       The height budget is expressed as an equivalent max-width instead
+       (target-height * 1200/580) so a vh-based cap still works. */
+    width:100%;
+    max-width: min(1200px, calc(52vh / var(--ui-zoom) * 1200 / 580));
+    aspect-ratio: 1200 / 580;
+    margin: 0 auto;
     overflow:hidden;
     border:1px solid rgba(0,245,255,0.2);
     box-shadow:0 0 30px rgba(0,245,255,0.06);
@@ -369,7 +374,7 @@
   /* ── RTS RESPONSIVE ── */
   @media (max-height: 850px) {
     #dso-wrapper { min-height: 0; }
-    #rts-viewport-wrap { height: min(460px, calc(42vh / var(--ui-zoom))); min-height: 220px; }
+    #rts-viewport-wrap { max-width: min(951.7px, calc(42vh / var(--ui-zoom) * 1200 / 580)); }
     .rts-hud { padding: 5px 10px; gap: 4px; }
     .rts-hud-top { gap: 6px; }
     .rbp-options { max-height: 84px; }
@@ -383,7 +388,7 @@
     .rts-hud-left, .rts-hud-right { min-width: 120px; }
     #rts-minimap { width: 130px; height: 53px; }
     .rts-action-panel { flex-basis: 100%; order: -1; }
-    #rts-viewport-wrap { height: 50vw; min-height: 300px; max-height: min(580px, calc(70vh / var(--ui-zoom))); }
+    #rts-viewport-wrap { max-width: min(1200px, calc(70vh / var(--ui-zoom) * 1200 / 580)); }
     #rv-canvas { width: 100%; height: auto; }
     .reveal-champion { font-size: 24px; letter-spacing: 4px; }
     .mp-code { font-size: 18px; letter-spacing: 4px; }
@@ -404,14 +409,14 @@
     .reveal-btns { flex-direction: column; gap: 10px; }
     .mp-buttons { flex-direction: column; gap: 10px; }
     .mp-join-row { justify-content: center; }
-    #rts-viewport-wrap { height: 60vw; min-height: 250px; max-height: calc(70vh / var(--ui-zoom)); }
+    #rts-viewport-wrap { max-width: calc(70vh / var(--ui-zoom) * 1200 / 580); }
   }
   /* Landscape mobile: constrain to viewport height */
   @media (max-height: 500px) and (orientation: landscape) {
     /* That min-height reserves room for the faction-select cards; once a
        match is running it just pads the bottom of a too-short viewport. */
     #dso-wrapper { min-height: 0; }
-    #rts-viewport-wrap { height: calc(48vh / var(--ui-zoom)); min-height: unset; max-height: unset; }
+    #rts-viewport-wrap { max-width: calc(48vh / var(--ui-zoom) * 1200 / 580); }
     .rts-hud { padding: 3px 10px; gap: 3px; }
     .rts-hud-top { gap: 4px; }
     /* Flow the resource readouts in a row instead of stacking them —
