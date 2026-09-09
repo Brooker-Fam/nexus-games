@@ -133,7 +133,7 @@ const BUILD_TIMES={
   destroyer:   1260, // 21s — Shadow 2nd air unit
   warbot:      780,  // 13s — Roboto 2nd barracks unit
   legionnairesquad: 1500, // 25s — Prism 2nd barracks unit, trains 4 at once
-  arkship:     1800, // 30s — Prism unique flagship, requires an existing Princess
+  arkship:     1800, // 30s — Prism unique flagship, requires an existing Prism unit
   research:    1500, // 25s — Research Lab military tech (unlocks Warbot/Tank/Warship)
 };
 const QUEUE_MAX = 5; // max units queued per building
@@ -311,9 +311,9 @@ function makeLightFighter(side, faction, nearX, nearY){
     frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };
 }
-// Arkship (Prism) — the Princess's unique flagship: not one solid hull but a
+// Arkship (Prism) — Prism's unique flagship: not one solid hull but a
 // swirling mass of metal fragments orbiting a bright core. Building one
-// requires an existing Princess and draws her inside (see the 'arkship'
+// requires an existing Prism unit and draws her inside (see the 'arkship'
 // train_unit handling in commands.js, which removes her on completion).
 // Phasing mode releases her again with an escort of 5 Witches; attacking
 // mode fires twin beams (see arkshipBeamAttackTick in game.js).
@@ -406,13 +406,13 @@ function makeElite(side, faction, nearX, nearY){
     forcedTarget:null, moveTarget:null,
   };
 }
-function makePrincess(side, faction, nearX, nearY){
-  const princess=makeElite(side,faction,nearX,nearY);
-  princess.subtype='princess';
+function makePrism(side, faction, nearX, nearY){
+  const prism=makeElite(side,faction,nearX,nearY);
+  prism.subtype='prism';
   // A longer cadence keeps each ten-unit summon meaningful.
-  princess.fireRate=180;
-  princess.summonsLegionnaires=true;
-  return princess;
+  prism.fireRate=180;
+  prism.summonsLegionnaires=true;
+  return prism;
 }
 function makeWizard(side, faction, nearX, nearY){
   const isPlayer=side==='player';

@@ -88,20 +88,20 @@ function executeCommand(cmd){
       if(building.side !== side) break; // can't train from enemy building
       if(building.infested) break; // infested Factories only auto-produce Infested GunBots
       const aerialFnMap = { makeStarFighter, makeSkyAttacker };
-      const costMap = { worker:cfg.workerCost, warrior:cfg.warriorCost, warrior2:cfg.warrior2Cost, princess:cfg.princessCost, arkship:cfg.arkshipCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost, aerial:cfg.aerialUnitCost, aerial2:cfg.aerial2Cost };
+      const costMap = { worker:cfg.workerCost, warrior:cfg.warriorCost, warrior2:cfg.warrior2Cost, prism:cfg.prismCost, arkship:cfg.arkshipCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost, aerial:cfg.aerialUnitCost, aerial2:cfg.aerial2Cost };
       const cost = costMap[cmd.unitType] || 0;
-      if(cmd.unitType==='princess' && faction==='prism'){
+      if(cmd.unitType==='prism' && faction==='prism'){
         if(building.type!=='base') break;
-        const princessExists=S.entities.some(e=>e.side===side && e.faction==='prism' && e.subtype==='princess');
-        const princessQueued=S.entities.some(e=>e.side===side && e.queue?.some(q=>q.unitType==='princess' || q.label===cfg.princessLabel));
-        if(princessExists || princessQueued) break;
+        const prismExists=S.entities.some(e=>e.side===side && e.faction==='prism' && e.subtype==='prism');
+        const prismQueued=S.entities.some(e=>e.side===side && e.queue?.some(q=>q.unitType==='prism' || q.label===cfg.prismLabel));
+        if(prismExists || prismQueued) break;
       }
       if(cmd.unitType==='arkship'){
         // The Arkship is unique to Prism, must be trained at the Temple, and
-        // requires an existing Princess — she's drawn inside when it completes.
+        // requires an existing Prism unit — she's drawn inside when it completes.
         if(faction!=='prism' || building.type!=='base') break;
-        const princessAvailable=S.entities.some(e=>e.side===side && e.faction==='prism' && e.subtype==='princess');
-        if(!princessAvailable) break;
+        const prismAvailable=S.entities.some(e=>e.side===side && e.faction==='prism' && e.subtype==='prism');
+        if(!prismAvailable) break;
         const arkshipExists=S.entities.some(e=>e.side===side && e.faction==='prism' && e.subtype==='arkship');
         const arkshipQueued=S.entities.some(e=>e.side===side && e.queue?.some(q=>q.unitType==='arkship' || q.label===cfg.arkshipLabel));
         if(arkshipExists || arkshipQueued) break;
@@ -111,7 +111,7 @@ function executeCommand(cmd){
       const oilCost = cmd.unitType==='elite2' ? (cfg.tankOilCost||cfg.elite2OilCost||0)
                     : cmd.unitType==='aerial'  ? (cfg.aerialOilCost||0)
                     : cmd.unitType==='aerial2' ? (cfg.aerial2OilCost||0)
-                    : cmd.unitType==='princess' ? (cfg.princessOilCost||0)
+                    : cmd.unitType==='prism' ? (cfg.prismOilCost||0)
                     : cmd.unitType==='arkship' ? (cfg.arkshipOilCost||0)
                     : cmd.unitType==='elite'   ? (cfg.eliteOilCost||0)
                     : cmd.unitType==='warrior2' ? (cfg.warrior2OilCost||0) : 0;
@@ -129,7 +129,7 @@ function executeCommand(cmd){
       }
 
       const aerial2TimeMap = { makeWarship:BUILD_TIMES.warship, makeLightFighter:BUILD_TIMES.lightfighter, makeDestroyer:BUILD_TIMES.destroyer };
-      const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, warrior2:warrior2TimeMap[cfg.warrior2Fn], princess:BUILD_TIMES.elite, arkship:BUILD_TIMES.arkship, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite2,
+      const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, warrior2:warrior2TimeMap[cfg.warrior2Fn], prism:BUILD_TIMES.elite, arkship:BUILD_TIMES.arkship, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite2,
         aerial:BUILD_TIMES[cfg.aerialFn==='makeSkyAttacker'?'skyattacker':'starfighter'],
         aerial2:aerial2TimeMap[cfg.aerial2Fn] };
       const time = timeMap[cmd.unitType] || BUILD_TIMES.worker;
@@ -138,18 +138,18 @@ function executeCommand(cmd){
         worker:  ()=>makeWorker(side, faction, building.x, building.y),
         warrior: ()=>makeWarrior(side, faction, building.x, building.y),
         warrior2:()=>warrior2FnMap[cfg.warrior2Fn](side, faction, building.x, building.y),
-        princess:()=>makePrincess(side, faction, building.x, building.y),
+        prism:()=>makePrism(side, faction, building.x, building.y),
         arkship: ()=>{
-          // "Takes" the Princess: she's removed from the field and the
+          // "Takes" the Prism unit: she's removed from the field and the
           // Arkship appears where she stood (falls back to the Temple if
           // she died mid-build).
-          const princess=S.entities.find(e=>e.side===side && e.faction==='prism' && e.subtype==='princess');
-          if(princess){
-            const idx=S.entities.indexOf(princess);
+          const prism=S.entities.find(e=>e.side===side && e.faction==='prism' && e.subtype==='prism');
+          if(prism){
+            const idx=S.entities.indexOf(prism);
             if(idx!==-1) S.entities.splice(idx,1);
           }
           const ark=makeArkship(side, faction, building.x, building.y);
-          if(princess){ ark.x=princess.x; ark.y=princess.y; }
+          if(prism){ ark.x=prism.x; ark.y=prism.y; }
           return ark;
         },
         elite:   ()=>makeElite(side, faction, building.x, building.y),
@@ -163,7 +163,7 @@ function executeCommand(cmd){
       const label = cmd.unitType==='worker' ? cfg.workerLabel
         : cmd.unitType==='warrior' ? cfg.warriorLabel
         : cmd.unitType==='warrior2' ? cfg.warrior2Label
-        : cmd.unitType==='princess' ? cfg.princessLabel
+        : cmd.unitType==='prism' ? cfg.prismLabel
         : cmd.unitType==='arkship' ? cfg.arkshipLabel
         : cmd.unitType==='elite' ? cfg.eliteLabel
         : cmd.unitType==='aerial' ? cfg.aerialUnitLabel
