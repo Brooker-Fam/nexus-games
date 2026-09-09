@@ -30,8 +30,6 @@ const AI_CONFIG = {
   aerialCost: STRUCT_COSTS.aerial.gold,
   aerialOilCost: STRUCT_COSTS.aerial.oil,
   oilRigCost: STRUCT_COSTS.oilrig.gold,
-  lingNestCost: STRUCT_COSTS.lingnest?.gold||0,
-  lingNestOilCost: STRUCT_COSTS.lingnest?.oil||0,
   researchLabCost: STRUCT_COSTS.researchlab?.gold||0,
   researchLabOilCost: STRUCT_COSTS.researchlab?.oil||0,
   councilLightCost: STRUCT_COSTS.councillight?.gold||0,
@@ -65,7 +63,7 @@ function unitCollisionRadius(e){
   if(e.type==='warrior'){
     if(e.subtype==='tank') return 18;
     if(e.subtype==='warbot'||e.subtype==='assaultbot'||e.subtype==='bloodhound') return 13;
-    if(e.subtype==='ling') return 8;
+    if(e.subtype==='vanthel') return 15;
     return 11;
   }
   return 0;
@@ -243,7 +241,7 @@ function aiTick(){
   const workers   = aiCount('worker');
   const warriors  = aiCount('warrior');
   const barracks  = aiCount('structure', e=>e.isBarracks);
-  const eliteStructs = aiCount('structure', e=>!e.isBarracks&&!e.isAerialHangar&&!e.isLingNest&&!e.isResearchLab&&!e.isCouncilOfLight&&!e.isCouncilOfDarkness);
+  const eliteStructs = aiCount('structure', e=>!e.isBarracks&&!e.isAerialHangar&&!e.isResearchLab&&!e.isCouncilOfLight&&!e.isCouncilOfDarkness);
   const aerialHangars = aiCount('structure', e=>e.isAerialHangar);
   const cannons   = aiCount('cannon');
   const idleWarriors = S.entities.filter(e=>e.side==='enemy'&&e.type==='warrior'&&e.state==='idle').length;
@@ -297,15 +295,6 @@ function aiTick(){
       const oilRigs=aiCount('structure',e=>e.isOilRig);
       if(oilRigs===0 && barracks>=1 && workers>=3){
         aiBuild('oilrig', eb.x-180, eb.y+200, AI_CONFIG.oilRigCost);
-      }
-    }
-
-    // Build a Ling Nest once a barracks exists — it then passively trickles
-    // free Lings with no further AI upkeep.
-    if(eCfg2.lingNestLabel){
-      const lingNests=aiCount('structure',e=>e.isLingNest);
-      if(lingNests===0 && barracks>=1 && workers>=3){
-        aiBuild('lingnest', eb.x-160, eb.y-200, AI_CONFIG.lingNestCost, AI_CONFIG.lingNestOilCost);
       }
     }
 
@@ -376,7 +365,7 @@ function aiTick(){
     }
 
     // Train elites (and elite2/tanks for Roboto)
-    const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.isOilRig&&!e.isLingNest&&!e.isResearchLab&&!e.isCouncilOfLight&&!e.isCouncilOfDarkness&&!e.underConstruction);
+    const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.isOilRig&&!e.isResearchLab&&!e.isCouncilOfLight&&!e.isCouncilOfDarkness&&!e.underConstruction);
     const eCfg3=FACTION_CFG[S.enemyFaction];
     if(S.enemyFaction==='prism'){
       const prismExists=S.entities.some(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='prism');
@@ -403,6 +392,18 @@ function aiTick(){
         },eCfg3.arkshipCost,'arkship')){
           S.oil.enemy=Math.max(0,(S.oil.enemy||0)-arkshipOil);
         }
+      }
+    }
+    if(S.enemyFaction==='shadow'){
+      const shipOrVanthelAlive=S.entities.some(e=>e.side==='enemy' && (e.subtype==='darkwarriorship'||e.subtype==='vanthel'));
+      const shipGoldNeeded=eCfg3.darkShipGoldCost||0;
+      const shipOilNeeded=eCfg3.darkShipOilCost||0;
+      if(!shipOrVanthelAlive && (eb.darkShipCooldown||0)<=S.frame
+        && S.gold.enemy>=shipGoldNeeded && (S.oil.enemy||0)>=shipOilNeeded){
+        S.gold.enemy-=shipGoldNeeded;
+        S.oil.enemy=Math.max(0,(S.oil.enemy||0)-shipOilNeeded);
+        eb.darkShipCooldown=S.frame+3600;
+        S.entities.push(makeDarkWarriorShip('enemy', 'shadow', eb.x-160, eb.y));
       }
     }
     if(eliteStruct){
@@ -522,6 +523,10 @@ function rtsTick(){
         if(e.side==='player') rtsSetLog('Necromancer raised a Swordsman from the dead!');
       }
     }
+    // Dark Warrior's Ship — releases Vanthel once no enemies are within
+    // sight. While it sees an enemy, it must burn them down with its
+    // (Destroyer-class but stronger) attack before it can deploy him.
+    if(e.type==='warrior' && e.subtype==='darkwarriorship') tryDeployVanthel(e, playerBase, enemyBase);
   }
 
   resolveUnitCollisions();
@@ -635,7 +640,7 @@ function workerBuild(w){
   if(moveToward(w, w.buildTarget.x, w.buildTarget.y, BUILD_ARRIVE_DIST)) {
     const bt=w.buildTarget.buildType||'structure';
     if(!w.buildTarget.ghost){
-      const makers={cannon:makeCannon, barracks:makeBarracks, base:makeBase, aerial:makeAerialBuilding, oilrig:makeOilRig, lingnest:makeLingNest, researchlab:makeResearchLab, councillight:makeCouncilOfLight, councildark:makeCouncilOfDarkness};
+      const makers={cannon:makeCannon, barracks:makeBarracks, base:makeBase, aerial:makeAerialBuilding, oilrig:makeOilRig, researchlab:makeResearchLab, councillight:makeCouncilOfLight, councildark:makeCouncilOfDarkness};
       const ghost=(makers[bt]||makeStructure)(w.side, w.faction, w.buildTarget.x, w.buildTarget.y);
       S.entities.push(ghost);
       w.buildTarget.ghost=ghost;
@@ -651,7 +656,7 @@ function workerBuild(w){
       ghost.hp=ghost.maxHp;
       sfx('rtsBuildDone');
       if(w.side==='player'){
-        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:bt==='aerial'?FACTION_CFG[w.faction].aerialLabel:bt==='oilrig'?(FACTION_CFG[w.faction].oilRigLabel||'OIL RIG'):bt==='lingnest'?(FACTION_CFG[w.faction].lingNestLabel||'LING NEST'):bt==='researchlab'?(FACTION_CFG[w.faction].researchLabLabel||'RESEARCH LAB'):bt==='councillight'?(FACTION_CFG[w.faction].councilOfLightLabel||'COUNCIL OF LIGHT'):bt==='councildark'?(FACTION_CFG[w.faction].councilOfDarknessLabel||'COUNCIL OF DARKNESS'):FACTION_CFG[w.faction].structLabel;
+        const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:bt==='aerial'?FACTION_CFG[w.faction].aerialLabel:bt==='oilrig'?(FACTION_CFG[w.faction].oilRigLabel||'OIL RIG'):bt==='researchlab'?(FACTION_CFG[w.faction].researchLabLabel||'RESEARCH LAB'):bt==='councillight'?(FACTION_CFG[w.faction].councilOfLightLabel||'COUNCIL OF LIGHT'):bt==='councildark'?(FACTION_CFG[w.faction].councilOfDarknessLabel||'COUNCIL OF DARKNESS'):FACTION_CFG[w.faction].structLabel;
         rtsSetLog(`${lbl} complete!`);
       }
       w.state='idle'; w.buildTarget=null; w.hammerSwing=0; w.buildTimer=0;
@@ -795,7 +800,6 @@ function cannonTick(c){
 function buildingTick(b){
   if(b.underConstruction) return; // can't train while being built
   if(b.infested) ensureInfestedProduction(b);
-  if(b.isLingNest) ensureLingNestProduction(b);
   if(!b.queue || b.queue.length===0) return;
   b.trainTimer=(b.trainTimer||0)+1;
   const item=b.queue[0];
@@ -811,7 +815,6 @@ function buildingTick(b){
       rtsSetLog(spawned.length>1 ? `${item.label} squad ready! (×${spawned.length})` : `${item.label} ready!`);
     }
     if(b.infested) ensureInfestedProduction(b);
-    if(b.isLingNest) ensureLingNestProduction(b);
   }
 }
 
@@ -821,14 +824,6 @@ function ensureInfestedProduction(factory){
   if(factory.queue.length>0) return false;
   return queueUnit(factory, 'INFESTED GUNBOT', BUILD_TIMES.infestedGunbot,
     ()=>makeInfestedGunbot(factory.side, factory.x, factory.y), 'infestedGunbot');
-}
-
-function ensureLingNestProduction(nest){
-  if(!nest?.isLingNest || nest.underConstruction) return false;
-  if(!nest.queue) nest.queue=[];
-  if(nest.queue.length>0) return false;
-  return queueUnit(nest, 'LING', BUILD_TIMES.ling,
-    ()=>makeLing(nest.side, nest.x, nest.y), 'ling');
 }
 
 function queueUnit(building, label, time, fn, unitType){
@@ -844,8 +839,8 @@ const MELEE_ATTACK_TICKS = 45;
 // Returns true if this attacker can hit aerial units.
 // Allowed: gunbot (roboto warrior), warbot, shockbot, dark warrior (shadow elite),
 //          witch (prism warrior), Prism (prism-faction elite), wizard, starfighter, skyattacker,
-//          bow-mode legionnaire, bow-mode bloodhound.
-// Blocked: workers, swordsman (shadow melee warrior), sword-mode legionnaire, necromancer, tank, ling.
+//          bow-mode legionnaire, bow-mode bloodhound, dark warrior's ship.
+// Blocked: workers, swordsman (shadow melee warrior), sword-mode legionnaire, necromancer, tank, vanthel.
 function canTargetAerial(w){
   if(w.type==='cannon') return true;
   if(w.type!=='warrior') return false;
@@ -854,7 +849,7 @@ function canTargetAerial(w){
   if(w.subtype==='bloodhound') return w.bowMode===true; // bow mode can hit aerial
   if(w.subtype==='necromancer') return false;
   if(w.subtype==='tank') return false;
-  if(w.subtype==='ling') return false; // ground-only melee creature
+  if(w.subtype==='vanthel') return false; // ground-only melee warrior
   return true;
 }
 
@@ -1174,6 +1169,30 @@ function warriorTick(w, playerBase, enemyBase){
 // retaliate even against an attacker outside its normal aggro range.
 const RETALIATE_WINDOW = 180;
 
+// How far a Dark Warrior's Ship "sees" — while any enemy is within this
+// radius it keeps fighting and won't release Vanthel.
+const DARK_SHIP_SIGHT_RANGE = 320;
+
+// Releases Vanthel from a Dark Warrior's Ship once it's clear of enemies.
+// Returns the newly spawned Vanthel, or null if the ship is still carrying
+// him (already deployed, or an enemy is still within DARK_SHIP_SIGHT_RANGE).
+function tryDeployVanthel(ship, playerBase, enemyBase){
+  if(!ship.carryingVanthel) return null;
+  const enemySide=ship.side==='player'?'enemy':'player';
+  const seesEnemy=S.entities.some(o=>
+    o.side===enemySide && o!==playerBase && o!==enemyBase && o.hp>0
+    && _dist(o.x-ship.x,o.y-ship.y)<=DARK_SHIP_SIGHT_RANGE
+  );
+  if(seesEnemy) return null;
+  ship.carryingVanthel=false;
+  const spawnOffset=ship.side==='player'?-40:40;
+  const vanthel=makeVanthel(ship.side, ship.x+spawnOffset, ship.y+(rtsRand()-0.5)*40);
+  S.entities.push(vanthel);
+  spawnMagicBurst(vanthel.x, vanthel.y, '#aa00ff');
+  if(ship.side==='player') rtsSetLog("Vanthel has been deployed from the Dark Warrior's Ship!");
+  return vanthel;
+}
+
 // ── COMBAT CONSTANTS ──
 const COMBAT = {
   tankAoeRadius: 80,
@@ -1183,6 +1202,8 @@ const COMBAT = {
   chainLightningBounces: 2,
   darkOrbAoeRadius: 90,
   darkOrbDamageFactor: 0.55,
+  darkShipOrbAoeRadius: 110,
+  darkShipOrbDamageFactor: 0.65,
 };
 
 // ── PROJECTILES ──
@@ -1195,6 +1216,8 @@ const PROJECTILE_TYPES = {
   warship:      { type:'bullet',  color:'#ffcc44', speed:12, sound:'rtsBullet' },
   destroyer:    { type:'darkorb', color:'#5500aa', speed:2.5, sound:'rtsDarkOrb',
                   aoeRadius:COMBAT.darkOrbAoeRadius, aoeFactor:COMBAT.darkOrbDamageFactor },
+  darkwarriorship: { type:'darkorb', color:'#aa00ff', speed:2.7, sound:'rtsDarkOrb',
+                  aoeRadius:COMBAT.darkShipOrbAoeRadius, aoeFactor:COMBAT.darkShipOrbDamageFactor },
   // elite per-faction
   'elite.roboto': { type:'lightning',  color:'#44ffff', speed:11, sound:'rtsLightning' },
   'elite.shadow': { type:'darkmagic',  color:'#220044', speed:4,  sound:'rtsDarkMagic' },

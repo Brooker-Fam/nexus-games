@@ -9,7 +9,7 @@ function drawRTSWarrior(rc,w){
   if(w.aerial){
     // Aerial units rotate to face their target.
     // Hover bob is applied in screen-space (before rotation) so it always moves up/down.
-    const isHeavyAerial = w.subtype==='skyattacker'||w.subtype==='warship'||w.subtype==='destroyer'||w.subtype==='arkship';
+    const isHeavyAerial = w.subtype==='skyattacker'||w.subtype==='warship'||w.subtype==='destroyer'||w.subtype==='darkwarriorship'||w.subtype==='arkship';
     const hover = isHeavyAerial ? Math.sin(w.frame*0.1)*2.5 : Math.sin(w.frame*0.12)*3;
     // Ground shadow — drawn before rotation so it stays flat below the unit.
     rc.fillStyle='rgba(0,0,0,0.18)';
@@ -37,6 +37,8 @@ function drawRTSWarrior(rc,w){
     drawLightFighterUnit(rc,cfg,w);
   } else if(w.subtype==='destroyer'){
     drawDestroyerUnit(rc,cfg,w);
+  } else if(w.subtype==='darkwarriorship'){
+    drawDarkWarriorShip(rc,cfg,w);
   } else if(w.subtype==='arkship'){
     drawArkshipUnit(rc,cfg,w);
   } else if(w.subtype==='warbot'){
@@ -49,8 +51,8 @@ function drawRTSWarrior(rc,w){
     rc.beginPath(); rc.arc(-7,-13,3,0,Math.PI*2); rc.fill();
     rc.beginPath(); rc.arc(5,-23,2,0,Math.PI*2); rc.fill();
     rc.restore();
-  } else if(w.subtype==='ling'){
-    drawLing(rc,w);
+  } else if(w.subtype==='vanthel'){
+    drawVanthel(rc,cfg,w);
   } else if(w.subtype==='legionnaire'){
     drawLegionnaire(rc,cfg,w);
   } else if(w.subtype==='prism'){
@@ -83,35 +85,58 @@ function drawRTSWarrior(rc,w){
   if(w.hp<w.maxHp) drawHealthBar(rc, w.x, w.y-26, 20, 3, w.hp, w.maxHp);
 }
 
-// Dog-like infested anatomy: airborne wings and antennae frame a low body,
-// while the oversized third claw-arm is visibly held clear of the ground.
-function drawLing(rc,w){
-  const t=w.frame;
-  const stride=w.state==='march'?Math.sin(t*.42)*5:Math.sin(t*.12);
-  rc.save();
-  rc.shadowColor='#71ff4e'; rc.shadowBlur=15;
-  // wings
-  rc.fillStyle='rgba(174,112,255,.48)'; rc.strokeStyle='#cf91ff'; rc.lineWidth=1.2;
-  for(const sy of [-1,1]){
-    rc.beginPath(); rc.moveTo(-5,-15); rc.quadraticCurveTo(-19,-31+sy*stride,-27,-17+sy*3); rc.quadraticCurveTo(-14,-12,-3,-8); rc.fill(); rc.stroke();
+// Vanthel — towering dark-warrior hero, wreathed in void flame and wielding
+// a greatsword far larger than any elite's weapon.
+function drawVanthel(rc,cfg,w){
+  const t=w.frame, isAtt=w.state==='attack', isMarching=w.state==='march';
+  // heavy striding legs
+  for(const [lx,ph] of [[-6,0],[5,Math.PI]]){
+    const step=isMarching?Math.sin(t*0.22+ph)*6:0;
+    rc.strokeStyle='#0a0014'; rc.lineWidth=6; rc.lineCap='round';
+    rc.beginPath(); rc.moveTo(lx,4); rc.lineTo(lx+step,20); rc.stroke();
   }
-  // four running legs
-  rc.strokeStyle='#36134d'; rc.lineWidth=4; rc.lineCap='round';
-  for(const lx of [-12,-4,6,14]){ rc.beginPath(); rc.moveTo(lx,-2); rc.lineTo(lx+stride*(lx%3?1:-1),13); rc.stroke(); }
-  // dog-like body and muzzle
-  const body=rc.createLinearGradient(-18,-16,20,5); body.addColorStop(0,'#7d28a8'); body.addColorStop(1,'#2d7b35');
-  rc.fillStyle=body; rc.beginPath(); rc.ellipse(0,-8,21,11,0,0,Math.PI*2); rc.fill();
-  rc.beginPath(); rc.ellipse(19,-13,10,8,-.2,0,Math.PI*2); rc.fill();
-  rc.fillStyle='#15101b'; rc.beginPath(); rc.ellipse(28,-12,5,3,0,0,Math.PI*2); rc.fill();
-  rc.fillStyle='#b7ff62'; rc.beginPath(); rc.arc(21,-16,2,0,Math.PI*2); rc.fill();
-  // antennae
-  rc.strokeStyle='#8cff68'; rc.lineWidth=1.5;
-  for(const ay of [-1,1]){ rc.beginPath(); rc.moveTo(18,-20); rc.quadraticCurveTo(22,-32,31,-29+ay*5); rc.stroke(); }
-  // extra raised arm and its exceptionally long nails (never touches the ground)
-  rc.strokeStyle='#5b236f'; rc.lineWidth=6; rc.beginPath(); rc.moveTo(3,-10); rc.quadraticCurveTo(13,-27,24,-24); rc.stroke();
-  rc.strokeStyle='#d9ff9a'; rc.lineWidth=1.7;
-  for(let i=0;i<3;i++){ rc.beginPath(); rc.moveTo(23,-27+i*3); rc.lineTo(42,-35+i*5); rc.stroke(); }
+  // armored torso — larger and darker than the Dark Warrior elite's robe
+  const bGrad=rc.createLinearGradient(-14,-32,14,10);
+  bGrad.addColorStop(0,'#1a0028'); bGrad.addColorStop(0.5,'#3a0a55'); bGrad.addColorStop(1,'#050008');
+  rc.fillStyle=bGrad;
+  rc.beginPath(); rc.moveTo(-13,-30); rc.lineTo(-15,10); rc.lineTo(15,10); rc.lineTo(13,-30); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(180,60,255,0.6)'; rc.lineWidth=1.2; rc.stroke();
+  // cracked void veins across the armor
+  rc.strokeStyle=`rgba(200,80,255,${0.35+Math.sin(t*0.08)*0.2})`; rc.lineWidth=1;
+  for(const fx of [-8,0,8]){ rc.beginPath(); rc.moveTo(fx,-24); rc.bezierCurveTo(fx-4,-10,fx+4,0,fx,10); rc.stroke(); }
+  // trailing void cape
+  const capeTrail=isMarching?7:2;
+  rc.fillStyle='rgba(10,0,20,0.75)';
+  rc.beginPath(); rc.moveTo(-11,-26); rc.lineTo(-14-capeTrail,6); rc.lineTo(-4,10); rc.lineTo(-6,-20); rc.closePath(); rc.fill();
+  // massive greatsword — held low when idle, raised high mid-swing
+  rc.save();
+  rc.translate(16,-10);
+  rc.rotate(isAtt?-0.9+Math.sin(t*0.35)*0.6:-0.25);
+  const swordGrad=rc.createLinearGradient(0,-46,0,6);
+  swordGrad.addColorStop(0,'#e8d0ff'); swordGrad.addColorStop(0.5,'#6a1acc'); swordGrad.addColorStop(1,'#1a0030');
+  rc.fillStyle=swordGrad; rc.shadowColor='#aa00ff'; rc.shadowBlur=isAtt?26:14;
+  rc.beginPath(); rc.moveTo(-3,6); rc.lineTo(-4,-40); rc.lineTo(0,-50); rc.lineTo(4,-40); rc.lineTo(3,6); rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(230,190,255,0.7)'; rc.lineWidth=1; rc.stroke();
+  rc.fillStyle='#160020'; rc.beginPath(); rc.roundRect(-6,6,12,5,2); rc.fill();
   rc.restore();
+  // broad-horned helm
+  rc.fillStyle='#0a0012'; rc.shadowColor='#aa00ff'; rc.shadowBlur=18;
+  rc.beginPath(); rc.ellipse(0,-38,10,11,0,0,Math.PI*2); rc.fill();
+  rc.beginPath();
+  rc.moveTo(-9,-46); rc.lineTo(-16,-58); rc.lineTo(-6,-48);
+  rc.moveTo(9,-46); rc.lineTo(16,-58); rc.lineTo(6,-48);
+  rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(180,60,255,0.6)'; rc.lineWidth=1; rc.stroke();
+  // burning eyes, brighter than the elite Dark Warrior's
+  for(const ex of [-4,4]){
+    const eg=rc.createRadialGradient(ex,-38,0,ex,-38,isAtt?6.5:4.5);
+    eg.addColorStop(0,'#ffccff'); eg.addColorStop(0.4,'#cc00ff'); eg.addColorStop(1,'transparent');
+    rc.fillStyle=eg; rc.beginPath(); rc.arc(ex,-38,isAtt?6.5:4.5,0,Math.PI*2); rc.fill();
+  }
+  // roiling void aura — noticeably larger than any elite's
+  rc.shadowBlur=0;
+  rc.strokeStyle=`rgba(120,0,220,${0.2+Math.sin(t*0.05)*0.12})`; rc.lineWidth=5;
+  rc.beginPath(); rc.ellipse(0,-14,38,50,0,0,Math.PI*2); rc.stroke();
 }
 
 function drawWarriorPrism(rc,cfg,w){

@@ -66,7 +66,6 @@ const STRUCT_COSTS = {
   cannon:    { gold:35,  oil:0  },
   barracks:  { gold:55,  oil:0  },
   oilrig:    { gold:45,  oil:0  },
-  lingnest:  { gold:90,  oil:30 },
   researchlab: { gold:65, oil:20 },
   councillight: { gold:65, oil:20 },
   councildark: { gold:65, oil:20 },
@@ -138,18 +137,19 @@ function openBuildPopup(screenX, screenY, context){
           u.oilCost);
       }
       if(myFaction()==='shadow'){
-        const cooldown=Math.max(0,(sel?.lingCallCooldown||0)-S.frame);
-        const goldCost=cfg.lingCallGoldCost||0;
-        const essenceCost=cfg.lingCallOilCost||0;
-        const lingCount=cfg.lingCallCount||12;
-        addOpt('☄', 'CALL DOWN ALLIED INFESTED', cooldown>0
+        const cooldown=Math.max(0,(sel?.darkShipCooldown||0)-S.frame);
+        const goldCost=cfg.darkShipGoldCost||0;
+        const essenceCost=cfg.darkShipOilCost||0;
+        const shipOrVanthelAlive=S.entities.some(e=>e.side===mySide() && (e.subtype==='darkwarriorship'||e.subtype==='vanthel'));
+        addOpt('🛸', "DEPLOY DARK WARRIOR'S SHIP", cooldown>0
           ? `Temple is recovering — ${Math.ceil(cooldown/60)}s`
-          : `Choose a location to call down ${lingCount} allied Lings`, goldCost, ()=>{
-          S.callDownLingMode={templeId:sel?sel.id:S.buildingSource?.id};
-          rtsSetLog('Choose a location to call down allied infested Lings.');
+          : shipOrVanthelAlive ? 'Vanthel is already on the battlefield'
+          : "Choose a location to deploy the Dark Warrior's Ship, carrying Vanthel", goldCost, ()=>{
+          S.deployDarkShipMode={templeId:sel?sel.id:S.buildingSource?.id};
+          rtsSetLog("Choose a location to deploy the Dark Warrior's Ship.");
           closeBuildPopup();
           rtsUpdateViewportCursor();
-        }, !!sel?.underConstruction||cooldown>0||myGold()<goldCost||myOil()<essenceCost, essenceCost);
+        }, !!sel?.underConstruction||cooldown>0||shipOrVanthelAlive||myGold()<goldCost||myOil()<essenceCost, essenceCost);
       }
       if(myFaction()==='roboto'){
         addOpt('☣', 'INFEST FACTORY', 'Permanent — continuously produces free Infested GunBots and can no longer make Drones', 0, ()=>{
@@ -194,7 +194,7 @@ function openBuildPopup(screenX, screenY, context){
     // completed barracks (portal/barracks/training field) first, and the aerial
     // hangar needs a completed elite structure first.
     const hasBarracks = S.entities.some(e=>e.side===mySide() && e.type==='structure' && e.isBarracks && !e.underConstruction);
-    const hasEliteStruct = S.entities.some(e=>e.side===mySide() && e.type==='structure' && !e.isBarracks && !e.isAerialHangar && !e.isOilRig && !e.isLingNest && !e.isResearchLab && !e.isCouncilOfLight && !e.isCouncilOfDarkness && !e.underConstruction);
+    const hasEliteStruct = S.entities.some(e=>e.side===mySide() && e.type==='structure' && !e.isBarracks && !e.isAerialHangar && !e.isOilRig && !e.isResearchLab && !e.isCouncilOfLight && !e.isCouncilOfDarkness && !e.underConstruction);
     addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Click to place — trains ${cfg.warriorLabel}s (${bc.gold}g)`, bc.gold, ()=>{
       S.buildStructureMode='barracks'; _buildModeCost=bc.gold; _buildModeOilCost=bc.oil;
       rtsSetLog(`Click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
@@ -222,13 +222,6 @@ function openBuildPopup(screenX, screenY, context){
         S.buildStructureMode='oilrig'; _buildModeCost=oc.gold; _buildModeOilCost=oc.oil;
         rtsSetLog(`Click to place your ${cfg.oilRigLabel}!`); closeBuildPopup();
       }, myGold()<oc.gold||myOil()<oc.oil, oc.oil);
-    }
-    if(cfg.lingNestLabel){
-      const lc=STRUCT_COSTS.lingnest;
-      addOpt(cfg.lingNestIcon, `Build ${cfg.lingNestLabel}`, `Click to place — ${(cfg.lingNestDesc||'passively spawns free Lings').toLowerCase()} (${lc.gold}g +${lc.oil}${oilName})`, lc.gold, ()=>{
-        S.buildStructureMode='lingnest'; _buildModeCost=lc.gold; _buildModeOilCost=lc.oil;
-        rtsSetLog(`Click to place your ${cfg.lingNestLabel}!`); closeBuildPopup();
-      }, myGold()<lc.gold||myOil()<lc.oil, lc.oil);
     }
     if(cfg.researchLabLabel){
       const rl=STRUCT_COSTS.researchlab;
@@ -474,10 +467,10 @@ function rtsHandleClick(e){
   const sp=canvasPos(e);
   const wp=screenToWorld(sp.x, sp.y);
   if(e.target.closest && e.target.closest('#rts-build-popup')) return;
-  if(S.callDownLingMode){
-    issueCommand({type:'call_down_lings',buildingId:S.callDownLingMode.templeId,x:wp.x,y:wp.y});
-    S.callDownLingMode=false;
-    rtsSetLog('Allied infested Lings are incoming!');
+  if(S.deployDarkShipMode){
+    issueCommand({type:'deploy_dark_ship',buildingId:S.deployDarkShipMode.templeId,x:wp.x,y:wp.y});
+    S.deployDarkShipMode=false;
+    rtsSetLog("The Dark Warrior's Ship is incoming!");
     rtsUpdateViewportCursor();
     return;
   }
@@ -513,7 +506,7 @@ function rtsHandleClick(e){
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, oilCost:_buildModeOilCost, buildType:'base' });
     } else {
       issueCommand({ type:'build_structure', workerId, x:wp.x, y:wp.y, cost:_buildModeCost, oilCost:_buildModeOilCost, buildType:
-        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':S.buildStructureMode==='oilrig'?'oilrig':S.buildStructureMode==='lingnest'?'lingnest':S.buildStructureMode==='researchlab'?'researchlab':S.buildStructureMode==='councillight'?'councillight':S.buildStructureMode==='councildark'?'councildark':'structure' });
+        S.buildStructureMode==='cannon'?'cannon':S.buildStructureMode==='barracks'?'barracks':S.buildStructureMode==='aerial'?'aerial':S.buildStructureMode==='oilrig'?'oilrig':S.buildStructureMode==='researchlab'?'researchlab':S.buildStructureMode==='councillight'?'councillight':S.buildStructureMode==='councildark'?'councildark':'structure' });
     }
     S.buildStructureMode=false;
     S.particles.push({x:wp.x,y:wp.y,vx:0,vy:0,life:25,maxLife:25,color:'#ffdd00',size:0,isRing:true,radius:4});
@@ -568,16 +561,6 @@ function rtsHandleClick(e){
         const rigCfg2=FACTION_CFG[S.playerFaction||'prism'];
         const resName=(rigCfg2.oilResourceName||'oil').toLowerCase();
         rtsSetLog(`${rigCfg2.oilRigLabel||'OIL RIG'} — ${resName}: ${hit.oil||0}/${hit.maxOil||200}  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
-      }
-    } else if(hit.type==='structure' && hit.isLingNest){
-      const nestLabel=cfg.lingNestLabel||'LING NEST';
-      if(hit.underConstruction){
-        const pct=Math.floor((hit.buildProgress/hit.buildTime)*100);
-        rtsSetLog(`${nestLabel} — under construction ${pct}%`);
-      } else {
-        const item=hit.queue?.[0];
-        const nextLing=item ? `  Next Ling: ${trainingProgress(hit.trainTimer,item.time).seconds}s` : '';
-        rtsSetLog(`${nestLabel} — HP: ${Math.floor(hit.hp)}/${hit.maxHp}${nextLing}`);
       }
     } else if(hit.type==='structure' && hit.isResearchLab){
       const labLabel=cfg.researchLabLabel||'RESEARCH LAB';
@@ -643,6 +626,11 @@ function rtsHandleClick(e){
     } else if(hit.type==='warrior' && hit.subtype==='psionic'){
       openBuildPopup(sx,sy,'psionic');
       rtsSetLog(`PSIONIC WARRIOR — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
+    } else if(hit.type==='warrior' && hit.subtype==='darkwarriorship'){
+      const status=hit.carryingVanthel ? 'Carrying Vanthel — will deploy him once clear of enemies' : 'Vanthel deployed';
+      rtsSetLog(`DARK WARRIOR'S SHIP — HP: ${Math.floor(hit.hp)}/${hit.maxHp}  ${status}`);
+    } else if(hit.type==='warrior' && hit.subtype==='vanthel'){
+      rtsSetLog(`VANTHEL — HP: ${Math.floor(hit.hp)}/${hit.maxHp}  A legendary dark warrior`);
     } else if(hit.type==='warrior'){
       const UNIT_LABELS={prism:'prismLabel',arkship:'arkshipLabel',elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label',warbot:'warrior2Label'};
       const lbl=cfg[UNIT_LABELS[hit.subtype]]||cfg.warriorLabel;

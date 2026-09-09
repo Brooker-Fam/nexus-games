@@ -584,46 +584,6 @@ function drawRTSStructure(rc, s){
     }
   }
 
-  if(s.structType==='lingnest'){
-    // ── LING NEST (Shadow) ── mound of clutched, glowing eggs
-    const t=S.frame*0.05;
-    // ground shadow
-    rc.fillStyle='rgba(80,0,150,0.12)';
-    rc.beginPath(); rc.ellipse(x,y+22,32,9,0,0,Math.PI*2); rc.fill();
-    // fleshy mound
-    const moundGrad=rc.createRadialGradient(x,y+4,4,x,y+4,26);
-    moundGrad.addColorStop(0,'#3a1050'); moundGrad.addColorStop(0.6,'#220a30'); moundGrad.addColorStop(1,'#0a0212');
-    rc.fillStyle=moundGrad;
-    rc.beginPath(); rc.ellipse(x,y+10,28,16,0,0,Math.PI*2); rc.fill();
-    rc.strokeStyle='rgba(150,60,255,0.4)'; rc.lineWidth=1; rc.stroke();
-    // membrane veins across the mound
-    rc.strokeStyle='rgba(150,60,255,0.3)'; rc.lineWidth=0.8;
-    for(const vx of [-16,0,16]){
-      rc.beginPath(); rc.moveTo(x+vx,y+22); rc.quadraticCurveTo(x+vx*0.6,y+8,x,y+2); rc.stroke();
-    }
-    // clutch of pulsing eggs
-    const eggs=[[-14,-4],[0,-12],[14,-4],[-6,-14],[7,-15]];
-    eggs.forEach(([ex,ey],i)=>{
-      const pulse=0.55+Math.sin(t*2+i*1.3)*0.35;
-      const eg=rc.createRadialGradient(x+ex,y+ey,0,x+ex,y+ey,7);
-      eg.addColorStop(0,`rgba(220,150,255,${pulse})`); eg.addColorStop(0.55,'rgba(140,30,220,0.8)'); eg.addColorStop(1,'transparent');
-      rc.fillStyle=eg; rc.shadowColor='#aa00ff'; rc.shadowBlur=10;
-      rc.beginPath(); rc.ellipse(x+ex,y+ey,4.5,5.5,0,0,Math.PI*2); rc.fill();
-    });
-    rc.shadowBlur=0;
-    // drifting spores above the nest
-    for(let i=0;i<3;i++){
-      const a=(t*0.7+i*2.1)%(Math.PI*2);
-      const mx=x+Math.cos(a)*18, my=y-8+Math.sin(a)*8;
-      rc.fillStyle='rgba(180,100,255,0.6)'; rc.shadowColor='#cc66ff'; rc.shadowBlur=6;
-      rc.beginPath(); rc.arc(mx,my,1.5,0,Math.PI*2); rc.fill();
-    }
-    rc.shadowBlur=0;
-    // label
-    rc.font='6px Orbitron,sans-serif'; rc.textAlign='center';
-    rc.fillStyle=cfg.color; rc.fillText('LING NEST',x,y+36);
-  }
-
   if(s.structType==='researchlab'){
     // ── RESEARCH LAB (Roboto) ── low tech bunker with a scanning dish and data screens
     const t=S.frame*0.04;
