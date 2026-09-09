@@ -155,4 +155,82 @@ function drawDestroyerUnit(rc,cfg,w){
   rc.beginPath(); rc.moveTo(2,3); rc.lineTo(-7,11); rc.stroke();
 }
 
+// ── ROBOTO CAPITAL SHIP — the faction flagship; carries Gongui the Roboto King ──
+// While airborne it rotates to face its current target like other aerial
+// units, but its combat is a multi-barrel volley (handled by
+// fireWarriorProjectiles) rather than a single stream. Drawn at origin facing
+// right; rotation + hover applied by the caller only while it's flying — a
+// landed ship is drawn "flat" via drawRTSWarrior's non-aerial branch.
+function drawCapitalShipUnit(rc,cfg,w){
+  rc.shadowColor=cfg.color; rc.shadowBlur=20;
+
+  const pulse=0.5+Math.sin(w.frame*0.25)*0.5;
+  const isAttacking=w.state==='attack';
+
+  // quad rear engine jets — dimmer while landed
+  const engineGlow=w.landed?0.15:pulse;
+  for(const ey of [-10,-3,3,10]){
+    const eg=rc.createRadialGradient(-26,ey,0,-26,ey,5.5);
+    eg.addColorStop(0,`rgba(255,190,0,${engineGlow})`); eg.addColorStop(1,'transparent');
+    rc.fillStyle=eg; rc.beginPath(); rc.arc(-26,ey,5.5,0,Math.PI*2); rc.fill();
+  }
+
+  // massive armoured hull
+  const bg=rc.createLinearGradient(-28,0,30,0);
+  bg.addColorStop(0,'#2a2010'); bg.addColorStop(0.5,cfg.color); bg.addColorStop(1,'#1a1008');
+  rc.fillStyle=bg;
+  rc.beginPath();
+  rc.moveTo(30,0);
+  rc.lineTo(16,-13); rc.lineTo(-22,-15); rc.lineTo(-30,-7); rc.lineTo(-30,7); rc.lineTo(-22,15); rc.lineTo(16,13);
+  rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(255,160,0,0.6)'; rc.lineWidth=1.4; rc.stroke();
+
+  // hull plating seams
+  rc.strokeStyle='rgba(80,50,0,0.7)'; rc.lineWidth=0.8;
+  rc.beginPath(); rc.moveTo(-14,-13); rc.lineTo(14,-10); rc.stroke();
+  rc.beginPath(); rc.moveTo(-14,13); rc.lineTo(14,10); rc.stroke();
+  rc.beginPath(); rc.moveTo(-4,-14); rc.lineTo(-4,14); rc.stroke();
+
+  // quad gun barrel cluster fanning toward the nose — reads as "fires at everything in front"
+  const recoil=isAttacking?Math.max(0,Math.sin(w.frame*0.7))*3:0;
+  for(const [gy,spread] of [[-10,-4],[-3,-1],[3,1],[10,4]]){
+    rc.fillStyle='#1a1008';
+    rc.beginPath(); rc.moveTo(14-recoil,gy-1.5); rc.lineTo(28-recoil+spread,gy-1); rc.lineTo(28-recoil+spread,gy+1); rc.lineTo(14-recoil,gy+1.5); rc.closePath(); rc.fill();
+    rc.strokeStyle='rgba(255,140,0,0.5)'; rc.lineWidth=0.5; rc.stroke();
+    const mFlash=isAttacking?0.5+Math.sin(w.frame*0.7+gy)*0.5:0.12;
+    const mg=rc.createRadialGradient(28-recoil+spread,gy,0,28-recoil+spread,gy,4);
+    mg.addColorStop(0,`rgba(255,230,150,${mFlash})`); mg.addColorStop(1,'transparent');
+    rc.fillStyle=mg; rc.beginPath(); rc.arc(28-recoil+spread,gy,4,0,Math.PI*2); rc.fill();
+  }
+
+  // side cargo bay — glows gold while Gongui rides aboard
+  rc.fillStyle='#2a1a08';
+  rc.beginPath(); rc.roundRect(-24,-21,16,7,2); rc.fill();
+  rc.beginPath(); rc.roundRect(-24,14,16,7,2); rc.fill();
+  rc.strokeStyle=w.passenger?'rgba(255,215,0,0.8)':'rgba(255,120,0,0.4)'; rc.lineWidth=0.7;
+  rc.beginPath(); rc.roundRect(-24,-21,16,7,2); rc.stroke();
+  rc.beginPath(); rc.roundRect(-24,14,16,7,2); rc.stroke();
+  if(w.passenger){
+    const bayPulse=0.5+Math.sin(w.frame*0.15)*0.5;
+    rc.fillStyle=`rgba(255,215,0,${0.5+bayPulse*0.4})`;
+    rc.beginPath(); rc.arc(-16,-17.5,2.2,0,Math.PI*2); rc.fill();
+    rc.beginPath(); rc.arc(-16,17.5,2.2,0,Math.PI*2); rc.fill();
+  }
+
+  // command bridge / cockpit
+  const cg=rc.createLinearGradient(6,-7,20,7);
+  cg.addColorStop(0,'rgba(255,220,100,0.95)'); cg.addColorStop(1,'rgba(200,100,0,0.7)');
+  rc.fillStyle=cg; rc.beginPath(); rc.ellipse(12,0,7,5.5,0,0,Math.PI*2); rc.fill();
+  rc.strokeStyle='rgba(255,200,120,0.6)'; rc.lineWidth=0.8; rc.stroke();
+
+  // landing legs — extend and glow when grounded
+  if(w.landed){
+    rc.strokeStyle='#443322'; rc.lineWidth=3; rc.lineCap='round';
+    for(const lx of [-20,-2,16]){
+      rc.beginPath(); rc.moveTo(lx,13); rc.lineTo(lx,24); rc.stroke();
+      rc.fillStyle='rgba(255,190,0,0.7)'; rc.beginPath(); rc.arc(lx,25,2,0,Math.PI*2); rc.fill();
+    }
+  }
+}
+
 //# sourceMappingURL=aerial2.js.map

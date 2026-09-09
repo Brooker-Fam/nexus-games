@@ -75,6 +75,8 @@ const FACTION_CFG={
     researchLabName:'RESEARCH LAB', researchLabLabel:'RESEARCH LAB',
     researchLabDesc:'Research military tech to unlock WARBOT, TANK, and WARSHIP production', researchLabIcon:'🔬',
     researchLabel:'MILITARY TECH', researchDesc:'Unlocks WARBOT, TANK, and WARSHIP production', researchCost:100,
+    gonguiLabel:'GONGUI', gonguiDesc:'Unique Roboto King — heavy-hitting royal gunbot that can board a Capital Ship (limit 1)',
+    gonguiCost:80, gonguiOilCost:35, gonguiIcon:'👑',
     structName:'ARMORY', structLabel:'ARMORY',
     eliteLabel:'SHOCKBOT', eliteDesc:'Ranged — chain lightning hits multiple enemies',
     eliteCost:24, eliteIcon:'⚡',
@@ -89,6 +91,8 @@ const FACTION_CFG={
     aerialUnitCost:22, aerialUnitIcon:'🚀', aerialFn:'makeSkyAttacker', aerialOilCost:8,
     aerial2Label:'WARSHIP', aerial2Desc:'Aerial — switches between single-target and multi-target fire',
     aerial2Cost:60, aerial2Icon:'🚀', aerial2Fn:'makeWarship', aerial2OilCost:30,
+    capitalShipLabel:'CAPITAL SHIP', capitalShipDesc:'Unique flagship — while airborne, fires one bullet at every enemy it faces; land it to deploy GONGUI (limit 1)',
+    capitalShipCost:120, capitalShipIcon:'🛸', capitalShipOilCost:50,
     oilRigName:'OIL RIG', oilRigLabel:'OIL RIG', oilRigIcon:'🛢',
   },
 };

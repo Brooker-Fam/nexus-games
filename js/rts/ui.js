@@ -41,6 +41,10 @@ function baseTrainingTypes(cfg, faction){
   if(faction==='prism'){
     types.push({ icon:cfg.princessIcon, label:cfg.princessLabel, desc:cfg.princessDesc, cost:cfg.princessCost, oilCost:cfg.princessOilCost||0, unitType:'princess' });
   }
+  // Gongui is the Roboto Armada's unique royal Factory unit.
+  if(faction==='roboto'){
+    types.push({ icon:cfg.gonguiIcon, label:cfg.gonguiLabel, desc:cfg.gonguiDesc, cost:cfg.gonguiCost, oilCost:cfg.gonguiOilCost||0, unitType:'gongui' });
+  }
   return types;
 }
 
@@ -118,39 +122,33 @@ function openBuildPopup(screenX, screenY, context){
 
   if(context==='base'){
     const sel=S.selected[0];
-    title.textContent = sel?.infested ? 'INFESTED FACTORY' : cfg.buildingName;
-    if(sel?.infested){
-      addOpt('☣', 'INFEST MODE ACTIVE', 'Permanently auto-producing Infested GunBots — Drone production disabled', 0, ()=>{}, true);
-    } else {
-      for(const u of baseTrainingTypes(cfg,myFaction())){
-        const princessUnavailable=u.unitType==='princess' && S.entities.some(e=>
-          e.side===mySide() && (e.subtype==='princess' || e.queue?.some(q=>q.unitType==='princess' || q.label===cfg.princessLabel))
-        );
-        addOpt(u.icon, u.label, u.desc, u.cost,
-          ()=>trainCmd(sel?sel.id:S.buildingSource?.id, u.unitType, 'base'),
-          princessUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
-          u.oilCost);
-      }
-      if(myFaction()==='shadow'){
-        const cooldown=Math.max(0,(sel?.lingCallCooldown||0)-S.frame);
-        const goldCost=cfg.lingCallGoldCost||0;
-        const essenceCost=cfg.lingCallOilCost||0;
-        const lingCount=cfg.lingCallCount||12;
-        addOpt('☄', 'CALL DOWN ALLIED INFESTED', cooldown>0
-          ? `Temple is recovering — ${Math.ceil(cooldown/60)}s`
-          : `Choose a location to call down ${lingCount} allied Lings`, goldCost, ()=>{
-          S.callDownLingMode={templeId:sel?sel.id:S.buildingSource?.id};
-          rtsSetLog('Choose a location to call down allied infested Lings.');
-          closeBuildPopup();
-          rtsUpdateViewportCursor();
-        }, !!sel?.underConstruction||cooldown>0||myGold()<goldCost||myOil()<essenceCost, essenceCost);
-      }
-      if(myFaction()==='roboto'){
-        addOpt('☣', 'INFEST FACTORY', 'Permanent — continuously produces free Infested GunBots and can no longer make Drones', 0, ()=>{
-          issueCommand({type:'infest_factory',buildingId:sel?sel.id:S.buildingSource?.id});
-          closeBuildPopup();
-        }, !!sel?.underConstruction);
-      }
+    title.textContent = cfg.buildingName;
+    for(const u of baseTrainingTypes(cfg,myFaction())){
+      const princessUnavailable=u.unitType==='princess' && S.entities.some(e=>
+        e.side===mySide() && (e.subtype==='princess' || e.queue?.some(q=>q.unitType==='princess' || q.label===cfg.princessLabel))
+      );
+      const gonguiUnavailable=u.unitType==='gongui' && S.entities.some(e=>
+        e.side===mySide() && (e.subtype==='gongui' || e.queue?.some(q=>q.unitType==='gongui' || q.label===cfg.gonguiLabel)
+          || (e.subtype==='capitalship' && e.passenger))
+      );
+      addOpt(u.icon, u.label, u.desc, u.cost,
+        ()=>trainCmd(sel?sel.id:S.buildingSource?.id, u.unitType, 'base'),
+        princessUnavailable||gonguiUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
+        u.oilCost);
+    }
+    if(myFaction()==='shadow'){
+      const cooldown=Math.max(0,(sel?.lingCallCooldown||0)-S.frame);
+      const goldCost=cfg.lingCallGoldCost||0;
+      const essenceCost=cfg.lingCallOilCost||0;
+      const lingCount=cfg.lingCallCount||12;
+      addOpt('☄', 'CALL DOWN ALLIED INFESTED', cooldown>0
+        ? `Temple is recovering — ${Math.ceil(cooldown/60)}s`
+        : `Choose a location to call down ${lingCount} allied Lings`, goldCost, ()=>{
+        S.callDownLingMode={templeId:sel?sel.id:S.buildingSource?.id};
+        rtsSetLog('Choose a location to call down allied infested Lings.');
+        closeBuildPopup();
+        rtsUpdateViewportCursor();
+      }, !!sel?.underConstruction||cooldown>0||myGold()<goldCost||myOil()<essenceCost, essenceCost);
     }
 
   } else if(context==='barracks'){
@@ -262,13 +260,21 @@ function openBuildPopup(screenX, screenY, context){
         desc: needsCouncilDarkAerial ? `Requires a completed ${cfg.councilOfDarknessLabel}` : cfg.aerial2Desc,
         cost:cfg.aerial2Cost, oilCost:cfg.aerial2OilCost||0, unitType:'aerial2', locked:needsCouncilDarkAerial },
     ];
+    // The Capital Ship is the Roboto Armada's unique flagship, trained here
+    // at the Shipyard alongside the standard aerial units.
+    if(myFaction()==='roboto' && cfg.capitalShipLabel){
+      aerialTypes.push({ icon:cfg.capitalShipIcon, label:cfg.capitalShipLabel, desc:cfg.capitalShipDesc, cost:cfg.capitalShipCost, oilCost:cfg.capitalShipOilCost||0, unitType:'capitalship' });
+    }
 
     for(const u of aerialTypes){
       const needsResearch=unitNeedsResearch(cfg,u.unitType);
+      const shipUnavailable=u.unitType==='capitalship' && S.entities.some(e=>
+        e.side===mySide() && (e.subtype==='capitalship' || e.queue?.some(q=>q.unitType==='capitalship' || q.label===cfg.capitalShipLabel))
+      );
       const desc = needsResearch ? `Requires completed research at the ${cfg.researchLabLabel}` : u.desc;
       addOpt(u.icon, u.label, desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'aerial'),
-        u.locked||needsResearch||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        u.locked||needsResearch||shipUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
         u.oilCost);
     }
 
@@ -323,6 +329,25 @@ function openBuildPopup(screenX, screenY, context){
     addOpt(isSingle?'✦':'🎯', isSingle?'Switch to MULTIPLE':'Switch to SINGLE',
       isSingle?'Fire one bullet at every enemy in range at a slower rate':'Focus one target with one bullet at 112 BPM',
       0, ()=>{ issueCommand({type:'toggle_warship_attack_mode',unitId:sel.id}); closeBuildPopup(); }, false);
+
+  } else if(context==='gongui'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='GONGUI, THE ROBOTO KING';
+    addOpt(cfg.gonguiIcon||'👑', 'THE ROBOTO KING', `HP: ${Math.floor(sel?.hp||0)}/${sel?.maxHp||260} · Board a Capital Ship to carry him into battle`, 0, ()=>closeBuildPopup(), true);
+
+  } else if(context==='capitalship'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='CAPITAL SHIP';
+    addOpt(sel.landed?'🚀':'🛬', sel.landed?'TAKE OFF':'LAND',
+      sel.landed?'Return to the air and resume multi-target fire':'Touch down — grounded and vulnerable, but able to board or deploy Gongui',
+      0, ()=>{ issueCommand({type:'toggle_capitalship_landed',unitId:sel.id}); closeBuildPopup(); }, false);
+    if(sel.passenger){
+      addOpt('👑', 'DEPLOY GONGUI', sel.landed?'Unload Gongui to fight on the ground':'Land the ship first to deploy Gongui',
+        0, ()=>{ issueCommand({type:'deploy_gongui',unitId:sel.id}); closeBuildPopup(); }, !sel.landed);
+    } else {
+      addOpt('👑', 'BOARD GONGUI', 'Load a nearby Gongui aboard for safe transport',
+        0, ()=>{ issueCommand({type:'board_gongui',unitId:sel.id}); closeBuildPopup(); }, false);
+    }
 
   } else if(context==='structure'){
     const sel=S.selected[0];
@@ -619,6 +644,12 @@ function rtsHandleClick(e){
     } else if(hit.type==='warrior' && hit.subtype==='warship'){
       openBuildPopup(sx,sy,'warship');
       rtsSetLog(`WARSHIP — ${hit.attackMode} attack mode  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
+    } else if(hit.type==='warrior' && hit.subtype==='gongui'){
+      openBuildPopup(sx,sy,'gongui');
+      rtsSetLog(`GONGUI, THE ROBOTO KING — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
+    } else if(hit.type==='warrior' && hit.subtype==='capitalship'){
+      openBuildPopup(sx,sy,'capitalship');
+      rtsSetLog(`CAPITAL SHIP — ${hit.landed?'landed':'airborne'}${hit.passenger?', Gongui aboard':''}  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior' && hit.subtype==='assaultbot'){
       openBuildPopup(sx,sy,'assaultbot');
       rtsSetLog(`ASSAULT BOT — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);

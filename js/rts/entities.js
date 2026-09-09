@@ -50,20 +50,6 @@ function makeWarrior(side, faction, nearX, nearY){
   };
 }
 
-// Infested GunBots are produced automatically by a Roboto Factory that has
-// permanently entered infest mode. Their unstable infestation leaves them
-// frailer and weaker than normal GunBots, while the subtype/flag gives the
-// renderer and UI a distinct unit.
-function makeInfestedGunbot(side, nearX, nearY){
-  const unit=makeWarrior(side, 'roboto', nearX, nearY);
-  unit.subtype='infestedGunbot';
-  unit.infested=true;
-  unit.hp=15;
-  unit.maxHp=15;
-  unit.damage=3;
-  return unit;
-}
-
 // Ling — a swift, dog-like allied infested creature called down by Shadow Temples.
 function makeLing(side, x, y){
   return { id:nextId(), type:'warrior', subtype:'ling', side, faction:'shadow',
@@ -121,7 +107,6 @@ const BUILD_TIMES={
   aerial:    1080,   // 18s — warp conduit / shipyard
   worker:    480,    // 8s
   warrior:   720,    // 12s
-  infestedGunbot: 720, // 12s — automatically repeated by an infested Factory
   elite:     960,    // 16s
   elite2:    1200,   // 20s
   starfighter: 720,  // 12s
@@ -133,6 +118,8 @@ const BUILD_TIMES={
   legionnairesquad: 1500, // 25s — Prism 2nd barracks unit, trains 4 at once
   ling:        600,  // 10s — automatically repeated by a Shadow Ling Nest
   research:    1500, // 25s — Research Lab military tech (unlocks Warbot/Tank/Warship)
+  gongui:      1200, // 20s — unique Roboto King, trained at the Factory
+  capitalship: 1500, // 25s — unique Roboto flagship, trained at the Shipyard
 };
 const QUEUE_MAX = 5; // max units queued per building
 
@@ -337,6 +324,22 @@ function makeDestroyer(side, faction, nearX, nearY){
   };
 }
 
+// Capital Ship (Roboto) — unique flagship. While airborne it fires one bullet
+// at every enemy it faces; landing it grounds it (vulnerable to melee, cannot
+// move or fight) so it can board or deploy Gongui, the Roboto King.
+function makeCapitalShip(side, faction, nearX, nearY){
+  const isPlayer=side==='player';
+  return {
+    id:nextId(), type:'warrior', subtype:'capitalship', side, faction,
+    x: nearX+(isPlayer?80:-80), y: nearY+(rtsRand()-0.5)*120,
+    hp:320, maxHp:320, speed:1.0,
+    state:'idle', target:null, attackTimer:0,
+    damage:6, range:220, ranged:true, fireRate:40,
+    aerial:true, landed:false, passenger:null,
+    frame:0, selected:false, forcedTarget:null, moveTarget:null,
+  };
+}
+
 // ── ELITE WARRIORS ──
 function makeBloodhound(side, faction, x, y){
   return {
@@ -388,6 +391,16 @@ function makePrincess(side, faction, nearX, nearY){
   princess.fireRate=180;
   princess.summonsLegionnaires=true;
   return princess;
+}
+// Gongui, the Roboto King — unique Factory champion. Heavier and harder-hitting
+// than a plain Shockbot, and the only unit a Capital Ship can carry aboard.
+function makeGongui(side, faction, nearX, nearY){
+  const gongui=makeElite(side,faction,nearX,nearY);
+  gongui.subtype='gongui';
+  gongui.hp=260; gongui.maxHp=260;
+  gongui.damage=16;
+  gongui.fireRate=18;
+  return gongui;
 }
 function makeWizard(side, faction, nearX, nearY){
   const isPlayer=side==='player';

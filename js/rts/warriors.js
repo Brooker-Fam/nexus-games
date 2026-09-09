@@ -9,7 +9,7 @@ function drawRTSWarrior(rc,w){
   if(w.aerial){
     // Aerial units rotate to face their target.
     // Hover bob is applied in screen-space (before rotation) so it always moves up/down.
-    const isHeavyAerial = w.subtype==='skyattacker'||w.subtype==='warship'||w.subtype==='destroyer';
+    const isHeavyAerial = w.subtype==='skyattacker'||w.subtype==='warship'||w.subtype==='destroyer'||w.subtype==='capitalship';
     const hover = isHeavyAerial ? Math.sin(w.frame*0.1)*2.5 : Math.sin(w.frame*0.12)*3;
     // Ground shadow — drawn before rotation so it stays flat below the unit.
     rc.fillStyle='rgba(0,0,0,0.18)';
@@ -37,22 +37,18 @@ function drawRTSWarrior(rc,w){
     drawLightFighterUnit(rc,cfg,w);
   } else if(w.subtype==='destroyer'){
     drawDestroyerUnit(rc,cfg,w);
+  } else if(w.subtype==='capitalship'){
+    drawCapitalShipUnit(rc,cfg,w);
   } else if(w.subtype==='warbot'){
     drawWarbot(rc,cfg,w);
-  } else if(w.subtype==='infestedGunbot'){
-    rc.save();
-    rc.shadowColor='#62ff45'; rc.shadowBlur=22;
-    drawWarriorRoboto(rc,{...cfg,color:'#62ff45'},w);
-    rc.fillStyle='rgba(98,255,69,0.75)';
-    rc.beginPath(); rc.arc(-7,-13,3,0,Math.PI*2); rc.fill();
-    rc.beginPath(); rc.arc(5,-23,2,0,Math.PI*2); rc.fill();
-    rc.restore();
   } else if(w.subtype==='ling'){
     drawLing(rc,w);
   } else if(w.subtype==='legionnaire'){
     drawLegionnaire(rc,cfg,w);
   } else if(w.subtype==='princess'){
     if(w.faction==='prism') drawPrincess(rc,cfg,w);
+  } else if(w.subtype==='gongui'){
+    drawGongui(rc,cfg,w);
   } else if(w.subtype==='elite'){
     if(w.faction==='prism') drawEliteOracle(rc,cfg,w);
     else if(w.faction==='shadow') drawEliteDarkWarrior(rc,cfg,w);

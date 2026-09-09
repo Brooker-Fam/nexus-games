@@ -93,12 +93,90 @@ test('Roboto warship has a premium resource cost',()=>{
   assert.deepEqual({...costs},{gold:60,oil:30});
 });
 
-test('Roboto Factory infestation is permanent, blocks Drones, and continuously makes Infested GunBots',()=>{
+test('Gongui, the Roboto King is a unique Factory champion, distinct from the Shockbot elite',()=>{
+  const context=makeContext();
+  const units=vm.runInContext(`(() => ({
+    shockbot:makeElite('player','roboto',100,100),
+    gongui:makeGongui('player','roboto',100,100),
+  }))()`,context);
+
+  assert.equal(units.shockbot.subtype,'elite');
+  assert.equal(units.gongui.subtype,'gongui');
+  assert.ok(units.gongui.hp>units.shockbot.hp);
+  assert.ok(units.gongui.damage>units.shockbot.damage);
+
+  const factionContext=vm.createContext({});
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),factionContext);
+  const presentation=vm.runInContext('({label:FACTION_CFG.roboto.gonguiLabel,desc:FACTION_CFG.roboto.gonguiDesc,gold:FACTION_CFG.roboto.gonguiCost,oil:FACTION_CFG.roboto.gonguiOilCost})',factionContext);
+  assert.equal(presentation.label,'GONGUI');
+  assert.match(presentation.desc,/limit 1/);
+  assert.ok(presentation.gold>0 && presentation.oil>0);
+});
+
+test('Gongui is limited to one existing, queued, or Capital-Ship-boarded unit',()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
-    S:{frame:0,entities:[],gold:{player:1000},oil:{player:0},stats:{unitsBuilt:0},playerFaction:'roboto',enemyFaction:'shadow'},
+    S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},playerFaction:'roboto',enemyFaction:'shadow'},
+    makeWorker:()=>{}, makeWarrior:()=>{}, makeWarbot:()=>{}, makeLegionnaireSquad:()=>{},
+    makeWizard:()=>{}, makeNecromancer:()=>{}, makeTank:()=>{}, makeStarFighter:()=>{},
+    makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>{},
+    updateRtsHUD:()=>{}, rtsSetLog:()=>{},
+    queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  const result=vm.runInContext(`(() => {
+    const factory={id:1,type:'base',side:'player',faction:'roboto',x:0,y:0,queue:[]};
+    S.entities=[factory];
+    executeCommand({type:'train_unit',buildingId:1,unitType:'gongui',side:'player'});
+    const afterFirst={gold:S.gold.player,oil:S.oil.player,queued:factory.queue.length};
+    executeCommand({type:'train_unit',buildingId:1,unitType:'gongui',side:'player'});
+    const afterQueuedAttempt={gold:S.gold.player,oil:S.oil.player,queued:factory.queue.length};
+    factory.queue=[];
+    S.entities.push(makeGongui('player','roboto',10,10));
+    executeCommand({type:'train_unit',buildingId:1,unitType:'gongui',side:'player'});
+    const afterExistingAttempt={gold:S.gold.player,oil:S.oil.player,queued:factory.queue.length};
+    S.entities=S.entities.filter(e=>e.subtype!=='gongui');
+    S.entities.push({id:2,type:'warrior',side:'player',faction:'roboto',subtype:'capitalship',passenger:{hp:1,maxHp:1}});
+    executeCommand({type:'train_unit',buildingId:1,unitType:'gongui',side:'player'});
+    return {afterFirst,afterQueuedAttempt,afterExistingAttempt,afterBoardedAttempt:{gold:S.gold.player,oil:S.oil.player,queued:factory.queue.length}};
+  })()`,context);
+  assert.deepEqual({...result.afterFirst},{gold:920,oil:965,queued:1});
+  assert.deepEqual({...result.afterQueuedAttempt},{gold:920,oil:965,queued:1});
+  assert.deepEqual({...result.afterExistingAttempt},{gold:920,oil:965,queued:0});
+  assert.deepEqual({...result.afterBoardedAttempt},{gold:920,oil:965,queued:0});
+});
+
+test('Roboto Capital Ship always fires one bullet at every enemy it faces, unlike the toggleable Warship',()=>{
+  const context=makeContext();
+  Object.assign(context,{
+    window:{_mpMultiplayer:false},
+    S:{entities:[],projectiles:[]},
+    STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0}},
+    FACTION_CFG:{roboto:{color:'#fff'}},
+    sfx:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+  const targets=vm.runInContext(`(() => {
+    const ship=makeCapitalShip('player','roboto',100,100);
+    const nearA={id:20,side:'enemy',hp:10,x:150,y:100};
+    const nearB={id:21,side:'enemy',hp:10,x:100,y:250};
+    const far={id:22,side:'enemy',hp:10,x:500,y:100};
+    S.entities=[ship,nearA,nearB,far];
+    fireWarriorProjectiles(ship,nearA);
+    return S.projectiles.map(projectile=>projectile.tx.id);
+  })()`,context);
+
+  assert.deepEqual([...targets],[20,21]);
+});
+
+test('Capital Ship boards, carries, and can only deploy Gongui once landed',()=>{
+  const context=makeContext();
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  Object.assign(context,{
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    S:{frame:0,entities:[],gold:{player:0},oil:{player:0},playerFaction:'roboto',enemyFaction:'shadow'},
     STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0}},
     rtsSetLog:()=>{}, updateRtsHUD:()=>{}, sfx:()=>{},
   });
@@ -106,31 +184,74 @@ test('Roboto Factory infestation is permanent, blocks Drones, and continuously m
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
 
   const result=vm.runInContext(`(() => {
-    const factory={id:1,type:'base',side:'player',faction:'roboto',x:100,y:100,hp:100,maxHp:100,queue:[],trainTimer:0};
-    S.entities=[factory];
-    executeCommand({type:'infest_factory',buildingId:factory.id,side:'player'});
-    const afterInfest={infested:factory.infested,queue:factory.queue.map(item=>item.unitType)};
+    const ship=makeCapitalShip('player','roboto',100,100);
+    const gongui=makeGongui('player','roboto',110,105);
+    gongui.hp=140;
+    S.entities=[ship,gongui];
 
-    executeCommand({type:'train_unit',buildingId:factory.id,unitType:'worker',side:'player'});
-    const afterDroneAttempt={gold:S.gold.player,queue:factory.queue.map(item=>item.unitType)};
+    const flat=()=>({
+      hasPassenger:!!ship.passenger,
+      passengerHp:ship.passenger?ship.passenger.hp:null,
+      passengerMaxHp:ship.passenger?ship.passenger.maxHp:null,
+      gonguiCount:S.entities.filter(e=>e.subtype==='gongui').length,
+    });
 
-    factory.trainTimer=BUILD_TIMES.infestedGunbot-1;
-    buildingTick(factory);
-    const first=S.entities.find(entity=>entity.subtype==='infestedGunbot');
+    executeCommand({type:'deploy_gongui',unitId:ship.id,side:'player'});
+    const deployWhileFlying=flat();
+
+    executeCommand({type:'board_gongui',unitId:ship.id,side:'player'});
+    const afterBoard=flat();
+
+    executeCommand({type:'deploy_gongui',unitId:ship.id,side:'player'});
+    const deployWhileAirborneStillBoarded=flat();
+
+    executeCommand({type:'toggle_capitalship_landed',unitId:ship.id,side:'player'});
+    const afterLand={landed:ship.landed,aerial:ship.aerial};
+
+    executeCommand({type:'deploy_gongui',unitId:ship.id,side:'player'});
+    const redeployed=S.entities.find(e=>e.subtype==='gongui');
     return {
-      afterInfest,
-      afterDroneAttempt,
-      spawned:{subtype:first.subtype,faction:first.faction,infested:first.infested,hp:first.hp,maxHp:first.maxHp,damage:first.damage},
-      nextQueue:factory.queue.map(item=>item.unitType),
+      deployWhileFlying, afterBoard, deployWhileAirborneStillBoarded, afterLand,
+      afterDeploy:{...flat(),gonguiHp:redeployed?redeployed.hp:null},
     };
   })()`,context);
 
-  assert.equal(result.afterInfest.infested,true);
-  assert.deepEqual([...result.afterInfest.queue],['infestedGunbot']);
-  assert.equal(result.afterDroneAttempt.gold,1000);
-  assert.deepEqual([...result.afterDroneAttempt.queue],['infestedGunbot']);
-  assert.deepEqual({...result.spawned},{subtype:'infestedGunbot',faction:'roboto',infested:true,hp:15,maxHp:15,damage:3});
-  assert.deepEqual([...result.nextQueue],['infestedGunbot']);
+  assert.deepEqual({...result.deployWhileFlying},{hasPassenger:false,passengerHp:null,passengerMaxHp:null,gonguiCount:1});
+  assert.deepEqual({...result.afterBoard},{hasPassenger:true,passengerHp:140,passengerMaxHp:260,gonguiCount:0});
+  assert.deepEqual({...result.deployWhileAirborneStillBoarded},{hasPassenger:true,passengerHp:140,passengerMaxHp:260,gonguiCount:0});
+  assert.deepEqual({...result.afterLand},{landed:true,aerial:false});
+  assert.deepEqual({...result.afterDeploy},{hasPassenger:false,passengerHp:null,passengerMaxHp:null,gonguiCount:1,gonguiHp:140});
+});
+
+test('A landed Capital Ship cannot move or attack until it takes off again',()=>{
+  const context=makeContext();
+  Object.assign(context,{
+    window:{_mpMultiplayer:false},
+    S:{frame:0,entities:[],projectiles:[]},
+    STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0}},
+    FACTION_CFG:{roboto:{color:'#fff'}},
+    sfx:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+  const result=vm.runInContext(`(() => {
+    const ship=makeCapitalShip('player','roboto',100,100);
+    ship.landed=true; ship.aerial=false;
+    const enemy={id:5,type:'warrior',side:'enemy',hp:10,x:150,y:100};
+    S.entities=[ship,enemy];
+    const before={x:ship.x,y:ship.y,state:ship.state};
+    warriorTick(ship,{x:0,y:0},{x:0,y:0});
+    return {before,after:{x:ship.x,y:ship.y,state:ship.state},projectiles:S.projectiles.length};
+  })()`,context);
+
+  assert.deepEqual(result.before,result.after);
+  assert.equal(result.projectiles,0);
+});
+
+test('Gongui and Capital Ship use distinct renderers from other Roboto units',()=>{
+  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','warriors.js'),'utf8');
+
+  assert.match(source,/w\.subtype==='gongui'[\s\S]*?drawGongui\(rc,cfg,w\)/);
+  assert.match(source,/w\.subtype==='capitalship'[\s\S]*?drawCapitalShipUnit\(rc,cfg,w\)/);
 });
 
 test('Shadow Temple spends gold and essence to call down twelve allied infested Lings',()=>{

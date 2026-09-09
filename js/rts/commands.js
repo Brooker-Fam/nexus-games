@@ -73,27 +73,12 @@ function executeCommand(cmd){
       break;
     }
 
-    case 'infest_factory': {
-      const factory=S.entities.find(e=>e.id===cmd.buildingId);
-      // Infestation is a one-way Roboto Factory conversion. Validate it here
-      // as well as in the UI so remote/lockstep commands cannot bypass it.
-      if(!factory || factory.type!=='base' || factory.side!==side ||
-          faction!=='roboto' || factory.underConstruction || factory.infested) break;
-      factory.infested=true;
-      factory.queue=[];
-      factory.trainTimer=0;
-      ensureInfestedProduction(factory);
-      if(side==='player') rtsSetLog('Factory infested — GunBot production is now permanent!');
-      break;
-    }
-
     case 'train_unit': {
       const building = S.entities.find(e=>e.id===cmd.buildingId);
       if(!building || building.underConstruction) break;
       if(building.side !== side) break; // can't train from enemy building
-      if(building.infested) break; // infested Factories only auto-produce Infested GunBots
       const aerialFnMap = { makeStarFighter, makeSkyAttacker };
-      const costMap = { worker:cfg.workerCost, warrior:cfg.warriorCost, warrior2:cfg.warrior2Cost, princess:cfg.princessCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost, aerial:cfg.aerialUnitCost, aerial2:cfg.aerial2Cost };
+      const costMap = { worker:cfg.workerCost, warrior:cfg.warriorCost, warrior2:cfg.warrior2Cost, princess:cfg.princessCost, elite:cfg.eliteCost, elite2:cfg.elite2Cost, aerial:cfg.aerialUnitCost, aerial2:cfg.aerial2Cost, gongui:cfg.gonguiCost, capitalship:cfg.capitalShipCost };
       const cost = costMap[cmd.unitType] || 0;
       if(cmd.unitType==='princess' && faction==='prism'){
         if(building.type!=='base') break;
@@ -101,12 +86,27 @@ function executeCommand(cmd){
         const princessQueued=S.entities.some(e=>e.side===side && e.queue?.some(q=>q.unitType==='princess' || q.label===cfg.princessLabel));
         if(princessExists || princessQueued) break;
       }
+      if(cmd.unitType==='gongui' && faction==='roboto'){
+        if(building.type!=='base') break;
+        const gonguiExists=S.entities.some(e=>e.side===side && e.faction==='roboto' && e.subtype==='gongui');
+        const gonguiQueued=S.entities.some(e=>e.side===side && e.queue?.some(q=>q.unitType==='gongui' || q.label===cfg.gonguiLabel));
+        const gonguiBoarded=S.entities.some(e=>e.side===side && e.faction==='roboto' && e.subtype==='capitalship' && e.passenger);
+        if(gonguiExists || gonguiQueued || gonguiBoarded) break;
+      }
+      if(cmd.unitType==='capitalship' && faction==='roboto'){
+        if(!building.isAerialHangar) break;
+        const shipExists=S.entities.some(e=>e.side===side && e.faction==='roboto' && e.subtype==='capitalship');
+        const shipQueued=S.entities.some(e=>e.side===side && e.queue?.some(q=>q.unitType==='capitalship' || q.label===cfg.capitalShipLabel));
+        if(shipExists || shipQueued) break;
+      }
       if(S.gold[side] < cost) break;
       // second resource costs (oil / essence / light)
       const oilCost = cmd.unitType==='elite2' ? (cfg.tankOilCost||cfg.elite2OilCost||0)
                     : cmd.unitType==='aerial'  ? (cfg.aerialOilCost||0)
                     : cmd.unitType==='aerial2' ? (cfg.aerial2OilCost||0)
                     : cmd.unitType==='princess' ? (cfg.princessOilCost||0)
+                    : cmd.unitType==='gongui' ? (cfg.gonguiOilCost||0)
+                    : cmd.unitType==='capitalship' ? (cfg.capitalShipOilCost||0)
                     : cmd.unitType==='elite'   ? (cfg.eliteOilCost||0)
                     : cmd.unitType==='warrior2' ? (cfg.warrior2OilCost||0) : 0;
       if(oilCost > 0 && (S.oil[side]||0) < oilCost) break;
@@ -125,7 +125,7 @@ function executeCommand(cmd){
       const aerial2TimeMap = { makeWarship:BUILD_TIMES.warship, makeLightFighter:BUILD_TIMES.lightfighter, makeDestroyer:BUILD_TIMES.destroyer };
       const timeMap = { worker:BUILD_TIMES.worker, warrior:BUILD_TIMES.warrior, warrior2:warrior2TimeMap[cfg.warrior2Fn], princess:BUILD_TIMES.elite, elite:BUILD_TIMES.elite, elite2:BUILD_TIMES.elite2,
         aerial:BUILD_TIMES[cfg.aerialFn==='makeSkyAttacker'?'skyattacker':'starfighter'],
-        aerial2:aerial2TimeMap[cfg.aerial2Fn] };
+        aerial2:aerial2TimeMap[cfg.aerial2Fn], gongui:BUILD_TIMES.gongui, capitalship:BUILD_TIMES.capitalship };
       const time = timeMap[cmd.unitType] || BUILD_TIMES.worker;
 
       const fnMap = {
@@ -137,6 +137,8 @@ function executeCommand(cmd){
         elite2:  ()=>elite2FnMap[cfg.elite2Fn](side, faction, building.x, building.y),
         aerial:  ()=>aerialFnMap[cfg.aerialFn](side, faction, building.x, building.y),
         aerial2: ()=>aerial2FnMap[cfg.aerial2Fn](side, faction, building.x, building.y),
+        gongui:  ()=>makeGongui(side, faction, building.x, building.y),
+        capitalship:()=>makeCapitalShip(side, faction, building.x, building.y),
       };
 
       const fn = fnMap[cmd.unitType];
@@ -145,6 +147,8 @@ function executeCommand(cmd){
         : cmd.unitType==='warrior' ? cfg.warriorLabel
         : cmd.unitType==='warrior2' ? cfg.warrior2Label
         : cmd.unitType==='princess' ? cfg.princessLabel
+        : cmd.unitType==='gongui' ? cfg.gonguiLabel
+        : cmd.unitType==='capitalship' ? cfg.capitalShipLabel
         : cmd.unitType==='elite' ? cfg.eliteLabel
         : cmd.unitType==='aerial' ? cfg.aerialUnitLabel
         : cmd.unitType==='aerial2' ? cfg.aerial2Label
@@ -312,6 +316,45 @@ function executeCommand(cmd){
       if(side==='player'){
         rtsSetLog(`Warship switched to ${unit.attackMode} attack mode!`);
       }
+      break;
+    }
+
+    case 'board_gongui': {
+      const ship=S.entities.find(e=>e.id===cmd.unitId);
+      if(!ship||ship.side!==side||ship.subtype!=='capitalship'||ship.passenger) break;
+      let best=null, bestDist=180;
+      for(const e of S.entities){
+        if(e.side!==side||e.subtype!=='gongui') continue;
+        const d=_dist(e.x-ship.x,e.y-ship.y);
+        if(d<bestDist){ bestDist=d; best=e; }
+      }
+      if(!best){ if(side==='player') rtsSetLog('No Gongui nearby to board.'); break; }
+      ship.passenger={hp:best.hp,maxHp:best.maxHp};
+      S.entities.splice(S.entities.indexOf(best),1);
+      if(side==='player') rtsSetLog('Gongui boards the Capital Ship!');
+      break;
+    }
+
+    case 'deploy_gongui': {
+      const ship=S.entities.find(e=>e.id===cmd.unitId);
+      if(!ship||ship.side!==side||ship.subtype!=='capitalship'||!ship.passenger||!ship.landed) break;
+      const gongui=makeGongui(side, faction, ship.x, ship.y);
+      gongui.hp=ship.passenger.hp;
+      gongui.maxHp=ship.passenger.maxHp;
+      gongui.x=ship.x; gongui.y=ship.y+40;
+      S.entities.push(gongui);
+      ship.passenger=null;
+      if(side==='player') rtsSetLog('Gongui deploys from the Capital Ship!');
+      break;
+    }
+
+    case 'toggle_capitalship_landed': {
+      const ship=S.entities.find(e=>e.id===cmd.unitId);
+      if(!ship||ship.side!==side||ship.subtype!=='capitalship') break;
+      ship.landed=!ship.landed;
+      ship.aerial=!ship.landed;
+      ship.attackTimer=0;
+      if(side==='player') rtsSetLog(ship.landed?'Capital Ship touches down.':'Capital Ship takes off.');
       break;
     }
 
