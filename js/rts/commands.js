@@ -37,7 +37,6 @@ function executeCommand(cmd){
     if(ent.isBarracks) return 'barracks';
     if(ent.isAerialHangar) return 'aerial';
     if(ent.isOilRig) return 'oilrig';
-    if(ent.isLingNest) return 'lingnest';
     if(ent.isResearchLab) return 'researchlab';
     if(ent.isCouncilOfLight) return 'councillight';
     if(ent.isCouncilOfDarkness) return 'councildark';
@@ -46,30 +45,26 @@ function executeCommand(cmd){
 
   switch(cmd.type){
 
-    case 'call_down_lings': {
+    case 'deploy_dark_ship': {
       const temple=S.entities.find(e=>e.id===cmd.buildingId);
-      const goldCost=cfg.lingCallGoldCost||0;
-      const essenceCost=cfg.lingCallOilCost||0;
+      const goldCost=cfg.darkShipGoldCost||0;
+      const essenceCost=cfg.darkShipOilCost||0;
+      const shipOrVanthelAlive=S.entities.some(e=>e.side===side && (e.subtype==='darkwarriorship'||e.subtype==='vanthel'));
       if(!temple || temple.type!=='base' || temple.side!==side || faction!=='shadow' ||
-          temple.underConstruction || (temple.lingCallCooldown||0)>S.frame ||
+          temple.underConstruction || (temple.darkShipCooldown||0)>S.frame || shipOrVanthelAlive ||
           !Number.isFinite(cmd.x) || !Number.isFinite(cmd.y) ||
           (S.gold[side]||0)<goldCost || (S.oil[side]||0)<essenceCost) break;
       S.gold[side]-=goldCost;
       S.oil[side]-=essenceCost;
-      temple.lingCallCooldown=S.frame+1800;
-      const lingCount=cfg.lingCallCount||12;
-      for(let i=0;i<lingCount;i++){
-        const angle=(Math.PI*2*i)/lingCount;
-        const radius=30+18*(i%2);
-        S.entities.push(makeLing(side,cmd.x+Math.cos(angle)*radius,cmd.y+Math.sin(angle)*radius));
-      }
+      temple.darkShipCooldown=S.frame+3600;
+      S.entities.push(makeDarkWarriorShip(side, faction, cmd.x, cmd.y));
       for(let i=0;i<18;i++) S.particles.push({
         x:cmd.x+(rtsRand()-.5)*55,y:cmd.y+(rtsRand()-.5)*55,
         vx:(rtsRand()-.5)*1.5,vy:-1-rtsRand()*2,life:35+rtsRand()*20,
-        color:i%2?'#79ff57':'#9922ff',size:2+rtsRand()*3,
+        color:i%2?'#8800cc':'#9922ff',size:2+rtsRand()*3,
       });
       updateRtsHUD();
-      if(side==='player') rtsSetLog(`${lingCount} allied infested Lings answered the call!`);
+      if(side==='player') rtsSetLog("The Dark Warrior's Ship descends, carrying Vanthel!");
       break;
     }
 

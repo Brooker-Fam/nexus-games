@@ -133,7 +133,7 @@ test('Roboto Factory infestation is permanent, blocks Drones, and continuously m
   assert.deepEqual([...result.nextQueue],['infestedGunbot']);
 });
 
-test('Shadow Temple spends gold and essence to call down twelve allied infested Lings',()=>{
+test("Shadow Temple spends gold and essence to deploy the Dark Warrior's Ship carrying Vanthel",()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
@@ -146,77 +146,55 @@ test('Shadow Temple spends gold and essence to call down twelve allied infested 
   const result=vm.runInContext(`(() => {
     const temple={id:1,type:'base',side:'player',x:20,y:30};
     S.entities=[temple];
-    executeCommand({type:'call_down_lings',buildingId:1,x:400,y:250,side:'player'});
-    const firstCall=S.entities.filter(entity=>entity.subtype==='ling');
-    executeCommand({type:'call_down_lings',buildingId:1,x:500,y:350,side:'player'});
-    return {lings:firstCall.map(ling=>({side:ling.side,faction:ling.faction})),cooldown:temple.lingCallCooldown,particles:S.particles.length,total:S.entities.filter(entity=>entity.subtype==='ling').length,gold:S.gold.player,essence:S.oil.player};
-  })()`,context);
-
-  assert.equal(result.lings.length,12);
-  assert.ok(result.lings.every(ling=>ling.side==='player' && ling.faction==='shadow'));
-  assert.equal(result.cooldown,1920);
-  assert.equal(result.particles,18);
-  assert.equal(result.total,12);
-  assert.equal(result.gold,50);
-  assert.equal(result.essence,25);
-});
-
-test('Shadow Ling Nest is a free-standing structure that continuously spawns Lings with no cost',()=>{
-  const context=makeContext();
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
-  Object.assign(context,{
-    window:{_mpMultiplayer:false}, mpConnected:false,
-    S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},stats:{unitsBuilt:0},playerFaction:'shadow',enemyFaction:'prism'},
-    STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0},lingnest:{gold:0,oil:0}},
-    BUILDING_HEALTH:{base:300,structure:160,cannon:120,aerial:140},
-    rtsSetLog:()=>{}, updateRtsHUD:()=>{}, sfx:()=>{},
-  });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
-
-  const result=vm.runInContext(`(() => {
-    const nest=makeLingNest('player','shadow',100,100);
-    S.entities=[nest];
-    const beforeGold=S.gold.player, beforeOil=S.oil.player;
-    const afterConstruction={isLingNest:nest.isLingNest,queue:nest.queue.map(item=>item.unitType)};
-
-    // still under construction — no production yet
-    buildingTick(nest);
-    const duringConstruction=nest.queue.length;
-
-    nest.underConstruction=false;
-    nest.hp=nest.maxHp;
-    buildingTick(nest);
-    const queuedAfterOpen=nest.queue.map(item=>item.unitType);
-
-    nest.trainTimer=BUILD_TIMES.ling-1;
-    buildingTick(nest);
-    const spawned=S.entities.find(entity=>entity.subtype==='ling');
+    executeCommand({type:'deploy_dark_ship',buildingId:1,x:400,y:250,side:'player'});
+    const firstShip=S.entities.find(entity=>entity.subtype==='darkwarriorship');
+    // A second attempt while the first ship is still alive must be rejected.
+    executeCommand({type:'deploy_dark_ship',buildingId:1,x:500,y:350,side:'player'});
     return {
-      afterConstruction, duringConstruction,
-      queuedAfterOpen,
-      spawned:{side:spawned.side,faction:spawned.faction,subtype:spawned.subtype},
-      nextQueue:nest.queue.map(item=>item.unitType),
-      goldSpent:beforeGold-S.gold.player, oilSpent:beforeOil-S.oil.player,
+      ship:{side:firstShip.side,faction:firstShip.faction,carryingVanthel:firstShip.carryingVanthel},
+      cooldown:temple.darkShipCooldown,
+      particles:S.particles.length,
+      total:S.entities.filter(entity=>entity.subtype==='darkwarriorship').length,
+      gold:S.gold.player, essence:S.oil.player,
     };
   })()`,context);
 
-  assert.equal(result.afterConstruction.isLingNest,true);
-  assert.deepEqual([...result.afterConstruction.queue],[]);
-  assert.equal(result.duringConstruction,0);
-  assert.deepEqual([...result.queuedAfterOpen],['ling']);
-  assert.deepEqual({...result.spawned},{side:'player',faction:'shadow',subtype:'ling'});
-  assert.deepEqual([...result.nextQueue],['ling']);
-  assert.equal(result.goldSpent,0);
-  assert.equal(result.oilSpent,0);
+  assert.deepEqual({...result.ship},{side:'player',faction:'shadow',carryingVanthel:true});
+  assert.equal(result.cooldown,3720);
+  assert.equal(result.particles,18);
+  assert.equal(result.total,1);
+  assert.equal(result.gold,20);
+  assert.equal(result.essence,10);
 });
 
-test('Shadow Temple rejects a Ling call when either resource is insufficient',()=>{
+test("Shadow Temple rejects deploying another Dark Warrior's Ship while one (or Vanthel) is already on the field",()=>{
   const context=makeContext();
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
-    S:{frame:120,entities:[],particles:[],gold:{player:49},oil:{player:100},playerFaction:'shadow',enemyFaction:'prism'},
+    S:{frame:120,entities:[],particles:[],gold:{player:1000},oil:{player:1000},playerFaction:'shadow',enemyFaction:'prism'},
+    STRUCT_COSTS:{}, rtsSetLog:()=>{}, updateRtsHUD:()=>{}, rtsRand:()=>0.5,
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const temple={id:1,type:'base',side:'player',x:20,y:30};
+    const vanthel={id:2,type:'warrior',subtype:'vanthel',side:'player',faction:'shadow',hp:1,x:0,y:0};
+    S.entities=[temple,vanthel];
+    temple.darkShipCooldown=0;
+    executeCommand({type:'deploy_dark_ship',buildingId:1,x:400,y:250,side:'player'});
+    return {entities:S.entities.length,gold:S.gold.player,essence:S.oil.player};
+  })()`,context);
+
+  assert.deepEqual({...result},{entities:2,gold:1000,essence:1000});
+});
+
+test("Shadow Temple rejects deploying the Dark Warrior's Ship when either resource is insufficient",()=>{
+  const context=makeContext();
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  Object.assign(context,{
+    window:{_mpMultiplayer:false}, mpConnected:false,
+    S:{frame:120,entities:[],particles:[],gold:{player:79},oil:{player:100},playerFaction:'shadow',enemyFaction:'prism'},
     STRUCT_COSTS:{}, rtsSetLog:()=>{}, updateRtsHUD:()=>{}, rtsRand:()=>0.5,
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
@@ -224,14 +202,53 @@ test('Shadow Temple rejects a Ling call when either resource is insufficient',()
   const result=vm.runInContext(`(() => {
     const temple={id:1,type:'base',side:'player'};
     S.entities=[temple];
-    executeCommand({type:'call_down_lings',buildingId:1,x:400,y:250,side:'player'});
+    executeCommand({type:'deploy_dark_ship',buildingId:1,x:400,y:250,side:'player'});
     S.gold.player=100;
-    S.oil.player=24;
-    executeCommand({type:'call_down_lings',buildingId:1,x:400,y:250,side:'player'});
-    return {entities:S.entities.length,cooldown:temple.lingCallCooldown,gold:S.gold.player,essence:S.oil.player};
+    S.oil.player=39;
+    executeCommand({type:'deploy_dark_ship',buildingId:1,x:400,y:250,side:'player'});
+    return {entities:S.entities.length,cooldown:temple.darkShipCooldown,gold:S.gold.player,essence:S.oil.player};
   })()`,context);
 
-  assert.deepEqual({...result},{entities:1,cooldown:undefined,gold:100,essence:24});
+  assert.deepEqual({...result},{entities:1,cooldown:undefined,gold:100,essence:39});
+});
+
+test("Dark Warrior's Ship releases Vanthel once clear of enemies, but not while one is still within sight",()=>{
+  const context=makeContext();
+  Object.assign(context,{
+    window:{_mpMultiplayer:false},
+    S:{entities:[],particles:[],playerBase:null,enemyBase:null},
+    STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0}},
+    rtsSetLog:()=>{},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+
+  const result=vm.runInContext(`(() => {
+    const ship=makeDarkWarriorShip('player','shadow',100,100);
+    ship.x=100; ship.y=100;
+    const nearbyEnemy={id:50,side:'enemy',hp:20,x:150,y:100};
+    S.entities=[ship,nearbyEnemy];
+    const blockedByEnemy=tryDeployVanthel(ship,null,null);
+    const stillCarrying=ship.carryingVanthel;
+
+    nearbyEnemy.hp=0; // destroyed by the ship's attack
+    const deployed=tryDeployVanthel(ship,null,null);
+    const noLongerCarrying=ship.carryingVanthel;
+    const secondAttempt=tryDeployVanthel(ship,null,null);
+
+    return {
+      blockedByEnemy, stillCarrying,
+      deployed:{side:deployed.side,faction:deployed.faction,subtype:deployed.subtype},
+      noLongerCarrying, secondAttempt,
+      total:S.entities.filter(entity=>entity.subtype==='vanthel').length,
+    };
+  })()`,context);
+
+  assert.equal(result.blockedByEnemy,null);
+  assert.equal(result.stillCarrying,true);
+  assert.deepEqual({...result.deployed},{side:'player',faction:'shadow',subtype:'vanthel'});
+  assert.equal(result.noLongerCarrying,false);
+  assert.equal(result.secondAttempt,null);
+  assert.equal(result.total,1);
 });
 
 test('Roboto Warbot, Tank, and Warship require completed (gold-cost) research at the Research Lab, and Prism Legionnaires require a completed Council of Light',()=>{
@@ -602,7 +619,7 @@ test('bow-mode legionnaire can target aerial units, sword-mode cannot',()=>{
   assert.deepEqual({...result},{sword:false,bow:true});
 });
 
-test('Ling cannot target aerial units',()=>{
+test('Vanthel cannot target aerial units, but the Dark Warrior\'s Ship that carries him can',()=>{
   const context=makeContext();
   Object.assign(context,{
     STRUCT_COSTS:{
@@ -615,8 +632,9 @@ test('Ling cannot target aerial units',()=>{
   const gameSource=fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8');
   vm.runInContext(gameSource,context);
   const result=vm.runInContext(`(() => {
-    const unit=makeLing('player',100,100);
-    return canTargetAerial(unit);
+    const vanthel=makeVanthel('player',100,100);
+    const ship=makeDarkWarriorShip('player','shadow',100,100);
+    return {vanthel:canTargetAerial(vanthel), ship:canTargetAerial(ship)};
   })()`,context);
-  assert.equal(result,false);
+  assert.deepEqual({...result},{vanthel:false,ship:true});
 });
