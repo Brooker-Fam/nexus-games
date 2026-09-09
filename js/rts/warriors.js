@@ -53,8 +53,8 @@ function drawRTSWarrior(rc,w){
     drawLing(rc,w);
   } else if(w.subtype==='legionnaire'){
     drawLegionnaire(rc,cfg,w);
-  } else if(w.subtype==='princess'){
-    if(w.faction==='prism') drawPrincess(rc,cfg,w);
+  } else if(w.subtype==='prism'){
+    if(w.faction==='prism') drawPrism(rc,cfg,w);
   } else if(w.subtype==='elite'){
     if(w.faction==='prism') drawEliteOracle(rc,cfg,w);
     else if(w.faction==='shadow') drawEliteDarkWarrior(rc,cfg,w);

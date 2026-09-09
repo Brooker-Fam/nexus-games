@@ -379,26 +379,26 @@ function aiTick(){
     const eliteStruct=S.entities.find(e=>e.side==='enemy'&&e.type==='structure'&&!e.isBarracks&&!e.isAerialHangar&&!e.isOilRig&&!e.isLingNest&&!e.isResearchLab&&!e.isCouncilOfLight&&!e.isCouncilOfDarkness&&!e.underConstruction);
     const eCfg3=FACTION_CFG[S.enemyFaction];
     if(S.enemyFaction==='prism'){
-      const princessExists=S.entities.some(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='princess');
-      const princessQueued=S.entities.some(e=>e.side==='enemy' && e.queue?.some(q=>q.unitType==='princess' || q.label===eCfg3.princessLabel));
-      const princessOil=eCfg3.princessOilCost||0;
-      if(!princessExists && !princessQueued && S.gold.enemy>=eCfg3.princessCost && (S.oil.enemy||0)>=princessOil){
-        if(aiQueueAt(eb,eCfg3.princessLabel,BUILD_TIMES.elite,()=>makePrincess('enemy','prism',eb.x,eb.y),eCfg3.princessCost,'princess')){
-          S.oil.enemy=Math.max(0,(S.oil.enemy||0)-princessOil);
+      const prismExists=S.entities.some(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='prism');
+      const prismQueued=S.entities.some(e=>e.side==='enemy' && e.queue?.some(q=>q.unitType==='prism' || q.label===eCfg3.prismLabel));
+      const prismOil=eCfg3.prismOilCost||0;
+      if(!prismExists && !prismQueued && S.gold.enemy>=eCfg3.prismCost && (S.oil.enemy||0)>=prismOil){
+        if(aiQueueAt(eb,eCfg3.prismLabel,BUILD_TIMES.elite,()=>makePrism('enemy','prism',eb.x,eb.y),eCfg3.prismCost,'prism')){
+          S.oil.enemy=Math.max(0,(S.oil.enemy||0)-prismOil);
         }
       }
-      // Once a Princess is alive, the AI may build her Arkship — this draws
+      // Once Prism is alive, the AI may build her Arkship — this draws
       // her inside, so the build only fires while she still exists.
-      const princessAlive=S.entities.find(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='princess');
+      const prismAlive=S.entities.find(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='prism');
       const arkshipExists=S.entities.some(e=>e.side==='enemy' && e.faction==='prism' && e.subtype==='arkship');
       const arkshipQueued=S.entities.some(e=>e.side==='enemy' && e.queue?.some(q=>q.unitType==='arkship' || q.label===eCfg3.arkshipLabel));
       const arkshipOil=eCfg3.arkshipOilCost||0;
-      if(princessAlive && !arkshipExists && !arkshipQueued && S.gold.enemy>=eCfg3.arkshipCost && (S.oil.enemy||0)>=arkshipOil){
+      if(prismAlive && !arkshipExists && !arkshipQueued && S.gold.enemy>=eCfg3.arkshipCost && (S.oil.enemy||0)>=arkshipOil){
         if(aiQueueAt(eb,eCfg3.arkshipLabel,BUILD_TIMES.arkship,()=>{
-          const idx=S.entities.indexOf(princessAlive);
+          const idx=S.entities.indexOf(prismAlive);
           if(idx!==-1) S.entities.splice(idx,1);
           const ark=makeArkship('enemy','prism',eb.x,eb.y);
-          ark.x=princessAlive.x; ark.y=princessAlive.y;
+          ark.x=prismAlive.x; ark.y=prismAlive.y;
           return ark;
         },eCfg3.arkshipCost,'arkship')){
           S.oil.enemy=Math.max(0,(S.oil.enemy||0)-arkshipOil);
@@ -843,7 +843,7 @@ const MELEE_ATTACK_TICKS = 45;
 
 // Returns true if this attacker can hit aerial units.
 // Allowed: gunbot (roboto warrior), warbot, shockbot, dark warrior (shadow elite),
-//          witch (prism warrior), princess (prism elite), wizard, starfighter, skyattacker,
+//          witch (prism warrior), Prism (prism-faction elite), wizard, starfighter, skyattacker,
 //          bow-mode legionnaire, bow-mode bloodhound.
 // Blocked: workers, swordsman (shadow melee warrior), sword-mode legionnaire, necromancer, tank, ling.
 function canTargetAerial(w){
@@ -991,40 +991,40 @@ function arkshipBeamAttackTick(w, target){
   }
 }
 
-// Deploys the Princess and 5 escorting Witches from an Arkship entering
+// Deploys Prism and 5 escorting Witches from an Arkship entering
 // phasing mode. One-shot per Arkship — toggling back and forth afterward
 // doesn't summon a second crew.
 function deployArkshipCrew(ark){
   if(ark.deployedCrew) return;
   ark.deployedCrew=true;
   const spawnOffset=ark.side==='player'?40:-40;
-  const princess=makePrincess(ark.side, ark.faction, ark.x, ark.y);
-  princess.x=ark.x+spawnOffset; princess.y=ark.y;
-  S.entities.push(princess);
+  const prism=makePrism(ark.side, ark.faction, ark.x, ark.y);
+  prism.x=ark.x+spawnOffset; prism.y=ark.y;
+  S.entities.push(prism);
   for(let i=0;i<5;i++){
     const witch=makeWarrior(ark.side, ark.faction, ark.x, ark.y);
     witch.x=ark.x+spawnOffset*0.6; witch.y=ark.y+(i-2)*22;
     S.entities.push(witch);
   }
   spawnMagicBurst(ark.x,ark.y,FACTION_CFG.prism.color);
-  if(ark.side==='player') rtsSetLog('The Arkship phases open — the Princess and her Witches emerge!');
+  if(ark.side==='player') rtsSetLog('The Arkship phases open — Prism and her Witches emerge!');
   sfx('rtsMagicFire',80);
 }
 
-function summonLegionnaire(princess, target){
-  const spawnOffset=princess.side==='player'?24:-24;
+function summonLegionnaire(prism, target){
+  const spawnOffset=prism.side==='player'?24:-24;
   // makeLegionnaire normally offsets a unit from a production building; adjust
-  // its origin so the summoned soldier appears directly in front of Princess.
-  const productionOffset=princess.side==='player'?80:-80;
+  // its origin so the summoned soldier appears directly in front of Prism.
+  const productionOffset=prism.side==='player'?80:-80;
   for(let i=0;i<10;i++){
     const legionnaire=makeLegionnaire(
-      princess.side,
-      princess.faction,
-      princess.x+spawnOffset-productionOffset,
-      princess.y,
+      prism.side,
+      prism.faction,
+      prism.x+spawnOffset-productionOffset,
+      prism.y,
       i%2===1
     );
-    legionnaire.y=princess.y+(rtsRand()-0.5)*36;
+    legionnaire.y=prism.y+(rtsRand()-0.5)*36;
     legionnaire.forcedTarget=target;
     legionnaire.state='march';
     S.entities.push(legionnaire);

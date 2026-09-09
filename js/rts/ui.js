@@ -37,9 +37,9 @@ function baseTrainingTypes(cfg, faction){
   const types = [
     { icon:cfg.workerIcon, label:cfg.workerLabel, desc:'Gathers gold from mines', cost:cfg.workerCost, oilCost:0, unitType:'worker' },
   ];
-  // The Princess is the Prism Armada's unique royal Temple unit.
+  // Prism is the Prism Armada's unique royal Temple unit.
   if(faction==='prism'){
-    types.push({ icon:cfg.princessIcon, label:cfg.princessLabel, desc:cfg.princessDesc, cost:cfg.princessCost, oilCost:cfg.princessOilCost||0, unitType:'princess' });
+    types.push({ icon:cfg.prismIcon, label:cfg.prismLabel, desc:cfg.prismDesc, cost:cfg.prismCost, oilCost:cfg.prismOilCost||0, unitType:'prism' });
     types.push({ icon:cfg.arkshipIcon, label:cfg.arkshipLabel, desc:cfg.arkshipDesc, cost:cfg.arkshipCost, oilCost:cfg.arkshipOilCost||0, unitType:'arkship' });
   }
   return types;
@@ -123,18 +123,18 @@ function openBuildPopup(screenX, screenY, context){
     if(sel?.infested){
       addOpt('☣', 'INFEST MODE ACTIVE', 'Permanently auto-producing Infested GunBots — Drone production disabled', 0, ()=>{}, true);
     } else {
-      const hasPrincess=S.entities.some(e=>e.side===mySide() && e.faction==='prism' && e.subtype==='princess');
+      const hasPrism=S.entities.some(e=>e.side===mySide() && e.faction==='prism' && e.subtype==='prism');
       for(const u of baseTrainingTypes(cfg,myFaction())){
-        const princessUnavailable=u.unitType==='princess' && S.entities.some(e=>
-          e.side===mySide() && (e.subtype==='princess' || e.queue?.some(q=>q.unitType==='princess' || q.label===cfg.princessLabel))
+        const prismUnavailable=u.unitType==='prism' && S.entities.some(e=>
+          e.side===mySide() && (e.subtype==='prism' || e.queue?.some(q=>q.unitType==='prism' || q.label===cfg.prismLabel))
         );
-        const arkshipUnavailable=u.unitType==='arkship' && (!hasPrincess || S.entities.some(e=>
+        const arkshipUnavailable=u.unitType==='arkship' && (!hasPrism || S.entities.some(e=>
           e.side===mySide() && (e.subtype==='arkship' || e.queue?.some(q=>q.unitType==='arkship' || q.label===cfg.arkshipLabel))
         ));
-        const desc = (u.unitType==='arkship' && !hasPrincess) ? 'Requires an existing Princess to build' : u.desc;
+        const desc = (u.unitType==='arkship' && !hasPrism) ? 'Requires an existing Prism to build' : u.desc;
         addOpt(u.icon, u.label, desc, u.cost,
           ()=>trainCmd(sel?sel.id:S.buildingSource?.id, u.unitType, 'base'),
-          princessUnavailable||arkshipUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
+          prismUnavailable||arkshipUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
           u.oilCost);
       }
       if(myFaction()==='shadow'){
@@ -336,7 +336,7 @@ function openBuildPopup(screenX, screenY, context){
     const isPhasing=sel.arkMode==='phasing';
     addOpt(isPhasing?'⚔':'🌀', isPhasing?'Switch to ATTACKING':'Switch to PHASING',
       isPhasing?'Reform and fire twin beams at nearby enemies'
-        : (sel.deployedCrew?'Phase out — the Princess and her Witches have already been deployed':'Phase out and deploy the Princess with 5 Witches'),
+        : (sel.deployedCrew?'Phase out — Prism and her Witches have already been deployed':'Phase out and deploy Prism with 5 Witches'),
       0, ()=>{ issueCommand({type:'toggle_arkship_mode',unitId:sel.id}); closeBuildPopup(); }, false);
 
   } else if(context==='structure'){
@@ -644,7 +644,7 @@ function rtsHandleClick(e){
       openBuildPopup(sx,sy,'psionic');
       rtsSetLog(`PSIONIC WARRIOR — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior'){
-      const UNIT_LABELS={princess:'princessLabel',arkship:'arkshipLabel',elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label',warbot:'warrior2Label'};
+      const UNIT_LABELS={prism:'prismLabel',arkship:'arkshipLabel',elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label',warbot:'warrior2Label'};
       const lbl=cfg[UNIT_LABELS[hit.subtype]]||cfg.warriorLabel;
       rtsSetLog(`${lbl} selected — click to move or attack.`);
     }

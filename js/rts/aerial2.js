@@ -155,7 +155,7 @@ function drawDestroyerUnit(rc,cfg,w){
   rc.beginPath(); rc.moveTo(2,3); rc.lineTo(-7,11); rc.stroke();
 }
 
-// ── PRISM ARKSHIP — the Princess's flagship: not a solid hull but a loose
+// ── PRISM ARKSHIP — Prism's flagship: not a solid hull but a loose
 // swirl of jagged metal fragments orbiting a bright core. Phasing mode dims
 // the swirl (it's about to release its crew); attacking mode flares its
 // twin beam emitters at the front.
