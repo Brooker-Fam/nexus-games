@@ -42,6 +42,10 @@ function baseTrainingTypes(cfg, faction){
     types.push({ icon:cfg.prismIcon, label:cfg.prismLabel, desc:cfg.prismDesc, cost:cfg.prismCost, oilCost:cfg.prismOilCost||0, unitType:'prism' });
     types.push({ icon:cfg.arkshipIcon, label:cfg.arkshipLabel, desc:cfg.arkshipDesc, cost:cfg.arkshipCost, oilCost:cfg.arkshipOilCost||0, unitType:'arkship' });
   }
+  // Gongui is the Roboto Armada's unique royal Factory unit.
+  if(faction==='roboto'){
+    types.push({ icon:cfg.gonguiIcon, label:cfg.gonguiLabel, desc:cfg.gonguiDesc, cost:cfg.gonguiCost, oilCost:cfg.gonguiOilCost||0, unitType:'gongui' });
+  }
   return types;
 }
 
@@ -118,45 +122,39 @@ function openBuildPopup(screenX, screenY, context){
 
   if(context==='base'){
     const sel=S.selected[0];
-    title.textContent = sel?.infested ? 'INFESTED FACTORY' : cfg.buildingName;
-    if(sel?.infested){
-      addOpt('☣', 'INFEST MODE ACTIVE', 'Permanently auto-producing Infested GunBots — Drone production disabled', 0, ()=>{}, true);
-    } else {
-      const hasPrism=S.entities.some(e=>e.side===mySide() && e.faction==='prism' && e.subtype==='prism');
-      for(const u of baseTrainingTypes(cfg,myFaction())){
-        const prismUnavailable=u.unitType==='prism' && S.entities.some(e=>
-          e.side===mySide() && (e.subtype==='prism' || e.queue?.some(q=>q.unitType==='prism' || q.label===cfg.prismLabel))
-        );
-        const arkshipUnavailable=u.unitType==='arkship' && (!hasPrism || S.entities.some(e=>
-          e.side===mySide() && (e.subtype==='arkship' || e.queue?.some(q=>q.unitType==='arkship' || q.label===cfg.arkshipLabel))
-        ));
-        const desc = (u.unitType==='arkship' && !hasPrism) ? 'Requires an existing Prism to build' : u.desc;
-        addOpt(u.icon, u.label, desc, u.cost,
-          ()=>trainCmd(sel?sel.id:S.buildingSource?.id, u.unitType, 'base'),
-          prismUnavailable||arkshipUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
-          u.oilCost);
-      }
-      if(myFaction()==='shadow'){
-        const cooldown=Math.max(0,(sel?.darkShipCooldown||0)-S.frame);
-        const goldCost=cfg.darkShipGoldCost||0;
-        const essenceCost=cfg.darkShipOilCost||0;
-        const shipOrVanthelAlive=S.entities.some(e=>e.side===mySide() && (e.subtype==='darkwarriorship'||e.subtype==='vanthel'));
-        addOpt('🛸', "DEPLOY DARK WARRIOR'S SHIP", cooldown>0
-          ? `Temple is recovering — ${Math.ceil(cooldown/60)}s`
-          : shipOrVanthelAlive ? 'Vanthel is already on the battlefield'
-          : "Choose a location to deploy the Dark Warrior's Ship, carrying Vanthel", goldCost, ()=>{
-          S.deployDarkShipMode={templeId:sel?sel.id:S.buildingSource?.id};
-          rtsSetLog("Choose a location to deploy the Dark Warrior's Ship.");
-          closeBuildPopup();
-          rtsUpdateViewportCursor();
-        }, !!sel?.underConstruction||cooldown>0||shipOrVanthelAlive||myGold()<goldCost||myOil()<essenceCost, essenceCost);
-      }
-      if(myFaction()==='roboto'){
-        addOpt('☣', 'INFEST FACTORY', 'Permanent — continuously produces free Infested GunBots and can no longer make Drones', 0, ()=>{
-          issueCommand({type:'infest_factory',buildingId:sel?sel.id:S.buildingSource?.id});
-          closeBuildPopup();
-        }, !!sel?.underConstruction);
-      }
+    title.textContent = cfg.buildingName;
+    const hasPrism=S.entities.some(e=>e.side===mySide() && e.faction==='prism' && e.subtype==='prism');
+    for(const u of baseTrainingTypes(cfg,myFaction())){
+      const prismUnavailable=u.unitType==='prism' && S.entities.some(e=>
+        e.side===mySide() && (e.subtype==='prism' || e.queue?.some(q=>q.unitType==='prism' || q.label===cfg.prismLabel))
+      );
+      const gonguiUnavailable=u.unitType==='gongui' && S.entities.some(e=>
+        e.side===mySide() && (e.subtype==='gongui' || e.queue?.some(q=>q.unitType==='gongui' || q.label===cfg.gonguiLabel)
+          || (e.subtype==='capitalship' && e.passenger))
+      );
+      const arkshipUnavailable=u.unitType==='arkship' && (!hasPrism || S.entities.some(e=>
+        e.side===mySide() && (e.subtype==='arkship' || e.queue?.some(q=>q.unitType==='arkship' || q.label===cfg.arkshipLabel))
+      ));
+      const desc = (u.unitType==='arkship' && !hasPrism) ? 'Requires an existing Prism to build' : u.desc;
+      addOpt(u.icon, u.label, desc, u.cost,
+        ()=>trainCmd(sel?sel.id:S.buildingSource?.id, u.unitType, 'base'),
+        prismUnavailable||gonguiUnavailable||arkshipUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
+        u.oilCost);
+    }
+    if(myFaction()==='shadow'){
+      const cooldown=Math.max(0,(sel?.darkShipCooldown||0)-S.frame);
+      const goldCost=cfg.darkShipGoldCost||0;
+      const essenceCost=cfg.darkShipOilCost||0;
+      const shipOrVanthelAlive=S.entities.some(e=>e.side===mySide() && (e.subtype==='darkwarriorship'||e.subtype==='vanthel'));
+      addOpt('🛸', "DEPLOY DARK WARRIOR'S SHIP", cooldown>0
+        ? `Temple is recovering — ${Math.ceil(cooldown/60)}s`
+        : shipOrVanthelAlive ? 'Vanthel is already on the battlefield'
+        : "Choose a location to deploy the Dark Warrior's Ship, carrying Vanthel", goldCost, ()=>{
+        S.deployDarkShipMode={templeId:sel?sel.id:S.buildingSource?.id};
+        rtsSetLog("Choose a location to deploy the Dark Warrior's Ship.");
+        closeBuildPopup();
+        rtsUpdateViewportCursor();
+      }, !!sel?.underConstruction||cooldown>0||shipOrVanthelAlive||myGold()<goldCost||myOil()<essenceCost, essenceCost);
     }
 
   } else if(context==='barracks'){
@@ -261,13 +259,21 @@ function openBuildPopup(screenX, screenY, context){
         desc: needsCouncilDarkAerial ? `Requires a completed ${cfg.councilOfDarknessLabel}` : cfg.aerial2Desc,
         cost:cfg.aerial2Cost, oilCost:cfg.aerial2OilCost||0, unitType:'aerial2', locked:needsCouncilDarkAerial },
     ];
+    // The Capital Ship is the Roboto Armada's unique flagship, trained here
+    // at the Shipyard alongside the standard aerial units.
+    if(myFaction()==='roboto' && cfg.capitalShipLabel){
+      aerialTypes.push({ icon:cfg.capitalShipIcon, label:cfg.capitalShipLabel, desc:cfg.capitalShipDesc, cost:cfg.capitalShipCost, oilCost:cfg.capitalShipOilCost||0, unitType:'capitalship' });
+    }
 
     for(const u of aerialTypes){
       const needsResearch=unitNeedsResearch(cfg,u.unitType);
+      const shipUnavailable=u.unitType==='capitalship' && S.entities.some(e=>
+        e.side===mySide() && (e.subtype==='capitalship' || e.queue?.some(q=>q.unitType==='capitalship' || q.label===cfg.capitalShipLabel))
+      );
       const desc = needsResearch ? `Requires completed research at the ${cfg.researchLabLabel}` : u.desc;
       addOpt(u.icon, u.label, desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'aerial'),
-        u.locked||needsResearch||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        u.locked||needsResearch||shipUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
         u.oilCost);
     }
 
@@ -322,6 +328,25 @@ function openBuildPopup(screenX, screenY, context){
     addOpt(isSingle?'✦':'🎯', isSingle?'Switch to MULTIPLE':'Switch to SINGLE',
       isSingle?'Fire one bullet at every enemy in range at a slower rate':'Focus one target with one bullet at 112 BPM',
       0, ()=>{ issueCommand({type:'toggle_warship_attack_mode',unitId:sel.id}); closeBuildPopup(); }, false);
+
+  } else if(context==='gongui'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='GONGUI, THE ROBOTO KING';
+    addOpt(cfg.gonguiIcon||'👑', 'THE ROBOTO KING', `HP: ${Math.floor(sel?.hp||0)}/${sel?.maxHp||260} · Board a Capital Ship to carry him into battle`, 0, ()=>closeBuildPopup(), true);
+
+  } else if(context==='capitalship'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='CAPITAL SHIP';
+    addOpt(sel.landed?'🚀':'🛬', sel.landed?'TAKE OFF':'LAND',
+      sel.landed?'Return to the air and resume multi-target fire':'Touch down — grounded and vulnerable, but able to board or deploy Gongui',
+      0, ()=>{ issueCommand({type:'toggle_capitalship_landed',unitId:sel.id}); closeBuildPopup(); }, false);
+    if(sel.passenger){
+      addOpt('👑', 'DEPLOY GONGUI', sel.landed?'Unload Gongui to fight on the ground':'Land the ship first to deploy Gongui',
+        0, ()=>{ issueCommand({type:'deploy_gongui',unitId:sel.id}); closeBuildPopup(); }, !sel.landed);
+    } else {
+      addOpt('👑', 'BOARD GONGUI', 'Load a nearby Gongui aboard for safe transport',
+        0, ()=>{ issueCommand({type:'board_gongui',unitId:sel.id}); closeBuildPopup(); }, false);
+    }
 
   } else if(context==='arkship'){
     const sel=S.selected[0]; if(!sel) return;
@@ -617,6 +642,12 @@ function rtsHandleClick(e){
     } else if(hit.type==='warrior' && hit.subtype==='warship'){
       openBuildPopup(sx,sy,'warship');
       rtsSetLog(`WARSHIP — ${hit.attackMode} attack mode  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
+    } else if(hit.type==='warrior' && hit.subtype==='gongui'){
+      openBuildPopup(sx,sy,'gongui');
+      rtsSetLog(`GONGUI, THE ROBOTO KING — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
+    } else if(hit.type==='warrior' && hit.subtype==='capitalship'){
+      openBuildPopup(sx,sy,'capitalship');
+      rtsSetLog(`CAPITAL SHIP — ${hit.landed?'landed':'airborne'}${hit.passenger?', Gongui aboard':''}  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior' && hit.subtype==='arkship'){
       openBuildPopup(sx,sy,'arkship');
       rtsSetLog(`ARKSHIP — ${hit.arkMode} mode  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);

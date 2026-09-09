@@ -194,6 +194,86 @@ function drawEliteDarkWarrior(rc,cfg,w){
   rc.beginPath(); rc.ellipse(0,-12,30,42,0,0,Math.PI*2); rc.stroke();
 }
 
+// ── GONGUI, THE ROBOTO KING (Roboto Factory) ──
+function drawGongui(rc,cfg,w){
+  const t=w.frame, isAtt=w.state==='attack', isMarch=w.state==='march';
+
+  // heavy royal legs
+  for(const [lx,ph] of [[-8,0],[5,Math.PI]]){
+    const step=isMarch?Math.sin(t*0.2+ph)*5:0;
+    rc.fillStyle='#241a10'; rc.fillRect(lx,-6+step,9,15); rc.strokeStyle='rgba(255,200,60,0.4)'; rc.lineWidth=0.6; rc.strokeRect(lx,-6+step,9,15);
+    rc.fillStyle='#161008'; rc.beginPath(); rc.roundRect(lx-2,9+step,13,5,1); rc.fill();
+  }
+
+  // trailing royal cape — dark bronze, streams behind while marching
+  const capeTrail=isMarch?6:isAtt?2:0;
+  const cape=rc.createLinearGradient(-14,-32,14,14);
+  cape.addColorStop(0,'#3a1f08'); cape.addColorStop(1,'#140a02');
+  rc.fillStyle=cape;
+  rc.beginPath();
+  rc.moveTo(-9,-28); rc.quadraticCurveTo(-20-capeTrail,-4,-17-capeTrail,14);
+  rc.lineTo(17,14); rc.quadraticCurveTo(20,-4,9,-28);
+  rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(255,200,60,0.4)'; rc.lineWidth=0.9; rc.stroke();
+
+  // bulky armoured torso, bigger than a Shockbot's
+  const tGrad=rc.createLinearGradient(-15,-32,15,4);
+  tGrad.addColorStop(0,'#403020'); tGrad.addColorStop(0.5,'#241808'); tGrad.addColorStop(1,'#100a04');
+  rc.fillStyle=tGrad; rc.beginPath(); rc.roundRect(-15,-32,30,36,3); rc.fill();
+  rc.strokeStyle='rgba(255,210,80,0.6)'; rc.lineWidth=1.3; rc.stroke();
+  // gold royal insignia bands
+  for(const ry of [-24,-14,-4]){
+    rc.strokeStyle=`rgba(255,210,80,${isAtt?0.8:0.4})`; rc.lineWidth=1.5;
+    rc.beginPath(); rc.roundRect(-12,ry,24,7,2); rc.stroke();
+  }
+  // royal power core — flares gold when attacking
+  const coreFlash=isAtt?0.6+Math.sin(t*0.5)*0.4:0.7;
+  const cG=rc.createRadialGradient(0,-14,0,0,-14,7+coreFlash*4);
+  cG.addColorStop(0,'#fff6d0'); cG.addColorStop(0.4,'#ffd700'); cG.addColorStop(0.75,'#aa6600'); cG.addColorStop(1,'transparent');
+  rc.fillStyle=cG; rc.shadowColor='#ffcc33'; rc.shadowBlur=isAtt?26:14;
+  rc.beginPath(); rc.arc(0,-14,7+coreFlash*3,0,Math.PI*2); rc.fill();
+
+  // twin cannon-gauntlet arms, spiked shoulder pauldrons
+  const recoil=isAtt?Math.max(0,Math.sin(t*0.55))*4:0;
+  for(const sx of [-1,1]){
+    rc.fillStyle='#2a1c0c'; rc.beginPath(); rc.roundRect(sx*15-5,-32,11,15,2); rc.fill();
+    rc.strokeStyle='rgba(255,200,60,0.5)'; rc.lineWidth=0.8; rc.stroke();
+    rc.fillStyle='#ffd700'; rc.beginPath(); rc.moveTo(sx*15,-32); rc.lineTo(sx*20,-42); rc.lineTo(sx*11,-32); rc.closePath(); rc.fill();
+    // cannon barrel
+    rc.fillStyle='#181008'; rc.fillRect(sx*20-2-sx*recoil,-16,4,16);
+    rc.strokeStyle='rgba(255,200,60,0.5)'; rc.lineWidth=0.5; rc.strokeRect(sx*20-2-sx*recoil,-16,4,16);
+    const flash=isAtt?6+Math.sin(t*0.55)*4:2;
+    const mg=rc.createRadialGradient(sx*20-sx*recoil,-16,0,sx*20-sx*recoil,-16,flash);
+    mg.addColorStop(0,`rgba(255,240,180,${isAtt?0.95:0.2})`); mg.addColorStop(0.5,`rgba(255,190,0,${isAtt?0.7:0.1})`); mg.addColorStop(1,'transparent');
+    rc.fillStyle=mg; rc.beginPath(); rc.arc(sx*20-sx*recoil,-16,flash,0,Math.PI*2); rc.fill();
+  }
+
+  // wide regal head
+  const hG=rc.createLinearGradient(-10,-46,10,-30);
+  hG.addColorStop(0,'#403020'); hG.addColorStop(1,'#180f06');
+  rc.fillStyle=hG; rc.beginPath(); rc.roundRect(-10,-46,20,16,3); rc.fill();
+  rc.strokeStyle='rgba(255,210,80,0.6)'; rc.lineWidth=0.9; rc.stroke();
+  // visor — regal gold, flares red only when attacking
+  const vG=rc.createLinearGradient(-8,-43,8,-36);
+  const vc=isAtt?'rgba(255,60,0,':'rgba(255,210,80,';
+  vG.addColorStop(0,vc+'0.2)'); vG.addColorStop(0.5,vc+'0.95)'); vG.addColorStop(1,vc+'0.2)');
+  rc.fillStyle=vG; rc.beginPath(); rc.roundRect(-8,-43,16,6,1); rc.fill();
+
+  // oversized jeweled crown — unmistakably the Roboto King
+  rc.fillStyle='#ffd700'; rc.shadowColor='#ffbf2f'; rc.shadowBlur=isAtt?22:12;
+  rc.beginPath();
+  rc.moveTo(-10,-46); rc.lineTo(-10,-58); rc.lineTo(-5,-52);
+  rc.lineTo(0,-64); rc.lineTo(5,-52); rc.lineTo(10,-58); rc.lineTo(10,-46);
+  rc.closePath(); rc.fill();
+  rc.strokeStyle='rgba(255,240,180,0.7)'; rc.lineWidth=1.2; rc.stroke();
+  rc.fillStyle='#ff3300';
+  for(const [jx,jy] of [[-5,-52],[0,-58],[5,-52]]){ rc.beginPath(); rc.arc(jx,jy,2,0,Math.PI*2); rc.fill(); }
+
+  // regal gold aura
+  rc.strokeStyle=`rgba(255,200,60,${0.2+Math.sin(t*0.05)*0.1})`; rc.lineWidth=3;
+  rc.beginPath(); rc.ellipse(0,-12,32,44,0,0,Math.PI*2); rc.stroke();
+}
+
 function drawEliteShockbot(rc,cfg,w){
   // Shockbot — bigger, electric-themed robot with lightning coils
   const t=w.frame, isAtt=w.state==='attack';

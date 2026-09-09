@@ -394,6 +394,17 @@ function aiTick(){
         }
       }
     }
+    if(S.enemyFaction==='roboto'){
+      const gonguiExists=S.entities.some(e=>e.side==='enemy' && e.faction==='roboto' && e.subtype==='gongui');
+      const gonguiQueued=S.entities.some(e=>e.side==='enemy' && e.queue?.some(q=>q.unitType==='gongui' || q.label===eCfg3.gonguiLabel));
+      const gonguiBoarded=S.entities.some(e=>e.side==='enemy' && e.subtype==='capitalship' && e.passenger);
+      const gonguiOil=eCfg3.gonguiOilCost||0;
+      if(!gonguiExists && !gonguiQueued && !gonguiBoarded && S.gold.enemy>=eCfg3.gonguiCost && (S.oil.enemy||0)>=gonguiOil){
+        if(aiQueueAt(eb,eCfg3.gonguiLabel,BUILD_TIMES.gongui,()=>makeGongui('enemy','roboto',eb.x,eb.y),eCfg3.gonguiCost,'gongui')){
+          S.oil.enemy=Math.max(0,(S.oil.enemy||0)-gonguiOil);
+        }
+      }
+    }
     if(S.enemyFaction==='shadow'){
       const shipOrVanthelAlive=S.entities.some(e=>e.side==='enemy' && (e.subtype==='darkwarriorship'||e.subtype==='vanthel'));
       const shipGoldNeeded=eCfg3.darkShipGoldCost||0;
@@ -453,6 +464,19 @@ function aiTick(){
         ()=>afn('enemy',S.enemyFaction,aerialHangar.x,aerialHangar.y),
         eCfg.aerialUnitCost)){
         if(aerialOilNeeded>0) S.oil.enemy=Math.max(0,(S.oil.enemy||0)-aerialOilNeeded);
+      }
+    }
+
+    if(aerialHangar && S.enemyFaction==='roboto'){
+      const shipExists=S.entities.some(e=>e.side==='enemy' && e.faction==='roboto' && e.subtype==='capitalship');
+      const shipQueued=S.entities.some(e=>e.side==='enemy' && e.queue?.some(q=>q.unitType==='capitalship' || q.label===eCfg.capitalShipLabel));
+      const shipOil=eCfg.capitalShipOilCost||0;
+      if(!shipExists && !shipQueued && S.gold.enemy>=eCfg.capitalShipCost && (S.oil.enemy||0)>=shipOil){
+        if(aiQueueAt(aerialHangar,eCfg.capitalShipLabel,BUILD_TIMES.capitalship,
+          ()=>makeCapitalShip('enemy','roboto',aerialHangar.x,aerialHangar.y),
+          eCfg.capitalShipCost,'capitalship')){
+          S.oil.enemy=Math.max(0,(S.oil.enemy||0)-shipOil);
+        }
       }
     }
 
@@ -799,7 +823,6 @@ function cannonTick(c){
 // ── BUILDING TICK — processes train queues ──
 function buildingTick(b){
   if(b.underConstruction) return; // can't train while being built
-  if(b.infested) ensureInfestedProduction(b);
   if(!b.queue || b.queue.length===0) return;
   b.trainTimer=(b.trainTimer||0)+1;
   const item=b.queue[0];
@@ -814,16 +837,7 @@ function buildingTick(b){
       S.stats.unitsBuilt+=spawned.length;
       rtsSetLog(spawned.length>1 ? `${item.label} squad ready! (×${spawned.length})` : `${item.label} ready!`);
     }
-    if(b.infested) ensureInfestedProduction(b);
   }
-}
-
-function ensureInfestedProduction(factory){
-  if(!factory?.infested || factory.underConstruction) return false;
-  if(!factory.queue) factory.queue=[];
-  if(factory.queue.length>0) return false;
-  return queueUnit(factory, 'INFESTED GUNBOT', BUILD_TIMES.infestedGunbot,
-    ()=>makeInfestedGunbot(factory.side, factory.x, factory.y), 'infestedGunbot');
 }
 
 function queueUnit(building, label, time, fn, unitType){
@@ -1074,6 +1088,9 @@ function warriorMeleeAttack(w, target, targetDist){
 
 function warriorTick(w, playerBase, enemyBase){
   if(w.beam){ w.beamTarget=null; w.beamTarget2=null; }
+  // A landed Capital Ship is grounded to board/deploy Gongui — it cannot
+  // move or fight until it takes off again.
+  if(w.subtype==='capitalship' && w.landed) return;
   const enemyBase2=w.side==='player'?enemyBase:playerBase;
 
   // DUEL STATE — two warriors fighting to become an elite
@@ -1216,6 +1233,7 @@ const PROJECTILE_TYPES = {
   warship:      { type:'bullet',  color:'#ffcc44', speed:12, sound:'rtsBullet' },
   destroyer:    { type:'darkorb', color:'#5500aa', speed:2.5, sound:'rtsDarkOrb',
                   aoeRadius:COMBAT.darkOrbAoeRadius, aoeFactor:COMBAT.darkOrbDamageFactor },
+  capitalship:  { type:'bullet',  color:'#ffd700', speed:12, sound:'rtsBullet' },
   darkwarriorship: { type:'darkorb', color:'#aa00ff', speed:2.7, sound:'rtsDarkOrb',
                   aoeRadius:COMBAT.darkShipOrbAoeRadius, aoeFactor:COMBAT.darkShipOrbDamageFactor },
   // elite per-faction
@@ -1267,10 +1285,11 @@ function spawnProjectile(shooter, target, burstOffset){
   sfx(pCfg.sound||'rtsBullet', 80);
 }
 
-// Warships in multiple mode engage every enemy in range simultaneously;
-// every other ranged attack sends one projectile at its selected target.
+// Warships in multiple mode, and Capital Ships whenever they're airborne,
+// engage every enemy in range simultaneously; every other ranged attack
+// sends one projectile at its selected target.
 function fireWarriorProjectiles(w, target){
-  if(w.subtype==='warship' && w.attackMode==='multiple'){
+  if((w.subtype==='warship' && w.attackMode==='multiple') || w.subtype==='capitalship'){
     const targets=S.entities.filter(e=>
       e.side!==w.side && e.hp>0 && _dist(e.x-w.x,e.y-w.y)<=w.range
     );
