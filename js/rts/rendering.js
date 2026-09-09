@@ -111,7 +111,7 @@ function drawMinimap(){
       mc.beginPath(); mc.arc(mx,my,1.5,0,Math.PI*2); mc.fill();
     } else if(e.type==='warrior'){
       const isAerial=e.aerial;
-      const isElite=e.subtype==='elite'||e.subtype==='princess'||e.subtype==='gongui'||e.subtype==='capitalship';
+      const isElite=e.subtype==='elite'||e.subtype==='princess'||e.subtype==='gongui'||e.subtype==='capitalship'||e.subtype==='arkship';
       mc.fillStyle=isElite?'#ffffff':isAerial?'#ffffff':pCfg.color;
       mc.globalAlpha=isAerial?0.7:1;
       mc.beginPath(); mc.arc(mx,my,isElite?2.5:isAerial?2.5:2,0,Math.PI*2); mc.fill();

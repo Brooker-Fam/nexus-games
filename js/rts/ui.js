@@ -40,6 +40,7 @@ function baseTrainingTypes(cfg, faction){
   // The Princess is the Prism Armada's unique royal Temple unit.
   if(faction==='prism'){
     types.push({ icon:cfg.princessIcon, label:cfg.princessLabel, desc:cfg.princessDesc, cost:cfg.princessCost, oilCost:cfg.princessOilCost||0, unitType:'princess' });
+    types.push({ icon:cfg.arkshipIcon, label:cfg.arkshipLabel, desc:cfg.arkshipDesc, cost:cfg.arkshipCost, oilCost:cfg.arkshipOilCost||0, unitType:'arkship' });
   }
   // Gongui is the Roboto Armada's unique royal Factory unit.
   if(faction==='roboto'){
@@ -123,6 +124,7 @@ function openBuildPopup(screenX, screenY, context){
   if(context==='base'){
     const sel=S.selected[0];
     title.textContent = cfg.buildingName;
+    const hasPrincess=S.entities.some(e=>e.side===mySide() && e.faction==='prism' && e.subtype==='princess');
     for(const u of baseTrainingTypes(cfg,myFaction())){
       const princessUnavailable=u.unitType==='princess' && S.entities.some(e=>
         e.side===mySide() && (e.subtype==='princess' || e.queue?.some(q=>q.unitType==='princess' || q.label===cfg.princessLabel))
@@ -131,9 +133,13 @@ function openBuildPopup(screenX, screenY, context){
         e.side===mySide() && (e.subtype==='gongui' || e.queue?.some(q=>q.unitType==='gongui' || q.label===cfg.gonguiLabel)
           || (e.subtype==='capitalship' && e.passenger))
       );
-      addOpt(u.icon, u.label, u.desc, u.cost,
+      const arkshipUnavailable=u.unitType==='arkship' && (!hasPrincess || S.entities.some(e=>
+        e.side===mySide() && (e.subtype==='arkship' || e.queue?.some(q=>q.unitType==='arkship' || q.label===cfg.arkshipLabel))
+      ));
+      const desc = (u.unitType==='arkship' && !hasPrincess) ? 'Requires an existing Princess to build' : u.desc;
+      addOpt(u.icon, u.label, desc, u.cost,
         ()=>trainCmd(sel?sel.id:S.buildingSource?.id, u.unitType, 'base'),
-        princessUnavailable||gonguiUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
+        princessUnavailable||gonguiUnavailable||arkshipUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
         u.oilCost);
     }
     if(myFaction()==='shadow'){
@@ -348,6 +354,15 @@ function openBuildPopup(screenX, screenY, context){
       addOpt('👑', 'BOARD GONGUI', 'Load a nearby Gongui aboard for safe transport',
         0, ()=>{ issueCommand({type:'board_gongui',unitId:sel.id}); closeBuildPopup(); }, false);
     }
+
+  } else if(context==='arkship'){
+    const sel=S.selected[0]; if(!sel) return;
+    title.textContent='ARKSHIP';
+    const isPhasing=sel.arkMode==='phasing';
+    addOpt(isPhasing?'⚔':'🌀', isPhasing?'Switch to ATTACKING':'Switch to PHASING',
+      isPhasing?'Reform and fire twin beams at nearby enemies'
+        : (sel.deployedCrew?'Phase out — the Princess and her Witches have already been deployed':'Phase out and deploy the Princess with 5 Witches'),
+      0, ()=>{ issueCommand({type:'toggle_arkship_mode',unitId:sel.id}); closeBuildPopup(); }, false);
 
   } else if(context==='structure'){
     const sel=S.selected[0];
@@ -650,6 +665,9 @@ function rtsHandleClick(e){
     } else if(hit.type==='warrior' && hit.subtype==='capitalship'){
       openBuildPopup(sx,sy,'capitalship');
       rtsSetLog(`CAPITAL SHIP — ${hit.landed?'landed':'airborne'}${hit.passenger?', Gongui aboard':''}  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
+    } else if(hit.type==='warrior' && hit.subtype==='arkship'){
+      openBuildPopup(sx,sy,'arkship');
+      rtsSetLog(`ARKSHIP — ${hit.arkMode} mode  HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior' && hit.subtype==='assaultbot'){
       openBuildPopup(sx,sy,'assaultbot');
       rtsSetLog(`ASSAULT BOT — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
@@ -657,7 +675,7 @@ function rtsHandleClick(e){
       openBuildPopup(sx,sy,'psionic');
       rtsSetLog(`PSIONIC WARRIOR — HP: ${Math.floor(hit.hp)}/${hit.maxHp}`);
     } else if(hit.type==='warrior'){
-      const UNIT_LABELS={princess:'princessLabel',elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label',warbot:'warrior2Label'};
+      const UNIT_LABELS={princess:'princessLabel',arkship:'arkshipLabel',elite:'eliteLabel',wizard:'elite2Label',necromancer:'elite2Label',tank:'elite2Label',starfighter:'aerialUnitLabel',skyattacker:'aerialUnitLabel',warship:'aerial2Label',lightfighter:'aerial2Label',destroyer:'aerial2Label',warbot:'warrior2Label'};
       const lbl=cfg[UNIT_LABELS[hit.subtype]]||cfg.warriorLabel;
       rtsSetLog(`${lbl} selected — click to move or attack.`);
     }
