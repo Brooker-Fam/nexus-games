@@ -99,6 +99,7 @@
   <div class="tabs">
     <button class="tab active" id="tab-btn-td">⬡ TOWER DEFENSE</button>
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
+    <button class="tab" id="tab-btn-skins">✦ SKINS</button>
   </div>
 </header>
 
@@ -342,6 +343,29 @@
     </div>
   </div>
 
+  <!-- SKINS -->
+  <div id="tab-skins" class="tab-content">
+    <div class="dso-title-wrap">
+      <div class="dso-pre">COSMETIC ARMORY</div>
+      <div class="dso-title">SKINS</div>
+      <div class="dso-sub">Alternate looks for your flagships.</div>
+    </div>
+    <div class="skins-gallery">
+      <div class="skin-card" id="skin-prism-arkship-attacking">
+        <canvas class="skin-canvas" id="skin-arkship-attacking-canvas" width="400" height="300"></canvas>
+        <div class="skin-name">PRISM ARKSHIP — ROYAL VANGUARD</div>
+        <div class="skin-mode">◆ ATTACKING MODE</div>
+        <div class="skin-desc">The Princess's flagship, forged from swirling shards of living light. Twin beam emitters flare as she brings the full weight of the Prism Armada to bear.</div>
+      </div>
+      <div class="skin-card" id="skin-prism-arkship-phasing">
+        <canvas class="skin-canvas" id="skin-arkship-phasing-canvas" width="400" height="300"></canvas>
+        <div class="skin-name">PRISM ARKSHIP — ROYAL VANGUARD</div>
+        <div class="skin-mode">◆ PHASING MODE</div>
+        <div class="skin-desc">The same flagship, its swirl of shards dimmed and rippling as it opens to release the Princess and her five Witches onto the field.</div>
+      </div>
+    </div>
+  </div>
+
 </main>
 </div>
 
@@ -380,6 +404,7 @@
 <script src="js/rts/elites.js"></script>
 <script src="js/rts/aerial2.js"></script>
 <script src="js/rts/cinematic.js"></script>
+<script src="js/rts/skins.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>
