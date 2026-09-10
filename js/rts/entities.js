@@ -308,12 +308,13 @@ function makeLightFighter(side, faction, nearX, nearY){
     frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };
 }
-// Arkship (Prism) — Prism's unique flagship: a tapered hull with crescent
-// blade-fins. Building one requires an existing Prism unit and draws her
+// Arkship (Prism) — Prism's unique flagship, which changes silhouette with
+// its mode. Building one requires an existing Prism unit and draws her
 // inside (see the 'arkship' train_unit handling in commands.js, which
-// removes her on completion). Phasing mode folds the fins flush and
-// releases her again with an escort of 5 Witches; attacking mode unfurls
-// the fins and fires twin beams (see arkshipBeamAttackTick in game.js).
+// removes her on completion). Phasing mode collapses the hull into a short,
+// squat cone and releases her again with an escort of 5 Witches; attacking
+// mode unfurls a long hull with twin crescent blade-fins and fires twin
+// beams (see arkshipBeamAttackTick in game.js).
 function makeArkship(side, faction, nearX, nearY){
   const isPlayer=side==='player';
   return {
