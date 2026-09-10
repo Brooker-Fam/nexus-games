@@ -143,6 +143,21 @@
   }
   .skin-option.selected .skin-equip-badge { display: block; }
 
+  /* hero portrait cards — read-only, not equippable, so plain .skin-card
+     rather than .skin-option; accent color follows each hero's faction */
+  .skins-section-label {
+    font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:6px;
+    color: var(--neon-cyan); opacity:0.7; text-align:center;
+    margin: 40px 0 20px;
+  }
+  .skins-gallery > .skin-card:hover { transform: translateY(-6px); border-color:rgba(0,245,255,0.6); box-shadow:0 0 30px rgba(0,245,255,0.2); }
+  .skin-card[data-faction="shadow"] .skin-name,
+  .skin-card[data-faction="shadow"] .skin-mode { color:#cc66ff; }
+  .skin-card[data-faction="shadow"]:hover { border-color:rgba(170,0,255,0.6); box-shadow:0 0 30px rgba(170,0,255,0.2); }
+  .skin-card[data-faction="roboto"] .skin-name,
+  .skin-card[data-faction="roboto"] .skin-mode { color:#ffaa33; }
+  .skin-card[data-faction="roboto"]:hover { border-color:rgba(255,136,0,0.6); box-shadow:0 0 30px rgba(255,136,0,0.2); }
+
   /* reveal screen */
   #dso-reveal { padding: 10px 0; }
   .reveal-header { text-align:center; margin-bottom:16px; }

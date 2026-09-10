@@ -120,6 +120,32 @@ function drawArkshipSkinCard(canvasEl,mode,skin){
   c.restore();
 }
 
+// Hero portrait cards — Prism, Vanthel and Gongui rendered with their real
+// in-game draw functions (drawPrism/drawVanthel/drawGongui), posed mid-attack
+// so each reads as a combat-ready hero rather than a static idle sprite.
+const HERO_SKIN_CFG={
+  prism:  { faction:'prism',  draw:(c,cfg,w)=>drawPrism(c,cfg,w) },
+  vanthel:{ faction:'shadow', draw:(c,cfg,w)=>drawVanthel(c,cfg,w) },
+  gongui: { faction:'roboto', draw:(c,cfg,w)=>drawGongui(c,cfg,w) },
+};
+
+function drawHeroSkinCard(canvasEl,heroKey){
+  const c=canvasEl.getContext('2d');
+  const W=canvasEl.width, H=canvasEl.height;
+  drawSkinsBackdrop(c,W,H);
+
+  const hero=HERO_SKIN_CFG[heroKey];
+  const cfg=FACTION_CFG[hero.faction];
+  const scale=3.2;
+  const fakeW={frame:skinsFrame, state:'attack', faction:hero.faction};
+
+  c.save();
+  c.translate(W*0.5,H*0.72);
+  c.scale(scale,scale);
+  hero.draw(c,cfg,fakeW);
+  c.restore();
+}
+
 function skinsPreviewLoop(){
   skinsFrame++;
   const basic=document.getElementById('skin-arkship-basic-canvas');
@@ -128,6 +154,10 @@ function skinsPreviewLoop(){
   if(atk) drawArkshipSkinCard(atk,'attacking','royal-vanguard');
   const pha=document.getElementById('skin-arkship-phasing-canvas');
   if(pha) drawArkshipSkinCard(pha,'phasing','royal-vanguard');
+  for(const heroKey of ['prism','vanthel','gongui']){
+    const canvasEl=document.getElementById(`skin-${heroKey}-canvas`);
+    if(canvasEl) drawHeroSkinCard(canvasEl,heroKey);
+  }
   skinsRAF=requestAnimationFrame(skinsPreviewLoop);
 }
 
