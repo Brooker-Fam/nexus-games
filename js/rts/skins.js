@@ -146,6 +146,100 @@ function drawHeroSkinCard(canvasEl,heroKey){
   c.restore();
 }
 
+// ── ROBOTO CAPITAL SHIP — IRONCROWN DREADNOUGHT SKIN ──
+// A stockier, slab-armoured refit of Gongui's flagship: a long boxy hull
+// bristling with turret batteries along the belly, twin heavy mounts flanking
+// the bridge, and a bank of blue-white engines instead of the stock ship's
+// bare thruster glow. Purely a showcase illustration for this tab — not tied
+// to drawCapitalShipUnit's in-game top-down sprite.
+function drawIroncrownTurretPod(c,x,edgeY,side,big,litColor){
+  const podW=big?8.5:6, podH=big?4.8:3.6;
+  const py=edgeY+side*podH*0.5;
+  c.fillStyle='#241408';
+  c.beginPath(); c.roundRect(x-podW/2,py-podH/2,podW,podH,1.2); c.fill();
+  c.strokeStyle='rgba(255,160,40,0.6)'; c.lineWidth=0.6; c.stroke();
+  c.fillStyle='#0a0502';
+  const barrelW=big?9:6.5, barrelH=big?1.7:1.2;
+  c.fillRect(x-1,py-barrelH-0.4,barrelW,barrelH);
+  c.fillRect(x-1,py+0.4,barrelW,barrelH);
+  c.strokeStyle='rgba(255,150,30,0.3)'; c.lineWidth=0.3;
+  c.strokeRect(x-1,py-barrelH-0.4,barrelW,barrelH); c.strokeRect(x-1,py+0.4,barrelW,barrelH);
+  c.save();
+  c.shadowColor='#88ddff'; c.shadowBlur=big?4:2.5;
+  c.fillStyle=litColor;
+  c.beginPath(); c.arc(x-podW*0.5+1.4,py,big?1.5:1.1,0,Math.PI*2); c.fill();
+  c.restore();
+}
+
+function drawCapitalShipSkinCard(canvasEl,mode){
+  const c=canvasEl.getContext('2d');
+  const W=canvasEl.width, H=canvasEl.height;
+  drawSkinsBackdrop(c,W,H);
+
+  const isLanded=mode==='landed';
+  const pulse=0.5+Math.sin(skinsFrame*0.25)*0.5;
+
+  c.save();
+  c.translate(W*0.44,H*0.56);
+  c.rotate(-0.08);
+  c.scale(4.2,4.2);
+
+  // engine bank — quad blue-white thrusters, dimmed while landed
+  const engineGlow=isLanded?0.15:pulse;
+  for(const ey of [-10,-3.3,3.3,10]){
+    const eg=c.createRadialGradient(-34,ey,0,-34,ey,6);
+    eg.addColorStop(0,`rgba(130,225,255,${engineGlow})`); eg.addColorStop(1,'transparent');
+    c.fillStyle=eg; c.beginPath(); c.arc(-34,ey,6,0,Math.PI*2); c.fill();
+  }
+
+  // long slab hull, tapering to a point at the bow
+  c.shadowColor='#ff8800'; c.shadowBlur=10;
+  const bg=c.createLinearGradient(-34,0,36,0);
+  bg.addColorStop(0,'#1a1008'); bg.addColorStop(0.15,'#a04800'); bg.addColorStop(0.5,'#ff9414'); bg.addColorStop(0.85,'#a04800'); bg.addColorStop(1,'#1a1008');
+  c.fillStyle=bg;
+  c.beginPath();
+  c.moveTo(36,0);
+  c.lineTo(24,-7); c.lineTo(6,-10); c.lineTo(-28,-10); c.lineTo(-34,-6); c.lineTo(-34,6); c.lineTo(-28,10); c.lineTo(6,10); c.lineTo(24,7);
+  c.closePath(); c.fill();
+  c.shadowBlur=0;
+  c.strokeStyle='rgba(255,180,60,0.7)'; c.lineWidth=1; c.stroke();
+
+  // hull plating seams
+  c.strokeStyle='rgba(90,45,10,0.7)'; c.lineWidth=0.6;
+  for(const sx of [-20,-10,0,10,20]){ c.beginPath(); c.moveTo(sx,-9.5); c.lineTo(sx,9.5); c.stroke(); }
+  c.beginPath(); c.moveTo(-30,0); c.lineTo(20,0); c.stroke();
+
+  const litColor=isLanded?'rgba(120,200,255,0.5)':`rgba(120,220,255,${0.5+pulse*0.5})`;
+
+  // belly turret battery — five twin-barrel pods along the underside
+  for(const tx of [-20,-10,0,10,20]) drawIroncrownTurretPod(c,tx,10,1,false,litColor);
+  // two heavier quad-mounts flanking the bridge, upper and lower
+  drawIroncrownTurretPod(c,18,-9,-1,true,litColor);
+  drawIroncrownTurretPod(c,18,9,1,true,litColor);
+
+  // bridge / cockpit at the bow
+  const cg=c.createLinearGradient(20,-4,34,4);
+  cg.addColorStop(0,'rgba(150,230,255,0.9)'); cg.addColorStop(1,'rgba(20,120,160,0.7)');
+  c.fillStyle=cg;
+  c.beginPath(); c.moveTo(34,0); c.lineTo(26,-4); c.lineTo(20,-2); c.lineTo(20,2); c.lineTo(26,4); c.closePath(); c.fill();
+  c.strokeStyle='rgba(200,255,255,0.6)'; c.lineWidth=0.6; c.stroke();
+
+  if(isLanded){
+    // landing legs, deployed
+    c.strokeStyle='#443322'; c.lineWidth=2; c.lineCap='round';
+    for(const lx of [-24,-4,16]){
+      c.beginPath(); c.moveTo(lx,10); c.lineTo(lx,20); c.stroke();
+      c.fillStyle='rgba(255,190,0,0.7)'; c.beginPath(); c.arc(lx,21,1.6,0,Math.PI*2); c.fill();
+    }
+    // gold throne-bay glow as Gongui disembarks
+    const kPulse=0.5+Math.sin(skinsFrame*0.15)*0.5;
+    c.fillStyle=`rgba(255,215,0,${0.4+kPulse*0.4})`;
+    c.beginPath(); c.arc(-6,0,3,0,Math.PI*2); c.fill();
+  }
+
+  c.restore();
+}
+
 function skinsPreviewLoop(){
   skinsFrame++;
   const basic=document.getElementById('skin-arkship-basic-canvas');
@@ -158,6 +252,10 @@ function skinsPreviewLoop(){
     const canvasEl=document.getElementById(`skin-${heroKey}-canvas`);
     if(canvasEl) drawHeroSkinCard(canvasEl,heroKey);
   }
+  const air=document.getElementById('skin-ironcrown-airborne-canvas');
+  if(air) drawCapitalShipSkinCard(air,'airborne');
+  const lnd=document.getElementById('skin-ironcrown-landed-canvas');
+  if(lnd) drawCapitalShipSkinCard(lnd,'landed');
   skinsRAF=requestAnimationFrame(skinsPreviewLoop);
 }
 
