@@ -739,10 +739,14 @@ function drawRTSCannon(rc, c){
   if(faction==='prism')       _drawCannonPrism(rc,x,y,angle,c);
   else if(faction==='shadow') _drawCannonShadow(rc,x,y,angle,c);
   else                        _drawCannonRoboto(rc,x,y,angle,c);
-  // selection ring
+  // selection ring + attack range
   if(c.selected){
     rc.strokeStyle='#00ff88'; rc.lineWidth=2; rc.shadowColor='#00ff88'; rc.shadowBlur=10;
     rc.beginPath(); rc.ellipse(x,y,26,14,0,0,Math.PI*2); rc.stroke();
+    rc.shadowBlur=0;
+    rc.strokeStyle='rgba(0,255,136,0.35)'; rc.lineWidth=1; rc.setLineDash([6,5]);
+    rc.beginPath(); rc.arc(x,y,c.range,0,Math.PI*2); rc.stroke();
+    rc.setLineDash([]);
   }
   // HP bar
   if(c.hp<c.maxHp) drawHealthBar(rc, x, y-30, 36, 4, c.hp, c.maxHp);

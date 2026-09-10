@@ -44,8 +44,27 @@ function drawPath(){
   ctx.restore();
 }
 
+function tdHexAlpha(hex,a){
+  const r=parseInt(hex.slice(1,3),16)||0, g=parseInt(hex.slice(3,5),16)||0, b=parseInt(hex.slice(5,7),16)||0;
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function drawTowerRange(t){
+  ctx.save();
+  ctx.beginPath(); ctx.arc(t.x, t.y, t.range, 0, Math.PI*2);
+  ctx.fillStyle = tdHexAlpha(t.color, 0.05);
+  ctx.fill();
+  ctx.strokeStyle = tdHexAlpha(t.color, 0.35);
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4,4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
 function drawTowers(){
   if(!Array.isArray(state.towers)) return;
+  for(const t of state.towers) drawTowerRange(t);
   for(const t of state.towers){
     // aim at nearest enemy or last known angle
     let angle = t.aimAngle || 0;
