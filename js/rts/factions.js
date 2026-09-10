@@ -16,7 +16,7 @@ const FACTION_CFG={
     structName:'SHRINE', structLabel:'SHRINE',
     prismLabel:'PRISM', prismDesc:'Unique royal summoner — conjures Legionnaires while engaging enemies (limit 1)',
     prismCost:200, prismOilCost:75, prismIcon:'💎',
-    arkshipLabel:'ARKSHIP', arkshipDesc:'Unique royal flagship — requires an existing Prism, who is drawn inside; phase to deploy her with 5 Witches, or unfurl blade-fins and attack with twin beams (limit 1)',
+    arkshipLabel:'ARKSHIP', arkshipDesc:'Unique royal flagship — requires an existing Prism, who is drawn inside; phase into a squat cone to deploy her with 5 Witches, or unfurl blade-fins and attack with twin beams (limit 1)',
     arkshipCost:150, arkshipOilCost:60, arkshipIcon:'💫',
     eliteLabel:'ORACLE', eliteDesc:'Ranged — high damage prismatic bolts',
     eliteCost:30, eliteIcon:'🔮', eliteOilCost:20,
