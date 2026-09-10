@@ -79,7 +79,7 @@ const FACTION_CFG={
     researchLabName:'RESEARCH LAB', researchLabLabel:'RESEARCH LAB',
     researchLabDesc:'Research military tech to unlock WARBOT, TANK, and WARSHIP production', researchLabIcon:'🔬',
     researchLabel:'MILITARY TECH', researchDesc:'Unlocks WARBOT, TANK, and WARSHIP production', researchCost:100,
-    gonguiLabel:'GONGUI', gonguiDesc:'Unique Roboto King — heavy-hitting royal gunbot that can board a Capital Ship (limit 1)',
+    gonguiLabel:'GONGUI', gonguiDesc:'Unique Roboto King — human commander wielding twin gauntlet-cannons, can board a Capital Ship (limit 1)',
     gonguiCost:80, gonguiOilCost:35, gonguiIcon:'👑',
     structName:'ARMORY', structLabel:'ARMORY',
     eliteLabel:'SHOCKBOT', eliteDesc:'Ranged — chain lightning hits multiple enemies',
