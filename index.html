@@ -351,18 +351,38 @@
       <div class="dso-sub">Alternate looks for your flagships.</div>
     </div>
     <div class="skins-gallery">
-      <div class="skin-card" id="skin-prism-arkship-attacking">
-        <canvas class="skin-canvas" id="skin-arkship-attacking-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">PRISM ARKSHIP — ROYAL VANGUARD</div>
-        <div class="skin-mode">◆ ATTACKING MODE</div>
-        <div class="skin-desc">The Princess's flagship, forged from swirling shards of living light. Twin beam emitters flare as she brings the full weight of the Prism Armada to bear.</div>
+
+      <!-- BASIC — single card, single skin -->
+      <div class="skin-option selected" id="skin-option-basic" data-skin="basic" role="button" tabindex="0" aria-pressed="true">
+        <div class="skin-option-cards">
+          <div class="skin-card">
+            <canvas class="skin-canvas" id="skin-arkship-basic-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">PRISM ARKSHIP</div>
+            <div class="skin-mode">◆ STANDARD ISSUE</div>
+          </div>
+        </div>
+        <div class="skin-desc">The stock flagship hull — crystalline blue shards, no royal trim.</div>
+        <div class="skin-equip-badge">✓ EQUIPPED</div>
       </div>
-      <div class="skin-card" id="skin-prism-arkship-phasing">
-        <canvas class="skin-canvas" id="skin-arkship-phasing-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">PRISM ARKSHIP — ROYAL VANGUARD</div>
-        <div class="skin-mode">◆ PHASING MODE</div>
-        <div class="skin-desc">The same flagship, its swirl of shards dimmed and rippling as it opens to release the Princess and her five Witches onto the field.</div>
+
+      <!-- ROYAL VANGUARD — two preview cards (attacking + phasing) but ONE skin/one button, since they're both the same unit -->
+      <div class="skin-option" id="skin-option-royal-vanguard" data-skin="royal-vanguard" role="button" tabindex="0" aria-pressed="false">
+        <div class="skin-option-cards">
+          <div class="skin-card">
+            <canvas class="skin-canvas" id="skin-arkship-attacking-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">PRISM ARKSHIP</div>
+            <div class="skin-mode">◆ ATTACKING MODE</div>
+          </div>
+          <div class="skin-card">
+            <canvas class="skin-canvas" id="skin-arkship-phasing-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">PRISM ARKSHIP</div>
+            <div class="skin-mode">◆ PHASING MODE</div>
+          </div>
+        </div>
+        <div class="skin-desc">ROYAL VANGUARD — the Princess's flagship, forged from silver shards of living light. Twin beam emitters flare when attacking; the swirl dims and ripples when phasing her crew aboard.</div>
+        <div class="skin-equip-badge">✓ EQUIPPED</div>
       </div>
+
     </div>
   </div>
 
