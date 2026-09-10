@@ -83,8 +83,9 @@ function drawRTSWarrior(rc,w){
   if(w.hp<w.maxHp) drawHealthBar(rc, w.x, w.y-26, 20, 3, w.hp, w.maxHp);
 }
 
-// Vanthel — towering dark-warrior hero, wreathed in void flame and wielding
-// a greatsword far larger than any elite's weapon.
+// Vanthel — towering dark-warrior hero, wreathed in void flame. He carries
+// no weapon; his reach comes from raw void energy lashing off a taloned
+// gauntlet, not a blade.
 function drawVanthel(rc,cfg,w){
   const t=w.frame, isAtt=w.state==='attack', isMarching=w.state==='march';
   // heavy striding legs
@@ -106,16 +107,27 @@ function drawVanthel(rc,cfg,w){
   const capeTrail=isMarching?7:2;
   rc.fillStyle='rgba(10,0,20,0.75)';
   rc.beginPath(); rc.moveTo(-11,-26); rc.lineTo(-14-capeTrail,6); rc.lineTo(-4,10); rc.lineTo(-6,-20); rc.closePath(); rc.fill();
-  // massive greatsword — held low when idle, raised high mid-swing
+  // clawed void-energy gauntlet — punches straight out toward the target
+  // instead of swinging up near the helm, so the reach reads clearly
+  const punch=isAtt?1+Math.sin(t*0.35)*0.4:0.35;
   rc.save();
-  rc.translate(16,-10);
-  rc.rotate(isAtt?-0.9+Math.sin(t*0.35)*0.6:-0.25);
-  const swordGrad=rc.createLinearGradient(0,-46,0,6);
-  swordGrad.addColorStop(0,'#e8d0ff'); swordGrad.addColorStop(0.5,'#6a1acc'); swordGrad.addColorStop(1,'#1a0030');
-  rc.fillStyle=swordGrad; rc.shadowColor='#aa00ff'; rc.shadowBlur=isAtt?26:14;
-  rc.beginPath(); rc.moveTo(-3,6); rc.lineTo(-4,-40); rc.lineTo(0,-50); rc.lineTo(4,-40); rc.lineTo(3,6); rc.closePath(); rc.fill();
-  rc.strokeStyle='rgba(230,190,255,0.7)'; rc.lineWidth=1; rc.stroke();
-  rc.fillStyle='#160020'; rc.beginPath(); rc.roundRect(-6,6,12,5,2); rc.fill();
+  rc.translate(13,-14);
+  const fx=6+14*punch, fy=-4;
+  // forearm
+  rc.strokeStyle='#1a0028'; rc.lineWidth=6; rc.lineCap='round';
+  rc.beginPath(); rc.moveTo(0,0); rc.lineTo(fx,fy); rc.stroke();
+  // taloned fist
+  rc.fillStyle='#0a0012'; rc.shadowColor='#aa00ff'; rc.shadowBlur=isAtt?24:12;
+  rc.beginPath(); rc.arc(fx,fy,6,0,Math.PI*2); rc.fill();
+  rc.strokeStyle='rgba(200,100,255,0.6)'; rc.lineWidth=1; rc.stroke();
+  // three void talons fanning outward from the fist toward the target,
+  // longer and brighter mid-strike
+  const talonLen=isAtt?16:6;
+  for(const ta of [-0.5,0,0.5]){
+    rc.strokeStyle='rgba(220,140,255,0.9)'; rc.lineWidth=1.6; rc.lineCap='round';
+    rc.beginPath(); rc.moveTo(fx,fy); rc.lineTo(fx+Math.cos(ta)*talonLen,fy+Math.sin(ta)*talonLen); rc.stroke();
+  }
+  rc.shadowBlur=0;
   rc.restore();
   // broad-horned helm
   rc.fillStyle='#0a0012'; rc.shadowColor='#aa00ff'; rc.shadowBlur=18;
