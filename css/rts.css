@@ -77,24 +77,51 @@
   /* skins tab */
   #tab-skins { padding: 10px 0 30px; }
   .skins-gallery {
-    display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
+    display: flex; gap: 36px; justify-content: center; flex-wrap: wrap; align-items: flex-start;
+  }
+
+  /* .skin-option is the clickable/selectable unit — one option can bundle several
+     .skin-card previews (e.g. attacking + phasing) because they're skins on the
+     same unit and must be picked and light up together as a single choice. */
+  .skin-option {
+    cursor: pointer;
+    border: 2px solid rgba(100,120,160,0.2);
+    border-radius: 4px;
+    padding: 16px 16px 14px;
+    background: rgba(5,10,20,0.5);
+    transition: all 0.3s ease;
+    display: flex; flex-direction: column; align-items: center;
+    max-width: 860px;
+  }
+  .skin-option:hover { transform: translateY(-4px); border-color: rgba(0,245,255,0.45); }
+  .skin-option.selected {
+    border-color: #00f5ff;
+    animation: skinGlowPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes skinGlowPulse {
+    0%,100% { box-shadow: 0 0 18px rgba(0,245,255,0.3), inset 0 0 16px rgba(0,245,255,0.06); }
+    50% { box-shadow: 0 0 38px rgba(0,245,255,0.65), inset 0 0 22px rgba(0,245,255,0.12); }
+  }
+
+  .skin-option-cards {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
   }
   .skin-card {
     background: rgba(5,15,30,0.9);
     border: 1px solid rgba(0,245,255,0.2);
-    width: 400px;
+    width: 380px;
     clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
-    transition: all 0.3s ease;
+    transition: border-color 0.3s ease;
     position: relative; overflow: hidden;
     display: flex; flex-direction: column; align-items: center;
-    padding-bottom: 20px;
+    padding-bottom: 16px;
   }
   .skin-card::before {
     content:''; position:absolute; inset:0;
     background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.45) 100%);
     pointer-events:none; z-index:1;
   }
-  .skin-card:hover { transform: translateY(-6px) scale(1.01); border-color:rgba(0,245,255,0.6); box-shadow:0 0 30px rgba(0,245,255,0.2); }
+  .skin-option.selected .skin-card { border-color: rgba(0,245,255,0.6); }
   .skin-canvas { display:block; position:relative; z-index:2; width:100%; height:auto; }
   .skin-name {
     font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; letter-spacing:2px;
@@ -102,12 +129,19 @@
   }
   .skin-mode {
     font-family:'Orbitron',sans-serif; font-size:10px; letter-spacing:3px;
-    margin-bottom: 10px; text-align:center; position:relative; z-index:2; color:#aaffff; opacity:0.85;
+    text-align:center; position:relative; z-index:2; color:#aaffff; opacity:0.85;
   }
   .skin-desc {
     font-size:11px; line-height:1.6; letter-spacing:0.5px; color:var(--text-dim);
-    text-align:center; padding:0 18px; position:relative; z-index:2;
+    text-align:center; padding: 14px 18px 0; max-width:640px;
   }
+  .skin-equip-badge {
+    display: none;
+    margin-top: 12px;
+    font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700; letter-spacing:3px;
+    color:#0a1520; background:#00f5ff; padding:6px 18px; border-radius:2px;
+  }
+  .skin-option.selected .skin-equip-badge { display: block; }
 
   /* reveal screen */
   #dso-reveal { padding: 10px 0; }
@@ -420,7 +454,8 @@
     .faction-cards { gap: 12px; }
     .faction-card { width: 180px; }
     .skins-gallery { gap: 16px; }
-    .skin-card { width: min(400px, 90vw); }
+    .skin-option { padding: 12px 10px; }
+    .skin-card { width: min(380px, 84vw); }
     .rts-hud { padding: 6px 10px; }
     .rts-hud-left, .rts-hud-right { min-width: 120px; }
     #rts-minimap { width: 130px; height: 53px; }
@@ -434,6 +469,9 @@
     .dso-title { font-size: 18px; letter-spacing: 2px; }
     .faction-cards { flex-direction: column; align-items: center; }
     .faction-card { width: 90%; max-width: 280px; }
+    .skins-gallery { flex-direction: column; align-items: center; }
+    .skin-option { width: 92%; }
+    .skin-card { width: 100%; max-width: 320px; }
     .rts-hud-top { flex-direction:column; align-items:stretch; }
     .rts-hud-bottom { flex-direction:column; align-items:stretch; }
     .rts-hud-minimap { justify-content:center; }
