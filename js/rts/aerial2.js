@@ -331,12 +331,15 @@ function drawArkshipUnit(rc,cfg,w){
     rc.rotate(ang+t*2);
     rc.globalAlpha=isPhasing?0.35:0.9;
     const sg=rc.createLinearGradient(-size,-size,size,size);
-    sg.addColorStop(0,'#e8f8ff'); sg.addColorStop(0.5,cfg.color); sg.addColorStop(1,'#245566');
+    sg.addColorStop(0,'#f6f9fc'); sg.addColorStop(0.45,'#b6c2cc'); sg.addColorStop(0.8,'#5c6670'); sg.addColorStop(1,'#20262c');
     rc.fillStyle=sg;
     rc.beginPath();
     rc.moveTo(size,0); rc.lineTo(size*0.2,-size*0.8); rc.lineTo(-size*0.9,-size*0.3);
     rc.lineTo(-size*0.6,size*0.7); rc.lineTo(size*0.3,size*0.5); rc.closePath(); rc.fill();
-    rc.strokeStyle='rgba(255,255,255,0.6)'; rc.lineWidth=0.5; rc.stroke();
+    rc.strokeStyle='rgba(255,255,255,0.7)'; rc.lineWidth=0.5; rc.stroke();
+    rc.strokeStyle=cfg.color; rc.globalAlpha=(isPhasing?0.35:0.9)*0.5; rc.lineWidth=0.6;
+    rc.beginPath(); rc.moveTo(size,0); rc.lineTo(size*0.2,-size*0.8); rc.stroke();
+    rc.globalAlpha=isPhasing?0.35:0.9;
     rc.restore();
   }
   rc.globalAlpha=1;
