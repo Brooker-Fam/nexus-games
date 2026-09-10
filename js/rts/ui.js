@@ -138,7 +138,7 @@ function openBuildPopup(screenX, screenY, context){
       const desc = (u.unitType==='arkship' && !hasPrism) ? 'Requires an existing Prism to build' : u.desc;
       addOpt(u.icon, u.label, desc, u.cost,
         ()=>trainCmd(sel?sel.id:S.buildingSource?.id, u.unitType, 'base'),
-        prismUnavailable||gonguiUnavailable||arkshipUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel?.underConstruction,
+        prismUnavailable||gonguiUnavailable||arkshipUnavailable||sel?.underConstruction,
         u.oilCost);
     }
     if(myFaction()==='shadow'){
@@ -154,7 +154,7 @@ function openBuildPopup(screenX, screenY, context){
         rtsSetLog("Choose a location to deploy the Dark Warrior's Ship.");
         closeBuildPopup();
         rtsUpdateViewportCursor();
-      }, !!sel?.underConstruction||cooldown>0||shipOrVanthelAlive||myGold()<goldCost||myOil()<essenceCost, essenceCost);
+      }, !!sel?.underConstruction||cooldown>0||shipOrVanthelAlive, essenceCost);
     }
 
   } else if(context==='barracks'){
@@ -178,7 +178,7 @@ function openBuildPopup(screenX, screenY, context){
     for(const u of barracksTypes){
       addOpt(u.icon, u.label, u.desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'barracks'),
-        u.locked||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        u.locked||sel.underConstruction,
         u.oilCost);
     }
 
@@ -196,56 +196,56 @@ function openBuildPopup(screenX, screenY, context){
     addOpt(cfg.barracksIcon, `Build ${cfg.barracksLabel}`, `Click to place — trains ${cfg.warriorLabel}s (${bc.gold}g)`, bc.gold, ()=>{
       S.buildStructureMode='barracks'; _buildModeCost=bc.gold; _buildModeOilCost=bc.oil;
       rtsSetLog(`Click to place your ${cfg.barracksLabel}!`); closeBuildPopup();
-    }, myGold()<bc.gold||myOil()<bc.oil, bc.oil);
+    }, false, bc.oil);
     addOpt(cfg.structIcon, `Build ${cfg.structLabel}`,
       hasBarracks ? `Click to place — trains elite units (${sc.gold}g +${sc.oil}${oilName})` : `Requires a completed ${cfg.barracksLabel} first`,
       sc.gold, ()=>{
       if(!hasBarracks) return;
       S.buildStructureMode=true; _buildModeCost=sc.gold; _buildModeOilCost=sc.oil;
       rtsSetLog(`Click to place your ${cfg.structLabel}!`); closeBuildPopup();
-    }, myGold()<sc.gold||myOil()<sc.oil||!hasBarracks, sc.oil);
+    }, !hasBarracks, sc.oil);
     addOpt('💣', 'Build CANNON', `Auto-attacks nearby enemies (${cc.gold}g)`, cc.gold, ()=>{
       S.buildStructureMode='cannon'; _buildModeCost=cc.gold; _buildModeOilCost=cc.oil;
       rtsSetLog('Click to place your CANNON!'); closeBuildPopup();
-    }, myGold()<cc.gold||myOil()<cc.oil, cc.oil);
+    }, false, cc.oil);
     addOpt(cfg.aerialIcon, `Build ${cfg.aerialLabel}`,
       hasEliteStruct ? `Click to place — aerial units (${ac.gold}g +${ac.oil}${oilName})` : `Requires a completed ${cfg.structLabel} first`,
       ac.gold, ()=>{
       if(!hasEliteStruct) return;
       S.buildStructureMode='aerial'; _buildModeCost=ac.gold; _buildModeOilCost=ac.oil;
       rtsSetLog(`Click to place your ${cfg.aerialLabel}!`); closeBuildPopup();
-    }, myGold()<ac.gold||myOil()<ac.oil||!hasEliteStruct, ac.oil);
+    }, !hasEliteStruct, ac.oil);
     if(cfg.oilRigLabel){
       addOpt(cfg.oilRigIcon, `Build ${cfg.oilRigLabel}`, `Click to place — workers harvest ${oilName} needed for advanced units (${oc.gold}g)`, oc.gold, ()=>{
         S.buildStructureMode='oilrig'; _buildModeCost=oc.gold; _buildModeOilCost=oc.oil;
         rtsSetLog(`Click to place your ${cfg.oilRigLabel}!`); closeBuildPopup();
-      }, myGold()<oc.gold||myOil()<oc.oil, oc.oil);
+      }, false, oc.oil);
     }
     if(cfg.researchLabLabel){
       const rl=STRUCT_COSTS.researchlab;
       addOpt(cfg.researchLabIcon, `Build ${cfg.researchLabLabel}`, `Click to place — ${(cfg.researchLabDesc||'unlocks advanced units').toLowerCase()} (${rl.gold}g +${rl.oil}${oilName})`, rl.gold, ()=>{
         S.buildStructureMode='researchlab'; _buildModeCost=rl.gold; _buildModeOilCost=rl.oil;
         rtsSetLog(`Click to place your ${cfg.researchLabLabel}!`); closeBuildPopup();
-      }, myGold()<rl.gold||myOil()<rl.oil, rl.oil);
+      }, false, rl.oil);
     }
     if(cfg.councilOfLightLabel){
       const cl=STRUCT_COSTS.councillight;
       addOpt(cfg.councilOfLightIcon, `Build ${cfg.councilOfLightLabel}`, `Click to place — ${(cfg.councilOfLightDesc||'unlocks advanced units').toLowerCase()} (${cl.gold}g +${cl.oil}${oilName})`, cl.gold, ()=>{
         S.buildStructureMode='councillight'; _buildModeCost=cl.gold; _buildModeOilCost=cl.oil;
         rtsSetLog(`Click to place your ${cfg.councilOfLightLabel}!`); closeBuildPopup();
-      }, myGold()<cl.gold||myOil()<cl.oil, cl.oil);
+      }, false, cl.oil);
     }
     if(cfg.councilOfDarknessLabel){
       const cd=STRUCT_COSTS.councildark;
       addOpt(cfg.councilOfDarknessIcon, `Build ${cfg.councilOfDarknessLabel}`, `Click to place — ${(cfg.councilOfDarknessDesc||'unlocks advanced units').toLowerCase()} (${cd.gold}g +${cd.oil}${oilName})`, cd.gold, ()=>{
         S.buildStructureMode='councildark'; _buildModeCost=cd.gold; _buildModeOilCost=cd.oil;
         rtsSetLog(`Click to place your ${cfg.councilOfDarknessLabel}!`); closeBuildPopup();
-      }, myGold()<cd.gold||myOil()<cd.oil, cd.oil);
+      }, false, cd.oil);
     }
     addOpt(cfg.baseIcon, `Build ${cfg.buildingName}`, `Click to place — trains more workers (${baseC.gold}g)`, baseC.gold, ()=>{
       S.buildStructureMode='base'; _buildModeCost=baseC.gold; _buildModeOilCost=baseC.oil;
       rtsSetLog(`Click to place your new ${cfg.buildingName}!`); closeBuildPopup();
-    }, myGold()<baseC.gold||myOil()<baseC.oil, baseC.oil);
+    }, false, baseC.oil);
 
   } else if(context==='aerial'){
     const sel=S.selected[0];
@@ -273,7 +273,7 @@ function openBuildPopup(screenX, screenY, context){
       const desc = needsResearch ? `Requires completed research at the ${cfg.researchLabLabel}` : u.desc;
       addOpt(u.icon, u.label, desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'aerial'),
-        u.locked||needsResearch||shipUnavailable||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        u.locked||needsResearch||shipUnavailable||sel.underConstruction,
         u.oilCost);
     }
 
@@ -374,7 +374,7 @@ function openBuildPopup(screenX, screenY, context){
         : u.desc;
       addOpt(u.icon, u.label, desc, u.cost,
         ()=>trainCmd(sel.id, u.unitType, 'structure'),
-        locked||myGold()<u.cost||myOil()<u.oilCost||sel.underConstruction,
+        locked||sel.underConstruction,
         u.oilCost);
     }
 
@@ -397,7 +397,7 @@ function openBuildPopup(screenX, screenY, context){
           sfx('rtsQueueUnit');
           setTimeout(()=>openBuildPopup((sel.x-S.camX)*S.camZoom,(sel.y-S.camY)*S.camZoom,'researchlab'), window._mpMultiplayer && !mpIsHost ? 200 : 0);
         },
-        researching||sel.underConstruction||myGold()<cost);
+        researching||sel.underConstruction);
     }
   }
 
