@@ -2,9 +2,9 @@
 // Preview cards + selection for the SKINS tab. Reuse the real in-game
 // Arkship renderer (drawArkshipUnit, aerial2.js) so each skin matches what
 // actually appears on the battlefield — held in 'attacking' mode with its
-// blade-fins unfurled and twin beam emitters lit, or 'phasing' mode with
-// the fins folded away and the hull dimmed and rippling as it prepares to
-// release Prism and her Witches.
+// blade-fins unfurled and twin beam emitters lit, or 'phasing' mode
+// collapsed into a short, squat cone as it prepares to release Prism and
+// her Witches.
 //
 // A "skin" applies to the whole Arkship unit, not to a single mode — so the
 // Attacking/Phasing preview cards for ROYAL VANGUARD are two windows onto
