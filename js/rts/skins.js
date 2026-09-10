@@ -2,8 +2,9 @@
 // Preview cards + selection for the SKINS tab. Reuse the real in-game
 // Arkship renderer (drawArkshipUnit, aerial2.js) so each skin matches what
 // actually appears on the battlefield — held in 'attacking' mode with its
-// twin beam emitters lit and firing, or 'phasing' mode with the shard-swirl
-// dimmed and rippling as it prepares to release Prism and her Witches.
+// blade-fins unfurled and twin beam emitters lit, or 'phasing' mode with
+// the fins folded away and the hull dimmed and rippling as it prepares to
+// release Prism and her Witches.
 //
 // A "skin" applies to the whole Arkship unit, not to a single mode — so the
 // Attacking/Phasing preview cards for ROYAL VANGUARD are two windows onto
@@ -85,33 +86,33 @@ function drawArkshipSkinCard(canvasEl,mode,skin){
   const fakeShip={frame:skinsFrame, arkMode:mode, skin};
 
   c.save();
-  c.translate(W*0.46,H*0.55);
+  c.translate(W*0.42,H*0.52);
   c.rotate(-0.12);
   c.scale(scale,scale);
 
   if(!isPhasing){
-    // twin beams lancing off toward unseen targets — sells "attacking mode"
+    // twin beams lancing off toward unseen targets, from the nose emitters — sells "attacking mode"
     const flicker=0.7+Math.sin(skinsFrame*0.25)*0.3;
-    for(const [ey,tx,ty] of [[-7,112,-40],[7,112,44]]){
+    for(const [ey,tx,ty] of [[-ARKSHIP_EMITTER_Y,58,-22],[ARKSHIP_EMITTER_Y,58,26]]){
       c.save();
       c.shadowColor='#ffffff'; c.shadowBlur=20/scale;
       c.strokeStyle=`rgba(180,255,255,${0.35*flicker})`; c.lineWidth=6/scale; c.lineCap='round';
-      c.beginPath(); c.moveTo(17,ey); c.lineTo(tx,ty); c.stroke();
+      c.beginPath(); c.moveTo(ARKSHIP_NOSE_X,ey); c.lineTo(tx,ty); c.stroke();
       c.strokeStyle=`rgba(255,255,255,${0.9*flicker})`; c.lineWidth=2/scale; c.lineCap='round';
-      c.beginPath(); c.moveTo(17,ey); c.lineTo(tx,ty); c.stroke();
+      c.beginPath(); c.moveTo(ARKSHIP_NOSE_X,ey); c.lineTo(tx,ty); c.stroke();
       c.restore();
       const fg=c.createRadialGradient(tx,ty,0,tx,ty,8);
       fg.addColorStop(0,'#ffffff'); fg.addColorStop(0.5,'#aaffff'); fg.addColorStop(1,'transparent');
       c.fillStyle=fg; c.beginPath(); c.arc(tx,ty,8*flicker,0,Math.PI*2); c.fill();
     }
   } else if(skin==='royal-vanguard'){
-    // outward phase ripples — the swirl dims as it readies to release its crew
+    // outward phase ripples — the hull dims as it readies to release its crew
     for(let r=0;r<2;r++){
       const rr=((skinsFrame*0.01)+r*0.5)%1;
       c.save();
       c.globalAlpha=(1-rr)*0.4;
       c.strokeStyle='rgba(150,220,255,0.9)'; c.lineWidth=1.4/scale;
-      c.beginPath(); c.arc(0,0,10+rr*34,0,Math.PI*2); c.stroke();
+      c.beginPath(); c.arc(0,0,34+rr*40,0,Math.PI*2); c.stroke();
       c.restore();
     }
   }

@@ -297,10 +297,14 @@ function drawDarkWarriorShip(rc,cfg,w){
   rc.beginPath(); rc.moveTo(3,4); rc.lineTo(-9,14); rc.stroke();
 }
 
-// ── PRISM ARKSHIP — Prism's flagship: not a solid hull but a loose
-// swirl of jagged metal fragments orbiting a bright core. Phasing mode dims
-// the swirl (it's about to release its crew); attacking mode flares its
-// twin beam emitters at the front.
+// ── PRISM ARKSHIP — Prism's flagship: a tapered, segmented hull with twin
+// crescent blade-fins that unfurl from the sides when attacking and fold
+// flush against the hull when phasing (a compact profile for slipping her
+// and her Witches through). Skins share this silhouette and differ only in
+// material — BASIC is glowing crystal, ROYAL VANGUARD is chrome/silver —
+// same shape either way, just a different coat of paint.
+const ARKSHIP_NOSE_X=24, ARKSHIP_EMITTER_Y=5;
+
 function drawArkshipUnit(rc,cfg,w){
   const isPhasing = w.arkMode==='phasing';
   // 'skin' lets the SKINS tab preview a specific look; real in-game ships fall
@@ -308,60 +312,77 @@ function drawArkshipUnit(rc,cfg,w){
   // cosmetic only, same unit either way).
   const skin = w.skin || (typeof getArkshipSkin==='function' ? getArkshipSkin() : 'basic');
   const isRoyal = skin==='royal-vanguard';
-  const t=w.frame*0.045;
-  rc.shadowColor=cfg.color; rc.shadowBlur=isPhasing?12:24;
+  rc.shadowColor=cfg.color; rc.shadowBlur=isPhasing?12:26;
+  rc.globalAlpha=isPhasing?0.55:1;
 
-  // bright core
-  const coreR=isPhasing?7:10;
-  const coreG=rc.createRadialGradient(0,0,0,0,0,coreR*2.2);
-  coreG.addColorStop(0,'#ffffff');
-  coreG.addColorStop(0.4,isPhasing?'rgba(0,221,255,0.35)':cfg.color);
-  coreG.addColorStop(1,'transparent');
-  rc.fillStyle=coreG; rc.beginPath(); rc.arc(0,0,coreR*2.2,0,Math.PI*2); rc.fill();
-  rc.fillStyle=isPhasing?'rgba(200,240,255,0.5)':'#ffffff';
-  rc.beginPath(); rc.arc(0,0,coreR*0.5,0,Math.PI*2); rc.fill();
+  // rear engine glow
+  const pulse=0.5+Math.sin(w.frame*0.25)*0.5;
+  const eg=rc.createRadialGradient(-29,0,0,-29,0,9);
+  eg.addColorStop(0,`rgba(255,255,255,${isPhasing?0.25:0.5+pulse*0.3})`); eg.addColorStop(0.5,cfg.color); eg.addColorStop(1,'transparent');
+  rc.fillStyle=eg; rc.beginPath(); rc.arc(-29,0,9,0,Math.PI*2); rc.fill();
 
-  // a ring of jagged metal shards, each spinning on its own orbit — reads as
-  // debris held together rather than a single ship silhouette
-  const shardCount=12;
-  for(let i=0;i<shardCount;i++){
-    const baseAngle=(i/shardCount)*Math.PI*2;
-    const orbitR=20+((i%3)*6);
-    const spin=t*(i%2===0?1:-1)*(0.6+0.1*(i%3));
-    const ang=baseAngle+spin;
-    const cx=Math.cos(ang)*orbitR, cy=Math.sin(ang)*orbitR*0.55;
-    const size=3.5+(i%4);
-    rc.save();
-    rc.translate(cx,cy);
-    rc.rotate(ang+t*2);
-    rc.globalAlpha=isPhasing?0.35:0.9;
-    const sg=rc.createLinearGradient(-size,-size,size,size);
-    if(isRoyal){
-      sg.addColorStop(0,'#f6f9fc'); sg.addColorStop(0.45,'#b6c2cc'); sg.addColorStop(0.8,'#5c6670'); sg.addColorStop(1,'#20262c');
-    } else {
-      sg.addColorStop(0,'#e8f8ff'); sg.addColorStop(0.5,cfg.color); sg.addColorStop(1,'#245566');
+  // ── crescent blade-fins — unfurled only while attacking ──
+  if(!isPhasing){
+    const fg=rc.createLinearGradient(-28,-26,10,-6);
+    if(isRoyal){ fg.addColorStop(0,'#1c2128'); fg.addColorStop(0.5,'#aab4bf'); fg.addColorStop(1,'#eef2f6'); }
+    else { fg.addColorStop(0,'#0d2c38'); fg.addColorStop(0.5,cfg.color); fg.addColorStop(1,'#d8fbff'); }
+    for(const flip of [1,-1]){
+      rc.save(); rc.scale(1,flip);
+      // large forward blade
+      rc.fillStyle=fg;
+      rc.beginPath();
+      rc.moveTo(11,-7);
+      rc.bezierCurveTo(1,-17,-11,-25,-21,-27);
+      rc.bezierCurveTo(-11,-18,-2,-11,11,-7);
+      rc.closePath(); rc.fill();
+      rc.strokeStyle=isRoyal?'rgba(230,240,250,0.7)':'rgba(255,255,255,0.7)'; rc.lineWidth=0.8; rc.stroke();
+      // smaller aft blade
+      rc.beginPath();
+      rc.moveTo(-9,-9.5);
+      rc.bezierCurveTo(-16,-15,-23,-18.5,-28,-18.5);
+      rc.bezierCurveTo(-21,-13.5,-15,-11,-9,-9.5);
+      rc.closePath(); rc.fill();
+      rc.strokeStyle=isRoyal?'rgba(230,240,250,0.7)':'rgba(255,255,255,0.7)'; rc.lineWidth=0.8; rc.stroke();
+      rc.restore();
     }
-    rc.fillStyle=sg;
-    rc.beginPath();
-    rc.moveTo(size,0); rc.lineTo(size*0.2,-size*0.8); rc.lineTo(-size*0.9,-size*0.3);
-    rc.lineTo(-size*0.6,size*0.7); rc.lineTo(size*0.3,size*0.5); rc.closePath(); rc.fill();
-    rc.strokeStyle=`rgba(255,255,255,${isRoyal?0.7:0.6})`; rc.lineWidth=0.5; rc.stroke();
-    if(isRoyal){
-      rc.strokeStyle=cfg.color; rc.globalAlpha=(isPhasing?0.35:0.9)*0.5; rc.lineWidth=0.6;
-      rc.beginPath(); rc.moveTo(size,0); rc.lineTo(size*0.2,-size*0.8); rc.stroke();
-      rc.globalAlpha=isPhasing?0.35:0.9;
-    }
-    rc.restore();
   }
+
+  // ── main tapered fuselage, nose at +x ──
+  rc.beginPath();
+  rc.moveTo(30,0);
+  rc.lineTo(17,-6.5); rc.lineTo(2,-8); rc.lineTo(-14,-9.5); rc.lineTo(-25,-10);
+  rc.lineTo(-30,-6); rc.lineTo(-30,6); rc.lineTo(-25,10); rc.lineTo(-14,9.5);
+  rc.lineTo(2,8); rc.lineTo(17,6.5);
+  rc.closePath();
+  const hg=rc.createLinearGradient(-30,0,30,0);
+  if(isRoyal){
+    hg.addColorStop(0,'#242b33'); hg.addColorStop(0.3,'#8892a0'); hg.addColorStop(0.55,'#eef2f6');
+    hg.addColorStop(0.8,'#98a2ae'); hg.addColorStop(1,'#f8fbfd');
+  } else {
+    hg.addColorStop(0,'#123f50'); hg.addColorStop(0.35,cfg.color); hg.addColorStop(0.7,'#c4f8ff'); hg.addColorStop(1,'#ffffff');
+  }
+  rc.fillStyle=hg; rc.fill();
+  rc.strokeStyle='rgba(255,255,255,0.75)'; rc.lineWidth=1; rc.stroke();
+
+  // panel/band seams along the hull — reads as articulated segments
+  rc.strokeStyle=isRoyal?'rgba(8,14,20,0.75)':hexAlpha(cfg.color,0.55); rc.lineWidth=1;
+  for(const [sx,hy] of [[17,6.5],[2,8],[-14,9.5],[-25,10]]){
+    rc.beginPath(); rc.moveTo(sx,-hy*0.92); rc.lineTo(sx,hy*0.92); rc.stroke();
+  }
+
+  // bridge core, visible through the hull — dimmer while phasing
+  const coreG=rc.createRadialGradient(7,0,0,7,0,6);
+  coreG.addColorStop(0,'#ffffff'); coreG.addColorStop(0.4,isPhasing?'rgba(0,221,255,0.3)':cfg.color); coreG.addColorStop(1,'transparent');
+  rc.fillStyle=coreG; rc.beginPath(); rc.arc(7,0,6,0,Math.PI*2); rc.fill();
+
   rc.globalAlpha=1;
 
   // twin beam-emitter nubs at the nose, lit only while attacking
   if(!isPhasing){
-    const pulse=0.5+Math.sin(w.frame*0.3)*0.5;
-    for(const ey of [-7,7]){
-      const eg=rc.createRadialGradient(17,ey,0,17,ey,4);
-      eg.addColorStop(0,`rgba(255,255,255,${0.6+0.4*pulse})`); eg.addColorStop(1,'transparent');
-      rc.fillStyle=eg; rc.beginPath(); rc.arc(17,ey,4,0,Math.PI*2); rc.fill();
+    for(const ey of [-ARKSHIP_EMITTER_Y,ARKSHIP_EMITTER_Y]){
+      const emG=rc.createRadialGradient(ARKSHIP_NOSE_X,ey,0,ARKSHIP_NOSE_X,ey,4);
+      emG.addColorStop(0,`rgba(255,255,255,${0.6+0.4*pulse})`); emG.addColorStop(1,'transparent');
+      rc.fillStyle=emG; rc.beginPath(); rc.arc(ARKSHIP_NOSE_X,ey,4,0,Math.PI*2); rc.fill();
     }
   }
 }

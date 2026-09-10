@@ -733,10 +733,10 @@ function drawArkshipBeams(rc,w){
   const ang=w.aimAngle||0;
   const perp=ang+Math.PI/2;
   const flicker=0.75+Math.sin(S.frame*0.9)*0.25;
-  const pairs=[[w.beamTarget,-7],[w.beamTarget2,7]];
+  const pairs=[[w.beamTarget,-ARKSHIP_EMITTER_Y],[w.beamTarget2,ARKSHIP_EMITTER_Y]];
   for(const [t,off] of pairs){
     if(!t||t.hp<=0) continue;
-    const ox=w.x+Math.cos(ang)*17+Math.cos(perp)*off, oy=w.y+Math.sin(ang)*17+Math.sin(perp)*off;
+    const ox=w.x+Math.cos(ang)*ARKSHIP_NOSE_X+Math.cos(perp)*off, oy=w.y+Math.sin(ang)*ARKSHIP_NOSE_X+Math.sin(perp)*off;
 
     rc.save();
     rc.shadowColor='#ffffff'; rc.shadowBlur=20;
