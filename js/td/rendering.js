@@ -25,6 +25,18 @@ function drawPath(){
     ctx.strokeRect(gx*CELL+2.5,gy*CELL+2.5,CELL-5,CELL-5);
   }
 
+  // Once a digger breaches the wall, the tunnel becomes a normal-looking
+  // lane extension so the new route reads at a glance.
+  if(state.shortcutOpen){
+    for(const cell of tunnelCellsSet){
+      const [gx,gy]=cell.split(',').map(Number);
+      ctx.fillStyle='rgba(0,30,60,0.95)';
+      ctx.fillRect(gx*CELL+2,gy*CELL+2,CELL-4,CELL-4);
+      ctx.strokeStyle='rgba(0,136,255,0.35)';
+      ctx.strokeRect(gx*CELL+2.5,gy*CELL+2.5,CELL-5,CELL-5);
+    }
+  }
+
   // A center trace keeps the route easy to follow through corners.
   ctx.shadowBlur=0;
   ctx.strokeStyle='rgba(0,136,255,0.35)';
@@ -34,6 +46,28 @@ function drawPath(){
   pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
   ctx.stroke();
   ctx.restore();
+
+  // Destructible terrain: rubble walls block a shortcut until a digger tunnels through.
+  if(!state.shortcutOpen && wallCellsSet.size){
+    ctx.save();
+    for(const cell of wallCellsSet){
+      const [gx,gy]=cell.split(',').map(Number);
+      const cx=gx*CELL+CELL/2, cy=gy*CELL+CELL/2;
+      const rGrad=ctx.createRadialGradient(cx-3,cy-3,1,cx,cy,20);
+      rGrad.addColorStop(0,'#8a6b45'); rGrad.addColorStop(0.6,'#4a3520'); rGrad.addColorStop(1,'#1a1208');
+      ctx.fillStyle=rGrad;
+      ctx.fillRect(gx*CELL+2,gy*CELL+2,CELL-4,CELL-4);
+      ctx.strokeStyle='rgba(180,140,80,0.5)'; ctx.lineWidth=1;
+      ctx.strokeRect(gx*CELL+2.5,gy*CELL+2.5,CELL-5,CELL-5);
+      // crack details
+      ctx.strokeStyle='rgba(20,12,4,0.6)'; ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.moveTo(cx-10,cy-8); ctx.lineTo(cx-2,cy-1); ctx.lineTo(cx-8,cy+9);
+      ctx.moveTo(cx+3,cy-9); ctx.lineTo(cx+2,cy+2); ctx.lineTo(cx+11,cy+7);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 
   // base entrance / exit markers
   ctx.save();
@@ -77,23 +111,85 @@ function drawTowers(){
       angle = Math.atan2(nearest.y - t.y, nearest.x - t.x);
       t.aimAngle = angle;
     }
+
+    // Selected-for-relocation ring, drawn under the turret.
+    if(state.movingTower===t){
+      ctx.save();
+      ctx.strokeStyle='rgba(0,255,136,0.8)'; ctx.lineWidth=2;
+      ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.arc(t.x,t.y,20,0,Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.strokeStyle='rgba(0,255,136,0.25)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(t.x,t.y,t.range,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+    // Cooling down after a relocation: can't fire yet.
+    if(t.moveCooldown>0) ctx.globalAlpha=0.55;
+
     if(t.type==='gun')    drawGunTower(t.x, t.y, angle);
     else if(t.type==='laser')   drawLaserTower(t.x, t.y, angle);
     else if(t.type==='missile') drawMissileTower(t.x, t.y, angle);
     else if(t.type==='slow')    drawCryoTower(t.x, t.y, angle);
+    ctx.globalAlpha=1;
+
+    drawTowerEvolutionBadge(t);
+  }
+}
+
+// Evolution feedback: a tinted ring once a tower branches at level 3, plus
+// small level pips so the player can tell levels apart at a glance.
+function drawTowerEvolutionBadge(t){
+  if(t.level>1){
+    ctx.save();
+    ctx.strokeStyle = t.evoTint || 'rgba(255,255,255,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath(); ctx.arc(t.x, t.y, 15, 0, Math.PI*2); ctx.stroke();
+    ctx.restore();
+    ctx.save();
+    ctx.fillStyle = t.evoTint || '#ffffff';
+    for(let i=0;i<t.level-1;i++){
+      ctx.beginPath(); ctx.arc(t.x-6+i*6, t.y+17, 2, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
   }
 }
 
 function drawEnemies(){
   if(!Array.isArray(state.enemies)) return;
   for(const e of state.enemies){
+    if(e.shielded) drawShieldAura(e);
     if(e.boss) drawBossEnemy(e); else drawGruntEnemy(e);
+    if(e.digging) drawDigProgress(e);
     drawEnemyHpBar(e);
   }
 }
 
+// Adaptive enemies: a ring tinted to the tower type they resist, so spam gets visible pushback.
+function drawShieldAura(e){
+  const color = TOWER_TYPES[e.resistType]?.color || '#ffffff';
+  const r = (e.boss ? 16 : 10) * (e.splitDepth ? 0.7 : 1) + 5;
+  ctx.save();
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.globalAlpha = 0.65;
+  ctx.shadowColor = color; ctx.shadowBlur = 8;
+  ctx.beginPath(); ctx.arc(e.x, e.y, r, 0, Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+
+// Digger channeling: a filling ring above the enemy shows breach progress.
+function drawDigProgress(e){
+  const frac = 1 - Math.max(0, e.digTimer)/TD_CONFIG.digDuration;
+  const r = 8;
+  ctx.save();
+  ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(e.x, e.y-24, r, 0, Math.PI*2); ctx.stroke();
+  ctx.strokeStyle='#cc9944'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(e.x, e.y-24, r, -Math.PI/2, -Math.PI/2 + frac*Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+
 function drawEnemyHpBar(e){
-  const r = e.boss ? 16 : 10;
+  const r = e.boss ? (e.splitDepth?11:16) : 10;
   const bw=28, bh=4;
   ctx.fillStyle='rgba(0,0,0,0.6)';
   ctx.fillRect(e.x-bw/2, e.y-r-8, bw, bh);
@@ -189,7 +285,7 @@ function drawGruntEnemy(e){
 
 // ── BOSS ENEMY: heavy 8-legged armored walker ──
 function drawBossEnemy(e){
-  const r = 16;
+  const r = e.splitDepth ? 11 : 16; // split-off bosses render smaller
   const frozen = e.slow>0;
   const phase = (e.walkDist||0)*0.1;
 
