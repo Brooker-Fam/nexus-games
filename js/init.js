@@ -84,6 +84,10 @@ document.getElementById('tab-btn-cs').onclick=function(){
   const dsoCount = document.getElementById('dso-player-count');
   if (dsoCount) dsoCount.textContent = '0';
 };
+document.getElementById('tab-btn-skins').onclick=function(){
+  switchTab('skins', this);
+  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'skins' });
+};
 
 // TD controls
 document.getElementById('btn-reset').onclick=resetGame;
