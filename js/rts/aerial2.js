@@ -300,9 +300,34 @@ function drawDarkWarriorShip(rc,cfg,w){
 // ── PRISM ARKSHIP — Prism's flagship changes silhouette with its mode:
 // ATTACKING is a long tapered hull with twin crescent blade-fins unfurled;
 // PHASING collapses that into a short, squat cone — compact for slipping
-// her and her Witches through. Skins share both silhouettes and differ only
-// in material — BASIC is glowing crystal, ROYAL VANGUARD is chrome/silver.
+// her and her Witches through. Both skins share the two silhouettes, but
+// ROYAL VANGUARD is more than a chrome recolor: gold piping traces every
+// edge, a cut-gem crest sits on the bridge, and the core burns amber
+// instead of BASIC's glowing crystal-blue.
 const ARKSHIP_NOSE_X=24, ARKSHIP_EMITTER_Y=5;
+const ARKSHIP_ROYAL_GOLD='#ffcf4d';
+
+// Small cut-gem crest — the Royal Vanguard's house insignia. Drawn wherever
+// a hull's bridge core would otherwise sit, so it reads as a replacement
+// for the stock core rather than an add-on.
+function drawArkshipRoyalCrest(rc,x,y,r,pulse){
+  rc.save();
+  rc.translate(x,y);
+  const glow=rc.createRadialGradient(0,0,0,0,0,r*1.8);
+  glow.addColorStop(0,`rgba(255,215,110,${0.55+pulse*0.35})`); glow.addColorStop(1,'transparent');
+  rc.fillStyle=glow; rc.beginPath(); rc.arc(0,0,r*1.8,0,Math.PI*2); rc.fill();
+
+  rc.beginPath();
+  rc.moveTo(0,-r); rc.lineTo(r*0.62,0); rc.lineTo(0,r); rc.lineTo(-r*0.62,0);
+  rc.closePath();
+  const gemG=rc.createLinearGradient(0,-r,0,r);
+  gemG.addColorStop(0,'#fff4cf'); gemG.addColorStop(0.5,ARKSHIP_ROYAL_GOLD); gemG.addColorStop(1,'#a3690f');
+  rc.fillStyle=gemG; rc.fill();
+  rc.strokeStyle='rgba(60,32,4,0.8)'; rc.lineWidth=0.6; rc.stroke();
+  rc.strokeStyle='rgba(255,255,255,0.5)'; rc.lineWidth=0.4;
+  rc.beginPath(); rc.moveTo(0,-r*0.85); rc.lineTo(0,r*0.85); rc.stroke();
+  rc.restore();
+}
 
 function drawArkshipUnit(rc,cfg,w){
   const isPhasing = w.arkMode==='phasing';
@@ -323,9 +348,10 @@ function drawArkshipUnit(rc,cfg,w){
 function drawArkshipAttackingHull(rc,cfg,w,isRoyal){
   const pulse=0.5+Math.sin(w.frame*0.25)*0.5;
 
-  // rear engine glow
+  // rear engine glow — Royal Vanguard burns amber-gold instead of the stock crystal-blue
+  const engineCore=isRoyal?ARKSHIP_ROYAL_GOLD:cfg.color;
   const eg=rc.createRadialGradient(-29,0,0,-29,0,9);
-  eg.addColorStop(0,`rgba(255,255,255,${0.5+pulse*0.3})`); eg.addColorStop(0.5,cfg.color); eg.addColorStop(1,'transparent');
+  eg.addColorStop(0,`rgba(255,255,255,${0.5+pulse*0.3})`); eg.addColorStop(0.5,engineCore); eg.addColorStop(1,'transparent');
   rc.fillStyle=eg; rc.beginPath(); rc.arc(-29,0,9,0,Math.PI*2); rc.fill();
 
   // ── crescent blade-fins, unfurled ──
@@ -341,14 +367,19 @@ function drawArkshipAttackingHull(rc,cfg,w,isRoyal){
     rc.bezierCurveTo(1,-17,-11,-25,-21,-27);
     rc.bezierCurveTo(-11,-18,-2,-11,11,-7);
     rc.closePath(); rc.fill();
-    rc.strokeStyle=isRoyal?'rgba(230,240,250,0.7)':'rgba(255,255,255,0.7)'; rc.lineWidth=0.8; rc.stroke();
+    rc.strokeStyle=isRoyal?ARKSHIP_ROYAL_GOLD:'rgba(255,255,255,0.7)'; rc.lineWidth=isRoyal?1.1:0.8; rc.stroke();
     // smaller aft blade
     rc.beginPath();
     rc.moveTo(-9,-9.5);
     rc.bezierCurveTo(-16,-15,-23,-18.5,-28,-18.5);
     rc.bezierCurveTo(-21,-13.5,-15,-11,-9,-9.5);
     rc.closePath(); rc.fill();
-    rc.strokeStyle=isRoyal?'rgba(230,240,250,0.7)':'rgba(255,255,255,0.7)'; rc.lineWidth=0.8; rc.stroke();
+    rc.strokeStyle=isRoyal?ARKSHIP_ROYAL_GOLD:'rgba(255,255,255,0.7)'; rc.lineWidth=isRoyal?1.1:0.8; rc.stroke();
+    if(isRoyal){
+      // engraved gold filigree line down the spine of the forward blade
+      rc.strokeStyle='rgba(255,207,77,0.55)'; rc.lineWidth=0.5;
+      rc.beginPath(); rc.moveTo(8,-8); rc.quadraticCurveTo(-6,-18,-18,-25.5); rc.stroke();
+    }
     rc.restore();
   }
 
@@ -367,7 +398,11 @@ function drawArkshipAttackingHull(rc,cfg,w,isRoyal){
     hg.addColorStop(0,'#123f50'); hg.addColorStop(0.35,cfg.color); hg.addColorStop(0.7,'#c4f8ff'); hg.addColorStop(1,'#ffffff');
   }
   rc.fillStyle=hg; rc.fill();
-  rc.strokeStyle='rgba(255,255,255,0.75)'; rc.lineWidth=1; rc.stroke();
+  rc.strokeStyle=isRoyal?ARKSHIP_ROYAL_GOLD:'rgba(255,255,255,0.75)'; rc.lineWidth=isRoyal?1.4:1; rc.stroke();
+  if(isRoyal){
+    // fine gold pinstripe just inside the hull edge — reads as ceremonial piping
+    rc.save(); rc.scale(0.94,0.94); rc.strokeStyle='rgba(255,207,77,0.4)'; rc.lineWidth=0.6; rc.stroke(); rc.restore();
+  }
 
   // panel/band seams along the hull — reads as articulated segments
   rc.strokeStyle=isRoyal?'rgba(8,14,20,0.75)':hexAlpha(cfg.color,0.55); rc.lineWidth=1;
@@ -375,15 +410,19 @@ function drawArkshipAttackingHull(rc,cfg,w,isRoyal){
     rc.beginPath(); rc.moveTo(sx,-hy*0.92); rc.lineTo(sx,hy*0.92); rc.stroke();
   }
 
-  // bridge core, visible through the hull
-  const coreG=rc.createRadialGradient(7,0,0,7,0,6);
-  coreG.addColorStop(0,'#ffffff'); coreG.addColorStop(0.4,cfg.color); coreG.addColorStop(1,'transparent');
-  rc.fillStyle=coreG; rc.beginPath(); rc.arc(7,0,6,0,Math.PI*2); rc.fill();
+  // bridge core — Royal Vanguard swaps the stock crystal-blue glow for its cut-gem crest
+  if(isRoyal){
+    drawArkshipRoyalCrest(rc,7,0,6,pulse);
+  } else {
+    const coreG=rc.createRadialGradient(7,0,0,7,0,6);
+    coreG.addColorStop(0,'#ffffff'); coreG.addColorStop(0.4,cfg.color); coreG.addColorStop(1,'transparent');
+    rc.fillStyle=coreG; rc.beginPath(); rc.arc(7,0,6,0,Math.PI*2); rc.fill();
+  }
 
   // twin beam-emitter nubs at the nose, lit while attacking
   for(const ey of [-ARKSHIP_EMITTER_Y,ARKSHIP_EMITTER_Y]){
     const emG=rc.createRadialGradient(ARKSHIP_NOSE_X,ey,0,ARKSHIP_NOSE_X,ey,4);
-    emG.addColorStop(0,`rgba(255,255,255,${0.6+0.4*pulse})`); emG.addColorStop(1,'transparent');
+    emG.addColorStop(0,`rgba(255,255,255,${0.6+0.4*pulse})`); emG.addColorStop(1,isRoyal?'rgba(255,207,77,0)':'transparent');
     rc.fillStyle=emG; rc.beginPath(); rc.arc(ARKSHIP_NOSE_X,ey,4,0,Math.PI*2); rc.fill();
   }
 }
@@ -395,9 +434,10 @@ function drawArkshipAttackingHull(rc,cfg,w,isRoyal){
 function drawArkshipPhasingCone(rc,cfg,w,isRoyal){
   const apexX=13, baseX=-11, baseHalfH=18;
 
-  // rear glow, seated behind the flared base
+  // rear glow, seated behind the flared base — Royal Vanguard runs amber-gold
+  const glowCore=isRoyal?ARKSHIP_ROYAL_GOLD:cfg.color;
   const eg=rc.createRadialGradient(baseX-5,0,0,baseX-5,0,11);
-  eg.addColorStop(0,'rgba(210,245,255,0.35)'); eg.addColorStop(0.5,cfg.color); eg.addColorStop(1,'transparent');
+  eg.addColorStop(0,'rgba(210,245,255,0.35)'); eg.addColorStop(0.5,glowCore); eg.addColorStop(1,'transparent');
   rc.fillStyle=eg; rc.beginPath(); rc.arc(baseX-5,0,11,0,Math.PI*2); rc.fill();
 
   // main cone body — short and wide, straight-sided
@@ -413,25 +453,30 @@ function drawArkshipPhasingCone(rc,cfg,w,isRoyal){
     hg.addColorStop(0,cfg.color); hg.addColorStop(0.55,'#bdf6ff'); hg.addColorStop(1,'#ffffff');
   }
   rc.fillStyle=hg; rc.fill();
-  rc.strokeStyle='rgba(255,255,255,0.6)'; rc.lineWidth=1; rc.stroke();
+  rc.strokeStyle=isRoyal?ARKSHIP_ROYAL_GOLD:'rgba(255,255,255,0.6)'; rc.lineWidth=isRoyal?1.3:1; rc.stroke();
 
-  // banded panel seams, width interpolated to the taper
-  rc.strokeStyle=isRoyal?'rgba(8,14,20,0.7)':hexAlpha(cfg.color,0.5); rc.lineWidth=1;
+  // banded panel seams, width interpolated to the taper — royal seams pick up gold trim
+  rc.strokeStyle=isRoyal?'rgba(255,207,77,0.5)':hexAlpha(cfg.color,0.5); rc.lineWidth=1;
   for(const f of [0.32,0.64]){
     const sx=apexX+(baseX-apexX)*f, sh=baseHalfH*f;
     rc.beginPath(); rc.moveTo(sx,-sh); rc.lineTo(sx,sh); rc.stroke();
   }
 
-  // flared, ringed base — concentric rings, like a rocket-nozzle skirt
+  // flared, ringed base — concentric rings, like a rocket-nozzle skirt.
+  // Royal Vanguard's rings burn gold instead of the stock cyan.
   for(let r=0;r<3;r++){
-    rc.strokeStyle=`rgba(200,240,255,${0.35-r*0.09})`; rc.lineWidth=1;
+    rc.strokeStyle=isRoyal?`rgba(255,215,120,${0.45-r*0.11})`:`rgba(200,240,255,${0.35-r*0.09})`; rc.lineWidth=1;
     rc.beginPath(); rc.ellipse(baseX-1-r*2,0,2+r*1.4,baseHalfH-r*4.5,0,0,Math.PI*2); rc.stroke();
   }
 
-  // dim bridge core, centered in the cone
-  const coreG=rc.createRadialGradient(0,0,0,0,0,5);
-  coreG.addColorStop(0,'#ffffff'); coreG.addColorStop(0.4,'rgba(0,221,255,0.3)'); coreG.addColorStop(1,'transparent');
-  rc.fillStyle=coreG; rc.beginPath(); rc.arc(0,0,5,0,Math.PI*2); rc.fill();
+  // bridge core, centered in the cone — Royal Vanguard shows its cut-gem crest
+  if(isRoyal){
+    drawArkshipRoyalCrest(rc,0,0,5,0.5+Math.sin(w.frame*0.25)*0.5);
+  } else {
+    const coreG=rc.createRadialGradient(0,0,0,0,0,5);
+    coreG.addColorStop(0,'#ffffff'); coreG.addColorStop(0.4,'rgba(0,221,255,0.3)'); coreG.addColorStop(1,'transparent');
+    rc.fillStyle=coreG; rc.beginPath(); rc.arc(0,0,5,0,Math.PI*2); rc.fill();
+  }
 }
 
 //# sourceMappingURL=aerial2.js.map
