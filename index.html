@@ -379,13 +379,34 @@
             <div class="skin-mode">◆ PHASING MODE</div>
           </div>
         </div>
-        <div class="skin-desc">ROYAL VANGUARD — the Princess's flagship, its hull forged from silver and light. Blade-fins unfurl and twin beam emitters flare when attacking; it collapses into a short, squat cone when phasing her crew aboard.</div>
+        <div class="skin-desc">ROYAL VANGUARD — the Princess's flagship, its hull forged from silver and light, traced in gold piping and marked with a cut-gem house crest in place of the stock crystal core. Blade-fins unfurl and twin beam emitters flare when attacking; it collapses into a short, squat cone when phasing her crew aboard.</div>
+        <div class="skin-equip-badge">✓ EQUIPPED</div>
+      </div>
+
+      <!-- ROBOTO CAPITAL SHIP — REGULAR — two preview cards (airborne + landed)
+           but ONE skin/one button, same pattern as ROYAL VANGUARD above.
+           Rendered with the real in-game drawCapitalShipUnit renderer, same
+           approach as the Arkship's BASIC card. -->
+      <div class="skin-option selected" id="skin-option-capitalship-regular" data-skin="regular" data-unit="capitalship" role="button" tabindex="0" aria-pressed="true">
+        <div class="skin-option-cards">
+          <div class="skin-card">
+            <canvas class="skin-canvas" id="skin-capitalship-airborne-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">ROBOTO CAPITAL SHIP</div>
+            <div class="skin-mode">◆ AIRBORNE MODE</div>
+          </div>
+          <div class="skin-card">
+            <canvas class="skin-canvas" id="skin-capitalship-landed-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">ROBOTO CAPITAL SHIP</div>
+            <div class="skin-mode">◆ LANDED MODE</div>
+          </div>
+        </div>
+        <div class="skin-desc">The stock flagship hull — standard-issue armor plating, quad gun barrels and engines, no royal trim. Engines bank and landing legs deploy, cargo bay glowing gold, as King Gongui disembarks.</div>
         <div class="skin-equip-badge">✓ EQUIPPED</div>
       </div>
 
       <!-- IRONCROWN DREADNOUGHT — two preview cards (airborne + landed) but ONE
            skin/one button, same pattern as ROYAL VANGUARD above. -->
-      <div class="skin-option selected" id="skin-option-ironcrown" data-skin="ironcrown" data-unit="capitalship" role="button" tabindex="0" aria-pressed="true">
+      <div class="skin-option" id="skin-option-ironcrown" data-skin="ironcrown" data-unit="capitalship" role="button" tabindex="0" aria-pressed="false">
         <div class="skin-option-cards">
           <div class="skin-card">
             <canvas class="skin-canvas" id="skin-ironcrown-airborne-canvas" width="400" height="300"></canvas>
