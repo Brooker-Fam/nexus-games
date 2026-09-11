@@ -147,6 +147,27 @@ function drawHeroSkinCard(canvasEl,heroKey){
   c.restore();
 }
 
+// ── ROBOTO CAPITAL SHIP — REGULAR SKIN ──
+// The stock hull, drawn with the real in-game renderer (drawCapitalShipUnit,
+// aerial2.js) so this card matches what actually appears on the
+// battlefield — same approach as the Arkship's BASIC card above.
+function drawCapitalShipRegularSkinCard(canvasEl,mode){
+  const c=canvasEl.getContext('2d');
+  const W=canvasEl.width, H=canvasEl.height;
+  drawSkinsBackdrop(c,W,H);
+
+  const cfg=FACTION_CFG.roboto;
+  const isLanded=mode==='landed';
+  const fakeShip={frame:skinsFrame, state:'attack', landed:isLanded, passenger:true};
+
+  c.save();
+  c.translate(W*0.42,H*0.52);
+  c.rotate(-0.08);
+  c.scale(4.2,4.2);
+  drawCapitalShipUnit(c,cfg,fakeShip);
+  c.restore();
+}
+
 // ── ROBOTO CAPITAL SHIP — IRONCROWN DREADNOUGHT SKIN ──
 // A stockier, slab-armoured refit of Gongui's flagship: a long boxy hull
 // bristling with turret batteries along the belly, twin heavy mounts flanking
@@ -253,6 +274,10 @@ function skinsPreviewLoop(){
     const canvasEl=document.getElementById(`skin-${heroKey}-canvas`);
     if(canvasEl) drawHeroSkinCard(canvasEl,heroKey);
   }
+  const stdAir=document.getElementById('skin-capitalship-airborne-canvas');
+  if(stdAir) drawCapitalShipRegularSkinCard(stdAir,'airborne');
+  const stdLnd=document.getElementById('skin-capitalship-landed-canvas');
+  if(stdLnd) drawCapitalShipRegularSkinCard(stdLnd,'landed');
   const air=document.getElementById('skin-ironcrown-airborne-canvas');
   if(air) drawCapitalShipSkinCard(air,'airborne');
   const lnd=document.getElementById('skin-ironcrown-landed-canvas');
