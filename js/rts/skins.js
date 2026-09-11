@@ -12,22 +12,33 @@
 let skinsRAF=null;
 let skinsFrame=0;
 
-const ARKSHIP_SKIN_KEY='nexusArkshipSkin';
-const ARKSHIP_SKIN_DEFAULT='basic';
+// Each equippable unit gets its own localStorage slot so picking a skin for
+// one (e.g. the Capital Ship) never clobbers another (e.g. the Arkship).
+const UNIT_SKIN_CFG={
+  arkship:     { key:'nexusArkshipSkin',     default:'basic' },
+  capitalship: { key:'nexusCapitalShipSkin', default:'ironcrown' },
+};
 
-function getArkshipSkin(){
-  try { return localStorage.getItem(ARKSHIP_SKIN_KEY) || ARKSHIP_SKIN_DEFAULT; }
-  catch(e){ return ARKSHIP_SKIN_DEFAULT; }
+function getUnitSkin(unit){
+  const cfg=UNIT_SKIN_CFG[unit];
+  if(!cfg) return null;
+  try { return localStorage.getItem(cfg.key) || cfg.default; }
+  catch(e){ return cfg.default; }
 }
-function setArkshipSkin(id){
-  try { localStorage.setItem(ARKSHIP_SKIN_KEY, id); } catch(e){}
+function setUnitSkin(unit,id){
+  const cfg=UNIT_SKIN_CFG[unit];
+  if(!cfg) return;
+  try { localStorage.setItem(cfg.key, id); } catch(e){}
   refreshSkinOptionsUI();
-  if(window.posthog) posthog.capture('skin_equipped', { unit:'arkship', skin:id });
+  if(window.posthog) posthog.capture('skin_equipped', { unit, skin:id });
 }
+function getArkshipSkin(){ return getUnitSkin('arkship'); }
+function setArkshipSkin(id){ setUnitSkin('arkship', id); }
+
 function refreshSkinOptionsUI(){
-  const current=getArkshipSkin();
   document.querySelectorAll('.skin-option').forEach(opt=>{
-    const on=opt.dataset.skin===current;
+    const unit=opt.dataset.unit || 'arkship';
+    const on=opt.dataset.skin===getUnitSkin(unit);
     opt.classList.toggle('selected', on);
     opt.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
@@ -266,19 +277,22 @@ registerGame('skins', {
 });
 
 // ── SELECTION — click (or Enter/Space) on a .skin-option to equip that skin.
-// Both Royal Vanguard preview cards live inside one .skin-option, so clicking
-// either one equips/lights up the pair together, same as the single Basic card.
+// Each .skin-option can bundle several preview cards (e.g. Royal Vanguard's
+// Attacking/Phasing pair, Ironcrown's Airborne/Landed pair), so clicking any
+// card inside it equips/lights up the whole option together. Options are
+// scoped per-unit via data-unit (arkship vs capitalship) so equipping one
+// unit's skin never affects the other's.
 (function wireSkinOptions(){
   const gallery=document.querySelector('.skins-gallery');
   if(!gallery) return;
   gallery.addEventListener('click', e=>{
     const opt=e.target.closest('.skin-option');
-    if(opt && opt.dataset.skin) setArkshipSkin(opt.dataset.skin);
+    if(opt && opt.dataset.skin) setUnitSkin(opt.dataset.unit || 'arkship', opt.dataset.skin);
   });
   gallery.addEventListener('keydown', e=>{
     if(e.key!=='Enter' && e.key!==' ') return;
     const opt=e.target.closest('.skin-option');
-    if(opt && opt.dataset.skin){ e.preventDefault(); setArkshipSkin(opt.dataset.skin); }
+    if(opt && opt.dataset.skin){ e.preventDefault(); setUnitSkin(opt.dataset.unit || 'arkship', opt.dataset.skin); }
   });
   refreshSkinOptionsUI();
 })();
