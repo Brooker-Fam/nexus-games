@@ -158,6 +158,54 @@ function drawHeroSkinCard(canvasEl,heroKey){
   c.restore();
 }
 
+// ── BARRACKS / ELITE / AERIAL WARRIOR PORTRAITS ──
+// Every trainable barracks, elite and aerial-tier unit across all three
+// factions, rendered with its real in-game draw function (same approach as
+// the hero portraits above) — read-only showcase cards, not equippable
+// skins, since these units don't have alternate looks.
+const WARRIOR_SKIN_CFG={
+  witch:            { faction:'prism',  category:'ground', draw:(c,cfg,w)=>drawWarriorPrism(c,cfg,w) },
+  swordsman:        { faction:'shadow', category:'ground', draw:(c,cfg,w)=>drawWarriorShadow(c,cfg,w) },
+  gunbot:           { faction:'roboto', category:'ground', draw:(c,cfg,w)=>drawWarriorRoboto(c,cfg,w) },
+  legionnaire:      { faction:'prism',  category:'ground', draw:(c,cfg,w)=>drawLegionnaire(c,cfg,w) },
+  warbot:           { faction:'roboto', category:'ground', draw:(c,cfg,w)=>drawWarbot(c,cfg,w) },
+  oracle:           { faction:'prism',  category:'ground', draw:(c,cfg,w)=>drawEliteOracle(c,cfg,w) },
+  darkwarrior:      { faction:'shadow', category:'ground', draw:(c,cfg,w)=>drawEliteDarkWarrior(c,cfg,w) },
+  shockbot:         { faction:'roboto', category:'ground', draw:(c,cfg,w)=>drawEliteShockbot(c,cfg,w) },
+  wizard:           { faction:'prism',  category:'ground', draw:(c,cfg,w)=>drawWizard(c,cfg,w) },
+  necromancer:      { faction:'shadow', category:'ground', draw:(c,cfg,w)=>drawNecromancer(c,cfg,w) },
+  tank:             { faction:'roboto', category:'ground', draw:(c,cfg,w)=>drawTankUnit(c,cfg,w) },
+  'wardrone-prism': { faction:'prism',  category:'aerial', draw:(c,cfg,w)=>drawPrismWarDrone(c,cfg,w) },
+  'wardrone-shadow':{ faction:'shadow', category:'aerial', draw:(c,cfg,w)=>drawShadowWraith(c,cfg,w) },
+  'wardrone-roboto':{ faction:'roboto', category:'aerial', draw:(c,cfg,w)=>drawSkyAttackerUnit(c,cfg,w) },
+  lightfighter:     { faction:'prism',  category:'aerial', draw:(c,cfg,w)=>drawLightFighterUnit(c,cfg,w) },
+  destroyer:        { faction:'shadow', category:'aerial', draw:(c,cfg,w)=>drawDestroyerUnit(c,cfg,w) },
+  warship:          { faction:'roboto', category:'aerial', draw:(c,cfg,w)=>drawWarshipUnit(c,cfg,w) },
+};
+
+function drawWarriorSkinCard(canvasEl,key){
+  const c=canvasEl.getContext('2d');
+  const W=canvasEl.width, H=canvasEl.height;
+  drawSkinsBackdrop(c,W,H);
+
+  const unit=WARRIOR_SKIN_CFG[key];
+  const cfg=FACTION_CFG[unit.faction];
+  const isAerial=unit.category==='aerial';
+  const scale=isAerial?4.4:3.4;
+  const fakeW={frame:skinsFrame, state:'attack', faction:unit.faction};
+
+  c.save();
+  if(isAerial){
+    c.translate(W*0.5,H*0.52);
+    c.rotate(-0.1);
+  } else {
+    c.translate(W*0.5,H*0.72);
+  }
+  c.scale(scale,scale);
+  unit.draw(c,cfg,fakeW);
+  c.restore();
+}
+
 // ── ROBOTO CAPITAL SHIP — REGULAR SKIN ──
 // The stock hull, drawn with the real in-game renderer (drawCapitalShipUnit,
 // aerial2.js) so this card matches what actually appears on the
@@ -284,6 +332,10 @@ function skinsPreviewLoop(){
   for(const heroKey of ['prism','vanthel','gongui']){
     const canvasEl=document.getElementById(`skin-${heroKey}-canvas`);
     if(canvasEl) drawHeroSkinCard(canvasEl,heroKey);
+  }
+  for(const key of Object.keys(WARRIOR_SKIN_CFG)){
+    const canvasEl=document.getElementById(`skin-${key}-canvas`);
+    if(canvasEl) drawWarriorSkinCard(canvasEl,key);
   }
   const stdAir=document.getElementById('skin-capitalship-airborne-canvas');
   if(stdAir) drawCapitalShipRegularSkinCard(stdAir,'airborne');
