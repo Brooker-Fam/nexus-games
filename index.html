@@ -348,215 +348,297 @@
     <div class="dso-title-wrap">
       <div class="dso-pre">COSMETIC ARMORY</div>
       <div class="dso-title">SKINS</div>
-      <div class="dso-sub">Alternate looks for your flagships and heroes — plus every warrior in the armada.</div>
+      <div class="dso-sub">Pick a unit's name for its default look and any alternate skin, side by side.</div>
     </div>
-    <div class="skins-gallery">
 
-      <!-- BASIC — single card, single skin -->
-      <div class="skin-option selected" id="skin-option-basic" data-skin="basic" data-unit="arkship" role="button" tabindex="0" aria-pressed="true">
-        <div class="skin-option-cards">
-          <div class="skin-card">
-            <canvas class="skin-canvas" id="skin-arkship-basic-canvas" width="400" height="300"></canvas>
-            <div class="skin-name">PRISM ARKSHIP</div>
-            <div class="skin-mode">◆ STANDARD ISSUE</div>
+    <div class="skins-layout">
+      <!-- LIST — every unit's name; clicking one shows its detail panel -->
+      <nav class="skins-list-col" aria-label="Units">
+        <div class="skins-list-section-label">◆ FLAGSHIPS</div>
+        <ul class="skins-list">
+          <li class="skins-list-item selected" data-unit="arkship" data-faction="prism" role="button" tabindex="0" aria-pressed="true">ARKSHIP</li>
+          <li class="skins-list-item" data-unit="capitalship" data-faction="roboto" role="button" tabindex="0" aria-pressed="false">CAPITAL SHIP</li>
+        </ul>
+
+        <div class="skins-list-section-label">◆ BARRACKS</div>
+        <ul class="skins-list">
+          <li class="skins-list-item" data-unit="witch" data-faction="prism" role="button" tabindex="0">WITCH</li>
+          <li class="skins-list-item" data-unit="swordsman" data-faction="shadow" role="button" tabindex="0">SWORDSMAN</li>
+          <li class="skins-list-item" data-unit="gunbot" data-faction="roboto" role="button" tabindex="0">GUNBOT</li>
+          <li class="skins-list-item" data-unit="legionnaire" data-faction="prism" role="button" tabindex="0">LEGIONNAIRES</li>
+          <li class="skins-list-item" data-unit="warbot" data-faction="roboto" role="button" tabindex="0">WARBOT</li>
+        </ul>
+
+        <div class="skins-list-section-label">◆ ELITE</div>
+        <ul class="skins-list">
+          <li class="skins-list-item" data-unit="oracle" data-faction="prism" role="button" tabindex="0">ORACLE</li>
+          <li class="skins-list-item" data-unit="darkwarrior" data-faction="shadow" role="button" tabindex="0">DARK WARRIOR</li>
+          <li class="skins-list-item" data-unit="shockbot" data-faction="roboto" role="button" tabindex="0">SHOCKBOT</li>
+          <li class="skins-list-item" data-unit="wizard" data-faction="prism" role="button" tabindex="0">WIZARD</li>
+          <li class="skins-list-item" data-unit="necromancer" data-faction="shadow" role="button" tabindex="0">NECROMANCER</li>
+          <li class="skins-list-item" data-unit="tank" data-faction="roboto" role="button" tabindex="0">TANK</li>
+        </ul>
+
+        <div class="skins-list-section-label">◆ AERIAL</div>
+        <ul class="skins-list">
+          <li class="skins-list-item" data-unit="wardrone-prism" data-faction="prism" role="button" tabindex="0">WAR DRONE — PRISM</li>
+          <li class="skins-list-item" data-unit="wardrone-shadow" data-faction="shadow" role="button" tabindex="0">WAR DRONE — SHADOW</li>
+          <li class="skins-list-item" data-unit="wardrone-roboto" data-faction="roboto" role="button" tabindex="0">WAR DRONE — ROBOTO</li>
+          <li class="skins-list-item" data-unit="lightfighter" data-faction="prism" role="button" tabindex="0">LIGHT FIGHTER</li>
+          <li class="skins-list-item" data-unit="destroyer" data-faction="shadow" role="button" tabindex="0">DESTROYER</li>
+          <li class="skins-list-item" data-unit="warship" data-faction="roboto" role="button" tabindex="0">WARSHIP</li>
+        </ul>
+
+        <div class="skins-list-section-label">◆ COMMANDERS</div>
+        <ul class="skins-list">
+          <li class="skins-list-item" data-unit="prism" data-faction="prism" role="button" tabindex="0">PRISM</li>
+          <li class="skins-list-item" data-unit="vanthel" data-faction="shadow" role="button" tabindex="0">VANTHEL</li>
+          <li class="skins-list-item" data-unit="gongui" data-faction="roboto" role="button" tabindex="0">GONGUI</li>
+        </ul>
+      </nav>
+
+      <!-- DETAIL — one panel per unit; only the selected one is shown -->
+      <div class="skins-detail-col">
+
+        <div class="skin-detail skins-gallery" id="skin-detail-arkship">
+          <!-- BASIC — single card, single skin -->
+          <div class="skin-option selected" id="skin-option-basic" data-skin="basic" data-unit="arkship" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-arkship-basic-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">PRISM ARKSHIP</div>
+                <div class="skin-mode">◆ STANDARD ISSUE</div>
+              </div>
+            </div>
+            <div class="skin-desc">The stock flagship hull — crystalline blue plating, no royal trim.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <!-- ROYAL VANGUARD — two preview cards (attacking + phasing) but ONE skin/one button, since they're both the same unit -->
+          <div class="skin-option" id="skin-option-royal-vanguard" data-skin="royal-vanguard" data-unit="arkship" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-arkship-attacking-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">PRISM ARKSHIP</div>
+                <div class="skin-mode">◆ ATTACKING MODE</div>
+              </div>
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-arkship-phasing-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">PRISM ARKSHIP</div>
+                <div class="skin-mode">◆ PHASING MODE</div>
+              </div>
+            </div>
+            <div class="skin-desc">ROYAL VANGUARD — the Princess's flagship, its hull forged from silver and light, traced in gold piping and marked with a cut-gem house crest in place of the stock crystal core. Blade-fins unfurl and twin beam emitters flare when attacking; it collapses into a short, squat cone when phasing her crew aboard.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
           </div>
         </div>
-        <div class="skin-desc">The stock flagship hull — crystalline blue plating, no royal trim.</div>
-        <div class="skin-equip-badge">✓ EQUIPPED</div>
-      </div>
 
-      <!-- ROYAL VANGUARD — two preview cards (attacking + phasing) but ONE skin/one button, since they're both the same unit -->
-      <div class="skin-option" id="skin-option-royal-vanguard" data-skin="royal-vanguard" data-unit="arkship" role="button" tabindex="0" aria-pressed="false">
-        <div class="skin-option-cards">
-          <div class="skin-card">
-            <canvas class="skin-canvas" id="skin-arkship-attacking-canvas" width="400" height="300"></canvas>
-            <div class="skin-name">PRISM ARKSHIP</div>
-            <div class="skin-mode">◆ ATTACKING MODE</div>
+        <div class="skin-detail skins-gallery" id="skin-detail-capitalship" hidden>
+          <!-- ROBOTO CAPITAL SHIP — REGULAR — two preview cards (airborne + landed)
+               but ONE skin/one button, same pattern as ROYAL VANGUARD above.
+               Rendered with the real in-game drawCapitalShipUnit renderer, same
+               approach as the Arkship's BASIC card. -->
+          <div class="skin-option selected" id="skin-option-capitalship-regular" data-skin="regular" data-unit="capitalship" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-capitalship-airborne-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">ROBOTO CAPITAL SHIP</div>
+                <div class="skin-mode">◆ AIRBORNE MODE</div>
+              </div>
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-capitalship-landed-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">ROBOTO CAPITAL SHIP</div>
+                <div class="skin-mode">◆ LANDED MODE</div>
+              </div>
+            </div>
+            <div class="skin-desc">The stock flagship hull — standard-issue armor plating, quad gun barrels and engines, no royal trim. Engines bank and landing legs deploy, cargo bay glowing gold, as King Gongui disembarks.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
           </div>
-          <div class="skin-card">
-            <canvas class="skin-canvas" id="skin-arkship-phasing-canvas" width="400" height="300"></canvas>
-            <div class="skin-name">PRISM ARKSHIP</div>
-            <div class="skin-mode">◆ PHASING MODE</div>
-          </div>
-        </div>
-        <div class="skin-desc">ROYAL VANGUARD — the Princess's flagship, its hull forged from silver and light, traced in gold piping and marked with a cut-gem house crest in place of the stock crystal core. Blade-fins unfurl and twin beam emitters flare when attacking; it collapses into a short, squat cone when phasing her crew aboard.</div>
-        <div class="skin-equip-badge">✓ EQUIPPED</div>
-      </div>
 
-      <!-- ROBOTO CAPITAL SHIP — REGULAR — two preview cards (airborne + landed)
-           but ONE skin/one button, same pattern as ROYAL VANGUARD above.
-           Rendered with the real in-game drawCapitalShipUnit renderer, same
-           approach as the Arkship's BASIC card. -->
-      <div class="skin-option selected" id="skin-option-capitalship-regular" data-skin="regular" data-unit="capitalship" role="button" tabindex="0" aria-pressed="true">
-        <div class="skin-option-cards">
-          <div class="skin-card">
-            <canvas class="skin-canvas" id="skin-capitalship-airborne-canvas" width="400" height="300"></canvas>
-            <div class="skin-name">ROBOTO CAPITAL SHIP</div>
-            <div class="skin-mode">◆ AIRBORNE MODE</div>
-          </div>
-          <div class="skin-card">
-            <canvas class="skin-canvas" id="skin-capitalship-landed-canvas" width="400" height="300"></canvas>
-            <div class="skin-name">ROBOTO CAPITAL SHIP</div>
-            <div class="skin-mode">◆ LANDED MODE</div>
-          </div>
-        </div>
-        <div class="skin-desc">The stock flagship hull — standard-issue armor plating, quad gun barrels and engines, no royal trim. Engines bank and landing legs deploy, cargo bay glowing gold, as King Gongui disembarks.</div>
-        <div class="skin-equip-badge">✓ EQUIPPED</div>
-      </div>
-
-      <!-- IRONCROWN DREADNOUGHT — two preview cards (airborne + landed) but ONE
-           skin/one button, same pattern as ROYAL VANGUARD above. -->
-      <div class="skin-option" id="skin-option-ironcrown" data-skin="ironcrown" data-unit="capitalship" role="button" tabindex="0" aria-pressed="false">
-        <div class="skin-option-cards">
-          <div class="skin-card">
-            <canvas class="skin-canvas" id="skin-ironcrown-airborne-canvas" width="400" height="300"></canvas>
-            <div class="skin-name">ROBOTO CAPITAL SHIP</div>
-            <div class="skin-mode">◆ AIRBORNE MODE</div>
-          </div>
-          <div class="skin-card">
-            <canvas class="skin-canvas" id="skin-ironcrown-landed-canvas" width="400" height="300"></canvas>
-            <div class="skin-name">ROBOTO CAPITAL SHIP</div>
-            <div class="skin-mode">◆ LANDED MODE</div>
+          <!-- IRONCROWN DREADNOUGHT — two preview cards (airborne + landed) but ONE
+               skin/one button, same pattern as ROYAL VANGUARD above. -->
+          <div class="skin-option" id="skin-option-ironcrown" data-skin="ironcrown" data-unit="capitalship" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-ironcrown-airborne-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">ROBOTO CAPITAL SHIP</div>
+                <div class="skin-mode">◆ AIRBORNE MODE</div>
+              </div>
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-ironcrown-landed-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">ROBOTO CAPITAL SHIP</div>
+                <div class="skin-mode">◆ LANDED MODE</div>
+              </div>
+            </div>
+            <div class="skin-desc">IRONCROWN DREADNOUGHT — a stockier, slab-armoured refit of Gongui's flagship. Turret batteries line the belly and flank the bridge, engines burning blue-white as it bears down on every foe it faces; engines bank and landing legs deploy, throne bay glowing gold, as King Gongui disembarks to lead the charge himself.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
           </div>
         </div>
-        <div class="skin-desc">IRONCROWN DREADNOUGHT — a stockier, slab-armoured refit of Gongui's flagship. Turret batteries line the belly and flank the bridge, engines burning blue-white as it bears down on every foe it faces; engines bank and landing legs deploy, throne bay glowing gold, as King Gongui disembarks to lead the charge himself.</div>
-        <div class="skin-equip-badge">✓ EQUIPPED</div>
-      </div>
-    </div>
 
-    <div class="skins-section-label">◆ BARRACKS</div>
-    <div class="skins-gallery">
-      <div class="skin-card" data-faction="prism" id="skin-witch-card">
-        <canvas class="skin-canvas" id="skin-witch-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">WITCH — PRISM ARMADA</div>
-        <div class="skin-mode">◆ BARRACKS — TIER 1</div>
-        <div class="skin-desc">Ranged — magic projectiles.</div>
-      </div>
-      <div class="skin-card" data-faction="shadow" id="skin-swordsman-card">
-        <canvas class="skin-canvas" id="skin-swordsman-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">SWORDSMAN — SHADOW ARMADA</div>
-        <div class="skin-mode">◆ BARRACKS — TIER 1</div>
-        <div class="skin-desc">Melee — fast sword charge.</div>
-      </div>
-      <div class="skin-card" data-faction="roboto" id="skin-gunbot-card">
-        <canvas class="skin-canvas" id="skin-gunbot-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">GUNBOT — ROBOTO ARMADA</div>
-        <div class="skin-mode">◆ BARRACKS — TIER 1</div>
-        <div class="skin-desc">Ranged — rapid fire gun.</div>
-      </div>
-      <div class="skin-card" data-faction="prism" id="skin-legionnaire-card">
-        <canvas class="skin-canvas" id="skin-legionnaire-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">LEGIONNAIRES — PRISM ARMADA</div>
-        <div class="skin-mode">◆ BARRACKS — TIER 2</div>
-        <div class="skin-desc">Mixed sword and bow squad, trained four at a time.</div>
-      </div>
-      <div class="skin-card" data-faction="roboto" id="skin-warbot-card">
-        <canvas class="skin-canvas" id="skin-warbot-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">WARBOT — ROBOTO ARMADA</div>
-        <div class="skin-mode">◆ BARRACKS — TIER 2</div>
-        <div class="skin-desc">Ranged — heavier armor, harder-hitting rifle than GunBot.</div>
-      </div>
-    </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-witch" hidden>
+          <div class="skin-card" data-faction="prism" id="skin-witch-card">
+            <canvas class="skin-canvas" id="skin-witch-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">WITCH — PRISM ARMADA</div>
+            <div class="skin-mode">◆ BARRACKS — TIER 1</div>
+            <div class="skin-desc">Ranged — magic projectiles.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-swordsman" hidden>
+          <div class="skin-card" data-faction="shadow" id="skin-swordsman-card">
+            <canvas class="skin-canvas" id="skin-swordsman-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">SWORDSMAN — SHADOW ARMADA</div>
+            <div class="skin-mode">◆ BARRACKS — TIER 1</div>
+            <div class="skin-desc">Melee — fast sword charge.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-gunbot" hidden>
+          <div class="skin-card" data-faction="roboto" id="skin-gunbot-card">
+            <canvas class="skin-canvas" id="skin-gunbot-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">GUNBOT — ROBOTO ARMADA</div>
+            <div class="skin-mode">◆ BARRACKS — TIER 1</div>
+            <div class="skin-desc">Ranged — rapid fire gun.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-legionnaire" hidden>
+          <div class="skin-card" data-faction="prism" id="skin-legionnaire-card">
+            <canvas class="skin-canvas" id="skin-legionnaire-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">LEGIONNAIRES — PRISM ARMADA</div>
+            <div class="skin-mode">◆ BARRACKS — TIER 2</div>
+            <div class="skin-desc">Mixed sword and bow squad, trained four at a time.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-warbot" hidden>
+          <div class="skin-card" data-faction="roboto" id="skin-warbot-card">
+            <canvas class="skin-canvas" id="skin-warbot-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">WARBOT — ROBOTO ARMADA</div>
+            <div class="skin-mode">◆ BARRACKS — TIER 2</div>
+            <div class="skin-desc">Ranged — heavier armor, harder-hitting rifle than GunBot.</div>
+          </div>
+        </div>
 
-    <div class="skins-section-label">◆ ELITE</div>
-    <div class="skins-gallery">
-      <div class="skin-card" data-faction="prism" id="skin-oracle-card">
-        <canvas class="skin-canvas" id="skin-oracle-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">ORACLE — PRISM ARMADA</div>
-        <div class="skin-mode">◆ ELITE — TIER 1</div>
-        <div class="skin-desc">Ranged — high damage prismatic bolts.</div>
-      </div>
-      <div class="skin-card" data-faction="shadow" id="skin-darkwarrior-card">
-        <canvas class="skin-canvas" id="skin-darkwarrior-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">DARK WARRIOR — SHADOW ARMADA</div>
-        <div class="skin-mode">◆ ELITE — TIER 1</div>
-        <div class="skin-desc">Ranged — black magic bolts that chain.</div>
-      </div>
-      <div class="skin-card" data-faction="roboto" id="skin-shockbot-card">
-        <canvas class="skin-canvas" id="skin-shockbot-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">SHOCKBOT — ROBOTO ARMADA</div>
-        <div class="skin-mode">◆ ELITE — TIER 1</div>
-        <div class="skin-desc">Ranged — chain lightning hits multiple enemies.</div>
-      </div>
-      <div class="skin-card" data-faction="prism" id="skin-wizard-card">
-        <canvas class="skin-canvas" id="skin-wizard-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">WIZARD — PRISM ARMADA</div>
-        <div class="skin-mode">◆ ELITE — TIER 2</div>
-        <div class="skin-desc">Ranged — chain lightning bounces between enemies.</div>
-      </div>
-      <div class="skin-card" data-faction="shadow" id="skin-necromancer-card">
-        <canvas class="skin-canvas" id="skin-necromancer-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">NECROMANCER — SHADOW ARMADA</div>
-        <div class="skin-mode">◆ ELITE — TIER 2</div>
-        <div class="skin-desc">Raises dead Swordsmen — fast revive, strong damage.</div>
-      </div>
-      <div class="skin-card" data-faction="roboto" id="skin-tank-card">
-        <canvas class="skin-canvas" id="skin-tank-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">TANK — ROBOTO ARMADA</div>
-        <div class="skin-mode">◆ ELITE — TIER 2</div>
-        <div class="skin-desc">Heavy armored unit — high HP, AOE cannon.</div>
-      </div>
-    </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-oracle" hidden>
+          <div class="skin-card" data-faction="prism" id="skin-oracle-card">
+            <canvas class="skin-canvas" id="skin-oracle-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">ORACLE — PRISM ARMADA</div>
+            <div class="skin-mode">◆ ELITE — TIER 1</div>
+            <div class="skin-desc">Ranged — high damage prismatic bolts.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-darkwarrior" hidden>
+          <div class="skin-card" data-faction="shadow" id="skin-darkwarrior-card">
+            <canvas class="skin-canvas" id="skin-darkwarrior-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">DARK WARRIOR — SHADOW ARMADA</div>
+            <div class="skin-mode">◆ ELITE — TIER 1</div>
+            <div class="skin-desc">Ranged — black magic bolts that chain.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-shockbot" hidden>
+          <div class="skin-card" data-faction="roboto" id="skin-shockbot-card">
+            <canvas class="skin-canvas" id="skin-shockbot-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">SHOCKBOT — ROBOTO ARMADA</div>
+            <div class="skin-mode">◆ ELITE — TIER 1</div>
+            <div class="skin-desc">Ranged — chain lightning hits multiple enemies.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-wizard" hidden>
+          <div class="skin-card" data-faction="prism" id="skin-wizard-card">
+            <canvas class="skin-canvas" id="skin-wizard-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">WIZARD — PRISM ARMADA</div>
+            <div class="skin-mode">◆ ELITE — TIER 2</div>
+            <div class="skin-desc">Ranged — chain lightning bounces between enemies.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-necromancer" hidden>
+          <div class="skin-card" data-faction="shadow" id="skin-necromancer-card">
+            <canvas class="skin-canvas" id="skin-necromancer-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">NECROMANCER — SHADOW ARMADA</div>
+            <div class="skin-mode">◆ ELITE — TIER 2</div>
+            <div class="skin-desc">Raises dead Swordsmen — fast revive, strong damage.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-tank" hidden>
+          <div class="skin-card" data-faction="roboto" id="skin-tank-card">
+            <canvas class="skin-canvas" id="skin-tank-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">TANK — ROBOTO ARMADA</div>
+            <div class="skin-mode">◆ ELITE — TIER 2</div>
+            <div class="skin-desc">Heavy armored unit — high HP, AOE cannon.</div>
+          </div>
+        </div>
 
-    <div class="skins-section-label">◆ AERIAL</div>
-    <div class="skins-gallery">
-      <div class="skin-card" data-faction="prism" id="skin-wardrone-prism-card">
-        <canvas class="skin-canvas" id="skin-wardrone-prism-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">WAR DRONE — PRISM ARMADA</div>
-        <div class="skin-mode">◆ AERIAL — TIER 1</div>
-        <div class="skin-desc">Aerial — fast energy bolts, immune to melee.</div>
-      </div>
-      <div class="skin-card" data-faction="shadow" id="skin-wardrone-shadow-card">
-        <canvas class="skin-canvas" id="skin-wardrone-shadow-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">WAR DRONE — SHADOW ARMADA</div>
-        <div class="skin-mode">◆ AERIAL — TIER 1</div>
-        <div class="skin-desc">Aerial — fast energy bolts, immune to melee.</div>
-      </div>
-      <div class="skin-card" data-faction="roboto" id="skin-wardrone-roboto-card">
-        <canvas class="skin-canvas" id="skin-wardrone-roboto-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">WAR DRONE — ROBOTO ARMADA</div>
-        <div class="skin-mode">◆ AERIAL — TIER 1</div>
-        <div class="skin-desc">Aerial — heavy missiles, immune to melee.</div>
-      </div>
-      <div class="skin-card" data-faction="prism" id="skin-lightfighter-card">
-        <canvas class="skin-canvas" id="skin-lightfighter-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">LIGHT FIGHTER — PRISM ARMADA</div>
-        <div class="skin-mode">◆ AERIAL — TIER 2</div>
-        <div class="skin-desc">Aerial — fires a piercing beam of light.</div>
-      </div>
-      <div class="skin-card" data-faction="shadow" id="skin-destroyer-card">
-        <canvas class="skin-canvas" id="skin-destroyer-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">DESTROYER — SHADOW ARMADA</div>
-        <div class="skin-mode">◆ AERIAL — TIER 2</div>
-        <div class="skin-desc">Aerial — hurls slow orbs of darkness that damage an area.</div>
-      </div>
-      <div class="skin-card" data-faction="roboto" id="skin-warship-card">
-        <canvas class="skin-canvas" id="skin-warship-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">WARSHIP — ROBOTO ARMADA</div>
-        <div class="skin-mode">◆ AERIAL — TIER 2</div>
-        <div class="skin-desc">Aerial — switches between single-target and multi-target fire.</div>
-      </div>
-    </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-wardrone-prism" hidden>
+          <div class="skin-card" data-faction="prism" id="skin-wardrone-prism-card">
+            <canvas class="skin-canvas" id="skin-wardrone-prism-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">WAR DRONE — PRISM ARMADA</div>
+            <div class="skin-mode">◆ AERIAL — TIER 1</div>
+            <div class="skin-desc">Aerial — fast energy bolts, immune to melee.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-wardrone-shadow" hidden>
+          <div class="skin-card" data-faction="shadow" id="skin-wardrone-shadow-card">
+            <canvas class="skin-canvas" id="skin-wardrone-shadow-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">WAR DRONE — SHADOW ARMADA</div>
+            <div class="skin-mode">◆ AERIAL — TIER 1</div>
+            <div class="skin-desc">Aerial — fast energy bolts, immune to melee.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-wardrone-roboto" hidden>
+          <div class="skin-card" data-faction="roboto" id="skin-wardrone-roboto-card">
+            <canvas class="skin-canvas" id="skin-wardrone-roboto-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">WAR DRONE — ROBOTO ARMADA</div>
+            <div class="skin-mode">◆ AERIAL — TIER 1</div>
+            <div class="skin-desc">Aerial — heavy missiles, immune to melee.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-lightfighter" hidden>
+          <div class="skin-card" data-faction="prism" id="skin-lightfighter-card">
+            <canvas class="skin-canvas" id="skin-lightfighter-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">LIGHT FIGHTER — PRISM ARMADA</div>
+            <div class="skin-mode">◆ AERIAL — TIER 2</div>
+            <div class="skin-desc">Aerial — fires a piercing beam of light.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-destroyer" hidden>
+          <div class="skin-card" data-faction="shadow" id="skin-destroyer-card">
+            <canvas class="skin-canvas" id="skin-destroyer-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">DESTROYER — SHADOW ARMADA</div>
+            <div class="skin-mode">◆ AERIAL — TIER 2</div>
+            <div class="skin-desc">Aerial — hurls slow orbs of darkness that damage an area.</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-warship" hidden>
+          <div class="skin-card" data-faction="roboto" id="skin-warship-card">
+            <canvas class="skin-canvas" id="skin-warship-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">WARSHIP — ROBOTO ARMADA</div>
+            <div class="skin-mode">◆ AERIAL — TIER 2</div>
+            <div class="skin-desc">Aerial — switches between single-target and multi-target fire.</div>
+          </div>
+        </div>
 
-    <div class="skins-section-label">◆ COMMANDERS</div>
-    <div class="skins-gallery">
-      <div class="skin-card" data-faction="prism" id="skin-prism-commander">
-        <canvas class="skin-canvas" id="skin-prism-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">PRISM — PRISM ARMADA COMMANDER</div>
-        <div class="skin-mode">◆ PRISM ARMADA</div>
-        <div class="skin-desc">Calm, ruthless and brilliant — she commands the Prism Armada with absolute control, gown and crown blazing as her scepter unleashes searing light. "Order brings clarity."</div>
-      </div>
-      <div class="skin-card" data-faction="shadow" id="skin-vanthel-dark-warrior">
-        <canvas class="skin-canvas" id="skin-vanthel-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">VANTHEL — DARK WARRIOR</div>
-        <div class="skin-mode">◆ SHADOW ARMADA</div>
-        <div class="skin-desc">Powerful, confident and loyal — still learning what he has become. Vanthel's taloned void gauntlets and burning eyes mark him as Shadow's deadliest warrior. "I'll fight with you."</div>
-      </div>
-      <div class="skin-card" data-faction="roboto" id="skin-gongui-roboto-king">
-        <canvas class="skin-canvas" id="skin-gongui-canvas" width="400" height="300"></canvas>
-        <div class="skin-name">GONGUI — KING OF THE ROBOTO ARMADA</div>
-        <div class="skin-mode">◆ ROBOTO ARMADA</div>
-        <div class="skin-desc">Smart, resourceful and loyal — the Roboto King leads with wisdom, twin cannon-gauntlets flaring gold as he fights beside his people. "People and machines together are stronger."</div>
+        <div class="skin-detail skins-gallery" id="skin-detail-prism" hidden>
+          <div class="skin-card" data-faction="prism" id="skin-prism-commander">
+            <canvas class="skin-canvas" id="skin-prism-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">PRISM — PRISM ARMADA COMMANDER</div>
+            <div class="skin-mode">◆ PRISM ARMADA</div>
+            <div class="skin-desc">Calm, ruthless and brilliant — she commands the Prism Armada with absolute control, gown and crown blazing as her scepter unleashes searing light. "Order brings clarity."</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-vanthel" hidden>
+          <div class="skin-card" data-faction="shadow" id="skin-vanthel-dark-warrior">
+            <canvas class="skin-canvas" id="skin-vanthel-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">VANTHEL — DARK WARRIOR</div>
+            <div class="skin-mode">◆ SHADOW ARMADA</div>
+            <div class="skin-desc">Powerful, confident and loyal — still learning what he has become. Vanthel's taloned void gauntlets and burning eyes mark him as Shadow's deadliest warrior. "I'll fight with you."</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-gongui" hidden>
+          <div class="skin-card" data-faction="roboto" id="skin-gongui-roboto-king">
+            <canvas class="skin-canvas" id="skin-gongui-canvas" width="400" height="300"></canvas>
+            <div class="skin-name">GONGUI — KING OF THE ROBOTO ARMADA</div>
+            <div class="skin-mode">◆ ROBOTO ARMADA</div>
+            <div class="skin-desc">Smart, resourceful and loyal — the Roboto King leads with wisdom, twin cannon-gauntlets flaring gold as he fights beside his people. "People and machines together are stronger."</div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>

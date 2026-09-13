@@ -358,20 +358,49 @@ registerGame('skins', {
 // Attacking/Phasing pair, Ironcrown's Airborne/Landed pair), so clicking any
 // card inside it equips/lights up the whole option together. Options are
 // scoped per-unit via data-unit (arkship vs capitalship) so equipping one
-// unit's skin never affects the other's.
+// unit's skin never affects the other's. Delegated on the whole detail
+// column since each unit's .skin-option(s) live in their own detail panel.
 (function wireSkinOptions(){
-  const gallery=document.querySelector('.skins-gallery');
-  if(!gallery) return;
-  gallery.addEventListener('click', e=>{
+  const col=document.querySelector('.skins-detail-col');
+  if(!col) return;
+  col.addEventListener('click', e=>{
     const opt=e.target.closest('.skin-option');
     if(opt && opt.dataset.skin) setUnitSkin(opt.dataset.unit || 'arkship', opt.dataset.skin);
   });
-  gallery.addEventListener('keydown', e=>{
+  col.addEventListener('keydown', e=>{
     if(e.key!=='Enter' && e.key!==' ') return;
     const opt=e.target.closest('.skin-option');
     if(opt && opt.dataset.skin){ e.preventDefault(); setUnitSkin(opt.dataset.unit || 'arkship', opt.dataset.skin); }
   });
   refreshSkinOptionsUI();
+})();
+
+// ── LIST NAVIGATION — click (or Enter/Space) on a unit's name in the list
+// to show that unit's detail panel (its default skin, and alternate skin
+// when it has one) and hide every other panel.
+function showSkinDetail(unit){
+  document.querySelectorAll('.skins-list-item').forEach(li=>{
+    const on=li.dataset.unit===unit;
+    li.classList.toggle('selected', on);
+    li.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  document.querySelectorAll('.skin-detail').forEach(panel=>{
+    panel.hidden = panel.id!==`skin-detail-${unit}`;
+  });
+}
+
+(function wireSkinList(){
+  const list=document.querySelector('.skins-list-col');
+  if(!list) return;
+  list.addEventListener('click', e=>{
+    const li=e.target.closest('.skins-list-item');
+    if(li && li.dataset.unit) showSkinDetail(li.dataset.unit);
+  });
+  list.addEventListener('keydown', e=>{
+    if(e.key!=='Enter' && e.key!==' ') return;
+    const li=e.target.closest('.skins-list-item');
+    if(li && li.dataset.unit){ e.preventDefault(); showSkinDetail(li.dataset.unit); }
+  });
 })();
 
 //# sourceMappingURL=skins.js.map
