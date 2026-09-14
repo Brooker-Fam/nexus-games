@@ -51,12 +51,14 @@ async function purchaseSkin(unit,skin,optEl){
 }
 
 // Called from skins.js's click/keydown delegation on a .skin-option — a
-// priced option that isn't owned yet routes to checkout instead of equipping.
+// priced option that isn't owned yet routes to checkout instead of equipping,
+// unless the player has an active Nexus Pro membership (js/shared/
+// memberships.js), which unlocks every alt livery without a purchase.
 function activateSkinOption(opt){
   if(!opt || !opt.dataset.skin || opt.classList.contains('skin-purchasing')) return;
   const unit=opt.dataset.unit || 'arkship';
   const skin=opt.dataset.skin;
-  if(opt.querySelector('.skin-price') && !ownedSkins.has(skinKey(unit,skin))){
+  if(opt.querySelector('.skin-price') && !ownedSkins.has(skinKey(unit,skin)) && !window.nexusProActive){
     purchaseSkin(unit, skin, opt);
     return;
   }

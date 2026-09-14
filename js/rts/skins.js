@@ -168,8 +168,10 @@ function refreshSkinOptionsUI(){
     const on=skin===getUnitSkin(unit);
     opt.classList.toggle('selected', on);
     opt.setAttribute('aria-pressed', on ? 'true' : 'false');
+    // Nexus Pro members (see js/shared/memberships.js) get every alternate
+    // skin for free without an individual purchase on record.
     if(opt.querySelector('.skin-price')){
-      opt.classList.toggle('owned', ownedSkins.has(skinKey(unit,skin)));
+      opt.classList.toggle('owned', ownedSkins.has(skinKey(unit,skin)) || !!window.nexusProActive);
     }
   });
 }

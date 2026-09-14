@@ -28,8 +28,10 @@ function bookUnlockDate(chapterNumber){
   return new Date(BOOK_START_DATE.getTime() + (chapterNumber - 1) * BOOK_WEEK_MS);
 }
 
+// Nexus Pro members (see js/shared/memberships.js) get every chapter
+// immediately instead of waiting for its weekly release.
 function bookIsUnlocked(chapterNumber){
-  return chapterNumber <= bookUnlockedCount();
+  return !!window.nexusProActive || chapterNumber <= bookUnlockedCount();
 }
 
 function bookFormatDate(date){
@@ -43,6 +45,10 @@ function bookDaysUntil(date){
 
 function renderBookCountdown(){
   const el = document.getElementById('book-countdown');
+  if(window.nexusProActive){
+    el.textContent = '★ NEXUS PRO — all ' + BOOK_TOTAL_CHAPTERS + ' chapters are unlocked.';
+    return;
+  }
   const unlocked = bookUnlockedCount();
   if(unlocked >= BOOK_TOTAL_CHAPTERS){
     el.textContent = 'All ' + BOOK_TOTAL_CHAPTERS + ' chapters are available.';

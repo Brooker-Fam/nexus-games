@@ -2,9 +2,11 @@ import { verifyPolarWebhook } from "../lib/polar.js";
 import { isValidPaidSkin } from "../lib/paid-skins.js";
 import { getSql } from "../lib/db.js";
 
-// Source of truth for skin unlocks — api/checkout-confirm.js unlocks
-// eagerly when the customer's browser makes it back from Polar, but this
-// is what fires even if it doesn't (closed tab, network hiccup, etc).
+// Source of truth for skin unlocks (api/checkout-confirm.js unlocks eagerly
+// when the customer's browser makes it back from Polar, but this is what
+// fires even if it doesn't — closed tab, network hiccup, etc) and for
+// Nexus Pro membership status, kept in sync with the subscription's
+// lifecycle (see api/membership-checkout.js).
 export const config = {
   api: { bodyParser: false },
 };
@@ -64,6 +66,29 @@ export default async function handler(req, res) {
           INSERT INTO skin_unlocks (user_id, unit, skin, order_id)
           VALUES (${userId}, ${unit}, ${skin}, ${order.id ?? null})
           ON CONFLICT (user_id, unit, skin) DO NOTHING
+        `;
+      }
+    } else if (
+      event.type === "subscription.created" ||
+      event.type === "subscription.updated" ||
+      event.type === "subscription.active" ||
+      event.type === "subscription.canceled" ||
+      event.type === "subscription.revoked"
+    ) {
+      const sub = event.data ?? {};
+      const meta = sub.metadata || {};
+      const userId = typeof meta.userId === "string" ? meta.userId : null;
+      if (userId) {
+        const sql = getSql();
+        await sql`
+          INSERT INTO memberships (user_id, status, polar_subscription_id, polar_customer_id, current_period_end, updated_at)
+          VALUES (${userId}, ${sub.status}, ${sub.id ?? null}, ${sub.customer_id ?? null}, ${sub.current_period_end ?? null}, NOW())
+          ON CONFLICT (user_id) DO UPDATE SET
+            status = EXCLUDED.status,
+            polar_subscription_id = EXCLUDED.polar_subscription_id,
+            polar_customer_id = EXCLUDED.polar_customer_id,
+            current_period_end = EXCLUDED.current_period_end,
+            updated_at = NOW()
         `;
       }
     }

@@ -92,6 +92,10 @@ document.getElementById('tab-btn-book').onclick=function(){
   switchTab('book', this);
   if(window.posthog) posthog.capture('game_tab_switched', { tab: 'book' });
 };
+document.getElementById('tab-btn-memberships').onclick=function(){
+  switchTab('memberships', this);
+  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'memberships' });
+};
 
 // TD controls
 document.getElementById('btn-reset').onclick=resetGame;
