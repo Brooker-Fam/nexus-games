@@ -12,14 +12,15 @@ export default async function handler(req, res) {
       headers: fromNodeHeaders(req.headers),
     });
     if (!session?.user) {
-      res.status(200).json({ purchases: [] });
+      res.status(401).json({ error: "no_session" });
       return;
     }
+
     const sql = getSql();
-    const rows = await sql`SELECT unit, skin FROM skin_purchases WHERE user_id = ${session.user.id}`;
-    res.status(200).json({ purchases: rows });
+    const rows = await sql`SELECT unit, skin FROM skin_unlocks WHERE user_id = ${session.user.id}`;
+    res.status(200).json({ unlocks: rows });
   } catch (err) {
-    console.error("skin-purchases error:", err);
-    res.status(500).json({ error: "purchases_failed", message: err?.message });
+    console.error("unlocks error:", err);
+    res.status(500).json({ error: "unlocks_failed", message: err?.message });
   }
 }

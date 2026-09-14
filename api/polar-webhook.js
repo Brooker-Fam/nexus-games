@@ -1,7 +1,10 @@
-import { validateEvent, WebhookVerificationError } from "@polar-sh/sdk/webhooks";
+import { verifyPolarWebhook } from "../lib/polar.js";
+import { isValidPaidSkin } from "../lib/paid-skins.js";
 import { getSql } from "../lib/db.js";
-import { isPaidSkin } from "../lib/skin-catalog.js";
 
+// Source of truth for skin unlocks — api/checkout-confirm.js unlocks
+// eagerly when the customer's browser makes it back from Polar, but this
+// is what fires even if it doesn't (closed tab, network hiccup, etc).
 export const config = {
   api: { bodyParser: false },
 };
@@ -29,31 +32,37 @@ export default async function handler(req, res) {
   }
 
   const rawBody = await readRawBody(req);
+  const valid = verifyPolarWebhook(
+    rawBody,
+    {
+      id: req.headers["webhook-id"],
+      timestamp: req.headers["webhook-timestamp"],
+      signature: req.headers["webhook-signature"],
+    },
+    secret,
+  );
+  if (!valid) {
+    res.status(401).json({ error: "invalid_signature" });
+    return;
+  }
+
   let event;
   try {
-    event = validateEvent(rawBody, req.headers, secret);
-  } catch (err) {
-    if (err instanceof WebhookVerificationError) {
-      res.status(403).json({ error: "invalid_signature" });
-      return;
-    }
-    console.error("polar-webhook verification error:", err);
-    res.status(400).json({ error: "bad_request" });
+    event = JSON.parse(rawBody);
+  } catch {
+    res.status(400).json({ error: "bad_json" });
     return;
   }
 
   try {
     if (event.type === "order.paid") {
-      const order = event.data;
-      const meta = order.metadata || {};
-      const userId = typeof meta.userId === "string" ? meta.userId : null;
-      const unit = typeof meta.unit === "string" ? meta.unit : null;
-      const skin = typeof meta.skin === "string" ? meta.skin : null;
-      if (userId && unit && skin && isPaidSkin(unit, skin)) {
+      const order = event.data ?? {};
+      const { userId, unit, skin } = order.metadata ?? {};
+      if (userId && isValidPaidSkin(unit, skin)) {
         const sql = getSql();
         await sql`
-          INSERT INTO skin_purchases (user_id, unit, skin, polar_order_id)
-          VALUES (${userId}, ${unit}, ${skin}, ${order.id})
+          INSERT INTO skin_unlocks (user_id, unit, skin, order_id)
+          VALUES (${userId}, ${unit}, ${skin}, ${order.id ?? null})
           ON CONFLICT (user_id, unit, skin) DO NOTHING
         `;
       }

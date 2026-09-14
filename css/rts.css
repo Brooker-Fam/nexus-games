@@ -184,9 +184,32 @@
     color:#0a1520; background:#00f5ff; padding:6px 18px; border-radius:2px;
   }
   .skin-option.selected .skin-equip-badge { display: block; }
-  .skin-option.selected .skin-price { display: none; }
-  .skin-option.locked .skin-price::before { content: '🔒 '; }
-  .skin-option.owned:not(.selected) .skin-price { color: #00f5ff; }
+  .skin-option.selected .skin-price,
+  .skin-option.owned .skin-price { display: none; }
+
+  /* Unpurchased alt skins — the price doubles as the buy button; a lock icon
+     and pointer cursor signal that a click opens Polar checkout rather than
+     equipping for free. */
+  .skin-option:not(.owned):not(.selected) .skin-price {
+    cursor: pointer;
+  }
+  .skin-option:not(.owned):not(.selected) .skin-price::before {
+    content: '🔒 ';
+  }
+  .skin-option:not(.owned):not(.selected):hover .skin-price {
+    color: #fff2a8;
+    text-shadow: 0 0 8px rgba(255,215,0,0.6);
+  }
+  .skin-option.skin-purchasing {
+    opacity: 0.65;
+    pointer-events: none;
+  }
+  .skin-option.skin-purchasing .skin-price {
+    cursor: default;
+  }
+  .skin-option.skin-purchasing .skin-price::before {
+    content: none;
+  }
 
   /* warrior/hero portrait cards — accent color follows each unit's faction,
      at any nesting depth (they now sit inside a .skin-option like the

@@ -154,77 +154,12 @@ function getUnitSkin(unit){
 function setUnitSkin(unit,id){
   const cfg=UNIT_SKIN_CFG[unit];
   if(!cfg) return;
-  if(isPaidSkin(unit,id) && !ownedSkins.has(skinOwnKey(unit,id))) return;
   try { localStorage.setItem(cfg.key, id); } catch(e){}
   refreshSkinOptionsUI();
   if(window.posthog) posthog.capture('skin_equipped', { unit, skin:id });
 }
 function getArkshipSkin(){ return getUnitSkin('arkship'); }
 function setArkshipSkin(id){ setUnitSkin('arkship', id); }
-
-// ── PAID ALT SKINS ──
-// A skin is "paid" whenever it isn't the unit's free default (see
-// UNIT_SKIN_CFG above). Ownership is fetched from /api/skin-purchases —
-// backed by the skin_purchases table, populated only by the Polar
-// order.paid webhook — so equipping a locked skin can never be spoofed by
-// editing localStorage directly.
-let ownedSkins=new Set();
-let skinsBuyInFlight=false;
-
-function isPaidSkin(unit,skin){
-  const cfg=UNIT_SKIN_CFG[unit];
-  return !!cfg && skin!==cfg.default;
-}
-function skinOwnKey(unit,skin){ return `${unit}:${skin}`; }
-
-async function loadOwnedSkins(){
-  try{
-    const res=await fetch('/api/skin-purchases',{credentials:'include'});
-    if(!res.ok) return;
-    const body=await res.json();
-    ownedSkins=new Set((body.purchases||[]).map(p=>skinOwnKey(p.unit,p.skin)));
-  } catch(e){ /* offline — treat as nothing owned yet */ }
-  refreshSkinOptionsUI();
-}
-
-async function buySkin(unit,skin){
-  if(skinsBuyInFlight) return;
-  skinsBuyInFlight=true;
-  try{
-    const res=await fetch('/api/skin-checkout',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      credentials:'include',
-      body:JSON.stringify({ unit, skin }),
-    });
-    const body=await res.json().catch(()=>({}));
-    if(!res.ok || !body.checkoutUrl){
-      alert(body.message || "Couldn't start checkout — please try again.");
-      return;
-    }
-    window.location.href=body.checkoutUrl;
-  } catch(e){
-    alert("Couldn't start checkout — please try again.");
-  } finally {
-    skinsBuyInFlight=false;
-  }
-}
-
-// Polar redirects back here after a successful payment with
-// ?skin_checkout_id=... — the webhook that actually grants the skin can
-// land a moment after that redirect, so poll briefly instead of assuming
-// it's already recorded.
-(function handleSkinCheckoutReturn(){
-  const params=new URLSearchParams(location.search);
-  const checkoutId=params.get('skin_checkout_id');
-  if(!checkoutId) return;
-  params.delete('skin_checkout_id');
-  const qs=params.toString();
-  history.replaceState(null,'',location.pathname+(qs?`?${qs}`:'')+location.hash);
-  let attempts=0;
-  const poll=()=>{ attempts++; loadOwnedSkins(); if(attempts<5) setTimeout(poll,1500); };
-  poll();
-})();
 
 function refreshSkinOptionsUI(){
   document.querySelectorAll('.skin-option').forEach(opt=>{
@@ -233,15 +168,8 @@ function refreshSkinOptionsUI(){
     const on=skin===getUnitSkin(unit);
     opt.classList.toggle('selected', on);
     opt.setAttribute('aria-pressed', on ? 'true' : 'false');
-
-    const paid=isPaidSkin(unit,skin);
-    const owned=!paid || ownedSkins.has(skinOwnKey(unit,skin));
-    opt.classList.toggle('locked', paid && !owned);
-    opt.classList.toggle('owned', paid && owned);
-    const priceEl=opt.querySelector('.skin-price');
-    if(priceEl && paid){
-      if(!opt.dataset.priceText) opt.dataset.priceText=priceEl.textContent;
-      priceEl.textContent = owned ? 'OWNED — CLICK TO EQUIP' : opt.dataset.priceText;
+    if(opt.querySelector('.skin-price')){
+      opt.classList.toggle('owned', ownedSkins.has(skinKey(unit,skin)));
     }
   });
 }
@@ -586,7 +514,7 @@ function skinsPreviewLoop(){
 }
 
 registerGame('skins', {
-  init(){ refreshSkinOptionsUI(); loadOwnedSkins(); if(!skinsRAF) skinsPreviewLoop(); },
+  init(){ refreshSkinOptionsUI(); if(!skinsRAF) skinsPreviewLoop(); },
   cleanup(){ if(skinsRAF){ cancelAnimationFrame(skinsRAF); skinsRAF=null; } },
 });
 
@@ -597,24 +525,18 @@ registerGame('skins', {
 // scoped per-unit via data-unit (arkship vs capitalship) so equipping one
 // unit's skin never affects the other's. Delegated on the whole detail
 // column since each unit's .skin-option(s) live in their own detail panel.
+// activateSkinOption() (js/rts/skin-shop.js) routes a priced, unowned option
+// to Polar checkout instead of equipping it for free.
 (function wireSkinOptions(){
   const col=document.querySelector('.skins-detail-col');
   if(!col) return;
   col.addEventListener('click', e=>{
-    const opt=e.target.closest('.skin-option');
-    if(!opt || !opt.dataset.skin) return;
-    const unit=opt.dataset.unit || 'arkship', skin=opt.dataset.skin;
-    if(isPaidSkin(unit,skin) && !ownedSkins.has(skinOwnKey(unit,skin))) buySkin(unit,skin);
-    else setUnitSkin(unit,skin);
+    activateSkinOption(e.target.closest('.skin-option'));
   });
   col.addEventListener('keydown', e=>{
     if(e.key!=='Enter' && e.key!==' ') return;
     const opt=e.target.closest('.skin-option');
-    if(!opt || !opt.dataset.skin) return;
-    e.preventDefault();
-    const unit=opt.dataset.unit || 'arkship', skin=opt.dataset.skin;
-    if(isPaidSkin(unit,skin) && !ownedSkins.has(skinOwnKey(unit,skin))) buySkin(unit,skin);
-    else setUnitSkin(unit,skin);
+    if(opt && opt.dataset.skin){ e.preventDefault(); activateSkinOption(opt); }
   });
   refreshSkinOptionsUI();
 })();
