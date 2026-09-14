@@ -853,8 +853,9 @@ const MELEE_ATTACK_TICKS = 45;
 // Returns true if this attacker can hit aerial units.
 // Allowed: gunbot (roboto warrior), warbot, shockbot, dark warrior (shadow elite),
 //          witch (prism warrior), Prism (prism-faction elite), wizard, starfighter, skyattacker,
-//          bow-mode legionnaire, bow-mode bloodhound, dark warrior's ship.
-// Blocked: workers, swordsman (shadow melee warrior), sword-mode legionnaire, necromancer, tank, vanthel.
+//          bow-mode legionnaire, bow-mode bloodhound, dark warrior's ship, vanthel (attacks
+//          the same way the dark warrior does).
+// Blocked: workers, swordsman (shadow melee warrior), sword-mode legionnaire, necromancer, tank.
 function canTargetAerial(w){
   if(w.type==='cannon') return true;
   if(w.type!=='warrior') return false;
@@ -863,7 +864,6 @@ function canTargetAerial(w){
   if(w.subtype==='bloodhound') return w.bowMode===true; // bow mode can hit aerial
   if(w.subtype==='necromancer') return false;
   if(w.subtype==='tank') return false;
-  if(w.subtype==='vanthel') return false; // ground-only melee warrior
   return true;
 }
 
@@ -1229,6 +1229,7 @@ const PROJECTILE_TYPES = {
   tank:        { type:'shell',      color:'#ff6600', speed:9,  sound:'rtsCannonFire' },
   wizard:      { type:'lightning',  color:'#88ffff', speed:6,  sound:'rtsLightning' },
   necromancer: { type:'darkmagic',  color:'#440088', speed:4,  sound:'rtsDarkMagic' },
+  vanthel:     { type:'darkmagic',  color:'#aa00ff', speed:5,  sound:'rtsDarkMagic' },
   // 2nd-tier aerial units
   warship:      { type:'bullet',  color:'#ffcc44', speed:12, sound:'rtsBullet' },
   destroyer:    { type:'darkorb', color:'#5500aa', speed:2.5, sound:'rtsDarkOrb',

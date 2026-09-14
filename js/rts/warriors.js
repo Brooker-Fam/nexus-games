@@ -84,8 +84,8 @@ function drawRTSWarrior(rc,w){
 }
 
 // Vanthel — towering dark-warrior hero, wreathed in void flame. He carries
-// no weapon; his reach comes from raw void energy lashing off a taloned
-// gauntlet, not a blade.
+// no weapon; like the Dark Warrior he attacks like, his reach comes from
+// bolts of raw void energy hurled from a taloned gauntlet, not a melee blow.
 function drawVanthel(rc,cfg,w){
   const t=w.frame, isAtt=w.state==='attack', isMarching=w.state==='march';
   // heavy striding legs
@@ -107,23 +107,27 @@ function drawVanthel(rc,cfg,w){
   const capeTrail=isMarching?7:2;
   rc.fillStyle='rgba(10,0,20,0.75)';
   rc.beginPath(); rc.moveTo(-11,-26); rc.lineTo(-14-capeTrail,6); rc.lineTo(-4,10); rc.lineTo(-6,-20); rc.closePath(); rc.fill();
-  // clawed void-energy gauntlet — punches straight out toward the target
-  // instead of swinging up near the helm, so the reach reads clearly
-  const punch=isAtt?1+Math.sin(t*0.35)*0.4:0.35;
+  // clawed void-energy gauntlet — raised to channel a bolt outward rather
+  // than swung into melee reach, brighter and larger than the elite's orb
+  const pulse=isAtt?1+Math.sin(t*0.3)*0.5:1;
   rc.save();
   rc.translate(13,-14);
-  const fx=6+14*punch, fy=-4;
-  // forearm
+  const fx=10, fy=-18;
+  // forearm, raised toward the target
   rc.strokeStyle='#1a0028'; rc.lineWidth=6; rc.lineCap='round';
   rc.beginPath(); rc.moveTo(0,0); rc.lineTo(fx,fy); rc.stroke();
   // taloned fist
   rc.fillStyle='#0a0012'; rc.shadowColor='#aa00ff'; rc.shadowBlur=isAtt?24:12;
   rc.beginPath(); rc.arc(fx,fy,6,0,Math.PI*2); rc.fill();
   rc.strokeStyle='rgba(200,100,255,0.6)'; rc.lineWidth=1; rc.stroke();
-  // three void talons fanning outward from the fist toward the target,
-  // longer and brighter mid-strike
-  const talonLen=isAtt?16:6;
-  for(const ta of [-0.5,0,0.5]){
+  // void bolt charging in the palm — larger and brighter than the elite's
+  const vg=rc.createRadialGradient(fx,fy,0,fx,fy,11*pulse);
+  vg.addColorStop(0,'#ffccff'); vg.addColorStop(0.3,'#aa00ff'); vg.addColorStop(0.7,'#220044'); vg.addColorStop(1,'transparent');
+  rc.fillStyle=vg; rc.shadowColor='#aa00ff'; rc.shadowBlur=isAtt?26:14;
+  rc.beginPath(); rc.arc(fx,fy,11*pulse,0,Math.PI*2); rc.fill();
+  // three void talons curling around the charged bolt
+  const talonLen=8+pulse*3;
+  for(const ta of [-2.4,-1.9,-1.4]){
     rc.strokeStyle='rgba(220,140,255,0.9)'; rc.lineWidth=1.6; rc.lineCap='round';
     rc.beginPath(); rc.moveTo(fx,fy); rc.lineTo(fx+Math.cos(ta)*talonLen,fy+Math.sin(ta)*talonLen); rc.stroke();
   }
