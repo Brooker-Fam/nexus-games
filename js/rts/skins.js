@@ -136,9 +136,13 @@ function setArkshipSkin(id){ setUnitSkin('arkship', id); }
 function refreshSkinOptionsUI(){
   document.querySelectorAll('.skin-option').forEach(opt=>{
     const unit=opt.dataset.unit || 'arkship';
-    const on=opt.dataset.skin===getUnitSkin(unit);
+    const skin=opt.dataset.skin;
+    const on=skin===getUnitSkin(unit);
     opt.classList.toggle('selected', on);
     opt.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if(opt.querySelector('.skin-price')){
+      opt.classList.toggle('owned', ownedSkins.has(skinKey(unit,skin)));
+    }
   });
 }
 
@@ -493,17 +497,18 @@ registerGame('skins', {
 // scoped per-unit via data-unit (arkship vs capitalship) so equipping one
 // unit's skin never affects the other's. Delegated on the whole detail
 // column since each unit's .skin-option(s) live in their own detail panel.
+// activateSkinOption() (js/rts/skin-shop.js) routes a priced, unowned option
+// to Polar checkout instead of equipping it for free.
 (function wireSkinOptions(){
   const col=document.querySelector('.skins-detail-col');
   if(!col) return;
   col.addEventListener('click', e=>{
-    const opt=e.target.closest('.skin-option');
-    if(opt && opt.dataset.skin) setUnitSkin(opt.dataset.unit || 'arkship', opt.dataset.skin);
+    activateSkinOption(e.target.closest('.skin-option'));
   });
   col.addEventListener('keydown', e=>{
     if(e.key!=='Enter' && e.key!==' ') return;
     const opt=e.target.closest('.skin-option');
-    if(opt && opt.dataset.skin){ e.preventDefault(); setUnitSkin(opt.dataset.unit || 'arkship', opt.dataset.skin); }
+    if(opt && opt.dataset.skin){ e.preventDefault(); activateSkinOption(opt); }
   });
   refreshSkinOptionsUI();
 })();
