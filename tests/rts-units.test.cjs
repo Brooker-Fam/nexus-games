@@ -890,7 +890,7 @@ test('Prism Arkship uses a distinct renderer from the Warship and Light Fighter'
   assert.match(source,/w\.subtype==='arkship'[\s\S]*?drawArkshipUnit\(rc,cfg,w\)/);
 });
 
-test('Vanthel cannot target aerial units, but the Dark Warrior\'s Ship that carries him can',()=>{
+test('Vanthel can target aerial units, like the Dark Warrior he attacks like, and so can the Ship that carries him',()=>{
   const context=makeContext();
   Object.assign(context,{
     STRUCT_COSTS:{
@@ -907,5 +907,5 @@ test('Vanthel cannot target aerial units, but the Dark Warrior\'s Ship that carr
     const ship=makeDarkWarriorShip('player','shadow',100,100);
     return {vanthel:canTargetAerial(vanthel), ship:canTargetAerial(ship)};
   })()`,context);
-  assert.deepEqual({...result},{vanthel:false,ship:true});
+  assert.deepEqual({...result},{vanthel:true,ship:true});
 });

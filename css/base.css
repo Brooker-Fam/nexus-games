@@ -235,6 +235,27 @@
     100% { transform: translateY(-10vh) scale(1.5); opacity:0; }
   }
 
+  /* ── BETA BADGE ── */
+  .beta-badge {
+    position: fixed;
+    top: 10px; right: 10px;
+    z-index: 1000;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 3px;
+    padding: 4px 10px;
+    color: var(--neon-cyan);
+    background: rgba(2,8,16,0.85);
+    border: 1px solid var(--neon-cyan);
+    border-radius: 3px;
+    box-shadow: 0 0 10px rgba(0,245,255,0.4);
+    pointer-events: none;
+    user-select: none;
+  }
+  @media (max-width: 480px) {
+    .beta-badge { font-size: 8px; padding: 3px 7px; letter-spacing: 2px; top: 6px; right: 6px; }
+  }
+
   /* ── HEADER ── */
   header {
     position: relative; z-index: 10;
