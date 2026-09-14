@@ -1,7 +1,12 @@
 import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
-import { getPolar, DEFAULT_SKIN_UNLOCK_PRODUCT_ID } from "../lib/polar.js";
-import { isPaidSkin } from "../lib/skin-catalog.js";
+import { createCheckout } from "../lib/polar.js";
+import { isValidPaidSkin } from "../lib/paid-skins.js";
+
+// The single "Alternate Skin Unlock" product ($2.00, one-time) — which
+// unit/skin the purchase is for travels in the checkout's metadata instead
+// of needing one Polar product per skin.
+const PRODUCT_ID = process.env.POLAR_SKIN_PRODUCT_ID || "8aa992b2-b28c-4ec1-a637-8533f64de1be";
 
 async function readJsonBody(req) {
   if (req.body && typeof req.body === "object") return req.body;
@@ -31,28 +36,26 @@ export default async function handler(req, res) {
     }
 
     const body = await readJsonBody(req);
-    const unit = typeof body?.unit === "string" ? body.unit : null;
-    const skin = typeof body?.skin === "string" ? body.skin : null;
-    if (!unit || !skin || !isPaidSkin(unit, skin)) {
+    const { unit, skin } = body ?? {};
+    if (!isValidPaidSkin(unit, skin)) {
       res.status(400).json({ error: "unknown_skin" });
       return;
     }
 
-    const productId = process.env.POLAR_SKIN_PRODUCT_ID || DEFAULT_SKIN_UNLOCK_PRODUCT_ID;
     const origin = req.headers.origin || `https://${req.headers.host}`;
-    const successUrl = `${origin}/index.html?skin_checkout_id={CHECKOUT_ID}#skins`;
+    const successUrl = `${origin}/?checkout_id={CHECKOUT_ID}`;
 
-    const polar = getPolar();
-    const checkout = await polar.checkouts.create({
-      products: [productId],
+    const checkout = await createCheckout({
+      productId: PRODUCT_ID,
       successUrl,
-      customerEmail: session.user.email && !session.user.isAnonymous ? session.user.email : undefined,
+      customerEmail: session.user.email,
+      customerExternalId: session.user.id,
       metadata: { userId: session.user.id, unit, skin },
     });
 
-    res.status(200).json({ checkoutUrl: checkout.url });
+    res.status(200).json({ url: checkout.url });
   } catch (err) {
-    console.error("skin-checkout error:", err);
+    console.error("checkout error:", err);
     res.status(500).json({ error: "checkout_failed", message: err?.message });
   }
 }
