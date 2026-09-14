@@ -55,7 +55,7 @@ const ALT_SKIN_THEME={
 
 // Reused scratch canvases for the alt-livery recolor pipeline — safe to
 // share since only one warrior/hero card is drawn at a time.
-const skinScratch={draw:null, gray:null, result:null};
+const skinScratch={draw:null, result:null};
 function getSkinScratchCanvas(id,w,h){
   if(!skinScratch[id]) skinScratch[id]=document.createElement('canvas');
   const el=skinScratch[id];
@@ -67,28 +67,24 @@ function getSkinScratchCanvas(id,w,h){
 // Recolors a freshly-drawn unit into a single accent hue and draws the
 // result onto the real canvas. A straight hue-rotate filter was tried first,
 // but it also rotates small existing accent details (a red eye slit, say)
-// into off-theme, clashing hues — so instead this desaturates the unit to a
-// grayscale luminance mask, then tints that mask with the theme's accent
-// color via multiply + a destination-in alpha clip, giving a coherent
-// duotone "livery" recolor with no leftover stray hues.
+// into off-theme, clashing hues. Desaturating to gray and multiplying the
+// accent on top was tried next, but multiply only darkens — it crushed the
+// original artwork's rim-light and shadowBlur glow into a flat, muddy
+// silhouette instead of a "livery". Using the canvas 'color' blend mode
+// keeps the original's luminosity (so highlights and glow halos still pop)
+// while swapping in the theme's hue/saturation, then a destination-in alpha
+// clip removes the accent fill's bleed outside the unit's silhouette.
 function drawAltLiveryUnit(c,srcCanvas,W,H,theme){
-  const gray=getSkinScratchCanvas('gray',W,H);
-  const gc=gray.getContext('2d');
-  gc.clearRect(0,0,W,H);
-  gc.filter='grayscale(1) brightness(1.15) contrast(1.05)';
-  gc.drawImage(srcCanvas,0,0);
-  gc.filter='none';
-
   const result=getSkinScratchCanvas('result',W,H);
   const rc=result.getContext('2d');
   rc.clearRect(0,0,W,H);
   rc.globalCompositeOperation='source-over';
+  rc.drawImage(srcCanvas,0,0);
+  rc.globalCompositeOperation='color';
   rc.fillStyle=theme.accent;
   rc.fillRect(0,0,W,H);
-  rc.globalCompositeOperation='multiply';
-  rc.drawImage(gray,0,0);
   rc.globalCompositeOperation='destination-in';
-  rc.drawImage(gray,0,0);
+  rc.drawImage(srcCanvas,0,0);
   rc.globalCompositeOperation='source-over';
 
   c.drawImage(result,0,0);
