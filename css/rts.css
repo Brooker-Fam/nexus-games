@@ -185,6 +185,8 @@
   }
   .skin-option.selected .skin-equip-badge { display: block; }
   .skin-option.selected .skin-price { display: none; }
+  .skin-option.locked .skin-price::before { content: '🔒 '; }
+  .skin-option.owned:not(.selected) .skin-price { color: #00f5ff; }
 
   /* warrior/hero portrait cards — accent color follows each unit's faction,
      at any nesting depth (they now sit inside a .skin-option like the
