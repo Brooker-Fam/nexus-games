@@ -17,7 +17,109 @@ let skinsFrame=0;
 const UNIT_SKIN_CFG={
   arkship:     { key:'nexusArkshipSkin',     default:'basic' },
   capitalship: { key:'nexusCapitalShipSkin', default:'regular' },
+  witch:            { key:'nexusWitchSkin',           default:'standard' },
+  swordsman:        { key:'nexusSwordsmanSkin',        default:'standard' },
+  gunbot:           { key:'nexusGunbotSkin',           default:'standard' },
+  legionnaire:      { key:'nexusLegionnaireSkin',      default:'standard' },
+  warbot:           { key:'nexusWarbotSkin',           default:'standard' },
+  oracle:           { key:'nexusOracleSkin',           default:'standard' },
+  darkwarrior:      { key:'nexusDarkWarriorSkin',      default:'standard' },
+  shockbot:         { key:'nexusShockbotSkin',         default:'standard' },
+  wizard:           { key:'nexusWizardSkin',           default:'standard' },
+  necromancer:      { key:'nexusNecromancerSkin',      default:'standard' },
+  tank:             { key:'nexusTankSkin',             default:'standard' },
+  'wardrone-prism':  { key:'nexusWarDronePrismSkin',   default:'standard' },
+  'wardrone-shadow': { key:'nexusWarDroneShadowSkin',  default:'standard' },
+  'wardrone-roboto': { key:'nexusWarDroneRobotoSkin',  default:'standard' },
+  lightfighter:     { key:'nexusLightFighterSkin',     default:'standard' },
+  destroyer:        { key:'nexusDestroyerSkin',        default:'standard' },
+  warship:          { key:'nexusWarshipSkin',          default:'standard' },
+  prism:            { key:'nexusPrismHeroSkin',        default:'standard' },
+  vanthel:          { key:'nexusVanthelSkin',          default:'standard' },
+  gongui:           { key:'nexusGonguiSkin',           default:'standard' },
 };
+
+// ── ALTERNATE SKIN LIVERIES ──
+// Every "standard issue" unit (barracks/elite/aerial warriors and the three
+// commanders) gets one faction-wide alternate livery, reusing the same
+// in-game draw function but recolored into a single accent hue and finished
+// with a themed corner frame + ribbon — the same "reskin, don't redraw"
+// approach the flagships' own alt skins (Royal Vanguard, Ironcrown) use for
+// their trim, just applied as a duotone recolor instead of hand-picked
+// gradients since these units don't have their own w.skin-aware renderers.
+const ALT_SKIN_THEME={
+  prism:  { id:'royal-vanguard',   label:'ROYAL VANGUARD',   accent:'#ffcf4d', accentDark:'#a3690f' },
+  shadow: { id:'crimson-covenant', label:'CRIMSON COVENANT', accent:'#ff3355', accentDark:'#5c0016' },
+  roboto: { id:'ironcrown',        label:'IRONCROWN',        accent:'#ff9414', accentDark:'#a04800' },
+};
+
+// Reused scratch canvases for the alt-livery recolor pipeline — safe to
+// share since only one warrior/hero card is drawn at a time.
+const skinScratch={draw:null, gray:null, result:null};
+function getSkinScratchCanvas(id,w,h){
+  if(!skinScratch[id]) skinScratch[id]=document.createElement('canvas');
+  const el=skinScratch[id];
+  if(el.width!==w) el.width=w;
+  if(el.height!==h) el.height=h;
+  return el;
+}
+
+// Recolors a freshly-drawn unit into a single accent hue and draws the
+// result onto the real canvas. A straight hue-rotate filter was tried first,
+// but it also rotates small existing accent details (a red eye slit, say)
+// into off-theme, clashing hues — so instead this desaturates the unit to a
+// grayscale luminance mask, then tints that mask with the theme's accent
+// color via multiply + a destination-in alpha clip, giving a coherent
+// duotone "livery" recolor with no leftover stray hues.
+function drawAltLiveryUnit(c,srcCanvas,W,H,theme){
+  const gray=getSkinScratchCanvas('gray',W,H);
+  const gc=gray.getContext('2d');
+  gc.clearRect(0,0,W,H);
+  gc.filter='grayscale(1) brightness(1.15) contrast(1.05)';
+  gc.drawImage(srcCanvas,0,0);
+  gc.filter='none';
+
+  const result=getSkinScratchCanvas('result',W,H);
+  const rc=result.getContext('2d');
+  rc.clearRect(0,0,W,H);
+  rc.globalCompositeOperation='source-over';
+  rc.fillStyle=theme.accent;
+  rc.fillRect(0,0,W,H);
+  rc.globalCompositeOperation='multiply';
+  rc.drawImage(gray,0,0);
+  rc.globalCompositeOperation='destination-in';
+  rc.drawImage(gray,0,0);
+  rc.globalCompositeOperation='source-over';
+
+  c.drawImage(result,0,0);
+}
+
+// Corner brackets + a bottom ribbon bearing the livery name — drawn AFTER
+// the (filtered) unit so the frame itself stays crisp and unrecolored.
+function drawAltSkinFrame(c,W,H,theme){
+  c.save();
+  const inset=10, len=20;
+  c.strokeStyle=theme.accent; c.lineWidth=2; c.lineCap='round';
+  c.shadowColor=theme.accent; c.shadowBlur=6;
+  for(const [x,y,dx,dy] of [[inset,inset,1,1],[W-inset,inset,-1,1],[inset,H-inset,1,-1],[W-inset,H-inset,-1,-1]]){
+    c.beginPath();
+    c.moveTo(x,y+len*dy); c.lineTo(x,y); c.lineTo(x+len*dx,y);
+    c.stroke();
+  }
+  c.shadowBlur=0;
+  c.restore();
+
+  c.save();
+  const bw=Math.min(220,W*0.6), bh=22, bx=(W-bw)/2, by=H-bh-10;
+  const bg=c.createLinearGradient(bx,0,bx+bw,0);
+  bg.addColorStop(0,'rgba(0,0,0,0)'); bg.addColorStop(0.12,theme.accentDark); bg.addColorStop(0.5,theme.accent); bg.addColorStop(0.88,theme.accentDark); bg.addColorStop(1,'rgba(0,0,0,0)');
+  c.fillStyle=bg; c.fillRect(bx,by,bw,bh);
+  c.strokeStyle='rgba(255,255,255,0.5)'; c.lineWidth=0.6;
+  c.beginPath(); c.moveTo(bx,by+1); c.lineTo(bx+bw,by+1); c.stroke();
+  c.font='bold 11px Orbitron,sans-serif'; c.textAlign='center'; c.textBaseline='middle';
+  c.fillStyle='#1a1204'; c.fillText(theme.label,W/2,by+bh/2+1);
+  c.restore();
+}
 
 function getUnitSkin(unit){
   const cfg=UNIT_SKIN_CFG[unit];
@@ -141,7 +243,7 @@ const HERO_SKIN_CFG={
   gongui: { faction:'roboto', draw:(c,cfg,w)=>drawGongui(c,cfg,w) },
 };
 
-function drawHeroSkinCard(canvasEl,heroKey){
+function drawHeroSkinCard(canvasEl,heroKey,skin){
   const c=canvasEl.getContext('2d');
   const W=canvasEl.width, H=canvasEl.height;
   drawSkinsBackdrop(c,W,H);
@@ -150,19 +252,30 @@ function drawHeroSkinCard(canvasEl,heroKey){
   const cfg=FACTION_CFG[hero.faction];
   const scale=3.2;
   const fakeW={frame:skinsFrame, state:'attack', faction:hero.faction};
+  const theme=ALT_SKIN_THEME[hero.faction];
+  const isAlt=skin===theme.id;
 
-  c.save();
-  c.translate(W*0.5,H*0.72);
-  c.scale(scale,scale);
-  hero.draw(c,cfg,fakeW);
-  c.restore();
+  // Same offscreen-draw-then-recolor approach as drawWarriorSkinCard — see comment there.
+  const tc = isAlt ? getSkinScratchCanvas('draw',W,H).getContext('2d') : c;
+  if(isAlt) tc.clearRect(0,0,W,H);
+
+  tc.save();
+  tc.translate(W*0.5,H*0.72);
+  tc.scale(scale,scale);
+  hero.draw(tc,cfg,fakeW);
+  tc.restore();
+
+  if(isAlt){
+    drawAltLiveryUnit(c,tc.canvas,W,H,theme);
+    drawAltSkinFrame(c,W,H,theme);
+  }
 }
 
 // ── BARRACKS / ELITE / AERIAL WARRIOR PORTRAITS ──
 // Every trainable barracks, elite and aerial-tier unit across all three
 // factions, rendered with its real in-game draw function (same approach as
-// the hero portraits above) — read-only showcase cards, not equippable
-// skins, since these units don't have alternate looks.
+// the hero portraits above). Each is equippable with its faction's alt
+// livery via ALT_SKIN_THEME (see drawAltSkinFrame above).
 const WARRIOR_SKIN_CFG={
   witch:            { faction:'prism',  category:'ground', draw:(c,cfg,w)=>drawWarriorPrism(c,cfg,w) },
   swordsman:        { faction:'shadow', category:'ground', draw:(c,cfg,w)=>drawWarriorShadow(c,cfg,w) },
@@ -183,7 +296,7 @@ const WARRIOR_SKIN_CFG={
   warship:          { faction:'roboto', category:'aerial', draw:(c,cfg,w)=>drawWarshipUnit(c,cfg,w) },
 };
 
-function drawWarriorSkinCard(canvasEl,key){
+function drawWarriorSkinCard(canvasEl,key,skin){
   const c=canvasEl.getContext('2d');
   const W=canvasEl.width, H=canvasEl.height;
   drawSkinsBackdrop(c,W,H);
@@ -193,17 +306,30 @@ function drawWarriorSkinCard(canvasEl,key){
   const isAerial=unit.category==='aerial';
   const scale=isAerial?4.4:3.4;
   const fakeW={frame:skinsFrame, state:'attack', faction:unit.faction};
+  const theme=ALT_SKIN_THEME[unit.faction];
+  const isAlt=skin===theme.id;
 
-  c.save();
+  // Alt liveries draw the unit into an offscreen scratch canvas first, then
+  // recolor+blit it onto the real canvas once — far cheaper than running
+  // every fill/stroke in unit.draw() through a per-shape recolor.
+  const tc = isAlt ? getSkinScratchCanvas('draw',W,H).getContext('2d') : c;
+  if(isAlt) tc.clearRect(0,0,W,H);
+
+  tc.save();
   if(isAerial){
-    c.translate(W*0.5,H*0.52);
-    c.rotate(-0.1);
+    tc.translate(W*0.5,H*0.52);
+    tc.rotate(-0.1);
   } else {
-    c.translate(W*0.5,H*0.72);
+    tc.translate(W*0.5,H*0.72);
   }
-  c.scale(scale,scale);
-  unit.draw(c,cfg,fakeW);
-  c.restore();
+  tc.scale(scale,scale);
+  unit.draw(tc,cfg,fakeW);
+  tc.restore();
+
+  if(isAlt){
+    drawAltLiveryUnit(c,tc.canvas,W,H,theme);
+    drawAltSkinFrame(c,W,H,theme);
+  }
 }
 
 // ── ROBOTO CAPITAL SHIP — REGULAR SKIN ──
@@ -321,30 +447,41 @@ function drawCapitalShipSkinCard(canvasEl,mode){
   c.restore();
 }
 
+// Only the selected unit's detail panel is ever shown at once (see
+// showSkinDetail), so skip redrawing every other unit's off-screen
+// canvases each frame — with 22 equippable units now in the tab (each with
+// a standard + alt-livery card) that's the difference between animating 2
+// canvases and 40+ every frame.
+function isSkinCanvasVisible(el){ return !!el && el.offsetParent!==null; }
+
 function skinsPreviewLoop(){
   skinsFrame++;
   const basic=document.getElementById('skin-arkship-basic-canvas');
-  if(basic) drawArkshipSkinCard(basic,'attacking','basic');
+  if(isSkinCanvasVisible(basic)) drawArkshipSkinCard(basic,'attacking','basic');
   const atk=document.getElementById('skin-arkship-attacking-canvas');
-  if(atk) drawArkshipSkinCard(atk,'attacking','royal-vanguard');
+  if(isSkinCanvasVisible(atk)) drawArkshipSkinCard(atk,'attacking','royal-vanguard');
   const pha=document.getElementById('skin-arkship-phasing-canvas');
-  if(pha) drawArkshipSkinCard(pha,'phasing','royal-vanguard');
+  if(isSkinCanvasVisible(pha)) drawArkshipSkinCard(pha,'phasing','royal-vanguard');
   for(const heroKey of ['prism','vanthel','gongui']){
-    const canvasEl=document.getElementById(`skin-${heroKey}-canvas`);
-    if(canvasEl) drawHeroSkinCard(canvasEl,heroKey);
+    const std=document.getElementById(`skin-${heroKey}-canvas`);
+    if(isSkinCanvasVisible(std)) drawHeroSkinCard(std,heroKey,'standard');
+    const alt=document.getElementById(`skin-${heroKey}-alt-canvas`);
+    if(isSkinCanvasVisible(alt)) drawHeroSkinCard(alt,heroKey,ALT_SKIN_THEME[HERO_SKIN_CFG[heroKey].faction].id);
   }
   for(const key of Object.keys(WARRIOR_SKIN_CFG)){
-    const canvasEl=document.getElementById(`skin-${key}-canvas`);
-    if(canvasEl) drawWarriorSkinCard(canvasEl,key);
+    const std=document.getElementById(`skin-${key}-canvas`);
+    if(isSkinCanvasVisible(std)) drawWarriorSkinCard(std,key,'standard');
+    const alt=document.getElementById(`skin-${key}-alt-canvas`);
+    if(isSkinCanvasVisible(alt)) drawWarriorSkinCard(alt,key,ALT_SKIN_THEME[WARRIOR_SKIN_CFG[key].faction].id);
   }
   const stdAir=document.getElementById('skin-capitalship-airborne-canvas');
-  if(stdAir) drawCapitalShipRegularSkinCard(stdAir,'airborne');
+  if(isSkinCanvasVisible(stdAir)) drawCapitalShipRegularSkinCard(stdAir,'airborne');
   const stdLnd=document.getElementById('skin-capitalship-landed-canvas');
-  if(stdLnd) drawCapitalShipRegularSkinCard(stdLnd,'landed');
+  if(isSkinCanvasVisible(stdLnd)) drawCapitalShipRegularSkinCard(stdLnd,'landed');
   const air=document.getElementById('skin-ironcrown-airborne-canvas');
-  if(air) drawCapitalShipSkinCard(air,'airborne');
+  if(isSkinCanvasVisible(air)) drawCapitalShipSkinCard(air,'airborne');
   const lnd=document.getElementById('skin-ironcrown-landed-canvas');
-  if(lnd) drawCapitalShipSkinCard(lnd,'landed');
+  if(isSkinCanvasVisible(lnd)) drawCapitalShipSkinCard(lnd,'landed');
   skinsRAF=requestAnimationFrame(skinsPreviewLoop);
 }
 

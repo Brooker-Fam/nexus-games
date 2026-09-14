@@ -180,9 +180,10 @@
   }
   .skin-option.selected .skin-equip-badge { display: block; }
 
-  /* hero portrait cards — read-only, not equippable, so plain .skin-card
-     rather than .skin-option; accent color follows each hero's faction */
-  .skins-gallery > .skin-card:hover { transform: translateY(-6px); border-color:rgba(0,245,255,0.6); box-shadow:0 0 30px rgba(0,245,255,0.2); }
+  /* warrior/hero portrait cards — accent color follows each unit's faction,
+     at any nesting depth (they now sit inside a .skin-option like the
+     flagships' cards do, once every standard-issue unit became equippable) */
+  .skins-gallery .skin-card:hover { transform: translateY(-6px); border-color:rgba(0,245,255,0.6); box-shadow:0 0 30px rgba(0,245,255,0.2); }
   .skin-card[data-faction="shadow"] .skin-name,
   .skin-card[data-faction="shadow"] .skin-mode { color:#cc66ff; }
   .skin-card[data-faction="shadow"]:hover { border-color:rgba(170,0,255,0.6); box-shadow:0 0 30px rgba(170,0,255,0.2); }
