@@ -102,6 +102,7 @@
     <button class="tab active" id="tab-btn-td">⬡ TOWER DEFENSE</button>
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
     <button class="tab" id="tab-btn-skins">✦ SKINS</button>
+    <button class="tab" id="tab-btn-memberships">★ MEMBERSHIPS</button>
   </div>
 </header>
 
@@ -1004,6 +1005,41 @@
     </div>
   </div>
 
+  <!-- MEMBERSHIPS -->
+  <div id="tab-memberships" class="tab-content">
+    <div class="dso-title-wrap">
+      <div class="dso-pre">CHOOSE YOUR RANK</div>
+      <div class="dso-title">MEMBERSHIPS</div>
+      <div class="dso-sub">Upgrade for every alternate skin, unlocked, plus full access to the book.</div>
+    </div>
+
+    <div class="membership-plans">
+      <div class="membership-card" id="membership-card-free">
+        <div class="membership-name">BASIC</div>
+        <div class="membership-price">$0<span class="membership-period">/mo</span></div>
+        <ul class="membership-features">
+          <li>◆ ALL TOWER DEFENSE &amp; DEEP SPACE OPS GAMEPLAY</li>
+          <li>◆ STANDARD-ISSUE UNIT SKINS</li>
+          <li>◆ RANKED &amp; MULTIPLAYER MATCHES</li>
+        </ul>
+        <div class="membership-btn membership-btn-current" id="membership-btn-free">CURRENT PLAN</div>
+      </div>
+
+      <div class="membership-card membership-card-pro" id="membership-card-pro">
+        <div class="membership-badge">BEST VALUE</div>
+        <div class="membership-name">PRO</div>
+        <div class="membership-price">$20<span class="membership-period">/mo</span></div>
+        <ul class="membership-features">
+          <li>◆ EVERYTHING IN BASIC</li>
+          <li>◆ EVERY ALTERNATE SKIN, FREE</li>
+          <li>◆ FULL ACCESS TO THE BOOK</li>
+        </ul>
+        <button class="membership-btn membership-btn-upgrade" id="membership-btn-pro">UPGRADE TO PRO</button>
+      </div>
+    </div>
+    <div class="membership-status" id="membership-status"></div>
+  </div>
+
 </main>
 </div>
 
@@ -1043,6 +1079,7 @@
 <script src="js/rts/aerial2.js"></script>
 <script src="js/rts/cinematic.js"></script>
 <script src="js/rts/skins.js"></script>
+<script src="js/shared/memberships.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>

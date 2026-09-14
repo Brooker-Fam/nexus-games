@@ -57,6 +57,29 @@ export default async function handler(req, res) {
           ON CONFLICT (user_id, unit, skin) DO NOTHING
         `;
       }
+    } else if (
+      event.type === "subscription.created" ||
+      event.type === "subscription.updated" ||
+      event.type === "subscription.active" ||
+      event.type === "subscription.canceled" ||
+      event.type === "subscription.revoked"
+    ) {
+      const sub = event.data;
+      const meta = sub.metadata || {};
+      const userId = typeof meta.userId === "string" ? meta.userId : null;
+      if (userId) {
+        const sql = getSql();
+        await sql`
+          INSERT INTO memberships (user_id, status, polar_subscription_id, polar_customer_id, current_period_end, updated_at)
+          VALUES (${userId}, ${sub.status}, ${sub.id}, ${sub.customerId || null}, ${sub.currentPeriodEnd || null}, NOW())
+          ON CONFLICT (user_id) DO UPDATE SET
+            status = EXCLUDED.status,
+            polar_subscription_id = EXCLUDED.polar_subscription_id,
+            polar_customer_id = EXCLUDED.polar_customer_id,
+            current_period_end = EXCLUDED.current_period_end,
+            updated_at = NOW()
+        `;
+      }
     }
     res.status(200).json({ received: true });
   } catch (err) {

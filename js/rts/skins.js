@@ -154,7 +154,7 @@ function getUnitSkin(unit){
 function setUnitSkin(unit,id){
   const cfg=UNIT_SKIN_CFG[unit];
   if(!cfg) return;
-  if(isPaidSkin(unit,id) && !ownedSkins.has(skinOwnKey(unit,id))) return;
+  if(isPaidSkin(unit,id) && !skinIsUnlocked(unit,id)) return;
   try { localStorage.setItem(cfg.key, id); } catch(e){}
   refreshSkinOptionsUI();
   if(window.posthog) posthog.capture('skin_equipped', { unit, skin:id });
@@ -176,6 +176,12 @@ function isPaidSkin(unit,skin){
   return !!cfg && skin!==cfg.default;
 }
 function skinOwnKey(unit,skin){ return `${unit}:${skin}`; }
+
+// Nexus Pro members (see js/shared/memberships.js) get every alternate skin
+// for free without an individual purchase on record.
+function skinIsUnlocked(unit,skin){
+  return ownedSkins.has(skinOwnKey(unit,skin)) || !!window.nexusProActive;
+}
 
 async function loadOwnedSkins(){
   try{
@@ -235,13 +241,13 @@ function refreshSkinOptionsUI(){
     opt.setAttribute('aria-pressed', on ? 'true' : 'false');
 
     const paid=isPaidSkin(unit,skin);
-    const owned=!paid || ownedSkins.has(skinOwnKey(unit,skin));
+    const owned=!paid || skinIsUnlocked(unit,skin);
     opt.classList.toggle('locked', paid && !owned);
     opt.classList.toggle('owned', paid && owned);
     const priceEl=opt.querySelector('.skin-price');
     if(priceEl && paid){
       if(!opt.dataset.priceText) opt.dataset.priceText=priceEl.textContent;
-      priceEl.textContent = owned ? 'OWNED — CLICK TO EQUIP' : opt.dataset.priceText;
+      priceEl.textContent = owned ? (window.nexusProActive ? 'PRO — CLICK TO EQUIP' : 'OWNED — CLICK TO EQUIP') : opt.dataset.priceText;
     }
   });
 }
@@ -604,7 +610,7 @@ registerGame('skins', {
     const opt=e.target.closest('.skin-option');
     if(!opt || !opt.dataset.skin) return;
     const unit=opt.dataset.unit || 'arkship', skin=opt.dataset.skin;
-    if(isPaidSkin(unit,skin) && !ownedSkins.has(skinOwnKey(unit,skin))) buySkin(unit,skin);
+    if(isPaidSkin(unit,skin) && !skinIsUnlocked(unit,skin)) buySkin(unit,skin);
     else setUnitSkin(unit,skin);
   });
   col.addEventListener('keydown', e=>{
@@ -613,7 +619,7 @@ registerGame('skins', {
     if(!opt || !opt.dataset.skin) return;
     e.preventDefault();
     const unit=opt.dataset.unit || 'arkship', skin=opt.dataset.skin;
-    if(isPaidSkin(unit,skin) && !ownedSkins.has(skinOwnKey(unit,skin))) buySkin(unit,skin);
+    if(isPaidSkin(unit,skin) && !skinIsUnlocked(unit,skin)) buySkin(unit,skin);
     else setUnitSkin(unit,skin);
   });
   refreshSkinOptionsUI();
