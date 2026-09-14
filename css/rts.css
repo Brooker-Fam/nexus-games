@@ -172,6 +172,11 @@
     font-size:11px; line-height:1.6; letter-spacing:0.5px; color:var(--text-dim);
     text-align:center; padding: 14px 18px 0; max-width:640px;
   }
+  .skin-price {
+    margin-top: 12px;
+    font-family:'Orbitron',sans-serif; font-size:11px; font-weight:700; letter-spacing:2px;
+    color:#ffd700;
+  }
   .skin-equip-badge {
     display: none;
     margin-top: 12px;
@@ -179,6 +184,7 @@
     color:#0a1520; background:#00f5ff; padding:6px 18px; border-radius:2px;
   }
   .skin-option.selected .skin-equip-badge { display: block; }
+  .skin-option.selected .skin-price { display: none; }
 
   /* hero portrait cards — read-only, not equippable, so plain .skin-card
      rather than .skin-option; accent color follows each hero's faction */
