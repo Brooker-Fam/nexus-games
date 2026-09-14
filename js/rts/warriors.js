@@ -26,56 +26,63 @@ function drawRTSWarrior(rc,w){
 
   rc.shadowColor=cfg.color; rc.shadowBlur=12;
 
+  // Each branch picks the real draw function plus (when the unit has an
+  // alternate livery — see ALT_SKIN_THEME/UNIT_SKIN_CFG in skins.js) the key
+  // its equipped skin is stored under, then drawSkinnedUnit applies that
+  // livery if equipped. Units with no skinUnit (ling, bloodhound, etc.)
+  // have no purchasable livery and always draw as-is.
+  let drawFn=null, skinUnit=null;
   if(w.subtype==='starfighter'){
-    if(w.faction==='prism') drawPrismWarDrone(rc,cfg,w);
-    else drawShadowWraith(rc,cfg,w);
+    if(w.faction==='prism'){ drawFn=drawPrismWarDrone; skinUnit='wardrone-prism'; }
+    else { drawFn=drawShadowWraith; skinUnit='wardrone-shadow'; }
   } else if(w.subtype==='skyattacker'){
-    drawSkyAttackerUnit(rc,cfg,w);
+    drawFn=drawSkyAttackerUnit; skinUnit='wardrone-roboto';
   } else if(w.subtype==='warship'){
-    drawWarshipUnit(rc,cfg,w);
+    drawFn=drawWarshipUnit; skinUnit='warship';
   } else if(w.subtype==='lightfighter'){
-    drawLightFighterUnit(rc,cfg,w);
+    drawFn=drawLightFighterUnit; skinUnit='lightfighter';
   } else if(w.subtype==='destroyer'){
-    drawDestroyerUnit(rc,cfg,w);
+    drawFn=drawDestroyerUnit; skinUnit='destroyer';
   } else if(w.subtype==='capitalship'){
-    drawCapitalShipUnit(rc,cfg,w);
+    drawFn=drawCapitalShipUnit; skinUnit='capitalship';
   } else if(w.subtype==='darkwarriorship'){
-    drawDarkWarriorShip(rc,cfg,w);
+    drawFn=drawDarkWarriorShip;
   } else if(w.subtype==='arkship'){
-    drawArkshipUnit(rc,cfg,w);
+    drawFn=drawArkshipUnit; // reads its own skin internally via getArkshipSkin()
   } else if(w.subtype==='warbot'){
-    drawWarbot(rc,cfg,w);
+    drawFn=drawWarbot; skinUnit='warbot';
   } else if(w.subtype==='ling'){
-    drawLing(rc,w);
+    drawFn=(c,_cfg,ww)=>drawLing(c,ww);
   } else if(w.subtype==='vanthel'){
-    drawVanthel(rc,cfg,w);
+    drawFn=drawVanthel; skinUnit='vanthel';
   } else if(w.subtype==='legionnaire'){
-    drawLegionnaire(rc,cfg,w);
+    drawFn=drawLegionnaire; skinUnit='legionnaire';
   } else if(w.subtype==='prism'){
-    if(w.faction==='prism') drawPrism(rc,cfg,w);
+    if(w.faction==='prism'){ drawFn=drawPrism; skinUnit='prism'; }
   } else if(w.subtype==='gongui'){
-    drawGongui(rc,cfg,w);
+    drawFn=drawGongui; skinUnit='gongui';
   } else if(w.subtype==='elite'){
-    if(w.faction==='prism') drawEliteOracle(rc,cfg,w);
-    else if(w.faction==='shadow') drawEliteDarkWarrior(rc,cfg,w);
-    else drawEliteShockbot(rc,cfg,w);
+    if(w.faction==='prism'){ drawFn=drawEliteOracle; skinUnit='oracle'; }
+    else if(w.faction==='shadow'){ drawFn=drawEliteDarkWarrior; skinUnit='darkwarrior'; }
+    else { drawFn=drawEliteShockbot; skinUnit='shockbot'; }
   } else if(w.subtype==='wizard'){
-    drawWizard(rc,cfg,w);
+    drawFn=drawWizard; skinUnit='wizard';
   } else if(w.subtype==='necromancer'){
-    drawNecromancer(rc,cfg,w);
+    drawFn=drawNecromancer; skinUnit='necromancer';
   } else if(w.subtype==='tank'){
-    drawTankUnit(rc,cfg,w);
+    drawFn=drawTankUnit; skinUnit='tank';
   } else if(w.subtype==='bloodhound'){
-    drawBloodhound(rc,cfg,w);
+    drawFn=drawBloodhound;
   } else if(w.subtype==='assaultbot'){
-    drawAssaultBot(rc,cfg,w);
+    drawFn=drawAssaultBot;
   } else if(w.subtype==='psionic'){
-    drawPsionicWarrior(rc,cfg,w);
+    drawFn=drawPsionicWarrior;
   } else {
-    if(w.faction==='prism') drawWarriorPrism(rc,cfg,w);
-    else if(w.faction==='shadow') drawWarriorShadow(rc,cfg,w);
-    else drawWarriorRoboto(rc,cfg,w);
+    if(w.faction==='prism'){ drawFn=drawWarriorPrism; skinUnit='witch'; }
+    else if(w.faction==='shadow'){ drawFn=drawWarriorShadow; skinUnit='swordsman'; }
+    else { drawFn=drawWarriorRoboto; skinUnit='gunbot'; }
   }
+  if(drawFn) drawSkinnedUnit(rc,cfg,w,skinUnit,drawFn);
 
   rc.restore();
   // selection ring

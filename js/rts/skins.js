@@ -74,7 +74,7 @@ function getSkinScratchCanvas(id,w,h){
 // keeps the original's luminosity (so highlights and glow halos still pop)
 // while swapping in the theme's hue/saturation, then a destination-in alpha
 // clip removes the accent fill's bleed outside the unit's silhouette.
-function drawAltLiveryUnit(c,srcCanvas,W,H,theme){
+function drawAltLiveryUnit(c,srcCanvas,W,H,theme,destX=0,destY=0){
   const result=getSkinScratchCanvas('result',W,H);
   const rc=result.getContext('2d');
   rc.clearRect(0,0,W,H);
@@ -87,7 +87,35 @@ function drawAltLiveryUnit(c,srcCanvas,W,H,theme){
   rc.drawImage(srcCanvas,0,0);
   rc.globalCompositeOperation='source-over';
 
-  c.drawImage(result,0,0);
+  c.drawImage(result,destX,destY);
+}
+
+// ── IN-GAME LIVERY APPLICATION ──
+// The preview cards above reuse each unit's real draw function against a
+// fixed-size, known-scale canvas. In an actual match, drawRTSWarrior has
+// already translated/rotated/scaled `rc` to the unit's world position and
+// facing before calling that same draw function — so instead of trying to
+// replicate the alt-livery recolor in that already-transformed space, draw
+// the unit once into a small local-space scratch canvas (every unit draws
+// itself centered on its own origin — see aerial2.js's "drawn at origin"
+// note), recolor that, then blit it back through rc's existing transform so
+// position/facing/rotation still come out right.
+const GAMEPLAY_SKIN_CANVAS=160;
+function drawSkinnedUnit(rc,cfg,w,skinUnit,drawFn){
+  const theme=skinUnit && ALT_SKIN_THEME[w.faction];
+  if(!theme || getUnitSkin(skinUnit)!==theme.id){
+    drawFn(rc,cfg,w);
+    return;
+  }
+  const S=GAMEPLAY_SKIN_CANVAS;
+  const tc=getSkinScratchCanvas('gameplay',S,S).getContext('2d');
+  tc.clearRect(0,0,S,S);
+  tc.save();
+  tc.translate(S/2,S/2);
+  tc.shadowColor=cfg.color; tc.shadowBlur=12;
+  drawFn(tc,cfg,w);
+  tc.restore();
+  drawAltLiveryUnit(rc,tc.canvas,S,S,theme,-S/2,-S/2);
 }
 
 // Corner brackets + a bottom ribbon bearing the livery name — drawn AFTER

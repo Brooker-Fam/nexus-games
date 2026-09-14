@@ -250,8 +250,8 @@ test('A landed Capital Ship cannot move or attack until it takes off again',()=>
 test('Gongui and Capital Ship use distinct renderers from other Roboto units',()=>{
   const source=fs.readFileSync(path.join(__dirname,'..','js','rts','warriors.js'),'utf8');
 
-  assert.match(source,/w\.subtype==='gongui'[\s\S]*?drawGongui\(rc,cfg,w\)/);
-  assert.match(source,/w\.subtype==='capitalship'[\s\S]*?drawCapitalShipUnit\(rc,cfg,w\)/);
+  assert.match(source,/w\.subtype==='gongui'[\s\S]*?drawFn=drawGongui/);
+  assert.match(source,/w\.subtype==='capitalship'[\s\S]*?drawFn=drawCapitalShipUnit/);
 });
 
 test("Shadow Temple spends gold and essence to deploy the Dark Warrior's Ship carrying Vanthel",()=>{
@@ -587,8 +587,8 @@ test('Prism Oracle and Wizard cost Light, with Wizard favoring Light over Gold',
 test('Prism unit uses a distinct renderer from the Oracle',()=>{
   const source=fs.readFileSync(path.join(__dirname,'..','js','rts','warriors.js'),'utf8');
 
-  assert.match(source,/w\.subtype==='prism'[\s\S]*?drawPrism\(rc,cfg,w\)/);
-  assert.match(source,/w\.subtype==='elite'[\s\S]*?drawEliteOracle\(rc,cfg,w\)/);
+  assert.match(source,/w\.subtype==='prism'[\s\S]*?drawFn=drawPrism/);
+  assert.match(source,/w\.subtype==='elite'[\s\S]*?drawFn=drawEliteOracle/);
 });
 
 test('Prism unit keeps a broader, taller silhouette than the Oracle',()=>{
@@ -887,7 +887,7 @@ test('Arkship fires twin beams in attacking mode — a second enemy in range tak
 
 test('Prism Arkship uses a distinct renderer from the Warship and Light Fighter',()=>{
   const source=fs.readFileSync(path.join(__dirname,'..','js','rts','warriors.js'),'utf8');
-  assert.match(source,/w\.subtype==='arkship'[\s\S]*?drawArkshipUnit\(rc,cfg,w\)/);
+  assert.match(source,/w\.subtype==='arkship'[\s\S]*?drawFn=drawArkshipUnit/);
 });
 
 test('Vanthel can target aerial units, like the Dark Warrior he attacks like, and so can the Ship that carries him',()=>{
