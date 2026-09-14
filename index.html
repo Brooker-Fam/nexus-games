@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/td.css">
 <link rel="stylesheet" href="css/rts.css">
+<link rel="stylesheet" href="css/book.css">
 <script>
   window.__errorBuffer=[];
   window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
@@ -102,6 +103,7 @@
     <button class="tab active" id="tab-btn-td">⬡ TOWER DEFENSE</button>
     <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
     <button class="tab" id="tab-btn-skins">✦ SKINS</button>
+    <button class="tab" id="tab-btn-book">📖 THE BOOK</button>
   </div>
 </header>
 
@@ -1004,6 +1006,27 @@
     </div>
   </div>
 
+  <!-- THE BOOK -->
+  <div id="tab-book" class="tab-content">
+    <div class="dso-title-wrap">
+      <div class="dso-pre">A NEXUS GAMES ORIGINAL</div>
+      <div class="dso-title">THE BOOK</div>
+      <div class="dso-sub">The Great War — the story behind the factions. A new chapter unlocks every week.</div>
+    </div>
+
+    <div id="book-countdown" class="book-countdown"></div>
+
+    <div class="book-layout">
+      <!-- LIST — parts + chapters; locked chapters show a countdown -->
+      <nav class="book-list-col" id="book-list-col" aria-label="Chapters"></nav>
+
+      <!-- READER — the selected chapter's text -->
+      <div class="book-detail-col">
+        <div class="book-reader" id="book-reader"></div>
+      </div>
+    </div>
+  </div>
+
 </main>
 </div>
 
@@ -1044,6 +1067,10 @@
 <script src="js/rts/cinematic.js"></script>
 <script src="js/rts/skin-shop.js"></script>
 <script src="js/rts/skins.js"></script>
+
+<!-- The Book -->
+<script src="js/book/book-data.js"></script>
+<script src="js/book/game.js"></script>
 
 <!-- Init -->
 <script src="js/init.js"></script>

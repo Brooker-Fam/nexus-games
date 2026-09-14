@@ -88,6 +88,10 @@ document.getElementById('tab-btn-skins').onclick=function(){
   switchTab('skins', this);
   if(window.posthog) posthog.capture('game_tab_switched', { tab: 'skins' });
 };
+document.getElementById('tab-btn-book').onclick=function(){
+  switchTab('book', this);
+  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'book' });
+};
 
 // TD controls
 document.getElementById('btn-reset').onclick=resetGame;
