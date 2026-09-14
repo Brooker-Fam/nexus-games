@@ -239,7 +239,7 @@
   .beta-badge {
     position: fixed;
     top: 10px; right: 10px;
-    z-index: 1000;
+    z-index: 2000;
     font-family: 'Orbitron', sans-serif;
     font-size: 10px; font-weight: 700;
     letter-spacing: 3px;
