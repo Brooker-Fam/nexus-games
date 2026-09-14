@@ -683,7 +683,16 @@ function workerBuild(w){
         const lbl=bt==='cannon'?'CANNON':bt==='barracks'?FACTION_CFG[w.faction].barracksLabel:bt==='base'?FACTION_CFG[w.faction].buildingName:bt==='aerial'?FACTION_CFG[w.faction].aerialLabel:bt==='oilrig'?(FACTION_CFG[w.faction].oilRigLabel||'OIL RIG'):bt==='researchlab'?(FACTION_CFG[w.faction].researchLabLabel||'RESEARCH LAB'):bt==='councillight'?(FACTION_CFG[w.faction].councilOfLightLabel||'COUNCIL OF LIGHT'):bt==='councildark'?(FACTION_CFG[w.faction].councilOfDarknessLabel||'COUNCIL OF DARKNESS'):FACTION_CFG[w.faction].structLabel;
         rtsSetLog(`${lbl} complete!`);
       }
-      w.state='idle'; w.buildTarget=null; w.hammerSwing=0; w.buildTimer=0;
+      w.buildTarget=null; w.hammerSwing=0; w.buildTimer=0;
+      if(bt==='oilrig'){
+        w.target=ghost;
+        w.assignedTask='gather_oil';
+        w.assignedTargetId=ghost.id;
+        w.state='mining';
+        w.mineTimer=0;
+      } else {
+        w.state='idle';
+      }
     }
   }
 }
