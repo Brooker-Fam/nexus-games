@@ -63,11 +63,13 @@ function makeLing(side, x, y){
 // Vanthel — a legendary, singularly powerful dark warrior. He is never
 // trained directly; the Dark Warrior's Ship carries him to the battlefield
 // and releases him once the ship is clear of enemies (see makeDarkWarriorShip).
+// Attacks the same way the Dark Warrior (elite subtype) does — ranged,
+// chaining black-magic bolts — just harder-hitting and longer-reaching.
 function makeVanthel(side, x, y){
   return { id:nextId(), type:'warrior', subtype:'vanthel', side, faction:'shadow',
     x, y, hp:320, maxHp:320, speed:1.7,
     state:'idle', target:null, attackTimer:0,
-    damage:58, range:60, ranged:false, fireRate:20,
+    damage:58, range:260, ranged:true, fireRate:20,
     frame:0, selected:false, forcedTarget:null, moveTarget:null,
   };
 }
