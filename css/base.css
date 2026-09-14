@@ -308,16 +308,6 @@
     font-size: 12px; letter-spacing: 2px;
     color: var(--neon-green); opacity: 0.8;
   }
-  .beta-badge {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 9px; font-weight: 700; letter-spacing: 2px;
-    color: var(--neon-purple);
-    border: 1px solid var(--neon-purple);
-    border-radius: 3px;
-    padding: 3px 7px;
-    text-shadow: 0 0 8px rgba(180,80,255,0.6);
-    box-shadow: 0 0 8px rgba(180,80,255,0.25);
-  }
 
   /* ── TABS ── */
   .tabs {
