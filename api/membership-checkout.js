@@ -2,7 +2,7 @@ import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
 import { createCheckout } from "../lib/polar.js";
 
-// Nexus Pro — $20/mo recurring subscription (every alternate skin unlocked
+// Nexus Pro — $5/mo recurring subscription (every alternate skin unlocked
 // + full book access). No hardcoded default: unlike the skin unlock product
 // this one hasn't been created in the Polar dashboard yet, so it must be
 // configured via POLAR_MEMBERSHIP_PRODUCT_ID before checkout can run.
