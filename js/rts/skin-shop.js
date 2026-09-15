@@ -1,5 +1,5 @@
 // ── SKIN SHOP — Polar checkout for paid alt liveries ──
-// The 22 "$2.00" alt-skin options in skins.js are real purchases: clicking
+// The 22 "$1.00" alt-skin options in skins.js are real purchases: clicking
 // one that isn't owned opens a Polar checkout instead of equipping it for
 // free. Split out of skins.js to keep that file under the project's
 // ~600-line guideline; relies on skins.js's setUnitSkin/getUnitSkin/

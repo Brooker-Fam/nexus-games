@@ -3,7 +3,7 @@ import { fromNodeHeaders } from "better-auth/node";
 import { createCheckout } from "../lib/polar.js";
 import { isValidPaidSkin } from "../lib/paid-skins.js";
 
-// The single "Alternate Skin Unlock" product ($2.00, one-time) — which
+// The single "Alternate Skin Unlock" product ($1.00, one-time) — which
 // unit/skin the purchase is for travels in the checkout's metadata instead
 // of needing one Polar product per skin.
 const PRODUCT_ID = process.env.POLAR_SKIN_PRODUCT_ID || "8aa992b2-b28c-4ec1-a637-8533f64de1be";
