@@ -1,5 +1,5 @@
 // ── MEMBERSHIPS TAB ──
-// Two plans: BASIC (free) and PRO ($5/mo — every alternate skin unlocked
+// Two plans: BASIC (free) and PRO ($1/mo — every alternate skin unlocked
 // plus full book access). Subscription state lives server-side in the
 // `memberships` table, kept in sync by the Polar subscription webhook (see
 // api/polar-webhook.js) — window.nexusProActive is the single flag the rest
