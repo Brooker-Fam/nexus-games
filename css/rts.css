@@ -16,6 +16,32 @@
   }
   .dso-sub { font-size:14px; letter-spacing:2px; color:var(--text-dim); }
 
+  /* mode tabs — AI / PVP / TRAINING */
+  .dso-mode-tabs { display:flex; gap:8px; justify-content:center; margin-top:22px; }
+  .dso-mode-tab {
+    font-family:'Orbitron',sans-serif; font-size:11px; font-weight:700; letter-spacing:3px;
+    padding:9px 22px; background:rgba(5,15,30,0.9);
+    border:1px solid rgba(100,120,160,0.25); color:var(--text-dim);
+    cursor:pointer; transition:all 0.25s ease;
+    clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+  }
+  .dso-mode-tab:hover { border-color:rgba(0,245,255,0.4); color:var(--text-bright); }
+  .dso-mode-tab.active {
+    color:var(--neon-cyan); border-color:rgba(0,245,255,0.6);
+    background:rgba(0,245,255,0.08); box-shadow:0 0 16px rgba(0,245,255,0.15);
+  }
+  .dso-mode-desc {
+    text-align:center; font-size:11px; letter-spacing:1px; color:var(--text-dim);
+    margin-top:12px;
+  }
+  .dso-training-banner {
+    max-width:640px; margin:20px auto 0; padding:12px 20px;
+    background:rgba(0,245,255,0.06); border:1px solid rgba(0,245,255,0.25);
+    text-align:center; font-size:12px; line-height:1.6; letter-spacing:0.5px; color:var(--text-bright);
+    clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
+  }
+  .dso-training-banner-icon { margin-right:6px; }
+
   .faction-cards {
     display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
   }
@@ -419,6 +445,37 @@
   }
   .rts-map-name { color:#9eeeff; text-shadow:0 0 8px rgba(0,200,255,.35); }
   @keyframes fadeOut { to { opacity:0; } }
+  /* ── TRAINING GUIDE ── */
+  .training-guide {
+    position:absolute; left:12px; bottom:12px; z-index:12;
+    width:min(340px, calc(100% - 24px));
+    background:rgba(2,10,22,0.92); border:1px solid rgba(0,245,255,0.35);
+    box-shadow:0 0 24px rgba(0,245,255,0.12);
+    padding:10px 14px 12px;
+    display:flex; flex-direction:column; gap:8px;
+    clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
+  }
+  .training-guide-header { display:flex; align-items:center; gap:6px; }
+  .training-guide-icon { font-size:13px; }
+  .training-guide-label {
+    font-family:'Orbitron',sans-serif; font-size:9px; letter-spacing:3px;
+    color:var(--neon-cyan); flex:1;
+  }
+  .training-guide-close {
+    background:transparent; border:none; color:var(--text-dim); cursor:pointer;
+    font-size:12px; padding:0 2px; transition:color 0.2s;
+  }
+  .training-guide-close:hover { color:#ff8888; }
+  .training-guide-text { font-size:12px; line-height:1.6; letter-spacing:0.3px; color:var(--text-bright); }
+  .training-guide-next {
+    align-self:flex-end;
+    font-family:'Orbitron',sans-serif; font-size:9px; letter-spacing:2px;
+    padding:6px 14px; background:rgba(0,245,255,0.08);
+    border:1px solid rgba(0,245,255,0.4); color:var(--neon-cyan); cursor:pointer;
+    transition:all 0.2s;
+    clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+  }
+  .training-guide-next:hover { background:rgba(0,245,255,0.18); box-shadow:0 0 12px rgba(0,245,255,0.2); }
   .rts-log-bar {
     background:rgba(2,8,16,0.9); border:1px solid rgba(0,245,255,0.1); border-top:none;
     padding:5px 14px; font-size:11px; letter-spacing:1px; color:var(--text-dim);

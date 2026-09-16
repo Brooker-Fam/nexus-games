@@ -196,6 +196,19 @@
           <div class="dso-title">DEEP SPACE OPS</div>
           <div class="dso-sub">Your faction determines your champion, your power, your fate.</div>
         </div>
+
+        <div class="dso-mode-tabs" id="dso-mode-tabs">
+          <button class="dso-mode-tab active" id="dso-mode-btn-ai" data-mode="ai">⚔ AI</button>
+          <button class="dso-mode-tab" id="dso-mode-btn-pvp" data-mode="pvp">🌐 PVP</button>
+          <button class="dso-mode-tab" id="dso-mode-btn-training" data-mode="training">🎓 TRAINING</button>
+        </div>
+        <div class="dso-mode-desc" id="dso-mode-desc">Battle an adaptive AI opponent that scales to your skill.</div>
+
+        <div class="dso-training-banner" id="dso-training-banner" style="display:none">
+          <span class="dso-training-banner-icon">🎓</span>
+          An AI advisor will guide you step-by-step through your first battle — pick a faction to begin.
+        </div>
+
         <div class="faction-cards">
 
           <!-- SHADOW -->
@@ -256,7 +269,7 @@
 
         <!-- MULTIPLAYER -->
         <div id="mp-controls" class="mp-controls">
-          <div class="mp-divider">— OR PLAY ONLINE —</div>
+          <div class="mp-divider">— PLAY ONLINE —</div>
           <div class="mp-buttons">
             <button class="rv-btn rv-play" id="btn-mp-host">CREATE GAME</button>
             <div class="mp-join-row">
@@ -333,6 +346,15 @@
         <div id="rts-viewport-wrap">
           <canvas id="rts-canvas" width="1200" height="580"></canvas>
           <div id="rts-scroll-hint">Click your base to build · Right-click to move/attack</div>
+          <div id="training-guide" class="training-guide" style="display:none">
+            <div class="training-guide-header">
+              <span class="training-guide-icon">🤖</span>
+              <span class="training-guide-label">AI ADVISOR</span>
+              <button class="training-guide-close" id="btn-training-close" title="Hide guide">✕</button>
+            </div>
+            <div class="training-guide-text" id="training-guide-text"></div>
+            <button class="training-guide-next" id="btn-training-next">GOT IT ▸</button>
+          </div>
         </div>
         <div class="rts-log-bar"><span id="rts-log">Click your base to build units!</span></div>
         <div id="rts-gameover-overlay" style="display:none" class="rts-over-overlay">
@@ -1091,6 +1113,7 @@
 <script src="js/rts/ui.js"></script>
 <script src="js/rts/difficulty.js"></script>
 <script src="js/rts/game.js"></script>
+<script src="js/rts/training.js"></script>
 <script src="js/rts/draw-helpers.js"></script>
 <script src="js/rts/rendering.js"></script>
 <script src="js/rts/structures.js"></script>
