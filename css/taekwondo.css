@@ -1,0 +1,120 @@
+.tkd-dojo {
+  --tkd-muted: #8ca5bd;
+  --tkd-line: rgba(115, 177, 223, 0.18);
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 8px 0 24px;
+}
+.tkd-dojo [hidden] { display: none !important; }
+.tkd-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+.tkd-eyebrow, .tkd-kicker { font-size: 11px; font-weight: 600; letter-spacing: 2.3px; color: #91a9c1; }
+.tkd-heading h1 { margin: 5px 0 7px; font: 900 clamp(25px, 3vw, 39px)/1.1 'Orbitron', sans-serif; letter-spacing: 1px; }
+.tkd-heading h1 span { color: #7afcff; }
+.tkd-tagline { color: var(--tkd-muted); font-size: 16px; letter-spacing: 0.3px; }
+.tkd-stats { display: flex; border: 1px solid var(--tkd-line); background: rgba(11, 24, 42, 0.75); border-radius: 8px; padding: 15px 5px; }
+.tkd-stat { min-width: 91px; padding: 0 18px; text-align: center; border-right: 1px solid var(--tkd-line); }
+.tkd-stat:last-child { border-right: 0; }
+.tkd-stat > span { display: block; color: var(--tkd-muted); font-size: 10px; font-weight: 600; letter-spacing: 1.8px; text-transform: uppercase; }
+.tkd-stat > strong { display: block; font: 700 25px/1.2 'Orbitron', sans-serif; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.tkd-stat:first-child > strong { color: #7afcff; }
+.tkd-stat:nth-child(2) > strong { color: #c79bff; }
+.tkd-layout { display: grid; grid-template-columns: minmax(0, 1fr) 264px; gap: 22px; align-items: start; }
+.tkd-main { min-width: 0; }
+.tkd-stage { position: relative; isolation: isolate; overflow: hidden; aspect-ratio: 16 / 9; background: #07101d; border: 1px solid #284352; border-radius: 10px; box-shadow: 0 14px 55px rgba(0,0,0,0.25); }
+.tkd-stage canvas { display: block; width: 100%; height: 100%; touch-action: manipulation; }
+.tkd-stage canvas:focus-visible { outline: 2px solid #7afcff; outline-offset: -3px; }
+.tkd-stage-label { position: absolute; top: 23px; left: 25px; display: flex; align-items: center; gap: 8px; color: #a8bed1; font: 600 8px/1 'Orbitron', sans-serif; letter-spacing: 1.7px; pointer-events: none; }
+.tkd-stage-label > span { width: 5px; height: 5px; background: #7afcff; border-radius: 50%; box-shadow: 0 0 12px #7afcff; }
+.tkd-overlay { position: absolute; top: 23%; left: 5%; width: 43%; pointer-events: none; padding: 15px 0; }
+.tkd-overlay h2 { font: 900 clamp(22px, 3vw, 43px)/1.2 'Orbitron', sans-serif; margin: 14px 0 15px; letter-spacing: -0.7px; text-shadow: 0 2px 25px #030a16; }
+.tkd-overlay > p:last-child { max-width: 290px; font-size: clamp(13px, 1.45vw, 17px); line-height: 1.5; color: #b1c6d9; text-shadow: 0 1px 4px #020810; }
+#tab-tkd:is([data-phase="error"], [data-phase="loading"], [data-phase="paused"]) .tkd-overlay { top: 50%; left: 6%; transform: translateY(-50%); width: 88%; max-width: 500px; padding: 20px; background: rgba(3, 12, 27, 0.86); border: 1px solid var(--tkd-line); border-radius: 8px; }
+#tab-tkd:is([data-phase="error"], [data-phase="loading"], [data-phase="paused"]) .tkd-overlay h2 { font-size: clamp(18px, 2.5vw, 30px); margin-top: 0; }
+#tab-tkd:is([data-phase="error"], [data-phase="loading"], [data-phase="paused"]) .tkd-overlay > p:last-child { max-width: none; }
+#tab-tkd:is([data-phase="error"], [data-phase="loading"], [data-phase="paused"]) .tkd-kicker { display: none; }
+.tkd-kicker { color: #79faff; font-size: 9px; letter-spacing: 1.6px; }
+.tkd-stage-footer { position: absolute; bottom: 21px; left: 25px; right: 25px; display: flex; justify-content: space-between; color: #71899e; font: 600 7px/1 'Orbitron', sans-serif; letter-spacing: 1.7px; pointer-events: none; }
+.tkd-countdown { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; font: 900 clamp(58px, 11vw, 126px)/1 'Orbitron', sans-serif; text-shadow: 0 0 40px #0088ff; pointer-events: none; }
+.tkd-statusbar { display: flex; align-items: center; gap: 10px; min-height: 43px; padding: 12px 2px 7px; }
+.tkd-statusbar > p { font-size: 15px; font-weight: 600; color: #c6dbe9; }
+.tkd-status-light { flex: 0 0 6px; height: 6px; border-radius: 50%; background: #83cfda; }
+.tkd-hint { color: var(--tkd-muted); font-size: 14px; line-height: 1.5; padding-left: 18px; }
+.tkd-calibration { display: block; appearance: none; width: calc(100% - 18px); height: 5px; margin: 7px 0 10px 18px; border: 0; border-radius: 9px; overflow: hidden; background: #173145; accent-color: #7afcff; }
+.tkd-calibration::-webkit-progress-bar { background: #173145; }
+.tkd-calibration::-webkit-progress-value { background: #7afcff; }
+.tkd-calibration::-moz-progress-bar { background: #7afcff; }
+.tkd-sidebar { display: flex; flex-direction: column; gap: 22px; }
+.tkd-control-card { background: linear-gradient(150deg, rgba(19, 35, 55, 0.85), rgba(8, 18, 33, 0.9)); border: 1px solid var(--tkd-line); border-radius: 10px; padding: 20px; }
+.tkd-card-heading { display: flex; align-items: center; gap: 9px; }
+.tkd-step { font: 700 10px/1.2 'Orbitron', sans-serif; color: #75a2bd; }
+.tkd-card-heading h2 { font-size: 17px; font-weight: 600; letter-spacing: 0.2px; }
+.tkd-card-copy { color: var(--tkd-muted); font-size: 14px; line-height: 1.45; margin: 12px 0 17px; }
+.tkd-button { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid transparent; border-radius: 5px; min-height: 43px; padding: 11px 14px; font: 600 15px/1.2 'Rajdhani', sans-serif; cursor: pointer; transition: background 120ms, border-color 120ms; }
+.tkd-button:focus-visible, .tkd-difficulty select:focus-visible { outline: 2px solid #c79bff; outline-offset: 3px; }
+.tkd-button-primary { color: #031822; background: #79faff; border-color: #a1ffff; }
+.tkd-button-primary:hover { background: #b0ffff; }
+.tkd-button-primary > span { font-size: 19px; }
+.tkd-button-secondary { background: rgba(93, 124, 151, 0.07); border-color: #385469; color: #e8f4ff; margin-top: 9px; }
+.tkd-button-secondary:hover, .tkd-button-small:hover { background: rgba(122, 252, 255, 0.09); border-color: #78b3c4; }
+.tkd-button:disabled { opacity: 0.45; cursor: default; }
+.tkd-difficulty { display: block; margin-top: 19px; font-size: 12px; color: #b8cada; font-weight: 600; }
+.tkd-difficulty select { display: block; margin-top: 7px; width: 100%; min-height: 39px; border: 1px solid #2c4356; border-radius: 4px; background: #0b1727; color: #cde0ed; padding: 8px; font: 400 13px/1.2 'Rajdhani', sans-serif; }
+.tkd-session-controls { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.tkd-button-small { flex: 1 1 43%; width: auto; min-height: 34px; justify-content: center; padding: 7px; border-color: #2c4356; background: transparent; color: #b7ccdd; font-size: 12px; }
+.tkd-privacy { display: flex; align-items: start; gap: 7px; color: #8daabe; font-size: 12px; line-height: 1.45; margin-top: 16px; }
+.tkd-privacy > span { color: #87d9d6; padding-top: 1px; }
+.tkd-howto { padding: 0 3px; }
+.tkd-howto ol { list-style: none; counter-reset: tkd-instruction; display: grid; gap: 13px; margin-top: 16px; }
+.tkd-howto li { position: relative; padding-left: 22px; color: var(--tkd-muted); font-size: 13px; line-height: 1.4; counter-increment: tkd-instruction; }
+.tkd-howto li::before { content: counter(tkd-instruction) "."; position: absolute; left: 0; color: #668198; }
+.tkd-howto li strong { display: block; color: #c2d6e5; font-weight: 600; }
+.tkd-space-note { margin-top: 17px; padding-top: 13px; border-top: 1px solid var(--tkd-line); font-size: 12px; line-height: 1.5; color: #8fa6ba; }
+.tkd-demo-help { padding: 0 3px; color: var(--tkd-muted); font-size: 12px; line-height: 1.7; }
+.tkd-demo-help > strong { font-size: 9px; letter-spacing: 1.5px; font-weight: 600; color: #7793a8; }
+.tkd-demo-help p { margin-top: 4px; }
+.tkd-demo-help kbd { font: inherit; color: #c9deeb; border: 1px solid #304659; border-radius: 3px; padding: 0 4px; white-space: nowrap; }
+.tkd-results { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; margin-top: 19px; padding: 22px; background: #0b1b2b; border: 1px solid #426676; border-radius: 8px; }
+.tkd-results-title > span { color: #7afcff; font-size: 9px; font-weight: 600; letter-spacing: 1.5px; }
+.tkd-results-title h2 { margin-top: 5px; font: 700 19px/1.4 'Orbitron', sans-serif; }
+.tkd-result-grid { display: flex; justify-content: space-between; flex: 1 1 260px; gap: 15px; }
+.tkd-result-grid > div { display: flex; flex-direction: column; gap: 5px; }
+.tkd-result-grid strong { font: 700 22px/1 'Orbitron', sans-serif; }
+.tkd-result-grid span { font-size: 12px; color: var(--tkd-muted); }
+.tkd-results .tkd-button { max-width: 175px; }
+@media (max-width: 1050px) {
+  .tkd-layout { grid-template-columns: minmax(0, 1fr) 232px; gap: 15px; }
+  .tkd-control-card { padding: 17px; }
+  .tkd-heading { gap: 15px; }
+  .tkd-stat { min-width: 72px; padding: 0 12px; }
+  .tkd-stat > strong { font-size: 21px; }
+  .tkd-overlay h2 { font-size: clamp(20px, 2.7vw, 31px); }
+  .tkd-stage-label { top: 17px; left: 19px; font-size: 6px; }
+  .tkd-stage-footer { bottom: 17px; left: 19px; right: 19px; font-size: 6px; }
+}
+@media (max-width: 760px) {
+  .tkd-heading { align-items: start; flex-wrap: wrap; margin-bottom: 17px; }
+  .tkd-stats { width: 100%; justify-content: space-between; padding: 10px 0; }
+  .tkd-stat { flex: 1; min-width: 0; }
+  .tkd-stat > span { font-size: 9px; }
+  .tkd-stat > strong { font-size: 20px; margin-top: 4px; }
+  .tkd-layout { grid-template-columns: 1fr; gap: 21px; }
+  .tkd-sidebar { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 20px; }
+  .tkd-demo-help { grid-column: 1 / -1; }
+  .tkd-overlay { top: 21%; width: 44%; }
+  .tkd-overlay h2 { font-size: clamp(18px, 4.2vw, 29px); margin: 9px 0; }
+  .tkd-kicker { font-size: 7px; letter-spacing: 1px; }
+  .tkd-overlay > p:last-child { font-size: 12px; line-height: 1.4; }
+}
+@media (max-width: 460px) {
+  .tkd-sidebar { grid-template-columns: 1fr; }
+  .tkd-demo-help { grid-column: auto; }
+  .tkd-stage { aspect-ratio: 4 / 3; }
+  .tkd-stage-footer > span:first-child { font-size: 5px; letter-spacing: 0.8px; }
+  .tkd-overlay { top: 16%; width: 49%; padding: 8px 0; }
+  .tkd-overlay h2 { font-size: 18px; }
+  .tkd-stage-label { font-size: 5px; letter-spacing: 1.1px; left: 14px; }
+  .tkd-result-grid { flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tkd-button { transition: none; }
+}

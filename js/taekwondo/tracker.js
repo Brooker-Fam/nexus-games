@@ -1,0 +1,210 @@
+const FRAME_INTERVAL = 1000 / 24;
+const CAMERA_TIMEOUT = 60000;
+const MODEL_TIMEOUT = 60000;
+const FRAME_TIMEOUT = 8000;
+
+function abortError() {
+  return new DOMException('Camera session cancelled.', 'AbortError');
+}
+
+function waitFor(promise, signal, timeout, message) {
+  return new Promise((resolve, reject) => {
+    const finish = (callback, value) => {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', cancel);
+      callback(value);
+    };
+    const cancel = () => finish(reject, signal.reason || abortError());
+    const timer = setTimeout(() => finish(reject, new Error(message)), timeout);
+    signal.addEventListener('abort', cancel, { once: true });
+    promise.then(value => finish(resolve, value), error => finish(reject, error));
+    if (signal.aborted) cancel();
+  });
+}
+
+function waitForVideo(video, signal) {
+  if (video.readyState >= 2 && video.videoWidth) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const cleanup = () => {
+      video.removeEventListener('loadeddata', ready);
+      video.removeEventListener('error', failed);
+      signal.removeEventListener('abort', cancelled);
+    };
+    const ready = () => {
+      cleanup();
+      resolve();
+    };
+    const failed = () => {
+      cleanup();
+      reject(new Error('The camera video could not start. Try another camera.'));
+    };
+    const cancelled = () => {
+      cleanup();
+      reject(signal.reason || abortError());
+    };
+    video.addEventListener('loadeddata', ready, { once: true });
+    video.addEventListener('error', failed, { once: true });
+    signal.addEventListener('abort', cancelled, { once: true });
+    if (signal.aborted) cancelled();
+  });
+}
+
+export function createPoseTracker({ video, onPose, onStatus = () => {}, onError = () => {} }) {
+  let current = null;
+
+  function cleanUp(session, reason = abortError()) {
+    session.controller.abort(reason);
+    cancelAnimationFrame(session.animationFrame);
+    clearTimeout(session.frameTimer);
+    session.worker?.terminate();
+    for (const track of session.stream?.getTracks() || []) {
+      track.removeEventListener('ended', session.onEnded);
+      track.stop();
+    }
+    if (session.stream && video.srcObject === session.stream) {
+      video.pause();
+      video.srcObject = null;
+    }
+  }
+
+  function fail(session, error) {
+    if (current !== session) return;
+    current = null;
+    cleanUp(session, error);
+    if (session.started) onError(error);
+  }
+
+  function nextFrame(session, now) {
+    if (current !== session) return;
+    session.animationFrame = requestAnimationFrame(time => nextFrame(session, time));
+    if (session.inFlight || video.readyState < 2 ||
+        video.currentTime === session.lastVideoTime || now - session.lastCapture < FRAME_INTERVAL) return;
+
+    session.inFlight = true;
+    session.lastCapture = performance.now();
+    session.lastVideoTime = video.currentTime;
+    session.frameId += 1;
+    session.frameTimer = setTimeout(() => {
+      fail(session, new Error('Body tracking stopped responding. Restart the camera to try again.'));
+    }, FRAME_TIMEOUT);
+
+    createImageBitmap(video).then(bitmap => {
+      if (current !== session) {
+        bitmap.close();
+        return;
+      }
+      try {
+        session.worker.postMessage({
+          type: 'frame',
+          bitmap,
+          timestamp: session.lastCapture,
+          frameId: session.frameId,
+        }, [bitmap]);
+      } catch (error) {
+        bitmap.close();
+        fail(session, error);
+      }
+    }).catch(error => fail(session, error));
+  }
+
+  async function initialize(session) {
+    const { signal } = session.controller;
+    try {
+      if (!globalThis.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Camera access needs HTTPS or localhost in a supported browser.');
+      }
+      if (!globalThis.Worker || !globalThis.createImageBitmap || !globalThis.OffscreenCanvas) {
+        throw new Error('Body tracking needs a recent browser. Try the latest Chrome, Edge, or Safari.');
+      }
+      onStatus('requesting');
+      const camera = navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: 'user',
+          width: { ideal: 960 },
+          height: { ideal: 540 },
+          frameRate: { ideal: 30, max: 30 },
+        },
+      }).then(stream => {
+        if (current !== session) {
+          stream.getTracks().forEach(track => track.stop());
+          throw signal.reason || abortError();
+        }
+        session.stream = stream;
+        return stream;
+      });
+      await waitFor(camera, signal, CAMERA_TIMEOUT, 'Camera permission timed out. Allow access and try again.');
+      if (current !== session) throw signal.reason || abortError();
+
+      session.onEnded = () => fail(session, new Error('The camera disconnected. Reconnect it and try again.'));
+      session.stream.getVideoTracks().forEach(track => track.addEventListener('ended', session.onEnded));
+      video.muted = true;
+      video.playsInline = true;
+      video.srcObject = session.stream;
+      onStatus('loading');
+      await waitFor(video.play(), signal, 15000, 'The camera video could not start. Try restarting it.');
+      await waitFor(waitForVideo(video, signal), signal, 15000, 'The camera did not provide video. Try another camera.');
+      if (current !== session) throw signal.reason || abortError();
+
+      session.worker = new Worker(new URL('./pose-worker.js', import.meta.url));
+      const ready = new Promise(resolve => {
+        session.worker.onmessage = ({ data }) => {
+          if (current !== session) return;
+          if (data.type === 'ready') resolve();
+          if (data.type === 'error') fail(session, new Error(data.message));
+          if (data.type === 'pose' && data.frameId === session.frameId && session.inFlight) {
+            clearTimeout(session.frameTimer);
+            session.inFlight = false;
+            onPose(data.landmarks, data.timestamp);
+          }
+        };
+      });
+      session.worker.onerror = event => {
+        event.preventDefault();
+        fail(session, new Error('Body tracking could not run. Check your connection and try again.'));
+      };
+      session.worker.onmessageerror = () => fail(session, new Error('Body tracking could not read a camera frame.'));
+      session.worker.postMessage({ type: 'initialize' });
+      await waitFor(ready, signal, MODEL_TIMEOUT, 'Body tracking took too long to load. Check your connection and try again.');
+      if (current !== session) throw signal.reason || abortError();
+      session.started = true;
+      onStatus('tracking');
+      session.animationFrame = requestAnimationFrame(time => nextFrame(session, time));
+    } catch (error) {
+      if (current === session) {
+        current = null;
+        cleanUp(session, error);
+      }
+      throw error;
+    }
+  }
+
+  function start() {
+    if (current) return current.startPromise;
+    const session = {
+      controller: new AbortController(),
+      stream: null,
+      worker: null,
+      started: false,
+      animationFrame: 0,
+      frameTimer: 0,
+      inFlight: false,
+      frameId: 0,
+      lastCapture: -Infinity,
+      lastVideoTime: -1,
+    };
+    current = session;
+    session.startPromise = initialize(session);
+    return session.startPromise;
+  }
+
+  function stop() {
+    const session = current;
+    current = null;
+    if (session) cleanUp(session);
+  }
+
+  return { start, stop };
+}
+
+//# sourceMappingURL=tracker.js.map
