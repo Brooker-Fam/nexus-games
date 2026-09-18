@@ -77,6 +77,14 @@ export function createDojoView(container) {
           <div class="tkd-demo-help"><strong>JUST EXPLORING?</strong><p>In demo, tap or click a pad, or use <kbd>A</kbd> / <kbd>D</kbd> or <kbd>←</kbd> / <kbd>→</kbd> to strike. <kbd>Esc</kbd> pauses.</p></div>
         </aside>
       </div>
+      <div class="tkd-lock" data-ref="lockPanel" hidden>
+        <div class="tkd-lock-card">
+          <p class="tkd-eyebrow">NEXUS MAX</p>
+          <h2>Neon Dojo is a MAX exclusive.</h2>
+          <p>Upgrade to Nexus MAX to unlock the camera dojo, plus everything in PRO.</p>
+          <button class="tkd-button tkd-button-primary" data-ref="lockUpgradeButton" type="button">Upgrade to MAX <span aria-hidden="true">↗</span></button>
+        </div>
+      </div>
     </section>`;
   const refs = {};
   container.querySelectorAll('[data-ref]').forEach(element => {
