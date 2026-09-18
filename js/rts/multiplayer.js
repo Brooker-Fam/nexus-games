@@ -97,6 +97,8 @@ function mpStartGame(msg){
     return;
   }
   window._mpMultiplayer=true;
+  window._dsoTrainingMode=false;
+  if(typeof stopTrainingGuide==='function') stopTrainingGuide();
   document.getElementById('dso-select').style.display='none';
   document.getElementById('dso-reveal').style.display='none';
   document.getElementById('dso-game').style.display='flex';

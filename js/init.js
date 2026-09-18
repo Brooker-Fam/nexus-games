@@ -1,3 +1,31 @@
+// ── MODE TABS (AI / PVP / TRAINING) ──
+let dsoMode='ai';
+const DSO_MODE_DESC={
+  ai:'Battle an adaptive AI opponent that scales to your skill.',
+  pvp:'Host or join a match and fight another commander online.',
+  training:'An AI advisor walks you through the basics, step by step.',
+};
+function setDsoMode(mode){
+  dsoMode=mode;
+  document.querySelectorAll('.dso-mode-tab').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.mode===mode);
+  });
+  const desc=document.getElementById('dso-mode-desc');
+  if(desc) desc.textContent=DSO_MODE_DESC[mode]||'';
+  const cards=document.querySelector('.faction-cards');
+  if(cards) cards.style.display = (mode==='pvp' && !mpConnected) ? 'none' : '';
+  const stats=document.getElementById('dso-stats');
+  if(stats) stats.style.display = mode==='ai' ? '' : 'none';
+  const mp=document.getElementById('mp-controls');
+  if(mp) mp.style.display = mode==='pvp' ? '' : 'none';
+  const banner=document.getElementById('dso-training-banner');
+  if(banner) banner.style.display = mode==='training' ? '' : 'none';
+}
+function mpRevealFactionPicker(){
+  const cards=document.querySelector('.faction-cards');
+  if(cards) cards.style.display='';
+}
+
 // ── REVEAL SCREEN ──
 function dsoSelect(faction){
   dsoSelectedFaction=faction;
@@ -22,6 +50,7 @@ function dsoBack(){
   document.getElementById('dso-reveal').style.display='none';
   document.getElementById('dso-select').style.display='block';
   initFactionCards();
+  setDsoMode(dsoMode);
 }
 
 function dsoPlay(){
@@ -29,16 +58,26 @@ function dsoPlay(){
   document.getElementById('dso-reveal').style.display='none';
   document.getElementById('dso-game').style.display='flex';
   document.getElementById('rts-gameover-overlay').style.display='none';
+  window._dsoTrainingMode=(dsoMode==='training');
   startRTS(dsoSelectedFaction);
-  if(window.posthog) posthog.capture('dso_game_started', { faction: dsoSelectedFaction, mode: 'singleplayer' });
+  if(window._dsoTrainingMode){
+    applyTrainingEasyMode();
+    startTrainingGuide();
+  } else {
+    stopTrainingGuide();
+  }
+  if(window.posthog) posthog.capture('dso_game_started', { faction: dsoSelectedFaction, mode: window._dsoTrainingMode ? 'training' : 'singleplayer' });
 }
 function rtsMenuBack(){
   cancelAnimationFrame(S.raf); S.raf=null;
+  stopTrainingGuide();
+  window._dsoTrainingMode=false;
   mpDisconnect();
   document.getElementById('dso-game').style.display='none';
   document.getElementById('dso-select').style.display='block';
   document.getElementById('mp-status').textContent='';
   initFactionCards();
+  setDsoMode(dsoMode);
 }
 
 // ── INIT ──
@@ -58,12 +97,14 @@ registerGame('cs', {
     document.getElementById('dso-select').style.display='';
     document.getElementById('dso-reveal').style.display='none';
     document.getElementById('dso-game').style.display='none';
+    setDsoMode(dsoMode);
   },
   cleanup(){
     if(window._mpMultiplayer) return; // don't stop during multiplayer
     if(S.raf){ cancelAnimationFrame(S.raf); S.raf=null; }
     if(dsoRevealRAF){ cancelAnimationFrame(dsoRevealRAF); dsoRevealRAF=null; }
     if(dsoPreviewRAF){ cancelAnimationFrame(dsoPreviewRAF); dsoPreviewRAF=null; }
+    stopTrainingGuide();
     closeBuildPopup();
   },
 });
@@ -127,11 +168,23 @@ document.querySelector('.speed-btns').onclick=function(e){
     } else {
       dsoSelect(faction);
     }
-    if(window.posthog) posthog.capture('dso_faction_selected', { faction, mode: mpConnected ? 'multiplayer' : 'singleplayer' });
+    if(window.posthog) posthog.capture('dso_faction_selected', { faction, mode: mpConnected ? 'multiplayer' : dsoMode });
   });
   card.addEventListener('mouseenter', ()=>dsoPreview(faction));
   card.addEventListener('mouseleave', ()=>dsoPreviewClear());
 });
+
+// Mode tabs (AI / PVP / TRAINING)
+document.querySelectorAll('.dso-mode-tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    setDsoMode(btn.dataset.mode);
+    if(window.posthog) posthog.capture('dso_mode_selected', { mode: btn.dataset.mode });
+  });
+});
+
+// Training guide controls
+document.getElementById('btn-training-next').onclick=advanceTrainingStep;
+document.getElementById('btn-training-close').onclick=stopTrainingGuide;
 
 // Reveal screen
 document.getElementById('btn-dso-back').onclick=dsoBack;
@@ -144,7 +197,7 @@ document.getElementById('btn-mp-host').onclick=async function(){
   try {
     const code = await mpHost();
     if(window.posthog) posthog.capture('mp_game_hosted');
-    mpOnConnect=()=>{ status.className='mp-status'; status.innerHTML='Connected! Both pick a faction.'; };
+    mpOnConnect=()=>{ status.className='mp-status'; status.innerHTML='Connected! Both pick a faction.'; mpRevealFactionPicker(); };
     status.className='mp-status waiting';
     status.innerHTML=`Code: <span class="mp-code" title="Click to copy">${code}</span> — waiting for opponent...`;
     status.querySelector('.mp-code').onclick=function(){
@@ -167,6 +220,7 @@ document.getElementById('btn-mp-join').onclick=async function(){
     if(window.posthog) posthog.capture('mp_game_joined');
     status.className='mp-status';
     status.innerHTML='Connected! Both pick a faction.';
+    mpRevealFactionPicker();
   } catch(e){
     status.className='mp-status error'; status.textContent='Failed: '+e.message;
   }

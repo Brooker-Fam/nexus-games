@@ -1456,6 +1456,7 @@ function spawnDeathParticles(x,y,color){
 
 function endRTS(playerWon){
   S.gameOver=true;
+  if(typeof stopTrainingGuide==='function') stopTrainingGuide();
   const ov=document.getElementById('rts-gameover-overlay');
   const title=document.getElementById('rts-over-title');
   const sub=document.getElementById('rts-over-sub');
@@ -1463,19 +1464,25 @@ function endRTS(playerWon){
   if(playerWon){ title.textContent='VICTORY'; title.className='rts-over-title win'; sub.textContent='The enemy base has been destroyed.'; }
   else { title.textContent='DEFEAT'; title.className='rts-over-title lose'; sub.textContent='Your base has fallen.'; }
 
-  // Record result and show rating change
-  const result = recordGameResult(playerWon, S.frame, S.stats);
-  showRatingChange(result);
+  const isTraining = !!window._dsoTrainingMode;
+  let result = null;
+  if(isTraining){
+    sub.textContent += ' Training games don’t affect your rating — try AI or PVP mode when you’re ready.';
+  } else {
+    // Record result and show rating change
+    result = recordGameResult(playerWon, S.frame, S.stats);
+    showRatingChange(result);
+  }
   if(window.posthog) posthog.capture('dso_game_ended', {
     outcome: playerWon ? 'victory' : 'defeat',
     faction: S.playerFaction,
     enemy_faction: S.enemyFaction,
-    mode: window._mpMultiplayer ? 'multiplayer' : 'singleplayer',
-    rating_before: result.before,
-    rating_after: result.after,
-    rating_delta: result.after - result.before,
-    streak: result.streak,
-    games_played: result.gamesPlayed,
+    mode: isTraining ? 'training' : (window._mpMultiplayer ? 'multiplayer' : 'singleplayer'),
+    rating_before: result ? result.before : null,
+    rating_after: result ? result.after : null,
+    rating_delta: result ? (result.after - result.before) : null,
+    streak: result ? result.streak : null,
+    games_played: result ? result.gamesPlayed : null,
     game_frames: S.frame,
   });
 }
