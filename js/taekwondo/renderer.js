@@ -60,7 +60,7 @@ export class DojoRenderer {
       ctx.fillStyle = 'rgba(3, 12, 27, 0.12)';
       ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
     } else if (!scene.landmarks) {
-      this.drawGuide(scene.target ? 0.5 : 0.72);
+      this.drawGuide(scene.target ? scene.target.x : 0.72);
       if (!scene.target && ['idle', 'menu', 'ready'].includes(scene.phase)) {
         this.drawPad({ x: 0.56, y: 0.47, radius: 0.065, side: 'left', remaining: 1, total: 1 }, 0, true);
         this.drawPad({ x: 0.87, y: 0.56, radius: 0.065, side: 'right', remaining: 1, total: 1 }, 0, true);
