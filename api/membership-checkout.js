@@ -2,19 +2,39 @@ import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
 import { createCheckout } from "../lib/polar.js";
 
-// Nexus Pro — $1/mo recurring subscription (every alternate skin unlocked
-// + full book access). No hardcoded default: unlike the skin unlock product
-// this one hasn't been created in the Polar dashboard yet, so it must be
-// configured via POLAR_MEMBERSHIP_PRODUCT_ID before checkout can run.
-const PRODUCT_ID = process.env.POLAR_MEMBERSHIP_PRODUCT_ID;
+// Nexus PRO — $1/mo (every alternate skin unlocked + full book access) and
+// Nexus MAX — $2/mo (everything in PRO, plus the Neon Dojo taekwondo game).
+// No hardcoded defaults: neither product has been created in the Polar
+// dashboard yet, so each must be configured via its env var before checkout
+// can run for that tier.
+const PRODUCT_ID_ENV_VARS = {
+  pro: "POLAR_MEMBERSHIP_PRODUCT_ID",
+  max: "POLAR_MAX_PRODUCT_ID",
+};
+
+async function readJsonBody(req) {
+  if (req.body && typeof req.body === "object") return req.body;
+  return await new Promise((resolve, reject) => {
+    let data = "";
+    req.on("data", (chunk) => (data += chunk));
+    req.on("end", () => {
+      if (!data) return resolve({});
+      try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
+    });
+    req.on("error", reject);
+  });
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "method_not_allowed" });
     return;
   }
+  const { tier } = (await readJsonBody(req).catch(() => ({}))) ?? {};
+  const plan = tier === "max" ? "max" : "pro";
+  const PRODUCT_ID = process.env[PRODUCT_ID_ENV_VARS[plan]];
   if (!PRODUCT_ID) {
-    console.error("POLAR_MEMBERSHIP_PRODUCT_ID is not set");
+    console.error(`${PRODUCT_ID_ENV_VARS[plan]} is not set`);
     res.status(500).json({ error: "membership_not_configured" });
     return;
   }
@@ -39,7 +59,7 @@ export default async function handler(req, res) {
       successUrl,
       customerEmail: session.user.email,
       customerExternalId: session.user.id,
-      metadata: { userId: session.user.id },
+      metadata: { userId: session.user.id, tier: plan },
     });
 
     res.status(200).json({ url: checkout.url });

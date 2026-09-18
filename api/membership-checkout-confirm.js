@@ -42,24 +42,26 @@ export default async function handler(req, res) {
     }
 
     const checkout = await getCheckout(checkoutId);
-    const { userId } = checkout?.metadata ?? {};
+    const { userId, tier } = checkout?.metadata ?? {};
     if (checkout?.status !== "succeeded" || !userId || userId !== session.user.id) {
       res.status(200).json({ active: false, status: checkout?.status ?? "unknown" });
       return;
     }
+    const plan = tier === "max" ? "max" : "pro";
 
     const sql = getSql();
     await sql`
-      INSERT INTO memberships (user_id, status, polar_subscription_id, polar_customer_id, updated_at)
-      VALUES (${userId}, 'active', ${checkout.subscription_id ?? null}, ${checkout.customer_id ?? null}, NOW())
+      INSERT INTO memberships (user_id, status, tier, polar_subscription_id, polar_customer_id, updated_at)
+      VALUES (${userId}, 'active', ${plan}, ${checkout.subscription_id ?? null}, ${checkout.customer_id ?? null}, NOW())
       ON CONFLICT (user_id) DO UPDATE SET
         status = 'active',
+        tier = EXCLUDED.tier,
         polar_subscription_id = COALESCE(EXCLUDED.polar_subscription_id, memberships.polar_subscription_id),
         polar_customer_id = COALESCE(EXCLUDED.polar_customer_id, memberships.polar_customer_id),
         updated_at = NOW()
     `;
 
-    res.status(200).json({ active: true });
+    res.status(200).json({ active: true, tier: plan });
   } catch (err) {
     console.error("membership-checkout-confirm error:", err);
     res.status(500).json({ error: "confirm_failed", message: err?.message });

@@ -78,13 +78,15 @@ export default async function handler(req, res) {
       const sub = event.data ?? {};
       const meta = sub.metadata || {};
       const userId = typeof meta.userId === "string" ? meta.userId : null;
+      const tier = meta.tier === "max" ? "max" : "pro";
       if (userId) {
         const sql = getSql();
         await sql`
-          INSERT INTO memberships (user_id, status, polar_subscription_id, polar_customer_id, current_period_end, updated_at)
-          VALUES (${userId}, ${sub.status}, ${sub.id ?? null}, ${sub.customer_id ?? null}, ${sub.current_period_end ?? null}, NOW())
+          INSERT INTO memberships (user_id, status, tier, polar_subscription_id, polar_customer_id, current_period_end, updated_at)
+          VALUES (${userId}, ${sub.status}, ${tier}, ${sub.id ?? null}, ${sub.customer_id ?? null}, ${sub.current_period_end ?? null}, NOW())
           ON CONFLICT (user_id) DO UPDATE SET
             status = EXCLUDED.status,
+            tier = EXCLUDED.tier,
             polar_subscription_id = EXCLUDED.polar_subscription_id,
             polar_customer_id = EXCLUDED.polar_customer_id,
             current_period_end = EXCLUDED.current_period_end,

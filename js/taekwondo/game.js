@@ -7,6 +7,7 @@ const container = document.getElementById('tab-tkd');
 const view = createDojoView(container);
 const renderer = new DojoRenderer(view.canvas);
 let active = false;
+let locked = true;
 let phase = 'idle';
 let mode = 'camera';
 let sound = true;
@@ -37,6 +38,20 @@ const tracker = createPoseTracker({
 function setStatus(message) {
   if (view.status.textContent !== message) view.status.textContent = message;
 }
+
+// Neon Dojo is a Nexus MAX exclusive (see js/shared/memberships.js). Locked
+// by default until membership status resolves, so gameplay never starts
+// unentitled while that fetch is in flight.
+function applyLock() {
+  locked = !window.nexusMaxActive;
+  view.lockPanel.hidden = !locked;
+  view.startButton.disabled = locked;
+  view.demoButton.disabled = locked;
+  if (locked && active && !['idle', 'results', 'error'].includes(phase)) {
+    stopSession('Locked. Upgrade to Nexus MAX to keep training.');
+  }
+}
+window.renderTkdLock = applyLock;
 
 function bestKey() {
   return `nexus-dojo-best-${mode}-${view.difficultySelect.value}`;
@@ -93,6 +108,7 @@ function stopSession(message = 'Camera off. Ready when you are.') {
 }
 
 async function startCamera() {
+  if (locked) return;
   stopSession();
   mode = 'camera';
   phase = 'loading';
@@ -144,6 +160,7 @@ function recalibrate() {
 }
 
 function startDemo() {
+  if (locked) return;
   stopSession();
   mode = 'demo';
   calibration = { ...DEMO_STANCE };
@@ -294,6 +311,10 @@ function frame(now) {
 
 view.startButton.addEventListener('click', startCamera);
 view.demoButton.addEventListener('click', startDemo);
+view.lockUpgradeButton.addEventListener('click', () => {
+  const btn = document.getElementById('tab-btn-memberships');
+  if (btn) window.switchTab('memberships', btn);
+});
 view.stopButton.addEventListener('click', () => stopSession());
 view.recalibrateButton.addEventListener('click', recalibrate);
 view.pauseButton.addEventListener('click', togglePause);
@@ -333,6 +354,7 @@ window.registerGame('tkd', {
   init() {
     active = true;
     stopSession();
+    applyLock();
     previousFrame = performance.now();
     animation = requestAnimationFrame(frame);
   },

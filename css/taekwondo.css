@@ -1,11 +1,32 @@
 .tkd-dojo {
   --tkd-muted: #8ca5bd;
   --tkd-line: rgba(115, 177, 223, 0.18);
+  position: relative;
   max-width: 1480px;
   margin: 0 auto;
   padding: 8px 0 24px;
 }
 .tkd-dojo [hidden] { display: none !important; }
+.tkd-lock {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(4, 9, 19, 0.94);
+  backdrop-filter: blur(3px);
+  z-index: 10;
+}
+.tkd-lock-card {
+  max-width: 420px; margin: 0 16px; padding: 32px 28px;
+  text-align: center;
+  background: linear-gradient(150deg, rgba(35, 19, 55, 0.9), rgba(11, 8, 20, 0.94));
+  border: 1px solid rgba(136, 0, 255, 0.4);
+  border-radius: 10px;
+  box-shadow: 0 0 40px rgba(136, 0, 255, 0.15);
+}
+.tkd-lock-card .tkd-eyebrow { color: #c79bff; }
+.tkd-lock-card h2 { margin: 10px 0 12px; font: 900 clamp(20px, 2.6vw, 28px)/1.25 'Orbitron', sans-serif; letter-spacing: 0.2px; }
+.tkd-lock-card > p:not(.tkd-eyebrow) { color: var(--tkd-muted); font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
+.tkd-lock-card .tkd-button { border-color: #c79bff; background: rgba(136,0,255,0.15); color: #f1e6ff; justify-content: center; }
+.tkd-lock-card .tkd-button:hover { background: rgba(136,0,255,0.28); }
 .tkd-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
 .tkd-eyebrow, .tkd-kicker { font-size: 11px; font-weight: 600; letter-spacing: 2.3px; color: #91a9c1; }
 .tkd-heading h1 { margin: 5px 0 7px; font: 900 clamp(25px, 3vw, 39px)/1.1 'Orbitron', sans-serif; letter-spacing: 1px; }
