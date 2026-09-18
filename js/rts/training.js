@@ -20,7 +20,7 @@ const TRAINING_STEPS = [
     check: () => S.gold.player >= 150,
   },
   {
-    text: "Now build a barracks-type structure near your base — it trains warriors to fight for you.",
+    text: "Click one of your WORKERS (not your base) and choose to build a barracks-type structure — it trains warriors to fight for you.",
     check: () => S.entities.some(e => e.side === 'player' && e.isBarracks),
   },
   {
