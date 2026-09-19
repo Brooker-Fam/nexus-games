@@ -1,13 +1,12 @@
 // ── MEMBERSHIPS TAB ──
-// Three plans: BASIC (free), PRO ($1/mo — every alternate skin unlocked,
-// full book access, and the Neon Dojo camera taekwondo game), and MAX
-// ($2/mo — everything in PRO, plus first access to new games). Subscription
-// state lives server-side in the `memberships` table, kept in sync by the
-// Polar subscription webhook (see api/polar-webhook.js) — window.nexusProActive
-// and window.nexusMaxActive are the flags the rest of the app
-// (js/rts/skin-shop.js, js/book/game.js, js/taekwondo/game.js) reads to
-// decide what's unlocked. MAX includes every PRO perk, so nexusProActive is
-// true for both tiers.
+// Three plans: BASIC (free), PRO ($1/mo — every alternate skin unlocked
+// plus full book access), and MAX ($2/mo — everything in PRO, plus the
+// Neon Dojo camera taekwondo game). Subscription state lives server-side in
+// the `memberships` table, kept in sync by the Polar subscription webhook
+// (see api/polar-webhook.js) — window.nexusProActive and window.nexusMaxActive
+// are the flags the rest of the app (js/rts/skin-shop.js, js/book/game.js,
+// js/taekwondo/game.js) reads to decide what's unlocked. MAX includes every
+// PRO perk, so nexusProActive is true for both tiers.
 window.nexusProActive = false;
 window.nexusMaxActive = false;
 let membershipBuyInFlight = false;
@@ -53,7 +52,7 @@ function renderMembershipStatus(tier){
     statusEl.textContent = isMax
       ? '★ NEXUS MAX ACTIVE — every alternate skin, the full book, and the Neon Dojo are unlocked.'
       : isPro
-        ? '★ NEXUS PRO ACTIVE — every alternate skin, the full book, and the Neon Dojo are unlocked.'
+        ? '★ NEXUS PRO ACTIVE — every alternate skin and the full book are unlocked.'
         : '';
   }
 }
