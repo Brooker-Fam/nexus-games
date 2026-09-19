@@ -220,10 +220,16 @@
     font-size: 0.8rem;
     color: var(--text-dim);
   }
-  .site-logo {
+  .site-logo-wrap {
     position: fixed;
     top: 16px;
     left: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10;
+  }
+  .site-logo {
     height: 56px;
     width: auto;
     padding: 4px;
@@ -231,15 +237,26 @@
     border: 1px solid var(--panel-border);
     border-radius: 12px;
     box-shadow: 0 4px 16px rgba(26,14,43,0.12);
-    z-index: 10;
+  }
+  .site-logo-name {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+    color: #000;
   }
   @media (max-width: 480px) {
-    .site-logo { height: 40px; top: 10px; left: 10px; }
+    .site-logo-wrap { top: 10px; left: 10px; gap: 6px; }
+    .site-logo { height: 40px; }
+    .site-logo-name { font-size: 0.85rem; }
   }
 </style>
 </head>
 <body>
-<img class="site-logo" src="/assets/kitty-games-logo.webp" alt="Kitty Games logo">
+<div class="site-logo-wrap">
+  <img class="site-logo" src="/assets/kitty-games-logo.webp" alt="Kitty Games logo">
+  <span class="site-logo-name">Kitty Games</span>
+</div>
 <div class="shell">
   <header>
     <h1>KITTY GAMES</h1>
