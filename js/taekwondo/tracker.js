@@ -7,7 +7,17 @@ function abortError() {
   return new DOMException('Camera session cancelled.', 'AbortError');
 }
 
-function waitFor(promise, signal, timeout, message) {
+// Builds a camera fault carrying a short analytics `reason`. Set `expected` for
+// device or environment conditions the player can fix (blocked camera, slow
+// frame). Expected faults are shown on screen but never reported as exceptions.
+function cameraFault(message, reason, expected) {
+  const error = new Error(message);
+  error.reason = reason;
+  if (expected) error.expected = true;
+  return error;
+}
+
+function waitFor(promise, signal, timeout, message, reason, expected = false) {
   return new Promise((resolve, reject) => {
     const finish = (callback, value) => {
       clearTimeout(timer);
@@ -15,7 +25,7 @@ function waitFor(promise, signal, timeout, message) {
       callback(value);
     };
     const cancel = () => finish(reject, signal.reason || abortError());
-    const timer = setTimeout(() => finish(reject, new Error(message)), timeout);
+    const timer = setTimeout(() => finish(reject, cameraFault(message, reason, expected)), timeout);
     signal.addEventListener('abort', cancel, { once: true });
     promise.then(value => finish(resolve, value), error => finish(reject, error));
     if (signal.aborted) cancel();
@@ -36,7 +46,7 @@ function waitForVideo(video, signal) {
     };
     const failed = () => {
       cleanup();
-      reject(new Error('The camera video could not start. Try another camera.'));
+      reject(cameraFault('The camera video could not start. Try another camera.', 'video_failed', true));
     };
     const cancelled = () => {
       cleanup();
@@ -56,6 +66,7 @@ export function createPoseTracker({ video, onPose, onStatus = () => {}, onError 
     session.controller.abort(reason);
     cancelAnimationFrame(session.animationFrame);
     clearTimeout(session.frameTimer);
+    if (session.onVisibility) document.removeEventListener('visibilitychange', session.onVisibility);
     session.worker?.terminate();
     for (const track of session.stream?.getTracks() || []) {
       track.removeEventListener('ended', session.onEnded);
@@ -84,8 +95,12 @@ export function createPoseTracker({ video, onPose, onStatus = () => {}, onError 
     session.lastCapture = performance.now();
     session.lastVideoTime = video.currentTime;
     session.frameId += 1;
+    // A slow frame is not a crash. Drop the stalled frame so the next animation
+    // frame captures a fresh one; a late pose for the abandoned frameId is
+    // ignored below. The session stays alive and the round timer freezes on its
+    // own while no pose arrives.
     session.frameTimer = setTimeout(() => {
-      fail(session, new Error('Body tracking stopped responding. Restart the camera to try again.'));
+      if (current === session) session.inFlight = false;
     }, FRAME_TIMEOUT);
 
     createImageBitmap(video).then(bitmap => {
@@ -111,10 +126,10 @@ export function createPoseTracker({ video, onPose, onStatus = () => {}, onError 
     const { signal } = session.controller;
     try {
       if (!globalThis.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-        throw new Error('Camera access needs HTTPS or localhost in a supported browser.');
+        throw cameraFault('Camera access needs HTTPS or localhost in a supported browser.', 'insecure_context', true);
       }
       if (!globalThis.Worker || !globalThis.createImageBitmap || !globalThis.OffscreenCanvas) {
-        throw new Error('Body tracking needs a recent browser. Try the latest Chrome, Edge, or Safari.');
+        throw cameraFault('Body tracking needs a recent browser. Try the latest Chrome, Edge, or Safari.', 'unsupported_browser', true);
       }
       onStatus('requesting');
       const camera = navigator.mediaDevices.getUserMedia({
@@ -133,17 +148,17 @@ export function createPoseTracker({ video, onPose, onStatus = () => {}, onError 
         session.stream = stream;
         return stream;
       });
-      await waitFor(camera, signal, CAMERA_TIMEOUT, 'Camera permission timed out. Allow access and try again.');
+      await waitFor(camera, signal, CAMERA_TIMEOUT, 'Camera permission timed out. Allow access and try again.', 'permission_timeout', true);
       if (current !== session) throw signal.reason || abortError();
 
-      session.onEnded = () => fail(session, new Error('The camera disconnected. Reconnect it and try again.'));
+      session.onEnded = () => fail(session, cameraFault('The camera disconnected. Reconnect it and try again.', 'camera_disconnected', true));
       session.stream.getVideoTracks().forEach(track => track.addEventListener('ended', session.onEnded));
       video.muted = true;
       video.playsInline = true;
       video.srcObject = session.stream;
       onStatus('loading');
-      await waitFor(video.play(), signal, 15000, 'The camera video could not start. Try restarting it.');
-      await waitFor(waitForVideo(video, signal), signal, 15000, 'The camera did not provide video. Try another camera.');
+      await waitFor(video.play(), signal, 15000, 'The camera video could not start. Try restarting it.', 'video_failed', true);
+      await waitFor(waitForVideo(video, signal), signal, 15000, 'The camera did not provide video. Try another camera.', 'video_failed', true);
       if (current !== session) throw signal.reason || abortError();
 
       session.worker = new Worker(new URL('./pose-worker.js', import.meta.url));
@@ -151,7 +166,7 @@ export function createPoseTracker({ video, onPose, onStatus = () => {}, onError 
         session.worker.onmessage = ({ data }) => {
           if (current !== session) return;
           if (data.type === 'ready') resolve();
-          if (data.type === 'error') fail(session, new Error(data.message));
+          if (data.type === 'error') fail(session, cameraFault(data.message, 'worker_error'));
           if (data.type === 'pose' && data.frameId === session.frameId && session.inFlight) {
             clearTimeout(session.frameTimer);
             session.inFlight = false;
@@ -161,13 +176,22 @@ export function createPoseTracker({ video, onPose, onStatus = () => {}, onError 
       });
       session.worker.onerror = event => {
         event.preventDefault();
-        fail(session, new Error('Body tracking could not run. Check your connection and try again.'));
+        fail(session, cameraFault('Body tracking could not run. Check your connection and try again.', 'worker_failed'));
       };
-      session.worker.onmessageerror = () => fail(session, new Error('Body tracking could not read a camera frame.'));
+      session.worker.onmessageerror = () => fail(session, cameraFault('Body tracking could not read a camera frame.', 'frame_read_failed'));
       session.worker.postMessage({ type: 'initialize' });
-      await waitFor(ready, signal, MODEL_TIMEOUT, 'Body tracking took too long to load. Check your connection and try again.');
+      await waitFor(ready, signal, MODEL_TIMEOUT, 'Body tracking took too long to load. Check your connection and try again.', 'model_timeout');
       if (current !== session) throw signal.reason || abortError();
       session.started = true;
+      // Pause the frame watchdog while the tab is hidden: browsers throttle the
+      // capture loop then, so drop any in-flight frame instead of letting its
+      // timer count down against a stall the player cannot see.
+      session.onVisibility = () => {
+        if (current !== session || !document.hidden) return;
+        clearTimeout(session.frameTimer);
+        session.inFlight = false;
+      };
+      document.addEventListener('visibilitychange', session.onVisibility);
       onStatus('tracking');
       session.animationFrame = requestAnimationFrame(time => nextFrame(session, time));
     } catch (error) {
@@ -185,6 +209,7 @@ export function createPoseTracker({ video, onPose, onStatus = () => {}, onError 
       controller: new AbortController(),
       stream: null,
       worker: null,
+      onVisibility: null,
       started: false,
       animationFrame: 0,
       frameTimer: 0,

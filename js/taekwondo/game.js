@@ -116,6 +116,7 @@ async function startCamera() {
   view.overlayTitle.textContent = 'Opening the dojo';
   view.overlayText.textContent = 'Your camera stays on this device. Stand where your whole body fits in view.';
   controls();
+  if(window.posthog) posthog.capture('taekwondo_camera_started', { difficulty: view.difficultySelect.value });
   try {
     await tracker.start();
     if (!active || attempt !== startAttempt) return;
@@ -140,7 +141,12 @@ function cameraError(error) {
   view.overlayText.textContent = message;
   setStatus(message);
   controls();
-  if (!['NotAllowedError', 'NotFoundError', 'AbortError'].includes(error.name)) {
+  const reason = error.reason || error.name || 'unknown';
+  if (reason !== 'AbortError' && window.posthog) posthog.capture('taekwondo_camera_failed', { reason, mode });
+  // Report only unexpected faults. Expected device or environment conditions are
+  // tagged by the tracker or matched by name here, and handled on screen.
+  const handled = ['NotAllowedError', 'NotFoundError', 'NotReadableError', 'SecurityError', 'AbortError'];
+  if (!error.expected && !handled.includes(error.name)) {
     window.posthog?.captureException?.(error, { game: 'taekwondo', phase: 'camera' });
   }
 }
