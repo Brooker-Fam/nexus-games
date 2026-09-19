@@ -7,6 +7,12 @@ function abortError() {
   return new DOMException('Camera session cancelled.', 'AbortError');
 }
 
+function recoverableError(name, message) {
+  const error = new Error(message);
+  error.name = name;
+  return error;
+}
+
 function waitFor(promise, signal, timeout, message) {
   return new Promise((resolve, reject) => {
     const finish = (callback, value) => {
@@ -85,7 +91,7 @@ export function createPoseTracker({ video, onPose, onStatus = () => {}, onError 
     session.lastVideoTime = video.currentTime;
     session.frameId += 1;
     session.frameTimer = setTimeout(() => {
-      fail(session, new Error('Body tracking stopped responding. Restart the camera to try again.'));
+      fail(session, recoverableError('TrackerStalledError', 'Body tracking stopped responding. Restart the camera to try again.'));
     }, FRAME_TIMEOUT);
 
     createImageBitmap(video).then(bitmap => {
@@ -136,7 +142,7 @@ export function createPoseTracker({ video, onPose, onStatus = () => {}, onError 
       await waitFor(camera, signal, CAMERA_TIMEOUT, 'Camera permission timed out. Allow access and try again.');
       if (current !== session) throw signal.reason || abortError();
 
-      session.onEnded = () => fail(session, new Error('The camera disconnected. Reconnect it and try again.'));
+      session.onEnded = () => fail(session, recoverableError('CameraDisconnectedError', 'The camera disconnected. Reconnect it and try again.'));
       session.stream.getVideoTracks().forEach(track => track.addEventListener('ended', session.onEnded));
       video.muted = true;
       video.playsInline = true;

@@ -125,6 +125,15 @@ async function startCamera() {
   }
 }
 
+const RECOVERABLE_CAMERA_ERRORS = [
+  'NotAllowedError',
+  'NotFoundError',
+  'NotReadableError',
+  'SecurityError',
+  'CameraDisconnectedError',
+  'TrackerStalledError',
+];
+
 function cameraError(error) {
   if (!active) return;
   stopSession();
@@ -140,7 +149,10 @@ function cameraError(error) {
   view.overlayText.textContent = message;
   setStatus(message);
   controls();
-  if (!['NotAllowedError', 'NotFoundError', 'AbortError'].includes(error.name)) {
+  if (error.name === 'AbortError') return;
+  if (RECOVERABLE_CAMERA_ERRORS.includes(error.name)) {
+    window.posthog?.capture?.('taekwondo_camera_failed', { game: 'taekwondo', phase: 'camera', error_name: error.name });
+  } else {
     window.posthog?.captureException?.(error, { game: 'taekwondo', phase: 'camera' });
   }
 }
