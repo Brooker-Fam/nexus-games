@@ -18,7 +18,7 @@ function makeContext(){
     console,
     Math,
   });
-  const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'rts', 'game.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'nexus', 'js', 'rts', 'game.js'), 'utf8');
   vm.runInContext(source, context);
   return context;
 }

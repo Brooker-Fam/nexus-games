@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<!-- Nexus Games - Citadel of Zharoth -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS GAMES</title>
+<link rel="icon" type="image/svg+xml" href="/nexus/favicon.svg">
+<script>
+  if(location.protocol!=='file:'){
+    const l=document.createElement('link');
+    l.rel='stylesheet';
+    l.href='https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap';
+    document.head.appendChild(l);
+  }
+</script>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/td.css">
+<link rel="stylesheet" href="css/rts.css">
+<link rel="stylesheet" href="css/book.css">
+<link rel="stylesheet" href="css/taekwondo.css">
+<script>
+  window.__errorBuffer=[];
+  window.onerror=function(m,s,l,c,e){if(e)window.__errorBuffer.push(e);};
+  window.onunhandledrejection=function(e){window.__errorBuffer.push(e.reason);};
+</script>
+<script src="js/posthog-config.js"></script>
+<script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  // TODO: replace the placeholder with a real PostHog project API key via js/posthog-config.js, window.POSTHOG_KEY, or window.POSTHOG_TOKEN.
+  const POSTHOG_PROJECT_API_KEY = window.POSTHOG_TOKEN || window.POSTHOG_KEY || 'posthog_project_api_key_placeholder';
+  const POSTHOG_API_HOST = window.POSTHOG_HOST || 'https://us.i.posthog.com';
+  if(POSTHOG_PROJECT_API_KEY){
+    posthog.init(POSTHOG_PROJECT_API_KEY,{
+      api_host:POSTHOG_API_HOST,
+      autocapture:true,
+      capture_pageview:true,
+      defaults:'2026-01-30',
+      capture_exceptions:true
+    });
+    posthog.on('loaded',function(){
+      if(window.__errorBuffer){
+        window.__errorBuffer.forEach(function(e){if(e)posthog.captureException(e);});
+        window.__errorBuffer=null;
+      }
+    });
+  } else {
+    posthog.capture=function(){};
+    posthog.captureException=function(){};
+  }
+</script>
+</head>
+<body>
+
+<!-- LOGIN SCREEN OVERLAY -->
+<div id="login-screen">
+  <div class="login-panel">
+    <div class="login-logo">NEXUS GAMES</div>
+    <div class="login-tagline">ARCADE · STRATEGY · BEYOND</div>
+    <div class="login-sub">SIGN IN TO SAVE YOUR SCORES & COMPETE</div>
+    <div class="login-btns" id="login-btns">
+      <button class="login-action-btn login-google-btn" id="login-btn-google">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+        SIGN IN WITH GOOGLE
+      </button>
+      <button class="login-action-btn login-mail-btn" id="login-btn-mail">✉ SIGN IN WITH EMAIL LINK</button>
+      <button class="login-action-btn login-passkey-btn" id="login-btn-passkey" style="display:none">🔑 SIGN IN WITH PASSKEY</button>
+    </div>
+    <div id="login-msg" class="login-msg"></div>
+    <button class="login-skip-btn" id="btn-skip-login">SKIP — PLAY AS GUEST</button>
+  </div>
+</div>
+
+<!-- BACKGROUND -->
+<div class="bg-layer">
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+  <div class="scanline"></div>
+  <div id="particles"></div>
+</div>
+
+<div class="app-zoom-shell" id="app-zoom-shell">
+<!-- HEADER -->
+<header>
+  <div class="header-top">
+    <div>
+      <div class="logo">NEXUS GAMES</div>
+      <div class="logo-sub">ARCADE · STRATEGY · BEYOND</div>
+    </div>
+    <div class="header-right">
+      <div class="zoom-controls" aria-label="Interface zoom controls">
+        <button class="zoom-btn" id="zoom-out" type="button" aria-label="Zoom out">−</button>
+        <span class="zoom-label" id="zoom-label">115%</span>
+        <button class="zoom-btn" id="zoom-in" type="button" aria-label="Zoom in">+</button>
+      </div>
+      <div id="auth-slot" class="auth-slot"></div>
+      <div class="status-dot"></div>
+      <span class="status-text">ONLINE</span>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-btn-td">⬡ TOWER DEFENSE</button>
+    <button class="tab" id="tab-btn-cs">◈ DEEP SPACE OPS</button>
+    <button class="tab" id="tab-btn-tkd">◉ TAEKWONDO</button>
+    <button class="tab" id="tab-btn-skins">✦ SKINS</button>
+    <button class="tab" id="tab-btn-book">📖 THE BOOK</button>
+    <button class="tab" id="tab-btn-memberships">★ MEMBERSHIPS</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+  <!-- TOWER DEFENSE -->
+  <div id="tab-td" class="tab-content active">
+    <div class="game-header">
+      <div>
+        <div class="game-title">VOID <span>FORTRESS</span></div>
+      </div>
+      <div class="game-stats">
+        <div class="stat-box"><div class="stat-label">WAVE</div><div class="stat-val cyan" id="waveNum">0</div></div>
+        <div class="stat-box"><div class="stat-label">LIVES</div><div class="stat-val pink" id="livesNum">20</div></div>
+        <div class="stat-box"><div class="stat-label">GOLD</div><div class="stat-val gold" id="goldNum">200</div></div>
+        <div class="stat-box"><div class="stat-label">SCORE</div><div class="stat-val purple" id="scoreNum">0</div></div>
+      </div>
+    </div>
+
+    <div class="game-area">
+      <div class="canvas-wrap">
+        <canvas id="tdCanvas" width="720" height="480"></canvas>
+        <div class="overlay" id="overlay">
+          <div class="overlay-title" id="overlayTitle">GAME OVER</div>
+          <div class="overlay-sub" id="overlaySub">YOU HAVE FAILED THE VOID</div>
+          <button class="overlay-btn" id="btn-reset">⟳ RESTART</button>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <div class="panel">
+          <div class="panel-title">▸ DEPLOY TOWER</div>
+          <div class="tower-grid" id="towerGrid">
+            <button class="tower-btn selected" data-type="gun">
+              <canvas id="prev-gun" class="tower-preview" width="44" height="44"></canvas>
+              <span class="tower-name">GUN</span>
+              <span class="tower-cost">50g</span>
+            </button>
+            <button class="tower-btn" data-type="laser">
+              <canvas id="prev-laser" class="tower-preview" width="44" height="44"></canvas>
+              <span class="tower-name">LASER</span>
+              <span class="tower-cost">80g</span>
+            </button>
+            <button class="tower-btn" data-type="missile">
+              <canvas id="prev-missile" class="tower-preview" width="44" height="44"></canvas>
+              <span class="tower-name">MISSILE</span>
+              <span class="tower-cost">120g</span>
+            </button>
+            <button class="tower-btn" data-type="slow">
+              <canvas id="prev-slow" class="tower-preview" width="44" height="44"></canvas>
+              <span class="tower-name">CRYO</span>
+              <span class="tower-cost">70g</span>
+            </button>
+          </div>
+          <div class="place-hint">
+            CLICK CANVAS TO PLACE — CLICK A TOWER TO RELOCATE IT
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">▸ WAVE CONTROL</div>
+          <button class="wave-btn" id="waveBtn">▶ SEND WAVE</button>
+          <div class="place-hint">BOSSES PAY 10% INTEREST PER 50g SAVED</div>
+          <div class="place-hint">TOWERS EVOLVE WITH KILLS — WATCH FOR SHIELDED ENEMIES &amp; WALL BREACHES</div>
+          <div class="wave-section">
+            <div class="panel-title speed">▸ SPEED</div>
+            <div class="speed-btns">
+              <button class="speed-btn active">1×</button>
+              <button class="speed-btn">2×</button>
+              <button class="speed-btn">3×</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel flex">
+          <div class="panel-title">▸ BATTLE LOG</div>
+          <div class="log-box" id="logBox"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEEP SPACE OPS -->
+  <div id="tab-cs" class="tab-content">
+    <div id="dso-wrapper">
+
+      <!-- FACTION SELECT SCREEN -->
+      <div id="dso-select">
+        <div class="dso-title-wrap">
+          <div class="dso-pre">CHOOSE YOUR ARMADA</div>
+          <div class="dso-title">DEEP SPACE OPS</div>
+          <div class="dso-sub">Your faction determines your champion, your power, your fate.</div>
+        </div>
+
+        <div class="dso-mode-tabs" id="dso-mode-tabs">
+          <button class="dso-mode-tab active" id="dso-mode-btn-ai" data-mode="ai">⚔ AI</button>
+          <button class="dso-mode-tab" id="dso-mode-btn-pvp" data-mode="pvp">🌐 PVP</button>
+          <button class="dso-mode-tab" id="dso-mode-btn-training" data-mode="training">🎓 TRAINING</button>
+        </div>
+        <div class="dso-mode-desc" id="dso-mode-desc">Battle an adaptive AI opponent that scales to your skill.</div>
+
+        <div class="dso-training-banner" id="dso-training-banner" style="display:none">
+          <span class="dso-training-banner-icon">🎓</span>
+          An AI advisor will guide you step-by-step through your first battle — pick a faction to begin.
+        </div>
+
+        <div class="faction-cards">
+
+          <!-- SHADOW -->
+          <div class="faction-card" id="fc-shadow">
+            <canvas class="fc-canvas" id="fc-canvas-shadow" width="180" height="220"></canvas>
+            <div class="fc-name">SHADOW ARMADA</div>
+            <div class="fc-desc">Masters of dark steel and silent death. The swordsman strikes before you see him.</div>
+            <div class="fc-stats">
+              <div class="fc-stat"><span class="fc-stat-label">ATK</span><div class="fc-bar"><div class="fc-fill" style="width:90%;background:#8800ff"></div></div></div>
+              <div class="fc-stat"><span class="fc-stat-label">DEF</span><div class="fc-bar"><div class="fc-fill" style="width:75%;background:#8800ff"></div></div></div>
+              <div class="fc-stat"><span class="fc-stat-label">SPD</span><div class="fc-bar"><div class="fc-fill" style="width:95%;background:#8800ff"></div></div></div>
+            </div>
+            <div class="fc-btn">SELECT</div>
+          </div>
+
+          <!-- PRISM -->
+          <div class="faction-card" id="fc-prism">
+            <canvas class="fc-canvas" id="fc-canvas-prism" width="180" height="220"></canvas>
+            <div class="fc-name">PRISM ARMADA</div>
+            <div class="fc-desc">Wielders of radiant light. The White Witch bends reality with spectral sorcery.</div>
+            <div class="fc-stats">
+              <div class="fc-stat"><span class="fc-stat-label">ATK</span><div class="fc-bar"><div class="fc-fill" style="width:80%;background:#00f5ff"></div></div></div>
+              <div class="fc-stat"><span class="fc-stat-label">DEF</span><div class="fc-bar"><div class="fc-fill" style="width:60%;background:#00f5ff"></div></div></div>
+              <div class="fc-stat"><span class="fc-stat-label">MGC</span><div class="fc-bar"><div class="fc-fill" style="width:100%;background:#00f5ff"></div></div></div>
+            </div>
+            <div class="fc-btn">SELECT</div>
+          </div>
+
+          <!-- ROBOTO -->
+          <div class="faction-card" id="fc-roboto">
+            <canvas class="fc-canvas" id="fc-canvas-roboto" width="180" height="220"></canvas>
+            <div class="fc-name">ROBOTO ARMADA</div>
+            <div class="fc-desc">Iron-clad war machines. The Gunbot never misses, never tires, never stops.</div>
+            <div class="fc-stats">
+              <div class="fc-stat"><span class="fc-stat-label">ATK</span><div class="fc-bar"><div class="fc-fill" style="width:85%;background:#ff8800"></div></div></div>
+              <div class="fc-stat"><span class="fc-stat-label">DEF</span><div class="fc-bar"><div class="fc-fill" style="width:95%;background:#ff8800"></div></div></div>
+              <div class="fc-stat"><span class="fc-stat-label">RNG</span><div class="fc-bar"><div class="fc-fill" style="width:88%;background:#ff8800"></div></div></div>
+            </div>
+            <div class="fc-btn">SELECT</div>
+          </div>
+
+        </div>
+
+        <!-- PLAYER STATS (shown after first game) -->
+        <div id="dso-stats" class="dso-stats" data-dso-stats>
+          <div class="dso-stats-title">COMMANDER STATS</div>
+          <div class="dso-stats-row">
+            <div class="dso-stat-box"><div class="dso-stat-label">RATING</div><div class="dso-stat-val cyan" data-stat="rating">1000</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">GAMES</div><div class="dso-stat-val" data-stat="games">0</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">K/D</div><div class="dso-stat-val" data-stat="kd">—</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">AI LEVEL</div><div class="dso-stat-val" data-stat="level">5/10</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">GOLD/MIN</div><div class="dso-stat-val" data-stat="gpm">—</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">OIL / ESSENCE / LIGHT / MIN</div><div class="dso-stat-val" data-stat="opm">—</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">STREAK</div><div class="dso-stat-val" data-stat="streak">—</div></div>
+          </div>
+          <canvas class="dso-rating-graph" width="700" height="120"></canvas>
+        </div>
+
+        <!-- MULTIPLAYER -->
+        <div id="mp-controls" class="mp-controls">
+          <div class="mp-divider">— PLAY ONLINE —</div>
+          <div class="mp-buttons">
+            <button class="rv-btn rv-play" id="btn-mp-host">CREATE GAME</button>
+            <div class="mp-join-row">
+              <input type="text" id="mp-join-input" class="mp-input" placeholder="ENTER CODE" maxlength="20">
+              <button class="rv-btn rv-play" id="btn-mp-join">JOIN</button>
+            </div>
+          </div>
+          <div id="mp-status" class="mp-status"></div>
+        </div>
+      </div>
+
+      <!-- REVEAL SCREEN -->
+      <div id="dso-reveal" style="display:none">
+        <div class="reveal-header">
+          <div class="reveal-armada" id="rv-armada">SHADOW ARMADA</div>
+          <div class="reveal-champion" id="rv-champion">THE SWORDSMAN</div>
+        </div>
+        <div class="reveal-stage">
+          <canvas id="rv-canvas" width="900" height="460"></canvas>
+          <div class="reveal-vignette"></div>
+        </div>
+        <div class="reveal-lore" id="rv-lore">From the void between stars, he emerged.</div>
+        <div class="fc-stats reveal-fc-stats" id="rv-stats"></div>
+        <div class="reveal-btns">
+          <button class="rv-btn rv-back" id="btn-dso-back">◂ CHANGE FACTION</button>
+          <button class="rv-btn rv-play" id="btn-dso-play">BEGIN BATTLE ▸</button>
+        </div>
+
+        <!-- COMMANDER STATS (same data as the select screen, reused here too) -->
+        <div class="dso-stats" data-dso-stats>
+          <div class="dso-stats-title">COMMANDER STATS</div>
+          <div class="dso-stats-row">
+            <div class="dso-stat-box"><div class="dso-stat-label">RATING</div><div class="dso-stat-val cyan" data-stat="rating">1000</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">GAMES</div><div class="dso-stat-val" data-stat="games">0</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">K/D</div><div class="dso-stat-val" data-stat="kd">—</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">AI LEVEL</div><div class="dso-stat-val" data-stat="level">5/10</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">GOLD/MIN</div><div class="dso-stat-val" data-stat="gpm">—</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">OIL / ESSENCE / LIGHT / MIN</div><div class="dso-stat-val" data-stat="opm">—</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">STREAK</div><div class="dso-stat-val" data-stat="streak">—</div></div>
+          </div>
+          <canvas class="dso-rating-graph" width="700" height="120"></canvas>
+        </div>
+      </div>
+
+      <!-- RTS GAME SCREEN -->
+      <div id="dso-game" style="display:none">
+        <div class="rts-hud">
+          <div class="rts-hud-top">
+            <div class="rts-hud-left">
+              <div class="rts-faction-badge" id="rts-faction-badge">PRISM ARMADA</div>
+              <div class="rts-faction-champion" id="rts-faction-champion"></div>
+              <div class="fc-stats rts-faction-stats" id="rts-faction-stats"></div>
+              <div class="rts-resource"><span class="rts-res-icon">◈</span> GOLD: <span id="rts-gold">0</span></div>
+              <div class="rts-resource" id="rts-oil-row" style="display:none"><span class="rts-res-icon">🛢</span> OIL: <span id="rts-oil">0</span></div>
+              <div class="rts-resource"><span class="rts-res-icon">⚔</span> UNITS: <span id="rts-units">0</span></div>
+              <div class="rts-resource rts-diff-row"><span class="rts-res-icon">⚙</span> AI LEVEL: <span id="rts-difficulty" class="rts-diff-val">5</span><span class="rts-diff-max">/10</span></div>
+            </div>
+            <div class="rts-hud-right">
+              <div class="rts-resource">ENEMY: <span id="rts-enemy-faction" class="rts-enemy-color">???</span></div>
+              <div class="rts-resource">MAP: <span id="rts-map-name" class="rts-map-name">ORION DIVIDE</span></div>
+              <div class="rts-resource">BASE HP: <span id="rts-base-hp" class="rts-hp-color">150</span></div>
+              <!-- COMMANDER STATS (compact — same data as the select/reveal screens) -->
+              <div class="dso-stats dso-stats-compact" data-dso-stats>
+                <div class="dso-stats-row">
+                  <div class="dso-stat-box"><div class="dso-stat-label">RATING</div><div class="dso-stat-val cyan" data-stat="rating">1000</div></div>
+                  <div class="dso-stat-box"><div class="dso-stat-label">GAMES</div><div class="dso-stat-val" data-stat="games">0</div></div>
+                  <div class="dso-stat-box"><div class="dso-stat-label">K/D</div><div class="dso-stat-val" data-stat="kd">—</div></div>
+                  <div class="dso-stat-box"><div class="dso-stat-label">STREAK</div><div class="dso-stat-val" data-stat="streak">—</div></div>
+                </div>
+              </div>
+              <button class="rts-retreat-btn" id="btn-rts-menu">◂ MENU</button>
+            </div>
+          </div>
+          <div class="rts-hud-bottom">
+            <div class="rts-hud-minimap">
+              <canvas id="rts-minimap" width="240" height="98"></canvas>
+            </div>
+            <!-- WORKER ACTIONS / BUILD PANEL — always visible, shows contextual options for whatever is selected -->
+            <div class="rts-action-panel" id="rts-build-popup">
+              <div class="rbp-header">
+                <div class="rbp-title" id="rbp-title">NO SELECTION</div>
+                <button class="rbp-close" id="btn-popup-close" title="Deselect">✕</button>
+              </div>
+              <div class="rbp-options" id="rbp-options">
+                <div class="rbp-idle-hint">Click your <span id="hud-building-name">TEMPLE</span> or a worker to build</div>
+              </div>
+            </div>
+            <div class="rts-hud-army">
+              <button class="rts-build-btn rts-army-btn" id="btn-select-army">
+                <span class="rts-build-icon">⚔</span>
+                SELECT ARMY
+              </button>
+              <div class="rts-speed-btns" id="rts-speed-btns">
+                <button class="speed-btn active" data-speed="1">1×</button>
+                <button class="speed-btn" data-speed="2">2×</button>
+                <button class="speed-btn" data-speed="3">3×</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="rts-viewport-wrap">
+          <canvas id="rts-canvas" width="1200" height="580"></canvas>
+          <div id="rts-scroll-hint">Click your base to build · Right-click to move/attack</div>
+          <div id="training-guide" class="training-guide" style="display:none">
+            <div class="training-guide-header">
+              <span class="training-guide-icon">🤖</span>
+              <span class="training-guide-label">AI ADVISOR</span>
+              <button class="training-guide-close" id="btn-training-close" title="Hide guide">✕</button>
+            </div>
+            <div class="training-guide-text" id="training-guide-text"></div>
+            <button class="training-guide-next" id="btn-training-next">GOT IT ▸</button>
+          </div>
+        </div>
+        <div class="rts-log-bar"><span id="rts-log">Click your base to build units!</span></div>
+        <div id="rts-gameover-overlay" style="display:none" class="rts-over-overlay">
+          <div class="rts-over-title" id="rts-over-title">VICTORY</div>
+          <div class="rts-over-sub" id="rts-over-sub">The enemy base has fallen.</div>
+          <div class="rts-over-rating" id="rts-over-rating" style="display:none"></div>
+          <button class="overlay-btn" id="btn-rts-menu-over">◂ BACK TO MENU</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SKINS -->
+  <div id="tab-skins" class="tab-content">
+    <div class="dso-title-wrap">
+      <div class="dso-pre">COSMETIC ARMORY</div>
+      <div class="dso-title">SKINS</div>
+      <div class="dso-sub">Pick a unit's name for its default look and any alternate skin, side by side.</div>
+    </div>
+
+    <div class="skins-layout">
+      <!-- LIST — every unit's name; clicking one shows its detail panel -->
+      <nav class="skins-list-col" aria-label="Units">
+        <div class="skins-list-section-label">◆ FLAGSHIPS</div>
+        <ul class="skins-list">
+          <li class="skins-list-item selected" data-unit="arkship" data-faction="prism" role="button" tabindex="0" aria-pressed="true">ARKSHIP</li>
+          <li class="skins-list-item" data-unit="capitalship" data-faction="roboto" role="button" tabindex="0" aria-pressed="false">CAPITAL SHIP</li>
+        </ul>
+
+        <div class="skins-list-section-label">◆ BARRACKS</div>
+        <ul class="skins-list">
+          <li class="skins-list-item" data-unit="witch" data-faction="prism" role="button" tabindex="0">WITCH</li>
+          <li class="skins-list-item" data-unit="swordsman" data-faction="shadow" role="button" tabindex="0">SWORDSMAN</li>
+          <li class="skins-list-item" data-unit="gunbot" data-faction="roboto" role="button" tabindex="0">GUNBOT</li>
+          <li class="skins-list-item" data-unit="legionnaire" data-faction="prism" role="button" tabindex="0">LEGIONNAIRES</li>
+          <li class="skins-list-item" data-unit="warbot" data-faction="roboto" role="button" tabindex="0">WARBOT</li>
+        </ul>
+
+        <div class="skins-list-section-label">◆ ELITE</div>
+        <ul class="skins-list">
+          <li class="skins-list-item" data-unit="oracle" data-faction="prism" role="button" tabindex="0">ORACLE</li>
+          <li class="skins-list-item" data-unit="darkwarrior" data-faction="shadow" role="button" tabindex="0">DARK WARRIOR</li>
+          <li class="skins-list-item" data-unit="shockbot" data-faction="roboto" role="button" tabindex="0">SHOCKBOT</li>
+          <li class="skins-list-item" data-unit="wizard" data-faction="prism" role="button" tabindex="0">WIZARD</li>
+          <li class="skins-list-item" data-unit="necromancer" data-faction="shadow" role="button" tabindex="0">NECROMANCER</li>
+          <li class="skins-list-item" data-unit="tank" data-faction="roboto" role="button" tabindex="0">TANK</li>
+        </ul>
+
+        <div class="skins-list-section-label">◆ AERIAL</div>
+        <ul class="skins-list">
+          <li class="skins-list-item" data-unit="wardrone-prism" data-faction="prism" role="button" tabindex="0">WAR DRONE — PRISM</li>
+          <li class="skins-list-item" data-unit="wardrone-shadow" data-faction="shadow" role="button" tabindex="0">WAR DRONE — SHADOW</li>
+          <li class="skins-list-item" data-unit="wardrone-roboto" data-faction="roboto" role="button" tabindex="0">WAR DRONE — ROBOTO</li>
+          <li class="skins-list-item" data-unit="lightfighter" data-faction="prism" role="button" tabindex="0">LIGHT FIGHTER</li>
+          <li class="skins-list-item" data-unit="destroyer" data-faction="shadow" role="button" tabindex="0">DESTROYER</li>
+          <li class="skins-list-item" data-unit="warship" data-faction="roboto" role="button" tabindex="0">WARSHIP</li>
+        </ul>
+
+        <div class="skins-list-section-label">◆ COMMANDERS</div>
+        <ul class="skins-list">
+          <li class="skins-list-item" data-unit="prism" data-faction="prism" role="button" tabindex="0">PRISM</li>
+          <li class="skins-list-item" data-unit="vanthel" data-faction="shadow" role="button" tabindex="0">VANTHEL</li>
+          <li class="skins-list-item" data-unit="gongui" data-faction="roboto" role="button" tabindex="0">GONGUI</li>
+        </ul>
+      </nav>
+
+      <!-- DETAIL — one panel per unit; only the selected one is shown -->
+      <div class="skins-detail-col">
+
+        <div class="skin-detail skins-gallery" id="skin-detail-arkship">
+          <!-- BASIC — single card, single skin -->
+          <div class="skin-option selected" id="skin-option-basic" data-skin="basic" data-unit="arkship" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-arkship-basic-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">PRISM ARKSHIP</div>
+                <div class="skin-mode">◆ STANDARD ISSUE</div>
+              </div>
+            </div>
+            <div class="skin-desc">The stock flagship hull — crystalline blue plating, no royal trim.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <!-- ROYAL VANGUARD — two preview cards (attacking + phasing) but ONE skin/one button, since they're both the same unit -->
+          <div class="skin-option" id="skin-option-royal-vanguard" data-skin="royal-vanguard" data-unit="arkship" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-arkship-attacking-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">PRISM ARKSHIP</div>
+                <div class="skin-mode">◆ ATTACKING MODE</div>
+              </div>
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-arkship-phasing-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">PRISM ARKSHIP</div>
+                <div class="skin-mode">◆ PHASING MODE</div>
+              </div>
+            </div>
+            <div class="skin-desc">ROYAL VANGUARD — the Princess's flagship, its hull forged from silver and light, traced in gold piping and marked with a cut-gem house crest in place of the stock crystal core. Blade-fins unfurl and twin beam emitters flare when attacking; it collapses into a short, squat cone when phasing her crew aboard.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+
+        <div class="skin-detail skins-gallery" id="skin-detail-capitalship" hidden>
+          <!-- ROBOTO CAPITAL SHIP — REGULAR — two preview cards (airborne + landed)
+               but ONE skin/one button, same pattern as ROYAL VANGUARD above.
+               Rendered with the real in-game drawCapitalShipUnit renderer, same
+               approach as the Arkship's BASIC card. -->
+          <div class="skin-option selected" id="skin-option-capitalship-regular" data-skin="regular" data-unit="capitalship" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-capitalship-airborne-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">ROBOTO CAPITAL SHIP</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — AIRBORNE MODE</div>
+              </div>
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-capitalship-landed-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">ROBOTO CAPITAL SHIP</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — LANDED MODE</div>
+              </div>
+            </div>
+            <div class="skin-desc">The stock flagship hull — standard-issue armor plating, quad gun barrels and engines, no royal trim. Engines bank and landing legs deploy, cargo bay glowing gold, as King Gongui disembarks.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <!-- IRONCROWN DREADNOUGHT — two preview cards (airborne + landed) but ONE
+               skin/one button, same pattern as ROYAL VANGUARD above. -->
+          <div class="skin-option" id="skin-option-ironcrown" data-skin="ironcrown" data-unit="capitalship" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-ironcrown-airborne-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">ROBOTO CAPITAL SHIP</div>
+                <div class="skin-mode">◆ AIRBORNE MODE</div>
+              </div>
+              <div class="skin-card">
+                <canvas class="skin-canvas" id="skin-ironcrown-landed-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">ROBOTO CAPITAL SHIP</div>
+                <div class="skin-mode">◆ LANDED MODE</div>
+              </div>
+            </div>
+            <div class="skin-desc">IRONCROWN DREADNOUGHT — a stockier, slab-armoured refit of Gongui's flagship. Turret batteries line the belly and flank the bridge, engines burning blue-white as it bears down on every foe it faces; engines bank and landing legs deploy, throne bay glowing gold, as King Gongui disembarks to lead the charge himself.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+
+        <div class="skin-detail skins-gallery" id="skin-detail-witch" hidden>
+          <div class="skin-option selected" id="skin-option-witch-standard" data-skin="standard" data-unit="witch" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-witch-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WITCH — PRISM ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — BARRACKS TIER 1</div>
+              </div>
+            </div>
+            <div class="skin-desc">Ranged — magic projectiles.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-witch-royal-vanguard" data-skin="royal-vanguard" data-unit="witch" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-witch-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WITCH — PRISM ARMADA</div>
+                <div class="skin-mode">◆ ROYAL VANGUARD LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Her acolyte blues traded for gold-piped white and a cut-gem clasp — the same magic projectiles, fired from the Princess's own colors.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-swordsman" hidden>
+          <div class="skin-option selected" id="skin-option-swordsman-standard" data-skin="standard" data-unit="swordsman" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="shadow">
+                <canvas class="skin-canvas" id="skin-swordsman-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">SWORDSMAN — SHADOW ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — BARRACKS TIER 1</div>
+              </div>
+            </div>
+            <div class="skin-desc">Melee — fast sword charge.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-swordsman-crimson-covenant" data-skin="crimson-covenant" data-unit="swordsman" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="shadow">
+                <canvas class="skin-canvas" id="skin-swordsman-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">SWORDSMAN — SHADOW ARMADA</div>
+                <div class="skin-mode">◆ CRIMSON COVENANT LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">His violet cloak burned away for blood-red and bone, the same fast sword charge now marked with the Covenant's brand.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-gunbot" hidden>
+          <div class="skin-option selected" id="skin-option-gunbot-standard" data-skin="standard" data-unit="gunbot" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-gunbot-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">GUNBOT — ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — BARRACKS TIER 1</div>
+              </div>
+            </div>
+            <div class="skin-desc">Ranged — rapid fire gun.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-gunbot-ironcrown" data-skin="ironcrown" data-unit="gunbot" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-gunbot-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">GUNBOT — ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ IRONCROWN LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Stock orange plating swapped for rust-dark iron and a crowned rivet seal, the rapid fire unchanged.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-legionnaire" hidden>
+          <div class="skin-option selected" id="skin-option-legionnaire-standard" data-skin="standard" data-unit="legionnaire" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-legionnaire-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">LEGIONNAIRES — PRISM ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — BARRACKS TIER 2</div>
+              </div>
+            </div>
+            <div class="skin-desc">Mixed sword and bow squad, trained four at a time.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-legionnaire-royal-vanguard" data-skin="royal-vanguard" data-unit="legionnaire" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-legionnaire-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">LEGIONNAIRES — PRISM ARMADA</div>
+                <div class="skin-mode">◆ ROYAL VANGUARD LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Sword-and-bow squad turned out in white-and-gold ceremonial plate, a house crest stamped on every shield.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-warbot" hidden>
+          <div class="skin-option selected" id="skin-option-warbot-standard" data-skin="standard" data-unit="warbot" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-warbot-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WARBOT — ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — BARRACKS TIER 2</div>
+              </div>
+            </div>
+            <div class="skin-desc">Ranged — heavier armor, harder-hitting rifle than GunBot.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-warbot-ironcrown" data-skin="ironcrown" data-unit="warbot" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-warbot-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WARBOT — ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ IRONCROWN LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Heavier armor recast in Ironcrown rust, the harder-hitting rifle unchanged underneath.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-oracle" hidden>
+          <div class="skin-option selected" id="skin-option-oracle-standard" data-skin="standard" data-unit="oracle" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-oracle-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">ORACLE — PRISM ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — ELITE TIER 1</div>
+              </div>
+            </div>
+            <div class="skin-desc">Ranged — high damage prismatic bolts.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-oracle-royal-vanguard" data-skin="royal-vanguard" data-unit="oracle" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-oracle-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">ORACLE — PRISM ARMADA</div>
+                <div class="skin-mode">◆ ROYAL VANGUARD LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Prismatic bolts now arc from a gold-filigreed staff, her robes recut in Royal Vanguard white.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-darkwarrior" hidden>
+          <div class="skin-option selected" id="skin-option-darkwarrior-standard" data-skin="standard" data-unit="darkwarrior" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="shadow">
+                <canvas class="skin-canvas" id="skin-darkwarrior-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">DARK WARRIOR — SHADOW ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — ELITE TIER 1</div>
+              </div>
+            </div>
+            <div class="skin-desc">Ranged — black magic bolts that chain.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-darkwarrior-crimson-covenant" data-skin="crimson-covenant" data-unit="darkwarrior" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="shadow">
+                <canvas class="skin-canvas" id="skin-darkwarrior-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">DARK WARRIOR — SHADOW ARMADA</div>
+                <div class="skin-mode">◆ CRIMSON COVENANT LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Black magic bolts now chain from crimson-veined gauntlets, his armor recast in blood-red and bone.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-shockbot" hidden>
+          <div class="skin-option selected" id="skin-option-shockbot-standard" data-skin="standard" data-unit="shockbot" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-shockbot-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">SHOCKBOT — ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — ELITE TIER 1</div>
+              </div>
+            </div>
+            <div class="skin-desc">Ranged — chain lightning hits multiple enemies.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-shockbot-ironcrown" data-skin="ironcrown" data-unit="shockbot" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-shockbot-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">SHOCKBOT — ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ IRONCROWN LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Chain lightning now arcs off rust-iron plating stamped with the crowned rivet seal.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-wizard" hidden>
+          <div class="skin-option selected" id="skin-option-wizard-standard" data-skin="standard" data-unit="wizard" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-wizard-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WIZARD — PRISM ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — ELITE TIER 2</div>
+              </div>
+            </div>
+            <div class="skin-desc">Ranged — chain lightning bounces between enemies.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-wizard-royal-vanguard" data-skin="royal-vanguard" data-unit="wizard" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-wizard-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WIZARD — PRISM ARMADA</div>
+                <div class="skin-mode">◆ ROYAL VANGUARD LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Chain lightning crackles through a gold-banded focus stone, his robes recut in white-and-gold livery.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-necromancer" hidden>
+          <div class="skin-option selected" id="skin-option-necromancer-standard" data-skin="standard" data-unit="necromancer" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="shadow">
+                <canvas class="skin-canvas" id="skin-necromancer-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">NECROMANCER — SHADOW ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — ELITE TIER 2</div>
+              </div>
+            </div>
+            <div class="skin-desc">Raises dead Swordsmen — fast revive, strong damage.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-necromancer-crimson-covenant" data-skin="crimson-covenant" data-unit="necromancer" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="shadow">
+                <canvas class="skin-canvas" id="skin-necromancer-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">NECROMANCER — SHADOW ARMADA</div>
+                <div class="skin-mode">◆ CRIMSON COVENANT LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Raises the dead in crimson-and-bone robes instead of stock violet, the same fast revive and killing strike.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-tank" hidden>
+          <div class="skin-option selected" id="skin-option-tank-standard" data-skin="standard" data-unit="tank" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-tank-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">TANK — ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — ELITE TIER 2</div>
+              </div>
+            </div>
+            <div class="skin-desc">Heavy armored unit — high HP, AOE cannon.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-tank-ironcrown" data-skin="ironcrown" data-unit="tank" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-tank-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">TANK — ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ IRONCROWN LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Its heavy hull replated in Ironcrown rust and iron, the AOE cannon unchanged.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-wardrone-prism" hidden>
+          <div class="skin-option selected" id="skin-option-wardrone-prism-standard" data-skin="standard" data-unit="wardrone-prism" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-wardrone-prism-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WAR DRONE — PRISM ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — AERIAL TIER 1</div>
+              </div>
+            </div>
+            <div class="skin-desc">Aerial — fast energy bolts, immune to melee.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-wardrone-prism-royal-vanguard" data-skin="royal-vanguard" data-unit="wardrone-prism" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-wardrone-prism-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WAR DRONE — PRISM ARMADA</div>
+                <div class="skin-mode">◆ ROYAL VANGUARD LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Its stock crystal-blue hull swapped for polished white plating and a gold house crest on the nose.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-wardrone-shadow" hidden>
+          <div class="skin-option selected" id="skin-option-wardrone-shadow-standard" data-skin="standard" data-unit="wardrone-shadow" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="shadow">
+                <canvas class="skin-canvas" id="skin-wardrone-shadow-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WAR DRONE — SHADOW ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — AERIAL TIER 1</div>
+              </div>
+            </div>
+            <div class="skin-desc">Aerial — fast energy bolts, immune to melee.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-wardrone-shadow-crimson-covenant" data-skin="crimson-covenant" data-unit="wardrone-shadow" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="shadow">
+                <canvas class="skin-canvas" id="skin-wardrone-shadow-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WAR DRONE — SHADOW ARMADA</div>
+                <div class="skin-mode">◆ CRIMSON COVENANT LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Its stock violet hull reforged in blood-red and bone, the energy bolts unchanged.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-wardrone-roboto" hidden>
+          <div class="skin-option selected" id="skin-option-wardrone-roboto-standard" data-skin="standard" data-unit="wardrone-roboto" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-wardrone-roboto-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WAR DRONE — ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — AERIAL TIER 1</div>
+              </div>
+            </div>
+            <div class="skin-desc">Aerial — heavy missiles, immune to melee.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-wardrone-roboto-ironcrown" data-skin="ironcrown" data-unit="wardrone-roboto" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-wardrone-roboto-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WAR DRONE — ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ IRONCROWN LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Stock orange hull reforged in rust-dark iron, the heavy missiles unchanged.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-lightfighter" hidden>
+          <div class="skin-option selected" id="skin-option-lightfighter-standard" data-skin="standard" data-unit="lightfighter" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-lightfighter-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">LIGHT FIGHTER — PRISM ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — AERIAL TIER 2</div>
+              </div>
+            </div>
+            <div class="skin-desc">Aerial — fires a piercing beam of light.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-lightfighter-royal-vanguard" data-skin="royal-vanguard" data-unit="lightfighter" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-lightfighter-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">LIGHT FIGHTER — PRISM ARMADA</div>
+                <div class="skin-mode">◆ ROYAL VANGUARD LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">The beam-cannon housing now gleams gold-trimmed white, the piercing light unchanged.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-destroyer" hidden>
+          <div class="skin-option selected" id="skin-option-destroyer-standard" data-skin="standard" data-unit="destroyer" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="shadow">
+                <canvas class="skin-canvas" id="skin-destroyer-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">DESTROYER — SHADOW ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — AERIAL TIER 2</div>
+              </div>
+            </div>
+            <div class="skin-desc">Aerial — hurls slow orbs of darkness that damage an area.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-destroyer-crimson-covenant" data-skin="crimson-covenant" data-unit="destroyer" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="shadow">
+                <canvas class="skin-canvas" id="skin-destroyer-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">DESTROYER — SHADOW ARMADA</div>
+                <div class="skin-mode">◆ CRIMSON COVENANT LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Orbs of darkness now trail crimson fire instead of violet, the hull branded with the Covenant's mark.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-warship" hidden>
+          <div class="skin-option selected" id="skin-option-warship-standard" data-skin="standard" data-unit="warship" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-warship-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WARSHIP — ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — AERIAL TIER 2</div>
+              </div>
+            </div>
+            <div class="skin-desc">Aerial — switches between single-target and multi-target fire.</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-warship-ironcrown" data-skin="ironcrown" data-unit="warship" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-warship-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">WARSHIP — ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ IRONCROWN LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">Hull replated in Ironcrown rust and iron, the single- and multi-target fire unchanged.</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-prism" hidden>
+          <div class="skin-option selected" id="skin-option-prism-standard" data-skin="standard" data-unit="prism" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-prism-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">PRISM — PRISM ARMADA COMMANDER</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — PRISM ARMADA</div>
+              </div>
+            </div>
+            <div class="skin-desc">Calm, ruthless and brilliant — she commands the Prism Armada with absolute control, gown and crown blazing as her scepter unleashes searing light. "Order brings clarity."</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-prism-royal-vanguard" data-skin="royal-vanguard" data-unit="prism" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="prism">
+                <canvas class="skin-canvas" id="skin-prism-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">PRISM — PRISM ARMADA COMMANDER</div>
+                <div class="skin-mode">◆ ROYAL VANGUARD LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">ROYAL VANGUARD — Prism's gown and crown recast in gold-piped white to match her flagship's colors, scepter still blazing with searing light. "Order wears many colors."</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-vanthel" hidden>
+          <div class="skin-option selected" id="skin-option-vanthel-standard" data-skin="standard" data-unit="vanthel" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="shadow">
+                <canvas class="skin-canvas" id="skin-vanthel-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">VANTHEL — DARK WARRIOR</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — SHADOW ARMADA</div>
+              </div>
+            </div>
+            <div class="skin-desc">Powerful, confident and loyal — still learning what he has become. Vanthel's taloned void gauntlets and burning eyes mark him as Shadow's deadliest warrior. "I'll fight with you."</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-vanthel-crimson-covenant" data-skin="crimson-covenant" data-unit="vanthel" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="shadow">
+                <canvas class="skin-canvas" id="skin-vanthel-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">VANTHEL — DARK WARRIOR</div>
+                <div class="skin-mode">◆ CRIMSON COVENANT LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">CRIMSON COVENANT — Vanthel's void gauntlets reforged in blood-red and bone, his eyes burning the same cold fire. "The color changes. I don't."</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+        <div class="skin-detail skins-gallery" id="skin-detail-gongui" hidden>
+          <div class="skin-option selected" id="skin-option-gongui-standard" data-skin="standard" data-unit="gongui" role="button" tabindex="0" aria-pressed="true">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-gongui-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">GONGUI — KING OF THE ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ STANDARD ISSUE — ROBOTO ARMADA</div>
+              </div>
+            </div>
+            <div class="skin-desc">Smart, resourceful and loyal — the Roboto King leads with wisdom, twin cannon-gauntlets flaring gold as he fights beside his people. "People and machines together are stronger."</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+
+          <div class="skin-option" id="skin-option-gongui-ironcrown" data-skin="ironcrown" data-unit="gongui" role="button" tabindex="0" aria-pressed="false">
+            <div class="skin-option-cards">
+              <div class="skin-card" data-faction="roboto">
+                <canvas class="skin-canvas" id="skin-gongui-alt-canvas" width="400" height="300"></canvas>
+                <div class="skin-name">GONGUI — KING OF THE ROBOTO ARMADA</div>
+                <div class="skin-mode">◆ IRONCROWN LIVERY</div>
+              </div>
+            </div>
+            <div class="skin-desc">IRONCROWN — Gongui's cannon-gauntlets replated in rust-dark iron to match his flagship's refit, flaring the same gold. "A crown is just another plate of armor."</div>
+            <div class="skin-price">$1.00</div>
+            <div class="skin-equip-badge">✓ EQUIPPED</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- THE BOOK -->
+  <div id="tab-book" class="tab-content">
+    <div class="dso-title-wrap">
+      <div class="dso-pre">A NEXUS GAMES ORIGINAL</div>
+      <div class="dso-title">THE BOOK</div>
+      <div class="dso-sub">The Great War — the story behind the factions. A new chapter unlocks every week.</div>
+    </div>
+
+    <div id="book-countdown" class="book-countdown"></div>
+
+    <div class="book-layout">
+      <!-- LIST — parts + chapters; locked chapters show a countdown -->
+      <nav class="book-list-col" id="book-list-col" aria-label="Chapters"></nav>
+
+      <!-- READER — the selected chapter's text -->
+      <div class="book-detail-col">
+        <div class="book-reader" id="book-reader"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMBERSHIPS -->
+  <div id="tab-memberships" class="tab-content">
+    <div class="dso-title-wrap">
+      <div class="dso-pre">CHOOSE YOUR RANK</div>
+      <div class="dso-title">MEMBERSHIPS</div>
+      <div class="dso-sub">Upgrade for every alternate skin, full access to the book, and the Neon Dojo camera game.</div>
+    </div>
+
+    <div class="membership-plans">
+      <div class="membership-card" id="membership-card-free">
+        <div class="membership-name">BASIC</div>
+        <div class="membership-price">$0<span class="membership-period">/mo</span></div>
+        <ul class="membership-features">
+          <li>◆ ALL TOWER DEFENSE &amp; DEEP SPACE OPS GAMEPLAY</li>
+          <li>◆ STANDARD-ISSUE UNIT SKINS</li>
+          <li>◆ RANKED &amp; MULTIPLAYER MATCHES</li>
+        </ul>
+        <div class="membership-btn membership-btn-current" id="membership-btn-free">CURRENT PLAN</div>
+      </div>
+
+      <div class="membership-card membership-card-pro" id="membership-card-pro">
+        <div class="membership-badge">BEST VALUE</div>
+        <div class="membership-name">PRO</div>
+        <div class="membership-price">$1<span class="membership-period">/mo</span></div>
+        <ul class="membership-features">
+          <li>◆ EVERYTHING IN BASIC</li>
+          <li>◆ EVERY ALTERNATE SKIN, FREE</li>
+          <li>◆ FULL ACCESS TO THE BOOK</li>
+          <li>◆ NEON DOJO — CAMERA TAEKWONDO</li>
+        </ul>
+        <button class="membership-btn membership-btn-upgrade" id="membership-btn-pro">UPGRADE TO PRO</button>
+      </div>
+
+      <div class="membership-card membership-card-max" id="membership-card-max">
+        <div class="membership-badge membership-badge-max">TOP RANK</div>
+        <div class="membership-name">MAX</div>
+        <div class="membership-price">$2<span class="membership-period">/mo</span></div>
+        <ul class="membership-features">
+          <li>◆ EVERYTHING IN PRO</li>
+          <li>◆ FIRST ACCESS TO NEW GAMES</li>
+        </ul>
+        <button class="membership-btn membership-btn-upgrade membership-btn-upgrade-max" id="membership-btn-max">UPGRADE TO MAX</button>
+      </div>
+    </div>
+    <div class="membership-status" id="membership-status"></div>
+  </div>
+
+  <div id="tab-tkd" class="tab-content"></div>
+</main>
+</div>
+
+<!-- Shared -->
+<script src="js/shared/audio.js"></script>
+<script src="js/shared/game-registry.js"></script>
+<script src="js/shared/ui.js"></script>
+<script src="js/shared/auth-client.js"></script>
+<script src="js/shared/auth-ui.js"></script>
+<script src="js/shared/stats-sync.js"></script>
+
+<!-- Tower Defense -->
+<script src="js/td/logic.js"></script>
+<script src="js/td/towers.js"></script>
+<script src="js/td/rendering.js"></script>
+
+<!-- Deep Space Ops (RTS) -->
+<script src="js/rts/rng.js"></script>
+<script src="js/rts/factions.js"></script>
+<script src="js/rts/faction-cards.js"></script>
+<script src="js/rts/camera.js"></script>
+<script src="js/rts/maps.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<script src="js/rts/multiplayer.js"></script>
+<script src="js/rts/lockstep.js"></script>
+<script src="js/rts/commands.js"></script>
+<script src="js/rts/entities.js"></script>
+<script src="js/rts/ui.js"></script>
+<script src="js/rts/difficulty.js"></script>
+<script src="js/rts/game.js"></script>
+<script src="js/rts/training.js"></script>
+<script src="js/rts/draw-helpers.js"></script>
+<script src="js/rts/rendering.js"></script>
+<script src="js/rts/structures.js"></script>
+<script src="js/rts/workers.js"></script>
+<script src="js/rts/warriors.js"></script>
+<script src="js/rts/elites.js"></script>
+<script src="js/rts/aerial2.js"></script>
+<script src="js/rts/cinematic.js"></script>
+<script src="js/rts/skin-shop.js"></script>
+<script src="js/rts/skins.js"></script>
+<script src="js/shared/memberships.js"></script>
+
+<!-- The Book -->
+<script src="js/book/book-data.js"></script>
+<script src="js/book/game.js"></script>
+
+<!-- Init -->
+<script src="js/init.js"></script>
+<script type="module" src="js/taekwondo/game.js"></script>
+</body>
+</html>

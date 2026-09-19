@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
-const model = import('../js/taekwondo/model.js');
+const model = import('../nexus/js/taekwondo/model.js');
 const stance = { centerX: 0.5, shoulderY: 0.25, hipY: 0.55, floorY: 0.9, bodyHeight: 0.65, aspect: 16 / 9 };
 
 function pose() {

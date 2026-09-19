@@ -18,7 +18,7 @@ function makeContext(){
     console,
     Math,
   });
-  const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'rts', 'game.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'nexus', 'js', 'rts', 'game.js'), 'utf8');
   vm.runInContext(source, context);
   return context;
 }
@@ -65,7 +65,7 @@ test('army evaluation accounts for health, damage rate, and range', () => {
 
 test('Prism attack summons 10 Legionnaires focused on her target', () => {
   const context=makeContext();
-  const entitiesSource=fs.readFileSync(path.join(__dirname,'..','js','rts','entities.js'),'utf8');
+  const entitiesSource=fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','entities.js'),'utf8');
   vm.runInContext(entitiesSource,context);
   context.FACTION_CFG={prism:{color:'#00ddff'}};
   context.spawnMagicBurst=()=>{};

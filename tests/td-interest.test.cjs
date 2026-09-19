@@ -36,7 +36,7 @@ function makeContext(){
     console,
     Math,
   });
-  const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'td', 'logic.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'nexus', 'js', 'td', 'logic.js'), 'utf8');
   vm.runInContext(source, context);
   return context;
 }

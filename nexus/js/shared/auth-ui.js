@@ -115,7 +115,7 @@
       const img = el('img', { src: user.image, alt: '', className: 'auth-avatar' });
       wrap.appendChild(img);
     }
-    const nameEl = el('a', { className: 'auth-name', href: '/profile.html', title: 'View profile' }, user.name || user.email || 'PLAYER');
+    const nameEl = el('a', { className: 'auth-name', href: '/nexus/profile.html', title: 'View profile' }, user.name || user.email || 'PLAYER');
     nameEl.style.textDecoration = 'none';
     wrap.appendChild(nameEl);
 

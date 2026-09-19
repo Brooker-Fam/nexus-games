@@ -44,6 +44,6 @@ function processDir(dir) {
   }
 }
 
-const jsDir = path.join(__dirname, '..', 'js');
+const jsDir = path.join(__dirname, '..', 'nexus', 'js');
 processDir(jsDir);
 console.log('Done generating source maps.');

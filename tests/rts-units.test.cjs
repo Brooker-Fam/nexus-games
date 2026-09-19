@@ -9,7 +9,7 @@ function makeContext(){
     rtsRand:()=>0.5,
     console,
   });
-  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','entities.js'),'utf8');
+  const source=fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','entities.js'),'utf8');
   vm.runInContext(source,context);
   return context;
 }
@@ -31,7 +31,7 @@ test('warship attack-mode command switches its rate and resets its firing cycle'
     window:{_mpMultiplayer:false}, mpConnected:false,
     FACTION_CFG:{roboto:{},shadow:{}}, rtsSetLog:()=>{}, updateRtsHUD:()=>{},
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','commands.js'),'utf8'),context);
   const modes=vm.runInContext(`(() => {
     const warship=makeWarship('player','roboto',100,100);
     warship.attackTimer=20;
@@ -55,7 +55,7 @@ test('warship multiple mode fires one bullet at every enemy in range',()=>{
     FACTION_CFG:{roboto:{color:'#fff'}},
     sfx:()=>{},
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','game.js'),'utf8'),context);
   const targets=vm.runInContext(`(() => {
     const warship=makeWarship('player','roboto',100,100);
     const nearA={id:20,side:'enemy',hp:10,x:150,y:100};
@@ -77,7 +77,7 @@ test('warship multiple mode fires one bullet at every enemy in range',()=>{
 
 test('Roboto warship uses a spaceship icon',()=>{
   const context=vm.createContext({});
-  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8');
+  const source=fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8');
   vm.runInContext(source,context);
 
   const icon=vm.runInContext('FACTION_CFG.roboto.aerial2Icon',context);
@@ -86,7 +86,7 @@ test('Roboto warship uses a spaceship icon',()=>{
 
 test('Roboto warship has a premium resource cost',()=>{
   const context=vm.createContext({});
-  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8');
+  const source=fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8');
   vm.runInContext(source,context);
 
   const costs=vm.runInContext('({gold:FACTION_CFG.roboto.aerial2Cost,oil:FACTION_CFG.roboto.aerial2OilCost})',context);
@@ -106,7 +106,7 @@ test('Gongui, the Roboto King is a unique Factory champion, distinct from the Sh
   assert.ok(units.gongui.damage>units.shockbot.damage);
 
   const factionContext=vm.createContext({});
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),factionContext);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8'),factionContext);
   const presentation=vm.runInContext('({label:FACTION_CFG.roboto.gonguiLabel,desc:FACTION_CFG.roboto.gonguiDesc,gold:FACTION_CFG.roboto.gonguiCost,oil:FACTION_CFG.roboto.gonguiOilCost})',factionContext);
   assert.equal(presentation.label,'GONGUI');
   assert.match(presentation.desc,/limit 1/);
@@ -115,7 +115,7 @@ test('Gongui, the Roboto King is a unique Factory champion, distinct from the Sh
 
 test('Gongui is limited to one existing, queued, or Capital-Ship-boarded unit',()=>{
   const context=makeContext();
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
     S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},playerFaction:'roboto',enemyFaction:'shadow'},
@@ -125,7 +125,7 @@ test('Gongui is limited to one existing, queued, or Capital-Ship-boarded unit',(
     updateRtsHUD:()=>{}, rtsSetLog:()=>{},
     queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','commands.js'),'utf8'),context);
   const result=vm.runInContext(`(() => {
     const factory={id:1,type:'base',side:'player',faction:'roboto',x:0,y:0,queue:[]};
     S.entities=[factory];
@@ -157,7 +157,7 @@ test('Roboto Capital Ship always fires one bullet at every enemy it faces, unlik
     FACTION_CFG:{roboto:{color:'#fff'}},
     sfx:()=>{},
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','game.js'),'utf8'),context);
   const targets=vm.runInContext(`(() => {
     const ship=makeCapitalShip('player','roboto',100,100);
     const nearA={id:20,side:'enemy',hp:10,x:150,y:100};
@@ -173,15 +173,15 @@ test('Roboto Capital Ship always fires one bullet at every enemy it faces, unlik
 
 test('Capital Ship boards, carries, and can only deploy Gongui once landed',()=>{
   const context=makeContext();
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
     S:{frame:0,entities:[],gold:{player:0},oil:{player:0},playerFaction:'roboto',enemyFaction:'shadow'},
     STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0}},
     rtsSetLog:()=>{}, updateRtsHUD:()=>{}, sfx:()=>{},
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','game.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','commands.js'),'utf8'),context);
 
   const result=vm.runInContext(`(() => {
     const ship=makeCapitalShip('player','roboto',100,100);
@@ -232,7 +232,7 @@ test('A landed Capital Ship cannot move or attack until it takes off again',()=>
     FACTION_CFG:{roboto:{color:'#fff'}},
     sfx:()=>{},
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','game.js'),'utf8'),context);
   const result=vm.runInContext(`(() => {
     const ship=makeCapitalShip('player','roboto',100,100);
     ship.landed=true; ship.aerial=false;
@@ -248,7 +248,7 @@ test('A landed Capital Ship cannot move or attack until it takes off again',()=>
 });
 
 test('Gongui and Capital Ship use distinct renderers from other Roboto units',()=>{
-  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','warriors.js'),'utf8');
+  const source=fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','warriors.js'),'utf8');
 
   assert.match(source,/w\.subtype==='gongui'[\s\S]*?drawFn=drawGongui/);
   assert.match(source,/w\.subtype==='capitalship'[\s\S]*?drawFn=drawCapitalShipUnit/);
@@ -256,13 +256,13 @@ test('Gongui and Capital Ship use distinct renderers from other Roboto units',()
 
 test("Shadow Temple spends gold and essence to deploy the Dark Warrior's Ship carrying Vanthel",()=>{
   const context=makeContext();
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
     S:{frame:120,entities:[],particles:[],gold:{player:100},oil:{player:50},playerFaction:'shadow',enemyFaction:'prism'},
     STRUCT_COSTS:{}, rtsSetLog:()=>{}, updateRtsHUD:()=>{}, rtsRand:()=>0.5,
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','commands.js'),'utf8'),context);
 
   const result=vm.runInContext(`(() => {
     const temple={id:1,type:'base',side:'player',x:20,y:30};
@@ -290,13 +290,13 @@ test("Shadow Temple spends gold and essence to deploy the Dark Warrior's Ship ca
 
 test("Shadow Temple rejects deploying another Dark Warrior's Ship while one (or Vanthel) is already on the field",()=>{
   const context=makeContext();
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
     S:{frame:120,entities:[],particles:[],gold:{player:1000},oil:{player:1000},playerFaction:'shadow',enemyFaction:'prism'},
     STRUCT_COSTS:{}, rtsSetLog:()=>{}, updateRtsHUD:()=>{}, rtsRand:()=>0.5,
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','commands.js'),'utf8'),context);
 
   const result=vm.runInContext(`(() => {
     const temple={id:1,type:'base',side:'player',x:20,y:30};
@@ -312,13 +312,13 @@ test("Shadow Temple rejects deploying another Dark Warrior's Ship while one (or 
 
 test("Shadow Temple rejects deploying the Dark Warrior's Ship when either resource is insufficient",()=>{
   const context=makeContext();
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
     S:{frame:120,entities:[],particles:[],gold:{player:79},oil:{player:100},playerFaction:'shadow',enemyFaction:'prism'},
     STRUCT_COSTS:{}, rtsSetLog:()=>{}, updateRtsHUD:()=>{}, rtsRand:()=>0.5,
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','commands.js'),'utf8'),context);
 
   const result=vm.runInContext(`(() => {
     const temple={id:1,type:'base',side:'player'};
@@ -341,7 +341,7 @@ test("Dark Warrior's Ship releases Vanthel once clear of enemies, but not while 
     STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0}},
     rtsSetLog:()=>{},
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','game.js'),'utf8'),context);
 
   const result=vm.runInContext(`(() => {
     const ship=makeDarkWarriorShip('player','shadow',100,100);
@@ -374,7 +374,7 @@ test("Dark Warrior's Ship releases Vanthel once clear of enemies, but not while 
 
 test('Roboto Warbot, Tank, and Warship require completed (gold-cost) research at the Research Lab, and Prism Legionnaires require a completed Council of Light',()=>{
   const context=makeContext();
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
     S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},research:{player:false},playerFaction:'roboto',enemyFaction:'shadow'},
@@ -386,7 +386,7 @@ test('Roboto Warbot, Tank, and Warship require completed (gold-cost) research at
     makeStarFighter:()=>{}, makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>{},
     makePrism:()=>{}, makeElite:()=>{},
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','commands.js'),'utf8'),context);
 
   const result=vm.runInContext(`(() => {
     const barracks={id:'barracks',type:'structure',side:'player',faction:'roboto',x:0,y:0,queue:[],isBarracks:true};
@@ -460,7 +460,7 @@ test('Roboto Warbot, Tank, and Warship require completed (gold-cost) research at
 
 test('Shadow Necromancer and Destroyer both require a completed Council of Darkness',()=>{
   const context=makeContext();
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
     S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},playerFaction:'shadow',enemyFaction:'roboto'},
@@ -471,7 +471,7 @@ test('Shadow Necromancer and Destroyer both require a completed Council of Darkn
     makeStarFighter:()=>{}, makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>({id:98}),
     makePrism:()=>{}, makeElite:()=>{},
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','commands.js'),'utf8'),context);
 
   const result=vm.runInContext(`(() => {
     const shrine={id:1,type:'structure',side:'player',faction:'shadow',x:0,y:0,queue:[]};
@@ -504,7 +504,7 @@ test('Shadow Necromancer and Destroyer both require a completed Council of Darkn
 
 test('start_research is gold-gated, one-shot, and unlocks Warbot/Tank/Warship together',()=>{
   const context=makeContext();
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
     S:{frame:0,entities:[],gold:{player:50},oil:{player:1000},research:{player:false},playerFaction:'roboto',enemyFaction:'shadow'},
@@ -516,7 +516,7 @@ test('start_research is gold-gated, one-shot, and unlocks Warbot/Tank/Warship to
     makeStarFighter:()=>{}, makeSkyAttacker:()=>{}, makeWarship:()=>{}, makeLightFighter:()=>{}, makeDestroyer:()=>{},
     makePrism:()=>{}, makeElite:()=>{},
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','commands.js'),'utf8'),context);
 
   const result=vm.runInContext(`(() => {
     const lab=makeResearchLab('player','roboto',50,50);
@@ -559,7 +559,7 @@ test('Prism Oracle and Prism remain distinct units',()=>{
   assert.equal(units.prism.fireRate,180);
 
   const factionContext=vm.createContext({});
-  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8');
+  const source=fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8');
   vm.runInContext(source,factionContext);
   const presentation=vm.runInContext('({oracle:FACTION_CFG.prism.eliteLabel,prism:FACTION_CFG.prism.prismLabel,desc:FACTION_CFG.prism.prismDesc,gold:FACTION_CFG.prism.prismCost,light:FACTION_CFG.prism.prismOilCost})',factionContext);
   assert.equal(presentation.oracle,'ORACLE');
@@ -572,7 +572,7 @@ test('Prism Oracle and Prism remain distinct units',()=>{
 
 test('Prism Oracle and Wizard cost Light, with Wizard favoring Light over Gold',()=>{
   const context=vm.createContext({});
-  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8');
+  const source=fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8');
   vm.runInContext(source,context);
 
   const costs=vm.runInContext(`({
@@ -585,7 +585,7 @@ test('Prism Oracle and Wizard cost Light, with Wizard favoring Light over Gold',
 });
 
 test('Prism unit uses a distinct renderer from the Oracle',()=>{
-  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','warriors.js'),'utf8');
+  const source=fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','warriors.js'),'utf8');
 
   assert.match(source,/w\.subtype==='prism'[\s\S]*?drawFn=drawPrism/);
   assert.match(source,/w\.subtype==='elite'[\s\S]*?drawFn=drawEliteOracle/);
@@ -593,7 +593,7 @@ test('Prism unit uses a distinct renderer from the Oracle',()=>{
 
 test('Prism unit keeps a broader, taller silhouette than the Oracle',()=>{
   const context=vm.createContext({console});
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','elites.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','elites.js'),'utf8'),context);
   const silhouettes=vm.runInContext(`(() => {
     function trace(draw){
       const points=[];
@@ -622,7 +622,7 @@ test('Prism unit keeps a broader, taller silhouette than the Oracle',()=>{
 
 test('Prism unit is limited to one existing or queued unit',()=>{
   const context=makeContext();
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
     S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},playerFaction:'prism',enemyFaction:'shadow'},
@@ -632,7 +632,7 @@ test('Prism unit is limited to one existing or queued unit',()=>{
     updateRtsHUD:()=>{}, rtsSetLog:()=>{},
     queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','commands.js'),'utf8'),context);
   const result=vm.runInContext(`(() => {
     const temple={id:1,type:'base',side:'player',faction:'prism',x:0,y:0,queue:[]};
     S.entities=[temple];
@@ -653,7 +653,7 @@ test('Prism unit is limited to one existing or queued unit',()=>{
 test('Prism unit trains at the Temple rather than the Shrine',()=>{
   const context=vm.createContext({});
   for(const file of ['factions.js','ui.js']){
-    vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts',file),'utf8'),context);
+    vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts',file),'utf8'),context);
   }
 
   const locations=vm.runInContext(`(() => {
@@ -683,7 +683,7 @@ test('Legionnaire starts in sword mode and can switch to bow mode',()=>{
     window:{_mpMultiplayer:false}, mpConnected:false,
     FACTION_CFG:{prism:{}}, rtsSetLog:()=>{}, updateRtsHUD:()=>{},
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','commands.js'),'utf8'),context);
   const bow=vm.runInContext(`(() => {
     const unit=makeLegionnaire('player','prism',100,100); S.entities=[unit];
     executeCommand({type:'toggle_weapon',unitId:unit.id,side:'player'});
@@ -728,7 +728,7 @@ test('bow-mode legionnaire can target aerial units, sword-mode cannot',()=>{
     },
     window:{_mpMultiplayer:false}, S:{entities:[],playerBase:null,enemyBase:null},
   });
-  const gameSource=fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8');
+  const gameSource=fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','game.js'),'utf8');
   vm.runInContext(gameSource,context);
   const result=vm.runInContext(`(() => {
     const unit=makeLegionnaire('player','prism',100,100);
@@ -750,7 +750,7 @@ test('Prism Arkship is a unique flagship that starts in attacking mode with no c
   assert.equal(ark.aerial,true);
 
   const factionContext=vm.createContext({});
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),factionContext);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8'),factionContext);
   const presentation=vm.runInContext('({label:FACTION_CFG.prism.arkshipLabel,desc:FACTION_CFG.prism.arkshipDesc,gold:FACTION_CFG.prism.arkshipCost,light:FACTION_CFG.prism.arkshipOilCost})',factionContext);
   assert.equal(presentation.label,'ARKSHIP');
   assert.match(presentation.desc,/Prism/);
@@ -761,7 +761,7 @@ test('Prism Arkship is a unique flagship that starts in attacking mode with no c
 
 test('Arkship requires an existing Prism to build, consumes her on completion, and is limited to one',()=>{
   const context=makeContext();
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','factions.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','factions.js'),'utf8'),context);
   Object.assign(context,{
     window:{_mpMultiplayer:false}, mpConnected:false,
     S:{frame:0,entities:[],gold:{player:1000},oil:{player:1000},playerFaction:'prism',enemyFaction:'shadow'},
@@ -771,7 +771,7 @@ test('Arkship requires an existing Prism to build, consumes her on completion, a
     updateRtsHUD:()=>{}, rtsSetLog:()=>{},
     queueUnit:(building,label,time,fn,unitType)=>{ building.queue.push({label,time,fn,unitType}); return true; },
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','commands.js'),'utf8'),context);
 
   const result=vm.runInContext(`(() => {
     const temple={id:1,type:'base',side:'player',faction:'prism',x:0,y:0,queue:[]};
@@ -815,8 +815,8 @@ test('toggle_arkship_mode deploys the Prism with 5 Witches exactly once, and swi
     FACTION_CFG:{prism:{color:'#00ddff'}}, rtsSetLog:()=>{}, updateRtsHUD:()=>{}, sfx:()=>{},
     STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0}},
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','commands.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','game.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','commands.js'),'utf8'),context);
 
   const result=vm.runInContext(`(() => {
     const ark=makeArkship('player','prism',100,100);
@@ -854,7 +854,7 @@ test('Arkship fires twin beams in attacking mode — a second enemy in range tak
     STRUCT_COSTS:{barracks:{gold:0},cannon:{gold:0},structure:{gold:0,oil:0},aerial:{gold:0,oil:0},oilrig:{gold:0}},
     FACTION_CFG:{prism:{color:'#00ddff'}}, sfx:()=>{},
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','game.js'),'utf8'),context);
 
   const result=vm.runInContext(`(() => {
     const ark=makeArkship('player','prism',100,100);
@@ -886,7 +886,7 @@ test('Arkship fires twin beams in attacking mode — a second enemy in range tak
 });
 
 test('Prism Arkship uses a distinct renderer from the Warship and Light Fighter',()=>{
-  const source=fs.readFileSync(path.join(__dirname,'..','js','rts','warriors.js'),'utf8');
+  const source=fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','warriors.js'),'utf8');
   assert.match(source,/w\.subtype==='arkship'[\s\S]*?drawFn=drawArkshipUnit/);
 });
 
@@ -900,7 +900,7 @@ test('Vanthel can target aerial units, like the Dark Warrior he attacks like, an
     },
     window:{_mpMultiplayer:false}, S:{entities:[],playerBase:null,enemyBase:null},
   });
-  const gameSource=fs.readFileSync(path.join(__dirname,'..','js','rts','game.js'),'utf8');
+  const gameSource=fs.readFileSync(path.join(__dirname,'..','nexus','js','rts','game.js'),'utf8');
   vm.runInContext(gameSource,context);
   const result=vm.runInContext(`(() => {
     const vanthel=makeVanthel('player',100,100);

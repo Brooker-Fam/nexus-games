@@ -4,8 +4,8 @@ const path = require('node:path');
 const test = require('node:test');
 const vm = require('node:vm');
 
-const model = import('../js/taekwondo/model.js');
-const controllerSource = fs.readFileSync(path.join(__dirname, '../js/taekwondo/game.js'), 'utf8')
+const model = import('../nexus/js/taekwondo/model.js');
+const controllerSource = fs.readFileSync(path.join(__dirname, '../nexus/js/taekwondo/game.js'), 'utf8')
   .replace(/^import .*;\n/gm, '');
 
 async function harness() {

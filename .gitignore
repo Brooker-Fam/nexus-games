@@ -4,5 +4,5 @@
 .env
 .env.local
 node_modules
-js/posthog-config.js
-js/**/*.js.map
+nexus/js/posthog-config.js
+nexus/js/**/*.js.map

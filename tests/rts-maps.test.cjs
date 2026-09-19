@@ -8,7 +8,7 @@ function makeContext(){
   const context=vm.createContext({S:{map:null,mapDecor:[],goldNodes:[]},console});
   vm.runInContext('const RW=4000, RH=1400, PLAYER_BASE_X=160, ENEMY_BASE_X=3840, BASE_Y=700;',context);
   for(const file of ['rng.js','maps.js']){
-    vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js','rts',file),'utf8'),context);
+    vm.runInContext(fs.readFileSync(path.join(__dirname,'..','nexus','js','rts',file),'utf8'),context);
   }
   return context;
 }

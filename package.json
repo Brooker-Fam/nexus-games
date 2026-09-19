@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Nexus Games arcade — vanilla JS frontend, serverless API on Vercel",
+  "description": "Kitty Games — landing page linking to the Nexus Games arcade (vanilla JS frontend, serverless API on Vercel)",
   "scripts": {
     "test": "node --test tests/*.test.cjs",
     "migrate": "node scripts/migrate.js",

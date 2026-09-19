@@ -43,7 +43,7 @@ export default async function handler(req, res) {
     }
 
     const origin = req.headers.origin || `https://${req.headers.host}`;
-    const successUrl = `${origin}/?checkout_id={CHECKOUT_ID}`;
+    const successUrl = `${origin}/nexus/?checkout_id={CHECKOUT_ID}`;
 
     const checkout = await createCheckout({
       productId: PRODUCT_ID,
