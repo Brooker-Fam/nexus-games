@@ -255,18 +255,18 @@
         </div>
 
         <!-- PLAYER STATS (shown after first game) -->
-        <div id="dso-stats" class="dso-stats">
+        <div id="dso-stats" class="dso-stats" data-dso-stats>
           <div class="dso-stats-title">COMMANDER STATS</div>
           <div class="dso-stats-row">
-            <div class="dso-stat-box"><div class="dso-stat-label">RATING</div><div class="dso-stat-val cyan" id="dso-stat-rating">1000</div></div>
-            <div class="dso-stat-box"><div class="dso-stat-label">GAMES</div><div class="dso-stat-val" id="dso-stat-games">0</div></div>
-            <div class="dso-stat-box"><div class="dso-stat-label">K/D</div><div class="dso-stat-val" id="dso-stat-kd">—</div></div>
-            <div class="dso-stat-box"><div class="dso-stat-label">AI LEVEL</div><div class="dso-stat-val" id="dso-stat-level">5/10</div></div>
-            <div class="dso-stat-box"><div class="dso-stat-label">GOLD/MIN</div><div class="dso-stat-val" id="dso-stat-gpm">—</div></div>
-            <div class="dso-stat-box"><div class="dso-stat-label">OIL / ESSENCE / LIGHT / MIN</div><div class="dso-stat-val" id="dso-stat-opm">—</div></div>
-            <div class="dso-stat-box"><div class="dso-stat-label">STREAK</div><div class="dso-stat-val" id="dso-stat-streak">—</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">RATING</div><div class="dso-stat-val cyan" data-stat="rating">1000</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">GAMES</div><div class="dso-stat-val" data-stat="games">0</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">K/D</div><div class="dso-stat-val" data-stat="kd">—</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">AI LEVEL</div><div class="dso-stat-val" data-stat="level">5/10</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">GOLD/MIN</div><div class="dso-stat-val" data-stat="gpm">—</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">OIL / ESSENCE / LIGHT / MIN</div><div class="dso-stat-val" data-stat="opm">—</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">STREAK</div><div class="dso-stat-val" data-stat="streak">—</div></div>
           </div>
-          <canvas id="dso-rating-graph" width="700" height="120"></canvas>
+          <canvas class="dso-rating-graph" width="700" height="120"></canvas>
         </div>
 
         <!-- MULTIPLAYER -->
@@ -294,9 +294,25 @@
           <div class="reveal-vignette"></div>
         </div>
         <div class="reveal-lore" id="rv-lore">From the void between stars, he emerged.</div>
+        <div class="fc-stats reveal-fc-stats" id="rv-stats"></div>
         <div class="reveal-btns">
           <button class="rv-btn rv-back" id="btn-dso-back">◂ CHANGE FACTION</button>
           <button class="rv-btn rv-play" id="btn-dso-play">BEGIN BATTLE ▸</button>
+        </div>
+
+        <!-- COMMANDER STATS (same data as the select screen, reused here too) -->
+        <div class="dso-stats" data-dso-stats>
+          <div class="dso-stats-title">COMMANDER STATS</div>
+          <div class="dso-stats-row">
+            <div class="dso-stat-box"><div class="dso-stat-label">RATING</div><div class="dso-stat-val cyan" data-stat="rating">1000</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">GAMES</div><div class="dso-stat-val" data-stat="games">0</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">K/D</div><div class="dso-stat-val" data-stat="kd">—</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">AI LEVEL</div><div class="dso-stat-val" data-stat="level">5/10</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">GOLD/MIN</div><div class="dso-stat-val" data-stat="gpm">—</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">OIL / ESSENCE / LIGHT / MIN</div><div class="dso-stat-val" data-stat="opm">—</div></div>
+            <div class="dso-stat-box"><div class="dso-stat-label">STREAK</div><div class="dso-stat-val" data-stat="streak">—</div></div>
+          </div>
+          <canvas class="dso-rating-graph" width="700" height="120"></canvas>
         </div>
       </div>
 
@@ -306,6 +322,8 @@
           <div class="rts-hud-top">
             <div class="rts-hud-left">
               <div class="rts-faction-badge" id="rts-faction-badge">PRISM ARMADA</div>
+              <div class="rts-faction-champion" id="rts-faction-champion"></div>
+              <div class="fc-stats rts-faction-stats" id="rts-faction-stats"></div>
               <div class="rts-resource"><span class="rts-res-icon">◈</span> GOLD: <span id="rts-gold">0</span></div>
               <div class="rts-resource" id="rts-oil-row" style="display:none"><span class="rts-res-icon">🛢</span> OIL: <span id="rts-oil">0</span></div>
               <div class="rts-resource"><span class="rts-res-icon">⚔</span> UNITS: <span id="rts-units">0</span></div>
@@ -315,6 +333,15 @@
               <div class="rts-resource">ENEMY: <span id="rts-enemy-faction" class="rts-enemy-color">???</span></div>
               <div class="rts-resource">MAP: <span id="rts-map-name" class="rts-map-name">ORION DIVIDE</span></div>
               <div class="rts-resource">BASE HP: <span id="rts-base-hp" class="rts-hp-color">150</span></div>
+              <!-- COMMANDER STATS (compact — same data as the select/reveal screens) -->
+              <div class="dso-stats dso-stats-compact" data-dso-stats>
+                <div class="dso-stats-row">
+                  <div class="dso-stat-box"><div class="dso-stat-label">RATING</div><div class="dso-stat-val cyan" data-stat="rating">1000</div></div>
+                  <div class="dso-stat-box"><div class="dso-stat-label">GAMES</div><div class="dso-stat-val" data-stat="games">0</div></div>
+                  <div class="dso-stat-box"><div class="dso-stat-label">K/D</div><div class="dso-stat-val" data-stat="kd">—</div></div>
+                  <div class="dso-stat-box"><div class="dso-stat-label">STREAK</div><div class="dso-stat-val" data-stat="streak">—</div></div>
+                </div>
+              </div>
               <button class="rts-retreat-btn" id="btn-rts-menu">◂ MENU</button>
             </div>
           </div>

@@ -254,81 +254,80 @@ function showRatingChange(result){
   el.style.display = 'block';
 }
 
-// ── STATS PANEL (faction select screen) ──
+// ── STATS PANELS (every DSO screen carries its own instance) ──
 
+// Every commander-stats panel is marked with [data-dso-stats] and looks up
+// its own values by [data-stat] so the same render logic drives all of them
+// (faction select, reveal screen, in-game HUD) from one source of truth.
 function refreshDifficultyStats(){
-  const panel = document.getElementById('dso-stats');
-  if(!panel) return;
+  const panels = document.querySelectorAll('[data-dso-stats]');
+  if(!panels.length) return;
 
   const d = loadDifficultyData();
 
-  panel.style.display = '';
-
-  // Update stat values
-  const setTxt = (id, txt) => { const e = document.getElementById(id); if(e) e.textContent = txt; };
-  setTxt('dso-stat-rating', d.rating);
-  setTxt('dso-stat-games', d.gamesPlayed);
-  setTxt('dso-stat-level', getDifficultyLevel() + '/10');
-
   // K/D ratio from history
   const gamesWithStats = d.history.filter(g => g.k !== undefined);
+  let kd = '—';
   if(gamesWithStats.length > 0){
     const totalKills  = gamesWithStats.reduce((s,g)=>s+(g.k||0),0);
     const totalDeaths = gamesWithStats.reduce((s,g)=>s+(g.dt||0),0);
-    const kd = totalKills / Math.max(1, totalDeaths);
-    setTxt('dso-stat-kd', kd.toFixed(2));
-  } else {
-    setTxt('dso-stat-kd', '—');
+    kd = (totalKills / Math.max(1, totalDeaths)).toFixed(2);
   }
 
   // Average gold per minute
+  let gpm = '—';
   if(gamesWithStats.length > 0){
     const totalGold = gamesWithStats.reduce((s,g)=>s+(g.ge||0),0);
     const totalMins = gamesWithStats.reduce((s,g)=>s+((g.f||0)/3600),0); // frames→minutes at 60fps
-    const gpm = totalMins > 0 ? Math.round(totalGold / totalMins) : 0;
-    setTxt('dso-stat-gpm', gpm > 0 ? gpm + '/m' : '—');
-  } else {
-    setTxt('dso-stat-gpm', '—');
+    const v = totalMins > 0 ? Math.round(totalGold / totalMins) : 0;
+    gpm = v > 0 ? v + '/m' : '—';
   }
 
   // Average secondary resource (oil / essence / light) per minute
   const gamesWithOilStats = d.history.filter(g => g.oe !== undefined);
+  let opm = '—';
   if(gamesWithOilStats.length > 0){
     const totalOil = gamesWithOilStats.reduce((s,g)=>s+(g.oe||0),0);
     const totalMins = gamesWithOilStats.reduce((s,g)=>s+((g.f||0)/3600),0); // frames→minutes at 60fps
-    const opm = totalMins > 0 ? Math.round(totalOil / totalMins) : 0;
-    setTxt('dso-stat-opm', opm > 0 ? opm + '/m' : '—');
-  } else {
-    setTxt('dso-stat-opm', '—');
+    const v = totalMins > 0 ? Math.round(totalOil / totalMins) : 0;
+    opm = v > 0 ? v + '/m' : '—';
   }
 
-  if(d.streak > 0) setTxt('dso-stat-streak', d.streak + 'W');
-  else if(d.streak < 0) setTxt('dso-stat-streak', Math.abs(d.streak) + 'L');
-  else setTxt('dso-stat-streak', '—');
+  let streakTxt = '—', streakColor = '';
+  if(d.streak > 0){ streakTxt = d.streak + 'W'; }
+  else if(d.streak < 0){ streakTxt = Math.abs(d.streak) + 'L'; }
+  if(d.streak >= 3) streakColor = '#ff6666';
+  else if(d.streak <= -3) streakColor = '#66ff88';
 
-  // Color streak
-  const streakEl = document.getElementById('dso-stat-streak');
-  if(streakEl){
-    if(d.streak >= 3) streakEl.style.color = '#ff6666';
-    else if(d.streak <= -3) streakEl.style.color = '#66ff88';
-    else streakEl.style.color = '';
-  }
+  let rdTxt = 'STABLE';
+  if(d.rd > 150) rdTxt = 'NEW';
+  else if(d.rd > 100) rdTxt = 'LEARNING';
+  else if(d.rd > 70) rdTxt = 'SETTLING';
 
-  // RD indicator
-  const rdEl = document.getElementById('dso-stat-rd');
-  if(rdEl){
-    if(d.rd > 150) rdEl.textContent = 'NEW';
-    else if(d.rd > 100) rdEl.textContent = 'LEARNING';
-    else if(d.rd > 70) rdEl.textContent = 'SETTLING';
-    else rdEl.textContent = 'STABLE';
-  }
+  panels.forEach(panel=>{
+    panel.style.display = '';
+    const setTxt = (stat, txt) => { const e = panel.querySelector('[data-stat="'+stat+'"]'); if(e) e.textContent = txt; };
+    setTxt('rating', d.rating);
+    setTxt('games', d.gamesPlayed);
+    setTxt('level', getDifficultyLevel() + '/10');
+    setTxt('kd', kd);
+    setTxt('gpm', gpm);
+    setTxt('opm', opm);
+    setTxt('streak', streakTxt);
+    setTxt('rd', rdTxt);
+    const streakEl = panel.querySelector('[data-stat="streak"]');
+    if(streakEl) streakEl.style.color = streakColor;
+  });
 
-  // Draw the rating graph
+  // Draw the rating graph in every panel that has one
   drawRatingGraph();
 }
 
 function drawRatingGraph(){
-  const canvas = document.getElementById('dso-rating-graph');
+  document.querySelectorAll('.dso-rating-graph').forEach(canvas=>drawRatingGraphOn(canvas));
+}
+
+function drawRatingGraphOn(canvas){
   if(!canvas) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;

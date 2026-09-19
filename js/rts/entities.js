@@ -540,14 +540,14 @@ function startRTS(playerFaction, enemyFaction, mapSeed){
 
   // update HUD labels
   const pCfg=FACTION_CFG[playerFaction];
-  document.getElementById('rts-faction-badge').textContent=playerFaction.toUpperCase()+' ARMADA';
-  document.getElementById('rts-faction-badge').style.color=pCfg.color;
+  if(typeof updateGameFactionPanel==='function') updateGameFactionPanel(playerFaction);
   document.getElementById('hud-building-name').textContent=pCfg.buildingName;
   document.getElementById('rts-enemy-faction').textContent=S.enemyFaction.toUpperCase();
   document.getElementById('rts-enemy-faction').style.color=FACTION_CFG[S.enemyFaction].color;
   const mapName=document.getElementById('rts-map-name');
   if(mapName) mapName.textContent=S.map?S.map.name:'ORION DIVIDE';
   rtsSetLog('Click your '+pCfg.buildingName+' to train units!');
+  if(typeof refreshDifficultyStats==='function') refreshDifficultyStats();
 
   if(S.raf) cancelAnimationFrame(S.raf);
   rtsLastTime=performance.now(); rtsAccum=0;

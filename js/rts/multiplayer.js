@@ -112,8 +112,7 @@ function mpStartGame(msg){
   // Guest: fix HUD for their faction, start camera at their base
   if(!mpIsHost){
     const myCfg=FACTION_CFG[msg.gf];
-    document.getElementById('rts-faction-badge').textContent=msg.gf.toUpperCase()+' ARMADA';
-    document.getElementById('rts-faction-badge').style.color=myCfg.color;
+    if(typeof updateGameFactionPanel==='function') updateGameFactionPanel(msg.gf);
     document.getElementById('hud-building-name').textContent=myCfg.buildingName;
     document.getElementById('rts-enemy-faction').textContent=msg.hf.toUpperCase();
     document.getElementById('rts-enemy-faction').style.color=FACTION_CFG[msg.hf].color;

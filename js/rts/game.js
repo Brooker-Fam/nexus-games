@@ -1472,6 +1472,7 @@ function endRTS(playerWon){
     // Record result and show rating change
     result = recordGameResult(playerWon, S.frame, S.stats);
     showRatingChange(result);
+    if(typeof refreshDifficultyStats==='function') refreshDifficultyStats();
   }
   if(window.posthog) posthog.capture('dso_game_ended', {
     outcome: playerWon ? 'victory' : 'defeat',
