@@ -39,16 +39,16 @@ function setStatus(message) {
   if (view.status.textContent !== message) view.status.textContent = message;
 }
 
-// Neon Dojo is a Nexus MAX exclusive (see js/shared/memberships.js). Locked
+// Neon Dojo is a Nexus PRO exclusive (see js/shared/memberships.js). Locked
 // by default until membership status resolves, so gameplay never starts
 // unentitled while that fetch is in flight.
 function applyLock() {
-  locked = !window.nexusMaxActive;
+  locked = !window.nexusProActive;
   view.lockPanel.hidden = !locked;
   view.startButton.disabled = locked;
   view.demoButton.disabled = locked;
   if (locked && active && !['idle', 'results', 'error'].includes(phase)) {
-    stopSession('Locked. Upgrade to Nexus MAX to keep training.');
+    stopSession('Locked. Upgrade to Nexus PRO to keep training.');
   }
 }
 window.renderTkdLock = applyLock;
