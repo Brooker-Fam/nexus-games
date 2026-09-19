@@ -103,10 +103,40 @@ const FACTION_CFG={
 
 // UI/presentation config (reveal screen, card select)
 const FACTION_DATA={
-  shadow:{ armada:'SHADOW ARMADA', champion:'THE SWORDSMAN', lore:'"From the void between stars, he emerged. None who faced his blade lived to name him."', accentColor:'#9933ff', progression:{} },
-  prism: { armada:'PRISM ARMADA',  champion:'THE WHITE WITCH', lore:'"She speaks in light. Her words become spells. Her spells become storms."', accentColor:'#00ddff', progression:{} },
-  roboto:{ armada:'ROBOTO ARMADA', champion:'THE GUNBOT',     lore:'"Forged in a dead star\'s core. Programmed for one purpose: total suppression."', accentColor:'#ff8800', progression:{} },
+  shadow:{ armada:'SHADOW ARMADA', champion:'THE SWORDSMAN', lore:'"From the void between stars, he emerged. None who faced his blade lived to name him."', accentColor:'#9933ff', progression:{},
+    desc:'Masters of dark steel and silent death. The swordsman strikes before you see him.',
+    statBars:[{label:'ATK',val:90},{label:'DEF',val:75},{label:'SPD',val:95}] },
+  prism: { armada:'PRISM ARMADA',  champion:'THE WHITE WITCH', lore:'"She speaks in light. Her words become spells. Her spells become storms."', accentColor:'#00ddff', progression:{},
+    desc:'Wielders of radiant light. The White Witch bends reality with spectral sorcery.',
+    statBars:[{label:'ATK',val:80},{label:'DEF',val:60},{label:'MGC',val:100}] },
+  roboto:{ armada:'ROBOTO ARMADA', champion:'THE GUNBOT',     lore:'"Forged in a dead star\'s core. Programmed for one purpose: total suppression."', accentColor:'#ff8800', progression:{},
+    desc:'Iron-clad war machines. The Gunbot never misses, never tires, never stops.',
+    statBars:[{label:'ATK',val:85},{label:'DEF',val:95},{label:'RNG',val:88}] },
 };
+
+// Renders the ATK/DEF/SPD-style stat bars used on the faction select cards —
+// reused anywhere a faction's stats need to show (reveal screen, in-game HUD).
+function factionStatBarsHTML(faction){
+  const fd=FACTION_DATA[faction];
+  if(!fd || !fd.statBars) return '';
+  const color=(FACTION_CFG[faction]||{}).color || fd.accentColor;
+  return fd.statBars.map(s=>
+    `<div class="fc-stat"><span class="fc-stat-label">${s.label}</span><div class="fc-bar"><div class="fc-fill" style="width:${s.val}%;background:${color}"></div></div></div>`
+  ).join('');
+}
+
+// Populates the in-game HUD's faction badge/champion/stat bars for whichever
+// faction the local player is playing (singleplayer, training, and MP host/guest).
+function updateGameFactionPanel(faction){
+  const cfg=FACTION_CFG[faction], fd=FACTION_DATA[faction];
+  if(!cfg || !fd) return;
+  const badge=document.getElementById('rts-faction-badge');
+  if(badge){ badge.textContent=faction.toUpperCase()+' ARMADA'; badge.style.color=cfg.color; }
+  const champ=document.getElementById('rts-faction-champion');
+  if(champ) champ.textContent=fd.champion;
+  const stats=document.getElementById('rts-faction-stats');
+  if(stats) stats.innerHTML=factionStatBarsHTML(faction);
+}
 
 // Shared DSO state
 let dsoSelectedFaction = null;

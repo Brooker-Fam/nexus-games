@@ -250,6 +250,10 @@
 
   /* reveal screen */
   #dso-reveal { padding: 10px 0; }
+  @keyframes fadeSlideDown {
+    from { opacity:0; transform:translateY(-14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
   .reveal-header { text-align:center; margin-bottom:16px; }
   .reveal-armada {
     font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:6px;
@@ -281,6 +285,10 @@
     color:var(--text-dim); text-align:center; font-style:italic;
     margin-bottom:20px;
     animation: fadeSlideDown 1s ease 0.5s forwards; opacity:0;
+  }
+  .reveal-fc-stats {
+    max-width:340px; margin:0 auto 22px; padding:0;
+    animation: fadeSlideDown 1s ease 0.6s forwards; opacity:0;
   }
   .reveal-btns { display:flex; justify-content:center; gap:16px; }
   .rv-btn {
@@ -317,6 +325,14 @@
     color:var(--neon-cyan);
     clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px));
   }
+  .rts-faction-champion {
+    font-family:'Orbitron',sans-serif; font-size:8px; letter-spacing:1.5px;
+    color:var(--text-dim); margin-top:2px;
+  }
+  .rts-faction-stats { max-width:150px; padding:0; margin:4px 0 2px; }
+  .rts-faction-stats .fc-stat { margin-bottom:3px; }
+  .rts-faction-stats .fc-stat-label { width:22px; font-size:7px; }
+  .rts-faction-stats .fc-bar { height:3px; }
   .rts-resource { font-size:10px; letter-spacing:1px; color:var(--text-dim); }
   .rts-res-icon { color:gold; }
   /* Bottom row: minimap + the permanent worker-actions/build panel + army controls */
@@ -359,10 +375,17 @@
     color:var(--text-bright); letter-spacing:1px;
   }
   .dso-stat-val.cyan { color:var(--neon-cyan); }
-  #dso-rating-graph {
+  .dso-rating-graph {
     display:block; width:100%; max-width:700px; height:120px; margin:0 auto;
     border:1px solid rgba(0,245,255,0.08);
   }
+  /* compact variant — embedded in the in-game HUD, no title/graph, tighter boxes */
+  .dso-stats-compact {
+    max-width:none; margin:2px 0 0; padding:4px 8px;
+  }
+  .dso-stats-compact .dso-stats-row { gap:10px; margin-bottom:0; justify-content:flex-end; }
+  .dso-stats-compact .dso-stat-box { min-width:44px; }
+  .dso-stats-compact .dso-stat-val { font-size:12px; }
   /* ── MULTIPLAYER ── */
   .mp-controls { text-align:center; margin-top:30px; }
   .mp-divider {

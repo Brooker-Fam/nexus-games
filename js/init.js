@@ -14,8 +14,6 @@ function setDsoMode(mode){
   if(desc) desc.textContent=DSO_MODE_DESC[mode]||'';
   const cards=document.querySelector('.faction-cards');
   if(cards) cards.style.display = (mode==='pvp' && !mpConnected) ? 'none' : '';
-  const stats=document.getElementById('dso-stats');
-  if(stats) stats.style.display = mode==='ai' ? '' : 'none';
   const mp=document.getElementById('mp-controls');
   if(mp) mp.style.display = mode==='pvp' ? '' : 'none';
   const banner=document.getElementById('dso-training-banner');
@@ -37,11 +35,14 @@ function dsoSelect(faction){
   rvA.textContent=fd.armada; rvA.className='reveal-armada '+faction;
   rvC.textContent=fd.champion; rvC.className='reveal-champion '+faction;
   rvL.textContent=fd.lore;
+  const rvStats=document.getElementById('rv-stats');
+  if(rvStats) rvStats.innerHTML=factionStatBarsHTML(faction);
   // reset animations
   [rvA,rvC,rvL].forEach(el=>{el.style.animation='none';el.offsetHeight;el.style.animation='';});
   document.getElementById('dso-select').style.display='none';
   document.getElementById('dso-reveal').style.display='block';
   startRevealAnimation(faction);
+  if(typeof refreshDifficultyStats==='function') refreshDifficultyStats();
 }
 
 function dsoBack(){
