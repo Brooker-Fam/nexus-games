@@ -79,10 +79,10 @@ export function createDojoView(container) {
       </div>
       <div class="tkd-lock" data-ref="lockPanel" hidden>
         <div class="tkd-lock-card">
-          <p class="tkd-eyebrow">NEXUS PRO</p>
-          <h2>Neon Dojo is a PRO exclusive.</h2>
-          <p>Upgrade to Nexus PRO to unlock the camera dojo, plus every alternate skin and the full book.</p>
-          <button class="tkd-button tkd-button-primary" data-ref="lockUpgradeButton" type="button">Upgrade to PRO <span aria-hidden="true">↗</span></button>
+          <p class="tkd-eyebrow">NEXUS MAX</p>
+          <h2>Neon Dojo is a MAX exclusive.</h2>
+          <p>Upgrade to Nexus MAX to unlock the camera dojo.</p>
+          <button class="tkd-button tkd-button-primary" data-ref="lockUpgradeButton" type="button">Upgrade to MAX <span aria-hidden="true">↗</span></button>
         </div>
       </div>
     </section>`;
