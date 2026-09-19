@@ -20,6 +20,7 @@
     --bg-mid: #1a0e2b;
     --neon-pink: #ff5fd8;
     --neon-purple: #b06bff;
+    --neon-cyan: #4be8ff;
     --neon-yellow: #ffe066;
     --text-bright: #fdf3ff;
     --text-dim: rgba(253,243,255,0.6);
@@ -32,30 +33,19 @@
     color: var(--text-bright);
     font-family: 'Rajdhani', sans-serif;
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow-x: hidden;
+    padding: 40px 16px 60px;
   }
-  .card {
-    position: relative;
+  .shell {
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  header {
     text-align: center;
-    padding: 56px 44px;
-    background: var(--panel-bg);
-    border: 1px solid var(--panel-border);
-    border-radius: 24px;
-    box-shadow: 0 0 60px rgba(255,95,216,0.15), inset 0 0 40px rgba(176,107,255,0.08);
-    max-width: 480px;
-    width: calc(100% - 32px);
-  }
-  .paw {
-    font-size: 2.6rem;
-    margin-bottom: 8px;
-    filter: drop-shadow(0 0 12px var(--neon-pink));
+    margin-bottom: 32px;
   }
   h1 {
     font-family: 'Baloo 2', sans-serif;
-    font-size: 2.6rem;
+    font-size: 2.4rem;
     font-weight: 800;
     letter-spacing: 0.04em;
     background: linear-gradient(90deg, var(--neon-pink), var(--neon-purple));
@@ -71,40 +61,262 @@
     text-transform: uppercase;
     font-size: 0.85rem;
   }
-  .enter-btn {
-    display: inline-block;
-    margin-top: 36px;
-    padding: 16px 38px;
+
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: 12px 28px;
     font-family: 'Baloo 2', sans-serif;
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     font-weight: 700;
     letter-spacing: 0.06em;
+    color: var(--text-dim);
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .tab-btn:hover { color: var(--text-bright); }
+  .tab-btn.active {
     color: var(--bg-deep);
     background: linear-gradient(90deg, var(--neon-yellow), var(--neon-pink));
-    border: none;
-    border-radius: 999px;
-    text-decoration: none;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
     box-shadow: 0 0 24px rgba(255,95,216,0.4);
   }
-  .enter-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0 32px rgba(255,95,216,0.6);
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
   }
+  .game-card {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    padding: 28px 20px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 20px;
+    box-shadow: 0 0 40px rgba(255,95,216,0.1), inset 0 0 30px rgba(176,107,255,0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .game-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 40px rgba(255,95,216,0.3), inset 0 0 30px rgba(176,107,255,0.1);
+  }
+  .game-icon { font-size: 2.2rem; margin-bottom: 12px; }
+  .game-name {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+  .game-desc {
+    margin-top: 8px;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    flex-grow: 1;
+  }
+  .game-play {
+    margin-top: 16px;
+    align-self: flex-start;
+    padding: 8px 20px;
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--bg-deep);
+    background: linear-gradient(90deg, var(--neon-yellow), var(--neon-pink));
+    border-radius: 999px;
+  }
+
+  .membership-plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  .membership-card {
+    position: relative;
+    padding: 28px 20px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 20px;
+    text-align: center;
+  }
+  .membership-card-pro { border-color: rgba(75,232,255,0.5); }
+  .membership-card-max { border-color: rgba(255,224,102,0.5); }
+  .membership-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 14px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    border-radius: 999px;
+    background: var(--neon-cyan);
+    color: var(--bg-deep);
+  }
+  .membership-badge-max { background: var(--neon-yellow); }
+  .membership-name {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .membership-price {
+    margin-top: 8px;
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--neon-pink);
+  }
+  .membership-period {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+  .membership-features {
+    list-style: none;
+    margin: 18px 0 20px;
+    text-align: left;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+  .membership-btn {
+    display: block;
+    padding: 10px 0;
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    border-radius: 999px;
+    color: var(--bg-deep);
+    background: linear-gradient(90deg, var(--neon-yellow), var(--neon-pink));
+  }
+  .membership-btn-current {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--panel-border);
+  }
+
   .sub-note {
-    margin-top: 18px;
+    margin-top: 36px;
+    text-align: center;
     font-size: 0.8rem;
     color: var(--text-dim);
   }
 </style>
 </head>
 <body>
-<div class="card">
-  <div class="paw">🐾</div>
-  <h1>KITTY GAMES</h1>
-  <div class="tagline">Play &middot; Purr &middot; Repeat</div>
-  <a class="enter-btn" href="/nexus/">ENTER NEXUS →</a>
+<div class="shell">
+  <header>
+    <h1>KITTY GAMES</h1>
+    <div class="tagline">Arcade &middot; Strategy &middot; Beyond</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-btn-games">GAMES</button>
+    <button class="tab-btn" id="tab-btn-memberships">MEMBERSHIPS</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-games">
+    <div class="games-grid">
+      <a class="game-card" href="/nexus/">
+        <div class="game-icon">⬡</div>
+        <div class="game-name">TOWER DEFENSE</div>
+        <div class="game-desc">Deploy towers, evolve them with kills, and hold the void fortress against escalating waves.</div>
+        <span class="game-play">PLAY →</span>
+      </a>
+      <a class="game-card" href="/nexus/">
+        <div class="game-icon">◈</div>
+        <div class="game-name">DEEP SPACE OPS</div>
+        <div class="game-desc">Pick a faction and battle the AI, a friend, or a live opponent in real-time strategy combat.</div>
+        <span class="game-play">PLAY →</span>
+      </a>
+      <a class="game-card" href="/nexus/">
+        <div class="game-icon">◉</div>
+        <div class="game-name">NEON DOJO — TAEKWONDO</div>
+        <div class="game-desc">Camera-tracked taekwondo training. Read your moves and score every strike.</div>
+        <span class="game-play">PLAY →</span>
+      </a>
+      <a class="game-card" href="/nexus/">
+        <div class="game-icon">📖</div>
+        <div class="game-name">THE BOOK</div>
+        <div class="game-desc">An illustrated story mode woven through the Nexus universe.</div>
+        <span class="game-play">PLAY →</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-memberships">
+    <div class="membership-plans">
+      <div class="membership-card" id="membership-card-free">
+        <div class="membership-name">BASIC</div>
+        <div class="membership-price">$0<span class="membership-period">/mo</span></div>
+        <ul class="membership-features">
+          <li>◆ All Tower Defense &amp; Deep Space Ops gameplay</li>
+          <li>◆ Standard-issue unit skins</li>
+          <li>◆ Ranked &amp; multiplayer matches</li>
+        </ul>
+        <div class="membership-btn membership-btn-current">CURRENT PLAN</div>
+      </div>
+
+      <div class="membership-card membership-card-pro" id="membership-card-pro">
+        <div class="membership-badge">BEST VALUE</div>
+        <div class="membership-name">PRO</div>
+        <div class="membership-price">$1<span class="membership-period">/mo</span></div>
+        <ul class="membership-features">
+          <li>◆ Everything in Basic</li>
+          <li>◆ Every alternate skin, free</li>
+          <li>◆ Full access to The Book</li>
+          <li>◆ Neon Dojo — camera taekwondo</li>
+        </ul>
+        <a class="membership-btn" href="/nexus/">UPGRADE TO PRO</a>
+      </div>
+
+      <div class="membership-card membership-card-max" id="membership-card-max">
+        <div class="membership-badge membership-badge-max">TOP RANK</div>
+        <div class="membership-name">MAX</div>
+        <div class="membership-price">$2<span class="membership-period">/mo</span></div>
+        <ul class="membership-features">
+          <li>◆ Everything in Pro</li>
+          <li>◆ First access to new games</li>
+        </ul>
+        <a class="membership-btn" href="/nexus/">UPGRADE TO MAX</a>
+      </div>
+    </div>
+  </div>
+
   <div class="sub-note">Nexus Games lives on inside Kitty Games.</div>
 </div>
+
+<script>
+  const tabs = {
+    games: { btn: document.getElementById('tab-btn-games'), panel: document.getElementById('tab-games') },
+    memberships: { btn: document.getElementById('tab-btn-memberships'), panel: document.getElementById('tab-memberships') },
+  };
+  Object.keys(tabs).forEach(function(key) {
+    tabs[key].btn.onclick = function() {
+      Object.keys(tabs).forEach(function(k) {
+        tabs[k].btn.classList.toggle('active', k === key);
+        tabs[k].panel.classList.toggle('active', k === key);
+      });
+    };
+  });
+</script>
 </body>
 </html>
