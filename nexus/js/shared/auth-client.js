@@ -39,25 +39,19 @@
 
   async function signInWithGoogle(){
     const callbackURL = window.location.origin + window.location.pathname;
-    try {
-      const res = await fetch('/api/auth/sign-in/social', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ provider: 'google', callbackURL }),
-      });
-      if (!res.ok) { console.error('sign-in failed', res.status, await res.text()); return; }
-      const body = await res.json();
-      if (body?.url) {
-        window.location.href = body.url;
-      } else if (body?.redirect === true && body?.url) {
-        window.location.href = body.url;
-      } else {
-        console.error('unexpected sign-in response', body);
-      }
-    } catch (e) {
-      console.error('sign-in error', e);
+    const res = await fetch('/api/auth/sign-in/social', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ provider: 'google', callbackURL }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`sign-in failed (${res.status}): ${text}`);
     }
+    const body = await res.json();
+    if (!body?.url) throw new Error('unexpected sign-in response');
+    window.location.href = body.url;
   }
 
   async function signOut(){

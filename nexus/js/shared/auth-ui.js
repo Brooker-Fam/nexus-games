@@ -38,8 +38,14 @@
       passkeyBtn.style.display = '';
     }
 
-    document.getElementById('login-btn-google').addEventListener('click', () => {
-      window.NexusAuth.signInWithGoogle();
+    document.getElementById('login-btn-google').addEventListener('click', async () => {
+      setLoginMsg('Redirecting to Google…', false);
+      try {
+        await window.NexusAuth.signInWithGoogle();
+      } catch (err) {
+        console.error('google sign-in failed', err);
+        setLoginMsg('Could not sign in with Google. Try email or passkey instead.', true);
+      }
     });
 
     document.getElementById('login-btn-mail').addEventListener('click', async () => {
@@ -79,7 +85,14 @@
 
     if (!user || user.isAnonymous) {
       const google = el('button', { className: 'auth-btn auth-signin' }, 'SIGN IN');
-      google.addEventListener('click', () => window.NexusAuth.signInWithGoogle());
+      google.addEventListener('click', async () => {
+        try {
+          await window.NexusAuth.signInWithGoogle();
+        } catch (err) {
+          console.error('google sign-in failed', err);
+          alert('Could not sign in with Google. Try email or passkey instead.');
+        }
+      });
       slot.appendChild(google);
 
       const mail = el('button', { className: 'auth-btn auth-mail', title: 'Sign in via email link' }, '✉');
