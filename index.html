@@ -220,9 +220,23 @@
     font-size: 0.8rem;
     color: var(--text-dim);
   }
+  .site-logo {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    height: 56px;
+    width: auto;
+    border-radius: 12px;
+    filter: drop-shadow(0 0 12px rgba(255,95,216,0.35));
+    z-index: 10;
+  }
+  @media (max-width: 480px) {
+    .site-logo { height: 40px; top: 10px; left: 10px; }
+  }
 </style>
 </head>
 <body>
+<img class="site-logo" src="/assets/kitty-games-logo.webp" alt="Kitty Games logo">
 <div class="shell">
   <header>
     <h1>KITTY GAMES</h1>
