@@ -361,6 +361,15 @@
               <div class="rbp-options" id="rbp-options">
                 <div class="rbp-idle-hint">Click your <span id="hud-building-name">TEMPLE</span> or a worker to build</div>
               </div>
+              <div id="training-guide" class="training-guide" style="display:none">
+                <div class="training-guide-header">
+                  <span class="training-guide-icon">🤖</span>
+                  <span class="training-guide-label">AI ADVISOR</span>
+                  <button class="training-guide-close" id="btn-training-close" title="Hide guide">✕</button>
+                </div>
+                <div class="training-guide-text" id="training-guide-text"></div>
+                <button class="training-guide-next" id="btn-training-next">GOT IT ▸</button>
+              </div>
             </div>
             <div class="rts-hud-army">
               <button class="rts-build-btn rts-army-btn" id="btn-select-army">
@@ -378,15 +387,6 @@
         <div id="rts-viewport-wrap">
           <canvas id="rts-canvas" width="1200" height="580"></canvas>
           <div id="rts-scroll-hint">Click your base to build · Right-click to move/attack</div>
-          <div id="training-guide" class="training-guide" style="display:none">
-            <div class="training-guide-header">
-              <span class="training-guide-icon">🤖</span>
-              <span class="training-guide-label">AI ADVISOR</span>
-              <button class="training-guide-close" id="btn-training-close" title="Hide guide">✕</button>
-            </div>
-            <div class="training-guide-text" id="training-guide-text"></div>
-            <button class="training-guide-next" id="btn-training-next">GOT IT ▸</button>
-          </div>
         </div>
         <div class="rts-log-bar"><span id="rts-log">Click your base to build units!</span></div>
         <div id="rts-gameover-overlay" style="display:none" class="rts-over-overlay">
