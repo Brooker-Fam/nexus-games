@@ -2,8 +2,9 @@ import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
 import { createCheckout } from "../lib/polar.js";
 
-// Nexus PRO — $1/mo (every alternate skin unlocked + full book access) and
-// Nexus MAX — $2/mo (everything in PRO, plus the Neon Dojo taekwondo game).
+// Nexus PRO — $1/mo (every alternate skin unlocked + full book access +
+// the Neon Dojo taekwondo game) and Nexus MAX — $2/mo (everything in PRO,
+// plus first access to new games).
 // No hardcoded defaults: neither product has been created in the Polar
 // dashboard yet, so each must be configured via its env var before checkout
 // can run for that tier.

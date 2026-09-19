@@ -1,10 +1,10 @@
 # Neon Dojo
 
-The Taekwondo tab is a single-player camera game, gated behind the Nexus MAX subscription (see `js/shared/memberships.js` and `docs` for the membership tiers — BASIC, PRO, MAX). A signed-in player without an active MAX membership sees a locked overlay with an upgrade prompt instead of the dojo controls. A round lasts 60 active seconds. Kick a virtual pad with either foot, then lower the foot before kicking again. Consecutive hits increase the score multiplier. Easy uses larger pads and longer target windows; Normal uses smaller pads at varying heights below the calibrated hips.
+The Taekwondo tab is a single-player camera game, gated behind the Nexus PRO subscription (see `js/shared/memberships.js` and `docs` for the membership tiers — BASIC, PRO, MAX). A signed-in player without an active PRO (or MAX) membership sees a locked overlay with an upgrade prompt instead of the dojo controls. A round lasts 60 active seconds. Kick a virtual pad with either foot, then lower the foot before kicking again. Consecutive hits increase the score multiplier. Easy uses larger pads and longer target windows; Normal uses smaller pads at varying heights below the calibrated hips.
 
 ## Playing locally
 
-Run `python3 -m http.server 8765 --bind 127.0.0.1` from the repository, then open `http://localhost:8765/#taekwondo`. The static preview has no membership API to call, so `window.nexusMaxActive` stays `false` and the dojo renders locked. Account and payment APIs, including MAX entitlement, require the existing Vercel development environment.
+Run `python3 -m http.server 8765 --bind 127.0.0.1` from the repository, then open `http://localhost:8765/#taekwondo`. The static preview has no membership API to call, so `window.nexusProActive` stays `false` and the dojo renders locked. Account and payment APIs, including PRO entitlement, require the existing Vercel development environment.
 
 Choose **Enable camera**, allow access, and stand upright with shoulders, knees, and feet visible. Hold still for two seconds to calibrate. The game then counts down from three. Use **Recalibrate** after moving the camera. Recalibration starts a new round.
 
