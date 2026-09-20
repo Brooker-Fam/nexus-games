@@ -5,34 +5,34 @@
 
 const TRAINING_STEPS = [
   {
-    text: "Welcome, Commander! I'm your AI advisor — I'll walk you through your first Deep Space Ops battle, step by step. Click GOT IT to begin.",
+    text: (cfg, fd) => `Welcome, Commander of the ${fd.armada}! I'm your AI advisor, guided by the spirit of ${fd.champion}, here to walk you through your first Deep Space Ops battle, step by step. Click GOT IT to begin.`,
   },
   {
-    text: "First, click your glowing base structure to open its build menu.",
+    text: (cfg) => `First, click your glowing ${cfg.buildingName} to open its build menu.`,
     check: () => S.buildingSource === S.playerBase,
   },
   {
-    text: "Queue up an extra WORKER — more workers mean faster gold income.",
+    text: (cfg) => `Queue up an extra ${cfg.workerLabel} — more ${cfg.workerLabel}S mean faster gold income.`,
     check: () => S.entities.filter(e => e.side === 'player' && e.type === 'worker').length > 5,
   },
   {
-    text: "Workers automatically mine nearby gold nodes and haul it home. Watch your GOLD counter climb.",
+    text: (cfg) => `${cfg.workerLabel}S automatically mine nearby gold nodes and haul it home. Watch your GOLD counter climb.`,
     check: () => S.gold.player >= 150,
   },
   {
-    text: "Click one of your WORKERS (not your base) and choose to build a barracks-type structure — it trains warriors to fight for you.",
+    text: (cfg) => `Click one of your ${cfg.workerLabel}S (not your ${cfg.buildingName}) and choose to build a ${cfg.barracksLabel} — it trains ${cfg.warriorLabel}S to fight for you.`,
     check: () => S.entities.some(e => e.side === 'player' && e.isBarracks),
   },
   {
-    text: "Queue a few warriors from that structure once it finishes building.",
+    text: (cfg) => `Queue a few ${cfg.warriorLabel}S from the ${cfg.barracksLabel} once it finishes building.`,
     check: () => S.entities.some(e => e.side === 'player' && e.type === 'warrior'),
   },
   {
-    text: "Select your warriors (SELECT ARMY, or drag a box around them) and right-click the enemy base to attack!",
+    text: (cfg) => `Select your ${cfg.warriorLabel}S (SELECT ARMY, or drag a box around them) and right-click the enemy base to attack!`,
     check: () => S.entities.some(e => e.side === 'player' && e.type === 'warrior' && e.state === 'march'),
   },
   {
-    text: "That's the core loop — mine gold, build workers and warriors, then attack. You've got this, Commander. Destroy the enemy base to win!",
+    text: (cfg, fd) => `That's the core loop — mine gold, build ${cfg.workerLabel}S and ${cfg.warriorLabel}S, then attack. ${fd.champion} would be proud, Commander. Destroy the enemy base to win!`,
   },
 ];
 
@@ -75,7 +75,9 @@ function renderTrainingStep(){
   const textEl = document.getElementById('training-guide-text');
   const nextBtn = document.getElementById('btn-training-next');
   if(!step || !textEl) return;
-  textEl.textContent = step.text;
+  const cfg = FACTION_CFG[S.playerFaction] || FACTION_CFG.prism;
+  const fd = FACTION_DATA[S.playerFaction] || FACTION_DATA.prism;
+  textEl.textContent = typeof step.text === 'function' ? step.text(cfg, fd) : step.text;
   if(nextBtn) nextBtn.textContent = _trainingStepIdx >= TRAINING_STEPS.length - 1 ? 'GOT IT' : 'GOT IT ▸';
 }
 
