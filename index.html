@@ -55,6 +55,46 @@
     font-size: 0.85rem;
   }
 
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: 12px 28px;
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .tab-btn:hover { color: var(--text-bright); }
+  .tab-btn.active {
+    color: #fff;
+    background: linear-gradient(90deg, var(--neon-coral), var(--neon-purple));
+    box-shadow: 0 0 24px rgba(255,106,61,0.35);
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .membership-empty {
+    padding: 40px 28px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 20px;
+    text-align: center;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+
   .game-card {
     display: flex;
     flex-direction: column;
@@ -139,12 +179,38 @@
     <div class="tagline">Arcade &middot; Strategy &middot; Beyond</div>
   </header>
 
-  <a class="game-card" href="/nexus/">
-    <div class="game-icon">⬡</div>
-    <div class="game-name">NEXUS GAMES</div>
-    <div class="game-desc">Tower defense, real-time strategy, camera-tracked taekwondo, and an illustrated story mode — all in one arcade.</div>
-    <span class="game-play">PLAY →</span>
-  </a>
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-btn-games">GAMES</button>
+    <button class="tab-btn" id="tab-btn-memberships">MEMBERSHIPS</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-games">
+    <a class="game-card" href="/nexus/">
+      <div class="game-icon">⬡</div>
+      <div class="game-name">NEXUS GAMES</div>
+      <div class="game-desc">Tower defense, real-time strategy, camera-tracked taekwondo, and an illustrated story mode — all in one arcade.</div>
+      <span class="game-play">PLAY →</span>
+    </a>
+  </div>
+
+  <div class="tab-panel" id="tab-memberships">
+    <div class="membership-empty">No memberships available right now.</div>
+  </div>
 </div>
+
+<script>
+  const tabs = {
+    games: { btn: document.getElementById('tab-btn-games'), panel: document.getElementById('tab-games') },
+    memberships: { btn: document.getElementById('tab-btn-memberships'), panel: document.getElementById('tab-memberships') },
+  };
+  Object.keys(tabs).forEach(function(key) {
+    tabs[key].btn.onclick = function() {
+      Object.keys(tabs).forEach(function(k) {
+        tabs[k].btn.classList.toggle('active', k === key);
+        tabs[k].panel.classList.toggle('active', k === key);
+      });
+    };
+  });
+</script>
 </body>
 </html>
