@@ -36,6 +36,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow-x: hidden;
   }
   .shell {
     max-width: 480px;
@@ -57,18 +58,19 @@
 
   .tabs {
     display: flex;
-    justify-content: center;
-    gap: 4px;
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    margin-left: -50vw;
     margin-bottom: 28px;
-    padding: 4px;
     background: var(--panel-bg);
-    border: 1px solid var(--panel-border);
-    border-radius: 999px;
+    border-top: 1px solid var(--panel-border);
+    border-bottom: 1px solid var(--panel-border);
     box-shadow: 0 0 40px rgba(255,106,61,0.1), inset 0 0 30px rgba(176,107,255,0.06);
   }
   .tab-btn {
     flex: 1;
-    padding: 12px 28px;
+    padding: 16px 28px;
     font-family: 'Baloo 2', sans-serif;
     font-size: 0.95rem;
     font-weight: 700;
@@ -76,7 +78,6 @@
     color: var(--text-dim);
     background: transparent;
     border: none;
-    border-radius: 999px;
     cursor: pointer;
     transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
   }
