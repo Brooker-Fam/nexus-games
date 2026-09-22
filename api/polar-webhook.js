@@ -1,6 +1,7 @@
 import { verifyPolarWebhook } from "../lib/polar.js";
 import { isValidPaidSkin } from "../lib/paid-skins.js";
 import { getSql } from "../lib/db.js";
+import { sendCheckoutAlert } from "../lib/checkout-alerts.js";
 
 // Source of truth for skin unlocks (api/checkout-confirm.js unlocks eagerly
 // when the customer's browser makes it back from Polar, but this is what
@@ -29,6 +30,7 @@ export default async function handler(req, res) {
   const secret = process.env.POLAR_WEBHOOK_SECRET;
   if (!secret) {
     console.error("POLAR_WEBHOOK_SECRET is not set");
+    await sendCheckoutAlert("polar-webhook-configuration");
     res.status(500).json({ error: "webhook_not_configured" });
     return;
   }
@@ -97,6 +99,7 @@ export default async function handler(req, res) {
     res.status(200).json({ received: true });
   } catch (err) {
     console.error("polar-webhook error:", err);
+    await sendCheckoutAlert("polar-webhook");
     res.status(500).json({ error: "webhook_failed", message: err?.message });
   }
 }

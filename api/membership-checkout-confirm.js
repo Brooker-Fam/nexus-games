@@ -2,6 +2,7 @@ import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
 import { getCheckout } from "../lib/polar.js";
 import { getSql } from "../lib/db.js";
+import { sendCheckoutAlert } from "../lib/checkout-alerts.js";
 
 // Confirms a Nexus Pro checkout right after the customer is redirected back
 // from Polar, so membership activates immediately instead of waiting on the
@@ -64,6 +65,7 @@ export default async function handler(req, res) {
     res.status(200).json({ active: true, tier: plan });
   } catch (err) {
     console.error("membership-checkout-confirm error:", err);
+    await sendCheckoutAlert("membership-checkout-confirm");
     res.status(500).json({ error: "confirm_failed", message: err?.message });
   }
 }

@@ -3,6 +3,7 @@ import { fromNodeHeaders } from "better-auth/node";
 import { getCheckout } from "../lib/polar.js";
 import { isValidPaidSkin } from "../lib/paid-skins.js";
 import { getSql } from "../lib/db.js";
+import { sendCheckoutAlert } from "../lib/checkout-alerts.js";
 
 // Confirms a checkout right after the customer is redirected back from
 // Polar, so the skin unlocks immediately instead of waiting on the
@@ -58,6 +59,7 @@ export default async function handler(req, res) {
     res.status(200).json({ unlocked: true, unit, skin });
   } catch (err) {
     console.error("checkout-confirm error:", err);
+    await sendCheckoutAlert("checkout-confirm");
     res.status(500).json({ error: "confirm_failed", message: err?.message });
   }
 }

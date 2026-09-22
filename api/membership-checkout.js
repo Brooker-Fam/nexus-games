@@ -1,6 +1,7 @@
 import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
 import { createCheckout } from "../lib/polar.js";
+import { sendCheckoutAlert } from "../lib/checkout-alerts.js";
 
 // Nexus PRO — $1/mo (every alternate skin unlocked + full book access)
 // and Nexus MAX — $2/mo (everything in PRO, plus the Neon Dojo taekwondo
@@ -36,6 +37,7 @@ export default async function handler(req, res) {
   const PRODUCT_ID = process.env[PRODUCT_ID_ENV_VARS[plan]];
   if (!PRODUCT_ID) {
     console.error(`${PRODUCT_ID_ENV_VARS[plan]} is not set`);
+    await sendCheckoutAlert("membership-checkout-configuration");
     res.status(500).json({ error: "membership_not_configured" });
     return;
   }
@@ -66,6 +68,7 @@ export default async function handler(req, res) {
     res.status(200).json({ url: checkout.url });
   } catch (err) {
     console.error("membership-checkout error:", err);
+    await sendCheckoutAlert("membership-checkout");
     res.status(500).json({ error: "checkout_failed", message: err?.message });
   }
 }

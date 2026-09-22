@@ -2,6 +2,7 @@ import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
 import { createCheckout } from "../lib/polar.js";
 import { isValidPaidSkin } from "../lib/paid-skins.js";
+import { sendCheckoutAlert } from "../lib/checkout-alerts.js";
 
 // The single "Alternate Skin Unlock" product ($1.00, one-time) — which
 // unit/skin the purchase is for travels in the checkout's metadata instead
@@ -56,6 +57,7 @@ export default async function handler(req, res) {
     res.status(200).json({ url: checkout.url });
   } catch (err) {
     console.error("checkout error:", err);
+    await sendCheckoutAlert("checkout");
     res.status(500).json({ error: "checkout_failed", message: err?.message });
   }
 }
