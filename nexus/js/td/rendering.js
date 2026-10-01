@@ -1,12 +1,36 @@
 // ── DRAW ──
 function drawBg(){
-  ctx.fillStyle = '#020810';
-  ctx.fillRect(0,0,W,H);
-  // grid
-  ctx.strokeStyle='rgba(0,245,255,0.04)';
-  ctx.lineWidth=1;
-  for(let x=0;x<=W;x+=CELL){ ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke(); }
-  for(let y=0;y<=H;y+=CELL){ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke(); }
+  // Layered rock and metal tones give the battlefield depth without relying
+  // on a downloaded texture (and stay deterministic for replays/tests).
+  const base=ctx.createLinearGradient(0,0,W,H);
+  base.addColorStop(0,'#101923'); base.addColorStop(0.48,'#07101a'); base.addColorStop(1,'#121721');
+  ctx.fillStyle=base; ctx.fillRect(0,0,W,H);
+
+  for(let gy=0;gy<H;gy+=CELL){
+    for(let gx=0;gx<W;gx+=CELL){
+      const noise=((gx*17+gy*31)%23)/23;
+      ctx.fillStyle=`rgba(${18+noise*10},${29+noise*12},${39+noise*15},${0.14+noise*0.08})`;
+      ctx.fillRect(gx+1,gy+1,CELL-2,CELL-2);
+      if((gx/CELL+gy/CELL*3)%7===0){
+        ctx.strokeStyle='rgba(145,180,196,0.06)'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(gx+6,gy+CELL-8); ctx.lineTo(gx+CELL*.45,gy+CELL*.52); ctx.lineTo(gx+CELL-8,gy+7); ctx.stroke();
+      }
+    }
+  }
+
+  // Recessed tactical grid with a subtle highlight and shadow.
+  for(let x=0;x<=W;x+=CELL){
+    ctx.strokeStyle='rgba(0,0,0,0.34)'; ctx.beginPath();ctx.moveTo(x+1,0);ctx.lineTo(x+1,H);ctx.stroke();
+    ctx.strokeStyle='rgba(92,184,214,0.07)'; ctx.beginPath();ctx.moveTo(x+.5,0);ctx.lineTo(x+.5,H);ctx.stroke();
+  }
+  for(let y=0;y<=H;y+=CELL){
+    ctx.strokeStyle='rgba(0,0,0,0.38)'; ctx.beginPath();ctx.moveTo(0,y+1);ctx.lineTo(W,y+1);ctx.stroke();
+    ctx.strokeStyle='rgba(92,184,214,0.06)'; ctx.beginPath();ctx.moveTo(0,y+.5);ctx.lineTo(W,y+.5);ctx.stroke();
+  }
+
+  const vignette=ctx.createRadialGradient(W*.5,H*.45,H*.15,W*.5,H*.45,W*.7);
+  vignette.addColorStop(0,'rgba(0,0,0,0)'); vignette.addColorStop(1,'rgba(0,0,0,0.58)');
+  ctx.fillStyle=vignette; ctx.fillRect(0,0,W,H);
 }
 
 function drawPath(){
@@ -15,14 +39,18 @@ function drawPath(){
   // Draw the route as grid tiles so its visual footprint exactly matches the
   // cells that are unavailable for tower placement.
   ctx.save();
-  ctx.shadowColor='rgba(0,136,255,0.45)';
-  ctx.shadowBlur=10;
+  ctx.shadowColor='rgba(0,0,0,0.85)';
+  ctx.shadowBlur=12;
   for(const cell of pathCells){
     const [gx,gy]=cell.split(',').map(Number);
-    ctx.fillStyle='rgba(0,30,60,0.95)';
+    const lane=ctx.createLinearGradient(gx*CELL,gy*CELL,gx*CELL,gy*CELL+CELL);
+    lane.addColorStop(0,'#223443'); lane.addColorStop(.18,'#101d28'); lane.addColorStop(.8,'#09121b'); lane.addColorStop(1,'#263847');
+    ctx.fillStyle=lane;
     ctx.fillRect(gx*CELL+2,gy*CELL+2,CELL-4,CELL-4);
-    ctx.strokeStyle='rgba(0,136,255,0.35)';
+    ctx.strokeStyle='rgba(107,167,194,0.35)';
     ctx.strokeRect(gx*CELL+2.5,gy*CELL+2.5,CELL-5,CELL-5);
+    ctx.fillStyle='rgba(111,204,231,0.22)';
+    ctx.fillRect(gx*CELL+7,gy*CELL+CELL/2-1,CELL-14,2);
   }
 
   // Once a digger breaches the wall, the tunnel becomes a normal-looking
@@ -30,7 +58,7 @@ function drawPath(){
   if(state.shortcutOpen){
     for(const cell of tunnelCellsSet){
       const [gx,gy]=cell.split(',').map(Number);
-      ctx.fillStyle='rgba(0,30,60,0.95)';
+      ctx.fillStyle='#101d28';
       ctx.fillRect(gx*CELL+2,gy*CELL+2,CELL-4,CELL-4);
       ctx.strokeStyle='rgba(0,136,255,0.35)';
       ctx.strokeRect(gx*CELL+2.5,gy*CELL+2.5,CELL-5,CELL-5);

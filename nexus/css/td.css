@@ -268,3 +268,24 @@
     .wave-section { margin-top: 4px; }
     .log-box { height: 36px; }
   }
+
+/* Physical frame and optical depth for the tactical display. */
+.canvas-wrap {
+  padding: 8px;
+  border: 1px solid rgba(151, 199, 218, .2);
+  border-radius: 4px;
+  background: linear-gradient(145deg, #263441, #080e14 28%, #111c25 72%, #354653);
+  box-shadow: inset 0 1px rgba(255,255,255,.13), inset 0 -2px 4px rgba(0,0,0,.8), 0 18px 45px rgba(0,0,0,.45);
+}
+#tdCanvas {
+  border-color: rgba(117, 178, 204, .24);
+  box-shadow: inset 0 0 70px rgba(0,0,0,.62), 0 0 0 1px rgba(0,0,0,.8);
+}
+.tower-btn {
+  border-radius: 3px;
+  background: linear-gradient(155deg, rgba(33,54,69,.72), rgba(5,16,25,.88));
+  box-shadow: inset 0 1px rgba(255,255,255,.055), 0 5px 12px rgba(0,0,0,.18);
+}
+.tower-btn:hover, .tower-btn.selected {
+  background: linear-gradient(155deg, rgba(36,89,105,.72), rgba(6,29,39,.92));
+}
