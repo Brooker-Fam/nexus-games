@@ -450,3 +450,51 @@
     .tab { font-size: 8px; letter-spacing: 1px; padding: 5px 10px; }
     main { padding: 4px clamp(10px, 2vw, 24px); }
   }
+
+/* ── CINEMATIC MATERIAL & LIGHTING PASS ──
+   Shared finishing treatment for every Nexus experience. The interface now
+   reads as physical smoked glass over a deep-space command deck rather than
+   flat neon rectangles. */
+body {
+  background:
+    radial-gradient(ellipse 80% 55% at 52% -10%, rgba(36, 102, 151, .17), transparent 68%),
+    radial-gradient(ellipse 55% 45% at 0% 85%, rgba(66, 31, 110, .11), transparent 70%),
+    linear-gradient(145deg, #07101a 0%, #02060b 48%, #070b12 100%);
+}
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(128, 194, 219, .025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(128, 194, 219, .025) 1px, transparent 1px),
+    radial-gradient(circle, rgba(220, 241, 255, .3) 0 1px, transparent 1.4px);
+  background-size: 72px 72px, 72px 72px, 149px 149px;
+  background-position: center, center, 23px 41px;
+}
+.bg-glow {
+  background:
+    radial-gradient(ellipse 65% 40% at 18% 12%, rgba(16, 91, 148, .12), transparent 72%),
+    radial-gradient(ellipse 50% 38% at 88% 78%, rgba(92, 35, 145, .09), transparent 72%),
+    linear-gradient(115deg, transparent 35%, rgba(185, 224, 255, .018) 50%, transparent 65%);
+}
+header {
+  background: linear-gradient(180deg, rgba(9, 17, 27, .985), rgba(3, 9, 15, .94));
+  border-bottom-color: rgba(145, 200, 225, .18);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, .48), inset 0 -1px rgba(174, 220, 239, .04);
+}
+.panel, .stat-box, .auth-chip, .zoom-controls {
+  background:
+    linear-gradient(145deg, rgba(30, 48, 63, .66), rgba(7, 17, 27, .9) 48%, rgba(13, 27, 39, .82));
+  border-color: rgba(140, 197, 221, .22);
+  box-shadow: inset 0 1px rgba(220, 244, 255, .055), inset 0 -16px 35px rgba(0, 0, 0, .16), 0 10px 24px rgba(0, 0, 0, .2);
+}
+.tab, .auth-btn, .zoom-btn {
+  text-shadow: 0 1px 2px #000;
+}
+.tab.active {
+  background: linear-gradient(180deg, rgba(62, 133, 164, .19), rgba(5, 24, 35, .42));
+}
+canvas {
+  image-rendering: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scanline, .particle, .status-dot { animation: none !important; }
+}
