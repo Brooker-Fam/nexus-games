@@ -483,7 +483,7 @@ function canvasPos(e){
   const c=document.getElementById('rts-canvas');
   const rect=c.getBoundingClientRect();
   // Scale from display size to canvas resolution
-  const scaleX=c.width/rect.width, scaleY=c.height/rect.height;
+  const scaleX=VW/rect.width, scaleY=VH/rect.height;
   return { x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY };
 }
 

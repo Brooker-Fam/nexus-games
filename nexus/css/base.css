@@ -498,3 +498,23 @@ canvas {
 @media (prefers-reduced-motion: reduce) {
   .scanline, .particle, .status-dot { animation: none !important; }
 }
+
+/* ── MEMBERSHIP CARD POLISH ──
+   Tier-tinted smoked glass, a light sweep on hover and glowing bullets. */
+.membership-card { --tier: 0,245,255; overflow: hidden; }
+.membership-card-pro { --tier: 255,207,77; }
+.membership-card-max { --tier: 168,90,255; }
+.membership-card {
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(var(--tier),.14), transparent 70%),
+    linear-gradient(160deg, rgba(16,32,48,.92), rgba(4,10,20,.96));
+}
+.membership-card::after {
+  content: ''; position: absolute; top: 0; bottom: 0; left: -70%; width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.07), transparent);
+  transform: skewX(-18deg); pointer-events: none;
+  transition: left .8s ease;
+}
+.membership-card:hover::after { left: 140%; }
+.membership-features li::first-letter { color: rgb(var(--tier)); text-shadow: 0 0 8px rgba(var(--tier),.8); }
+@media (prefers-reduced-motion: reduce) { .membership-card::after { display: none; } }

@@ -121,7 +121,7 @@ function setupCameraControls(){
     const canvas2=document.getElementById('rts-canvas');
     if(canvas2){
       const rect=canvas2.getBoundingClientRect();
-      const scX=canvas2.width/rect.width, scY=canvas2.height/rect.height;
+      const scX=VW/rect.width, scY=VH/rect.height;
       const sx=(e.clientX-rect.left)*scX, sy=(e.clientY-rect.top)*scY;
       if(sx>=0&&sy>=0&&sx<=VW&&sy<=VH){
         S.mouseWorld={x:sx/S.camZoom+S.camX, y:sy/S.camZoom+S.camY};
@@ -161,7 +161,7 @@ function setupCameraControls(){
     const canvas2=document.getElementById('rts-canvas');
     if(!canvas2) return;
     const rect=canvas2.getBoundingClientRect();
-    const scX=canvas2.width/rect.width, scY=canvas2.height/rect.height;
+    const scX=VW/rect.width, scY=VH/rect.height;
     const sx=(e.clientX-rect.left)*scX, sy=(e.clientY-rect.top)*scY;
     const worldX=sx/S.camZoom+S.camX, worldY=sy/S.camZoom+S.camY;
     const factor=e.deltaY<0?CAM_ZOOM_FACTOR:1/CAM_ZOOM_FACTOR;
@@ -208,7 +208,7 @@ function _applyDragSelect(){
   const canvas=document.getElementById('rts-canvas');
   if(!canvas) return;
   const rect=canvas.getBoundingClientRect();
-  const scX=canvas.width/rect.width, scY=canvas.height/rect.height;
+  const scX=VW/rect.width, scY=VH/rect.height;
 
   // Convert client coords to world coords
   const wx1=(Math.min(dragSelStartCX,dragSelCurCX)-rect.left)*scX/S.camZoom+S.camX;
