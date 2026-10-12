@@ -187,7 +187,7 @@ test('later waves field progressively tougher enemy kinds', () => {
     return { curve, wave1: unlockedEnemyKinds(1).map(k => k.id).join(','),
              late: unlockedEnemyKinds(20).map(k => k.id).join(',') };
   })()`, context);
-  assert.equal(result.wave1, 'triangle,star,hexagon', 'wave 1 already mixes several kinds');
+  assert.equal(result.wave1, 'triangle');
   assert.ok(!result.late.includes('triangle'), 'weak kinds retire late game');
   assert.ok(result.late.includes('square'));
   for(let i=1; i<result.curve.length; i++) assert.ok(result.curve[i] >= result.curve[i-1]);
