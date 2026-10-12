@@ -23,7 +23,7 @@ async function harness() {
     performance: { now: () => 1000 },
     localStorage: { getItem: () => null, setItem() {} },
     document: { getElementById: element, addEventListener() {} },
-    window: { addEventListener() {}, registerGame() {}, posthog },
+    window: { addEventListener() {}, registerGame() {}, posthog, nexusMaxActive: true },
     location: { hash: '' },
     posthog,
     requestAnimationFrame: () => 1,
@@ -33,7 +33,8 @@ async function harness() {
     createPoseTracker: () => ({ start() {}, stop() {} }),
   });
   vm.runInContext(controllerSource, context);
-  vm.runInContext('active = true;', context);
+  // Neon Dojo is MAX-gated; resolve the lock as an entitled player.
+  vm.runInContext('active = true; applyLock();', context);
   return {
     events: name => captured.filter(entry => entry.event === name),
     exceptions,
