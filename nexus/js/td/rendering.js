@@ -1,109 +1,226 @@
 // ── DRAW ──
-function drawBg(){
-  // Layered rock and metal tones give the battlefield depth without relying
-  // on a downloaded texture (and stay deterministic for replays/tests).
-  const base=ctx.createLinearGradient(0,0,W,H);
-  base.addColorStop(0,'#101923'); base.addColorStop(0.48,'#07101a'); base.addColorStop(1,'#121721');
-  ctx.fillStyle=base; ctx.fillRect(0,0,W,H);
+// The static battlefield (deck plating, path channel, rubble) is painted once
+// into an offscreen layer and blitted each frame; it is rebuilt only when the
+// map or the breached shortcut changes. Positions/variation come from a hash of
+// the cell coordinates so the board looks the same every time it is drawn.
+let tdBoardLayer = null, tdBoardKey = '';
+let tdFxTime = 0; // free-running animation clock (runs even between waves)
 
-  for(let gy=0;gy<H;gy+=CELL){
-    for(let gx=0;gx<W;gx+=CELL){
-      const noise=((gx*17+gy*31)%23)/23;
-      ctx.fillStyle=`rgba(${18+noise*10},${29+noise*12},${39+noise*15},${0.14+noise*0.08})`;
-      ctx.fillRect(gx+1,gy+1,CELL-2,CELL-2);
-      if((gx/CELL+gy/CELL*3)%7===0){
-        ctx.strokeStyle='rgba(145,180,196,0.06)'; ctx.lineWidth=1;
-        ctx.beginPath(); ctx.moveTo(gx+6,gy+CELL-8); ctx.lineTo(gx+CELL*.45,gy+CELL*.52); ctx.lineTo(gx+CELL-8,gy+7); ctx.stroke();
+function tdHash(x, y, salt){
+  let h = Math.imul(x|0, 374761393) ^ Math.imul(y|0, 668265263) ^ Math.imul((salt|0)+1, 1274126177);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+function tdChannelCells(){
+  const cells = new Set(pathCells);
+  if(state.shortcutOpen) for(const c of tunnelCellsSet) cells.add(c);
+  return cells;
+}
+
+function buildBoardLayer(){
+  const dpr = typeof TD_DPR === 'number' ? TD_DPR : 1;
+  if(!tdBoardLayer) tdBoardLayer = document.createElement('canvas');
+  tdBoardLayer.width = W*dpr; tdBoardLayer.height = H*dpr;
+  const g = tdBoardLayer.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0);
+
+  // Deep-space backdrop: nebula washes and a seeded starfield.
+  const base = g.createLinearGradient(0,0,W,H);
+  base.addColorStop(0,'#0a1420'); base.addColorStop(0.5,'#050b13'); base.addColorStop(1,'#0b0f1c');
+  g.fillStyle = base; g.fillRect(0,0,W,H);
+  for(const [nx,ny,nr,col] of [[0.82,0.18,0.55,'rgba(130,50,210,0.16)'],[0.12,0.86,0.5,'rgba(0,170,220,0.13)'],[0.5,0.5,0.35,'rgba(40,90,160,0.08)']]){
+    const n = g.createRadialGradient(W*nx,H*ny,0,W*nx,H*ny,W*nr);
+    n.addColorStop(0,col); n.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle = n; g.fillRect(0,0,W,H);
+  }
+  for(let i=0;i<140;i++){
+    const sx = tdHash(i,7,1)*W, sy = tdHash(i,13,2)*H, sr = tdHash(i,3,3);
+    g.fillStyle = `rgba(210,235,255,${0.12+sr*0.45})`;
+    g.fillRect(sx, sy, sr>0.9?1.6:1, sr>0.9?1.6:1);
+  }
+
+  const channel = tdChannelCells();
+  const blocked = c => channel.has(c) || (!state.shortcutOpen && wallCellsSet.has(c));
+
+  // Build deck: individual smoked-metal plates, slightly translucent so the
+  // nebula reads through, with bevels, rivets and the odd vent or status light.
+  for(let gy=0;gy<ROWS;gy++){
+    for(let gx=0;gx<COLS;gx++){
+      if(blocked(`${gx},${gy}`)) continue;
+      const x = gx*CELL, y = gy*CELL, n = tdHash(gx,gy,4);
+      const plate = g.createLinearGradient(x,y,x+CELL,y+CELL);
+      plate.addColorStop(0,`rgba(${26+n*12},${40+n*14},${54+n*16},0.72)`);
+      plate.addColorStop(1,`rgba(${9+n*5},${15+n*7},${24+n*9},0.85)`);
+      g.fillStyle = plate;
+      g.beginPath(); g.roundRect(x+1.5,y+1.5,CELL-3,CELL-3,3); g.fill();
+      // bevel: lit top-left, shadowed bottom-right
+      g.lineWidth = 1;
+      g.strokeStyle = 'rgba(170,220,240,0.10)';
+      g.beginPath(); g.moveTo(x+2,y+CELL-3); g.lineTo(x+2,y+2); g.lineTo(x+CELL-3,y+2); g.stroke();
+      g.strokeStyle = 'rgba(0,0,0,0.45)';
+      g.beginPath(); g.moveTo(x+CELL-2,y+3); g.lineTo(x+CELL-2,y+CELL-2); g.lineTo(x+3,y+CELL-2); g.stroke();
+      if(tdHash(gx,gy,5) < 0.35){
+        g.fillStyle = 'rgba(0,0,0,0.5)';
+        for(const [rx,ry] of [[5,5],[CELL-5,5],[5,CELL-5],[CELL-5,CELL-5]]){
+          g.beginPath(); g.arc(x+rx,y+ry,1.1,0,Math.PI*2); g.fill();
+        }
+        g.fillStyle = 'rgba(190,230,250,0.10)';
+        for(const [rx,ry] of [[5,5],[CELL-5,5],[5,CELL-5],[CELL-5,CELL-5]]){
+          g.beginPath(); g.arc(x+rx-0.4,y+ry-0.4,0.6,0,Math.PI*2); g.fill();
+        }
+      }
+      const d = tdHash(gx,gy,6);
+      if(d < 0.12){
+        g.strokeStyle = 'rgba(0,0,0,0.5)'; g.lineWidth = 2;
+        for(let k=0;k<3;k++){ g.beginPath(); g.moveTo(x+12,y+14+k*6); g.lineTo(x+CELL-12,y+14+k*6); g.stroke(); }
+        g.strokeStyle = 'rgba(150,200,225,0.07)'; g.lineWidth = 1;
+        for(let k=0;k<3;k++){ g.beginPath(); g.moveTo(x+12,y+15.5+k*6); g.lineTo(x+CELL-12,y+15.5+k*6); g.stroke(); }
+      } else if(d < 0.18){
+        const col = tdHash(gx,gy,7) < 0.5 ? '0,230,255' : '255,170,40';
+        const lx = x+CELL-9, ly = y+9;
+        const lg = g.createRadialGradient(lx,ly,0,lx,ly,6);
+        lg.addColorStop(0,`rgba(${col},0.55)`); lg.addColorStop(1,`rgba(${col},0)`);
+        g.fillStyle = lg; g.beginPath(); g.arc(lx,ly,6,0,Math.PI*2); g.fill();
+        g.fillStyle = `rgba(${col},0.9)`; g.beginPath(); g.arc(lx,ly,1.2,0,Math.PI*2); g.fill();
       }
     }
   }
 
-  // Recessed tactical grid with a subtle highlight and shadow.
-  for(let x=0;x<=W;x+=CELL){
-    ctx.strokeStyle='rgba(0,0,0,0.34)'; ctx.beginPath();ctx.moveTo(x+1,0);ctx.lineTo(x+1,H);ctx.stroke();
-    ctx.strokeStyle='rgba(92,184,214,0.07)'; ctx.beginPath();ctx.moveTo(x+.5,0);ctx.lineTo(x+.5,H);ctx.stroke();
+  // Path channel: a recessed trench whose footprint matches exactly the cells
+  // that can't hold towers. Edges glow cyan; a breached tunnel glows amber.
+  for(const cell of channel){
+    const [gx,gy] = cell.split(',').map(Number);
+    const x = gx*CELL, y = gy*CELL;
+    const floor = g.createLinearGradient(x,y,x,y+CELL);
+    floor.addColorStop(0,'#040910'); floor.addColorStop(0.5,'#08131d'); floor.addColorStop(1,'#040910');
+    g.fillStyle = floor; g.fillRect(x,y,CELL,CELL);
+    // floor grating
+    g.strokeStyle = 'rgba(90,170,210,0.07)'; g.lineWidth = 1;
+    for(let k=6;k<CELL;k+=8){
+      g.beginPath(); g.moveTo(x+k+.5,y); g.lineTo(x+k+.5,y+CELL); g.stroke();
+      g.beginPath(); g.moveTo(x,y+k+.5); g.lineTo(x+CELL,y+k+.5); g.stroke();
+    }
   }
-  for(let y=0;y<=H;y+=CELL){
-    ctx.strokeStyle='rgba(0,0,0,0.38)'; ctx.beginPath();ctx.moveTo(0,y+1);ctx.lineTo(W,y+1);ctx.stroke();
-    ctx.strokeStyle='rgba(92,184,214,0.06)'; ctx.beginPath();ctx.moveTo(0,y+.5);ctx.lineTo(W,y+.5);ctx.stroke();
+  for(const cell of channel){
+    const [gx,gy] = cell.split(',').map(Number);
+    const x = gx*CELL, y = gy*CELL;
+    const rim = (state.shortcutOpen && tunnelCellsSet.has(cell) && !pathCells.has(cell)) ? '255,170,60' : '0,210,255';
+    const sides = [
+      [!channel.has(`${gx},${gy-1}`), x,y, x+CELL,y, 0,1],
+      [!channel.has(`${gx},${gy+1}`), x,y+CELL, x+CELL,y+CELL, 0,-1],
+      [!channel.has(`${gx-1},${gy}`), x,y, x,y+CELL, 1,0],
+      [!channel.has(`${gx+1},${gy}`), x+CELL,y, x+CELL,y+CELL, -1,0],
+    ];
+    for(const [open,x1,y1,x2,y2,nx,ny] of sides){
+      if(!open) continue;
+      // inner wall shadow falling into the trench
+      const sh = g.createLinearGradient(x1,y1,x1+nx*9,y1+ny*9);
+      sh.addColorStop(0,'rgba(0,0,0,0.7)'); sh.addColorStop(1,'rgba(0,0,0,0)');
+      g.fillStyle = sh;
+      g.fillRect(Math.min(x1,x1+nx*9), Math.min(y1,y1+ny*9), Math.abs(x2-x1)||9, Math.abs(y2-y1)||9);
+      // glowing rim
+      g.save();
+      g.shadowColor = `rgba(${rim},0.9)`; g.shadowBlur = 8;
+      g.strokeStyle = `rgba(${rim},0.55)`; g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(x1+nx*1.5,y1+ny*1.5); g.lineTo(x2+nx*1.5,y2+ny*1.5); g.stroke();
+      g.restore();
+    }
   }
 
-  const vignette=ctx.createRadialGradient(W*.5,H*.45,H*.15,W*.5,H*.45,W*.7);
-  vignette.addColorStop(0,'rgba(0,0,0,0)'); vignette.addColorStop(1,'rgba(0,0,0,0.58)');
-  ctx.fillStyle=vignette; ctx.fillRect(0,0,W,H);
+  // Destructible rubble: a heap of lit boulders sealing off the shortcut.
+  if(!state.shortcutOpen){
+    for(const cell of wallCellsSet){
+      const [gx,gy] = cell.split(',').map(Number);
+      const x = gx*CELL, y = gy*CELL;
+      g.fillStyle = '#0d0905'; g.fillRect(x+1,y+1,CELL-2,CELL-2);
+      g.save();
+      g.strokeStyle = 'rgba(255,150,50,0.35)'; g.setLineDash([5,4]); g.lineWidth = 1;
+      g.strokeRect(x+1.5,y+1.5,CELL-3,CELL-3);
+      g.restore();
+      for(let r=0;r<6;r++){
+        const cx = x+8+tdHash(gx*7+r,gy,8)*(CELL-16), cy = y+8+tdHash(gx,gy*7+r,9)*(CELL-16);
+        const rad = 5 + tdHash(gx+r,gy+r,10)*6;
+        const rock = g.createRadialGradient(cx-rad*0.4,cy-rad*0.4,0.5,cx,cy,rad);
+        rock.addColorStop(0,'#b08a5a'); rock.addColorStop(0.55,'#5a4128'); rock.addColorStop(1,'#1c130a');
+        g.fillStyle = rock;
+        g.beginPath();
+        for(let k=0;k<7;k++){
+          const a = k/7*Math.PI*2, rr = rad*(0.75+tdHash(r,k,gx+gy)*0.35);
+          k===0 ? g.moveTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr) : g.lineTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr);
+        }
+        g.closePath(); g.fill();
+        g.strokeStyle = 'rgba(0,0,0,0.5)'; g.lineWidth = 0.8; g.stroke();
+      }
+    }
+  }
+
+  const vignette = g.createRadialGradient(W*.5,H*.48,H*.25,W*.5,H*.48,W*.72);
+  vignette.addColorStop(0,'rgba(0,0,0,0)'); vignette.addColorStop(1,'rgba(0,0,0,0.6)');
+  g.fillStyle = vignette; g.fillRect(0,0,W,H);
+}
+
+function drawBg(){
+  tdFxTime++;
+  const key = `${PATH_WAYPOINTS.map(p=>p.x+','+p.y).join(';')}|${state.shortcutOpen?1:0}`;
+  if(key !== tdBoardKey || !tdBoardLayer){ buildBoardLayer(); tdBoardKey = key; }
+  ctx.drawImage(tdBoardLayer, 0, 0, W, H);
+}
+
+function tracePolyline(points){
+  ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y);
+  for(let i=1;i<points.length;i++) ctx.lineTo(points[i].x, points[i].y);
+}
+
+// Animated portal: swirling arcs and a pulsing core where enemies enter or exit.
+function drawPortal(x, y, rgb, dir){
+  const t = tdFxTime*0.04*dir, pulse = 0.75 + Math.sin(tdFxTime*0.08)*0.25;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const halo = ctx.createRadialGradient(x,y,0,x,y,26);
+  halo.addColorStop(0,`rgba(${rgb},${0.55*pulse})`); halo.addColorStop(0.45,`rgba(${rgb},0.18)`); halo.addColorStop(1,`rgba(${rgb},0)`);
+  ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(x,y,26,0,Math.PI*2); ctx.fill();
+  ctx.lineCap = 'round';
+  for(let i=0;i<3;i++){
+    const a = t + i*Math.PI*2/3;
+    ctx.strokeStyle = `rgba(${rgb},0.8)`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x,y,13,a,a+1.1); ctx.stroke();
+    ctx.strokeStyle = `rgba(${rgb},0.45)`; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(x,y,8,-a*1.6,-a*1.6+1.4); ctx.stroke();
+  }
+  ctx.fillStyle = `rgba(255,255,255,${0.6*pulse})`;
+  ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fill();
+  ctx.restore();
 }
 
 function drawPath(){
   const pts = PATH_WAYPOINTS.map(wpPx);
+  const routes = [pts];
+  if(state.shortcutOpen && activeMap.shortcut){
+    const sc = activeMap.shortcut;
+    routes.push([PATH_WAYPOINTS[sc.breachIndex], ...sc.tunnelWaypoints, PATH_WAYPOINTS[sc.rejoinIndex]].map(wpPx));
+  }
 
-  // Draw the route as grid tiles so its visual footprint exactly matches the
-  // cells that are unavailable for tower placement.
+  // Energy flowing along the route shows travel direction at a glance.
   ctx.save();
-  ctx.shadowColor='rgba(0,0,0,0.85)';
-  ctx.shadowBlur=12;
-  for(const cell of pathCells){
-    const [gx,gy]=cell.split(',').map(Number);
-    const lane=ctx.createLinearGradient(gx*CELL,gy*CELL,gx*CELL,gy*CELL+CELL);
-    lane.addColorStop(0,'#223443'); lane.addColorStop(.18,'#101d28'); lane.addColorStop(.8,'#09121b'); lane.addColorStop(1,'#263847');
-    ctx.fillStyle=lane;
-    ctx.fillRect(gx*CELL+2,gy*CELL+2,CELL-4,CELL-4);
-    ctx.strokeStyle='rgba(107,167,194,0.35)';
-    ctx.strokeRect(gx*CELL+2.5,gy*CELL+2.5,CELL-5,CELL-5);
-    ctx.fillStyle='rgba(111,204,231,0.22)';
-    ctx.fillRect(gx*CELL+7,gy*CELL+CELL/2-1,CELL-14,2);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for(const route of routes){
+    ctx.strokeStyle = 'rgba(0,150,255,0.10)'; ctx.lineWidth = 10;
+    tracePolyline(route); ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,190,255,0.22)'; ctx.lineWidth = 1.5;
+    tracePolyline(route); ctx.stroke();
+    ctx.setLineDash([2, 38]);
+    ctx.lineDashOffset = -tdFxTime*0.9;
+    ctx.strokeStyle = 'rgba(140,230,255,0.85)'; ctx.lineWidth = 4;
+    ctx.shadowColor = '#00ccff'; ctx.shadowBlur = 10;
+    tracePolyline(route); ctx.stroke();
+    ctx.setLineDash([]); ctx.shadowBlur = 0;
   }
-
-  // Once a digger breaches the wall, the tunnel becomes a normal-looking
-  // lane extension so the new route reads at a glance.
-  if(state.shortcutOpen){
-    for(const cell of tunnelCellsSet){
-      const [gx,gy]=cell.split(',').map(Number);
-      ctx.fillStyle='#101d28';
-      ctx.fillRect(gx*CELL+2,gy*CELL+2,CELL-4,CELL-4);
-      ctx.strokeStyle='rgba(0,136,255,0.35)';
-      ctx.strokeRect(gx*CELL+2.5,gy*CELL+2.5,CELL-5,CELL-5);
-    }
-  }
-
-  // A center trace keeps the route easy to follow through corners.
-  ctx.shadowBlur=0;
-  ctx.strokeStyle='rgba(0,136,255,0.35)';
-  ctx.lineWidth=1;
-  ctx.lineCap='square'; ctx.lineJoin='miter';
-  ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
-  pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
-  ctx.stroke();
   ctx.restore();
 
-  // Destructible terrain: rubble walls block a shortcut until a digger tunnels through.
-  if(!state.shortcutOpen && wallCellsSet.size){
-    ctx.save();
-    for(const cell of wallCellsSet){
-      const [gx,gy]=cell.split(',').map(Number);
-      const cx=gx*CELL+CELL/2, cy=gy*CELL+CELL/2;
-      const rGrad=ctx.createRadialGradient(cx-3,cy-3,1,cx,cy,20);
-      rGrad.addColorStop(0,'#8a6b45'); rGrad.addColorStop(0.6,'#4a3520'); rGrad.addColorStop(1,'#1a1208');
-      ctx.fillStyle=rGrad;
-      ctx.fillRect(gx*CELL+2,gy*CELL+2,CELL-4,CELL-4);
-      ctx.strokeStyle='rgba(180,140,80,0.5)'; ctx.lineWidth=1;
-      ctx.strokeRect(gx*CELL+2.5,gy*CELL+2.5,CELL-5,CELL-5);
-      // crack details
-      ctx.strokeStyle='rgba(20,12,4,0.6)'; ctx.lineWidth=1;
-      ctx.beginPath();
-      ctx.moveTo(cx-10,cy-8); ctx.lineTo(cx-2,cy-1); ctx.lineTo(cx-8,cy+9);
-      ctx.moveTo(cx+3,cy-9); ctx.lineTo(cx+2,cy+2); ctx.lineTo(cx+11,cy+7);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  // base entrance / exit markers
-  ctx.save();
-  ctx.fillStyle='rgba(0,255,136,0.7)';
-  ctx.fillRect(0, pts[0].y-6, 8, 12);
-  ctx.fillStyle='rgba(255,0,136,0.7)';
-  ctx.fillRect(W-8, pts[pts.length-1].y-6, 8, 12);
-  ctx.restore();
+  drawPortal(pts[0].x, pts[0].y, '0,255,136', 1);
+  drawPortal(pts[pts.length-1].x, pts[pts.length-1].y, '255,0,136', -1);
 }
 
 function tdHexAlpha(hex,a){
@@ -113,8 +230,10 @@ function tdHexAlpha(hex,a){
 
 function drawTowerRange(t){
   ctx.save();
+  const fill = ctx.createRadialGradient(t.x, t.y, t.range*0.2, t.x, t.y, t.range);
+  fill.addColorStop(0, tdHexAlpha(t.color, 0.02)); fill.addColorStop(1, tdHexAlpha(t.color, 0.09));
   ctx.beginPath(); ctx.arc(t.x, t.y, t.range, 0, Math.PI*2);
-  ctx.fillStyle = tdHexAlpha(t.color, 0.05);
+  ctx.fillStyle = fill;
   ctx.fill();
   ctx.strokeStyle = tdHexAlpha(t.color, 0.35);
   ctx.lineWidth = 1;
@@ -151,6 +270,14 @@ function drawTowers(){
       ctx.beginPath(); ctx.arc(t.x,t.y,t.range,0,Math.PI*2); ctx.stroke();
       ctx.restore();
     }
+    // Colored light spill from the turret onto the deck.
+    ctx.save();
+    ctx.globalCompositeOperation='lighter';
+    const spill=ctx.createRadialGradient(t.x,t.y,4,t.x,t.y,30);
+    spill.addColorStop(0,tdHexAlpha(t.color,0.22)); spill.addColorStop(1,tdHexAlpha(t.color,0));
+    ctx.fillStyle=spill; ctx.beginPath(); ctx.arc(t.x,t.y,30,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+
     // Cooling down after a relocation: can't fire yet.
     if(t.moveCooldown>0) ctx.globalAlpha=0.55;
 
@@ -219,11 +346,14 @@ function drawDigProgress(e){
 function drawEnemyHpBar(e){
   const r = e.boss ? (e.splitDepth?11:16) : 10;
   const bw=28, bh=4;
-  ctx.fillStyle='rgba(0,0,0,0.6)';
-  ctx.fillRect(e.x-bw/2, e.y-r-8, bw, bh);
+  const bx=e.x-bw/2, by=e.y-r-8;
+  ctx.fillStyle='rgba(0,0,0,0.7)';
+  ctx.fillRect(bx-1, by-1, bw+2, bh+2);
   const hp = Math.max(0,e.hp/e.maxHp);
   ctx.fillStyle = hp>0.5?'#00ff88':hp>0.25?'#ffaa00':'#ff2244';
-  ctx.fillRect(e.x-bw/2, e.y-r-8, bw*hp, bh);
+  ctx.fillRect(bx, by, bw*hp, bh);
+  ctx.fillStyle='rgba(255,255,255,0.35)';
+  ctx.fillRect(bx, by, bw*hp, 1);
 }
 
 // draws a jointed hexapod leg (hip -> knee -> foot) with a tripod-gait sweep
@@ -473,7 +603,7 @@ function drawBullets(){
     } else if(tt === 'laser'){
       // ── LASER BEAM: continuous glowing beam line from tower ──
       if(b.tx){
-        const dx=b.tx.x-b.x, dy=b.tx.y-b.y;
+        ctx.globalCompositeOperation='lighter';
         // outer glow beam
         ctx.strokeStyle='rgba(255,0,136,0.15)';
         ctx.lineWidth=12; ctx.lineCap='round';
@@ -577,6 +707,7 @@ function drawParticles(){
     if(p.life<=0){ state.particles.splice(i,1); continue; }
     const frac = p.life/p.maxLife;
     ctx.save();
+    ctx.globalCompositeOperation='lighter';
 
     if(p.type==='spark'){
       // bright white/cyan sparks — thin fast streaks

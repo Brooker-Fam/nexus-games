@@ -4,6 +4,13 @@ const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
 const CELL = 40;
 const COLS = W/CELL, ROWS = H/CELL;
+// Render at device resolution so the board stays crisp on high-DPI screens;
+// all game logic keeps working in W×H board units.
+const TD_DPR = Math.min(2, (typeof window!=='undefined' && window.devicePixelRatio) || 1);
+if(TD_DPR>1 && typeof ctx.setTransform==='function'){
+  canvas.width = W*TD_DPR; canvas.height = H*TD_DPR;
+  ctx.setTransform(TD_DPR,0,0,TD_DPR,0,0);
+}
 
 // ── GAME CONFIG ──
 const TD_CONFIG = {
@@ -306,7 +313,7 @@ function createTower(ttype, gx, gy){
 canvas.addEventListener('click', e=>{
   if(state.gameOver) return;
   const r = canvas.getBoundingClientRect();
-  const scaleX = canvas.width/r.width, scaleY = canvas.height/r.height;
+  const scaleX = W/r.width, scaleY = H/r.height;
   const mx = (e.clientX-r.left)*scaleX, my = (e.clientY-r.top)*scaleY;
   const gx = Math.floor(mx/CELL), gy = Math.floor(my/CELL);
 
