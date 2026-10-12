@@ -139,3 +139,38 @@ test('digger enemies open the shortcut once they finish tunneling', () => {
   assert.equal(result.shortcutOpen, true);
   assert.equal(result.route, true);
 });
+
+test('grunt kinds spawn with their own health and pay their own XP', () => {
+  const context = makeContext();
+  const result = vm.runInContext(`(() => {
+    state.towers = [];
+    state.wave = 1;
+    state.waveEnemiesLeft = 10;
+    state.waveEnemyCount = 10;
+    const kinds = [ENEMY_KINDS[0], ENEMY_KINDS[ENEMY_KINDS.length-1]];
+    const realRandom = Math.random;
+    const spawned = kinds.map(k => {
+      const idx = ENEMY_KINDS.indexOf(k);
+      // a constant roll picks this kind; hp jitter uses the same roll
+      const roll = (idx + 0.5) / ENEMY_KINDS.length;
+      Math.random = () => roll;
+      spawnEnemy();
+      Math.random = realRandom;
+      const e = state.enemies[state.enemies.length-1];
+      e.expectedHp = (TD_CONFIG.enemyBaseHp + TD_CONFIG.enemyHpScaling + roll*20) * k.hpMult;
+      return e;
+    });
+    const t = createTower('gun', 0, 0);
+    awardTowerXP(t, spawned[0]);
+    const weakXp = t.xp;
+    awardTowerXP(t, spawned[1]);
+    return { kinds: spawned.map(e => e.kind), hp: spawned.map(e => e.maxHp), weakXp, toughXp: t.xp - weakXp,
+             expectedXp: kinds.map(k => k.xp), expectedHp: spawned.map(e => e.expectedHp) };
+  })()`, context);
+  assert.equal(result.kinds.join(','), 'triangle,square');
+  assert.equal(result.hp.join(','), result.expectedHp.join(','));
+  assert.ok(result.hp[1] > result.hp[0]);
+  assert.equal(result.weakXp, result.expectedXp[0]);
+  assert.equal(result.toughXp, result.expectedXp[1]);
+  assert.ok(result.toughXp > result.weakXp);
+});

@@ -242,27 +242,25 @@ function drawMechLeg(baseAngle, r, phase, groupOffset, legLen, color, lineW){
 }
 
 // ── STANDARD ENEMY LOOKS ──
-// Grunts roll a random look at spawn so waves read as a mixed swarm; diggers and
-// boss minions get fixed looks so they stay recognizable. Purely cosmetic.
+// Each grunt kind (ENEMY_KINDS in logic.js) has its own shape and color; diggers and
+// boss minions get fixed looks so they stay recognizable.
 // sides: polygon side count (0 = circle); star: alternate inner/outer points;
 // size: radius multiplier so thin shapes read as large as the others.
-const ENEMY_LOOKS = [
-  { sides:6, star:false, hi:'#ff6688', mid:'#cc1133', dark:'#4a0812', edge:'#ff6688', leg:'rgba(255,80,100,0.85)',  glow:'#ff0044', eye:'rgba(255,60,60,0.9)' },   // red hexagon
-  { sides:3, star:false, size:1.35, hi:'#ffcc66', mid:'#e07a10', dark:'#4a2204', edge:'#ffb347', leg:'rgba(255,160,60,0.85)',  glow:'#ff8800', eye:'rgba(255,200,60,0.9)' },  // orange triangle
-  { sides:4, star:false, hi:'#88ff99', mid:'#1fae4a', dark:'#063a16', edge:'#66ff88', leg:'rgba(80,220,120,0.85)',  glow:'#00ff66', eye:'rgba(160,255,120,0.9)' }, // green diamond
-  { sides:4, star:false, rot:Math.PI/4, hi:'#d9a3ff', mid:'#8a2be2', dark:'#2a0a4a', edge:'#c58cff', leg:'rgba(180,110,255,0.85)', glow:'#aa44ff', eye:'rgba(230,160,255,0.9)' }, // purple square
-  { sides:5, star:true,  size:1.15, hi:'#fff59a', mid:'#e6c200', dark:'#4a3d00', edge:'#ffe14d', leg:'rgba(240,210,60,0.85)',  glow:'#ffdd00', eye:'rgba(255,255,160,0.9)' }, // yellow star
-  { sides:5, star:false, hi:'#ff99ee', mid:'#d01fa8', dark:'#440636', edge:'#ff77dd', leg:'rgba(255,90,210,0.85)',  glow:'#ff22cc', eye:'rgba(255,150,240,0.9)' }, // magenta pentagon
-];
+const ENEMY_LOOKS = {
+  hexagon:  { sides:6, star:false, hi:'#ff6688', mid:'#cc1133', dark:'#4a0812', edge:'#ff6688', leg:'rgba(255,80,100,0.85)',  glow:'#ff0044', eye:'rgba(255,60,60,0.9)' },   // red hexagon
+  triangle: { sides:3, star:false, size:1.35, hi:'#ffcc66', mid:'#e07a10', dark:'#4a2204', edge:'#ffb347', leg:'rgba(255,160,60,0.85)',  glow:'#ff8800', eye:'rgba(255,200,60,0.9)' },  // orange triangle
+  diamond:  { sides:4, star:false, hi:'#88ff99', mid:'#1fae4a', dark:'#063a16', edge:'#66ff88', leg:'rgba(80,220,120,0.85)',  glow:'#00ff66', eye:'rgba(160,255,120,0.9)' }, // green diamond
+  square:   { sides:4, star:false, rot:Math.PI/4, hi:'#d9a3ff', mid:'#8a2be2', dark:'#2a0a4a', edge:'#c58cff', leg:'rgba(180,110,255,0.85)', glow:'#aa44ff', eye:'rgba(230,160,255,0.9)' }, // purple square
+  star:     { sides:5, star:true,  size:1.15, hi:'#fff59a', mid:'#e6c200', dark:'#4a3d00', edge:'#ffe14d', leg:'rgba(240,210,60,0.85)',  glow:'#ffdd00', eye:'rgba(255,255,160,0.9)' }, // yellow star
+  pentagon: { sides:5, star:false, hi:'#ff99ee', mid:'#d01fa8', dark:'#440636', edge:'#ff77dd', leg:'rgba(255,90,210,0.85)',  glow:'#ff22cc', eye:'rgba(255,150,240,0.9)' }, // magenta pentagon
+};
 const DIGGER_LOOK = { sides:8, star:false, hi:'#e8c48a', mid:'#9a6a2e', dark:'#3a240a', edge:'#cc9944', leg:'rgba(200,150,80,0.85)', glow:'#cc9944', eye:'rgba(255,210,140,0.9)' }; // bronze octagon
 const MINION_LOOK = { sides:0, star:false, hi:'#ffb0a0', mid:'#e0503a', dark:'#4a120a', edge:'#ff8866', leg:'rgba(255,120,90,0.85)', glow:'#ff5533', eye:'rgba(255,180,140,0.9)' };  // coral orb
 
 function enemyLook(e){
   if(e.digger) return DIGGER_LOOK;
   if(e.minion) return MINION_LOOK;
-  const n = ENEMY_LOOKS.length;
-  const idx = Math.floor((e.look ?? 0) * n);
-  return ENEMY_LOOKS[Math.min(n-1, Math.max(0, idx))];
+  return ENEMY_LOOKS[e.kind] || ENEMY_LOOKS.hexagon;
 }
 
 function traceEnemyBody(look, r){

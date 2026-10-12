@@ -33,6 +33,7 @@ const TD_CONFIG = {
   xpArmoredKill: 20,
   xpBossKill: 60,
   evoXpThresholds: [0, 120, 320], // [base, level2, level3/evolve]
+  shieldedXpMult: 2, // adapted (shielded) grunts are worth double their kind's XP
 
   // ── MOVEABLE TOWERS ──
   moveCostFactor: 0.35,
@@ -120,6 +121,17 @@ const TOWER_TYPES = {
 // whichever kind of kill it has scored more of: 'swarm' (fast, numerous
 // grunts) rewards rate of fire; 'armored' (bosses, diggers, shielded
 // enemies) rewards raw damage/range.
+// Grunt kinds: each spawn rolls one at random. Tougher kinds take more hits
+// to kill and pay towers more evolution XP. `id` also selects the look in rendering.js.
+const ENEMY_KINDS = [
+  { id:'triangle', name:'Skitter',  hpMult:0.6, xp:6  }, // orange triangle: fragile
+  { id:'star',     name:'Spark',    hpMult:0.8, xp:8  }, // yellow star
+  { id:'hexagon',  name:'Crawler',  hpMult:1.0, xp:10 }, // red hexagon: baseline
+  { id:'diamond',  name:'Prism',    hpMult:1.3, xp:13 }, // green diamond
+  { id:'pentagon', name:'Brute',    hpMult:1.7, xp:17 }, // magenta pentagon
+  { id:'square',   name:'Bulwark',  hpMult:2.2, xp:22 }, // purple square: tank
+];
+
 const TOWER_EVOLUTIONS = {
   gun: {
     swarm:   { name:'Gatling',      mult:{ damage:0.8, range:1.0, rate:0.55 }, tint:'#ffee55' },
@@ -384,17 +396,19 @@ function spawnEnemy(){
     state.waveEnemiesLeft === Math.ceil(state.waveEnemyCount/2);
   if(isBoss) addLog('⚠ BOSS INCOMING','bad');
   if(isDigger) addLog('⚠ A DIGGER IS HEADING FOR THE WALL','bad');
+  const kind = (isBoss || isDigger) ? null : ENEMY_KINDS[Math.floor(Math.random()*ENEMY_KINDS.length)];
+  const maxHp = isBoss ? hp*TD_CONFIG.bossHpMultiplier : (isDigger ? hp*1.6 : hp*kind.hpMult);
 
   const enemy = {
     ...wpPx(PATH_WAYPOINTS[0]),
     wpIdx: 0, progress: 0,
-    hp: isBoss ? hp*TD_CONFIG.bossHpMultiplier : (isDigger ? hp*1.6 : hp),
-    maxHp: isBoss ? hp*TD_CONFIG.bossHpMultiplier : (isDigger ? hp*1.6 : hp),
+    hp: maxHp, maxHp,
     speed: isBoss ? spd*TD_CONFIG.bossSpeedMultiplier : (isDigger ? spd*0.85 : spd),
     slow: 0, boss: isBoss, digger: isDigger,
     reward: isBoss ? 60 : (isDigger ? 16 : 10 + state.wave * 2),
     angle: 0, walkDist: 0,
-    look: Math.random(), // cosmetic: picks the grunt's shape/color in rendering
+    kind: kind ? kind.id : null,
+    xp: kind ? kind.xp : null,
     route: state.shortcutOpen ? SHORTCUT_WAYPOINTS : PATH_WAYPOINTS,
     evoCategory: (isBoss || isDigger) ? 'armored' : 'swarm',
   };
@@ -405,6 +419,7 @@ function spawnEnemy(){
       enemy.resistType = domType;
       enemy.shielded = true;
       enemy.evoCategory = 'armored';
+      if(enemy.xp) enemy.xp *= TD_CONFIG.shieldedXpMult;
       if(domType==='slow') enemy.slowImmune = true;
       else enemy.resistFactor = TD_CONFIG.adaptResistFactor;
       if(!state.adaptationAnnounced[domType]){
@@ -438,7 +453,9 @@ function moveEnemy(e){
 function awardTowerXP(t, enemy){
   if(!t) return;
   const cat = enemy.evoCategory || 'swarm';
-  const xpGain = enemy.boss ? TD_CONFIG.xpBossKill : (cat==='armored' ? TD_CONFIG.xpArmoredKill : TD_CONFIG.xpSwarmKill);
+  const xpGain = enemy.boss ? TD_CONFIG.xpBossKill
+    : enemy.xp ? enemy.xp // grunt kinds carry their own XP value
+    : (cat==='armored' ? TD_CONFIG.xpArmoredKill : TD_CONFIG.xpSwarmKill);
   t.xp += xpGain;
   t.kills++;
   t.killCat[cat] = (t.killCat[cat]||0) + 1;
