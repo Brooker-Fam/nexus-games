@@ -241,9 +241,48 @@ function drawMechLeg(baseAngle, r, phase, groupOffset, legLen, color, lineW){
   ctx.beginPath(); ctx.arc(footX,footY,lineW*0.7,0,Math.PI*2); ctx.fill();
 }
 
+// ── STANDARD ENEMY LOOKS ──
+// Grunts roll a random look at spawn so waves read as a mixed swarm; diggers and
+// boss minions get fixed looks so they stay recognizable. Purely cosmetic.
+// sides: polygon side count (0 = circle); star: alternate inner/outer points;
+// size: radius multiplier so thin shapes read as large as the others.
+const ENEMY_LOOKS = [
+  { sides:6, star:false, hi:'#ff6688', mid:'#cc1133', dark:'#4a0812', edge:'#ff6688', leg:'rgba(255,80,100,0.85)',  glow:'#ff0044', eye:'rgba(255,60,60,0.9)' },   // red hexagon
+  { sides:3, star:false, size:1.35, hi:'#ffcc66', mid:'#e07a10', dark:'#4a2204', edge:'#ffb347', leg:'rgba(255,160,60,0.85)',  glow:'#ff8800', eye:'rgba(255,200,60,0.9)' },  // orange triangle
+  { sides:4, star:false, hi:'#88ff99', mid:'#1fae4a', dark:'#063a16', edge:'#66ff88', leg:'rgba(80,220,120,0.85)',  glow:'#00ff66', eye:'rgba(160,255,120,0.9)' }, // green diamond
+  { sides:4, star:false, rot:Math.PI/4, hi:'#d9a3ff', mid:'#8a2be2', dark:'#2a0a4a', edge:'#c58cff', leg:'rgba(180,110,255,0.85)', glow:'#aa44ff', eye:'rgba(230,160,255,0.9)' }, // purple square
+  { sides:5, star:true,  size:1.15, hi:'#fff59a', mid:'#e6c200', dark:'#4a3d00', edge:'#ffe14d', leg:'rgba(240,210,60,0.85)',  glow:'#ffdd00', eye:'rgba(255,255,160,0.9)' }, // yellow star
+  { sides:5, star:false, hi:'#ff99ee', mid:'#d01fa8', dark:'#440636', edge:'#ff77dd', leg:'rgba(255,90,210,0.85)',  glow:'#ff22cc', eye:'rgba(255,150,240,0.9)' }, // magenta pentagon
+];
+const DIGGER_LOOK = { sides:8, star:false, hi:'#e8c48a', mid:'#9a6a2e', dark:'#3a240a', edge:'#cc9944', leg:'rgba(200,150,80,0.85)', glow:'#cc9944', eye:'rgba(255,210,140,0.9)' }; // bronze octagon
+const MINION_LOOK = { sides:0, star:false, hi:'#ffb0a0', mid:'#e0503a', dark:'#4a120a', edge:'#ff8866', leg:'rgba(255,120,90,0.85)', glow:'#ff5533', eye:'rgba(255,180,140,0.9)' };  // coral orb
+
+function enemyLook(e){
+  if(e.digger) return DIGGER_LOOK;
+  if(e.minion) return MINION_LOOK;
+  const n = ENEMY_LOOKS.length;
+  const idx = Math.floor((e.look ?? 0) * n);
+  return ENEMY_LOOKS[Math.min(n-1, Math.max(0, idx))];
+}
+
+function traceEnemyBody(look, r){
+  r *= look.size || 1;
+  ctx.beginPath();
+  if(look.sides===0){ ctx.arc(0,0,r*0.85,0,Math.PI*2); return; }
+  const pts = look.star ? look.sides*2 : look.sides;
+  const rot = look.rot || 0;
+  for(let i=0;i<pts;i++){
+    const a = rot + (i/pts)*Math.PI*2;
+    const rr = look.star ? (i%2===0 ? r*1.15 : r*0.5) : r;
+    i===0?ctx.moveTo(Math.cos(a)*rr,Math.sin(a)*rr):ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);
+  }
+  ctx.closePath();
+}
+
 // ── STANDARD ENEMY: small hexapod crawler bot ──
 function drawGruntEnemy(e){
-  const r = 10;
+  const look = enemyLook(e);
+  const r = e.minion ? 8 : 10;
   const frozen = e.slow>0;
   const phase = (e.walkDist||0)*0.15;
 
@@ -254,42 +293,37 @@ function drawGruntEnemy(e){
 
   ctx.save();
   ctx.translate(e.x, e.y); ctx.rotate(e.angle||0);
-  ctx.shadowColor = frozen?'#8888ff':'#ff0044';
+  ctx.shadowColor = frozen?'#8888ff':look.glow;
   ctx.shadowBlur = 10;
 
   // 6 legs, alternating tripod gait
   const legAngles=[-2.35,-1.57,-0.78,0.78,1.57,2.35];
-  const legColor = frozen?'rgba(150,200,255,0.85)':'rgba(255,80,100,0.85)';
+  const legColor = frozen?'rgba(150,200,255,0.85)':look.leg;
   legAngles.forEach((ba,i)=>{
     drawMechLeg(ba, r, phase, (i%2===0?0:Math.PI), r*1.6, legColor, 1.4);
   });
 
-  // hexagonal carapace body
+  // carapace body in this enemy's shape
   const bGrad=ctx.createRadialGradient(-2,-2,1,0,0,r);
   if(frozen){ bGrad.addColorStop(0,'#cfe8ff'); bGrad.addColorStop(0.5,'#6688cc'); bGrad.addColorStop(1,'#223a66'); }
-  else { bGrad.addColorStop(0,'#ff6688'); bGrad.addColorStop(0.5,'#cc1133'); bGrad.addColorStop(1,'#4a0812'); }
+  else { bGrad.addColorStop(0,look.hi); bGrad.addColorStop(0.5,look.mid); bGrad.addColorStop(1,look.dark); }
   ctx.fillStyle=bGrad;
-  ctx.beginPath();
-  for(let i=0;i<6;i++){
-    const a=(i/6)*Math.PI*2;
-    const rr=r*(i%2===0?1:0.85);
-    i===0?ctx.moveTo(Math.cos(a)*rr,Math.sin(a)*rr):ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);
-  }
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle= frozen?'#aaccff':'#ff6688'; ctx.lineWidth=1.3; ctx.stroke();
+  traceEnemyBody(look, r);
+  ctx.fill();
+  ctx.strokeStyle= frozen?'#aaccff':look.edge; ctx.lineWidth=1.3; ctx.stroke();
 
   // armor seam lines
   ctx.strokeStyle='rgba(0,0,0,0.35)'; ctx.lineWidth=0.6;
   for(let i=0;i<3;i++){
     const a=(i/3)*Math.PI;
-    ctx.beginPath(); ctx.moveTo(Math.cos(a)*r*0.2,Math.sin(a)*r*0.2); ctx.lineTo(Math.cos(a)*r*0.9,Math.sin(a)*r*0.9); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(Math.cos(a)*r*0.2,Math.sin(a)*r*0.2); ctx.lineTo(Math.cos(a)*r*0.6,Math.sin(a)*r*0.6); ctx.stroke();
   }
 
   // single pulsing sensor eye facing direction of travel
   const eyePulse=0.6+Math.sin((state.frame||0)*0.15)*0.4;
   const eGrad=ctx.createRadialGradient(r*0.5,0,0,r*0.5,0,3);
   eGrad.addColorStop(0,`rgba(255,255,255,${eyePulse})`);
-  eGrad.addColorStop(0.5, frozen?'rgba(180,220,255,0.9)':'rgba(255,60,60,0.9)');
+  eGrad.addColorStop(0.5, frozen?'rgba(180,220,255,0.9)':look.eye);
   eGrad.addColorStop(1,'transparent');
   ctx.fillStyle=eGrad;
   ctx.beginPath(); ctx.arc(r*0.5,0,3,0,Math.PI*2); ctx.fill();

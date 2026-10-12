@@ -394,6 +394,7 @@ function spawnEnemy(){
     slow: 0, boss: isBoss, digger: isDigger,
     reward: isBoss ? 60 : (isDigger ? 16 : 10 + state.wave * 2),
     angle: 0, walkDist: 0,
+    look: Math.random(), // cosmetic: picks the grunt's shape/color in rendering
     route: state.shortcutOpen ? SHORTCUT_WAYPOINTS : PATH_WAYPOINTS,
     evoCategory: (isBoss || isDigger) ? 'armored' : 'swarm',
   };
