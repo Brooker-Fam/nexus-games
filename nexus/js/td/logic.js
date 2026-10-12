@@ -126,12 +126,12 @@ const TOWER_TYPES = {
 // later waves field progressively harder enemies (see pickEnemyKind).
 // `id` also selects the look in rendering.js.
 const ENEMY_KINDS = [
-  { id:'triangle', name:'Skitter',  hpMult:0.6, xp:6,  unlockWave:1 }, // orange triangle: fragile
-  { id:'star',     name:'Spark',    hpMult:0.8, xp:8,  unlockWave:2 }, // yellow star
-  { id:'hexagon',  name:'Crawler',  hpMult:1.0, xp:10, unlockWave:4 }, // red hexagon: baseline
-  { id:'diamond',  name:'Prism',    hpMult:1.3, xp:13, unlockWave:6 }, // green diamond
-  { id:'pentagon', name:'Brute',    hpMult:1.7, xp:17, unlockWave:8 }, // magenta pentagon
-  { id:'square',   name:'Bulwark',  hpMult:2.2, xp:22, unlockWave:11 }, // purple square: tank
+  { id:'triangle', name:'Skitter',  hpMult:0.6, xp:6,  unlockWave:1 }, // green triangle: fragile
+  { id:'star',     name:'Spark',    hpMult:0.8, xp:8,  unlockWave:1 }, // yellow star
+  { id:'hexagon',  name:'Crawler',  hpMult:1.0, xp:10, unlockWave:1 }, // red hexagon: baseline
+  { id:'diamond',  name:'Prism',    hpMult:1.3, xp:13, unlockWave:3 }, // orange diamond
+  { id:'pentagon', name:'Brute',    hpMult:1.7, xp:17, unlockWave:5 }, // magenta pentagon
+  { id:'square',   name:'Bulwark',  hpMult:2.2, xp:22, unlockWave:8 }, // purple square: tank
 ];
 // Only the newest few unlocked kinds spawn, weighted toward the newest, so
 // weak kinds retire as tougher ones arrive.

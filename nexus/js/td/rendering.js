@@ -248,8 +248,8 @@ function drawMechLeg(baseAngle, r, phase, groupOffset, legLen, color, lineW){
 // size: radius multiplier so thin shapes read as large as the others.
 const ENEMY_LOOKS = {
   hexagon:  { sides:6, star:false, hi:'#ff6688', mid:'#cc1133', dark:'#4a0812', edge:'#ff6688', leg:'rgba(255,80,100,0.85)',  glow:'#ff0044', eye:'rgba(255,60,60,0.9)' },   // red hexagon
-  triangle: { sides:3, star:false, size:1.35, hi:'#ffcc66', mid:'#e07a10', dark:'#4a2204', edge:'#ffb347', leg:'rgba(255,160,60,0.85)',  glow:'#ff8800', eye:'rgba(255,200,60,0.9)' },  // orange triangle
-  diamond:  { sides:4, star:false, hi:'#88ff99', mid:'#1fae4a', dark:'#063a16', edge:'#66ff88', leg:'rgba(80,220,120,0.85)',  glow:'#00ff66', eye:'rgba(160,255,120,0.9)' }, // green diamond
+  triangle: { sides:3, star:false, size:1.35, hi:'#88ff99', mid:'#1fae4a', dark:'#063a16', edge:'#66ff88', leg:'rgba(80,220,120,0.85)',  glow:'#00ff66', eye:'rgba(160,255,120,0.9)' }, // green triangle
+  diamond:  { sides:4, star:false, hi:'#ffcc66', mid:'#e07a10', dark:'#4a2204', edge:'#ffb347', leg:'rgba(255,160,60,0.85)',  glow:'#ff8800', eye:'rgba(255,200,60,0.9)' },  // orange diamond
   square:   { sides:4, star:false, rot:Math.PI/4, hi:'#d9a3ff', mid:'#8a2be2', dark:'#2a0a4a', edge:'#c58cff', leg:'rgba(180,110,255,0.85)', glow:'#aa44ff', eye:'rgba(230,160,255,0.9)' }, // purple square
   star:     { sides:5, star:true,  size:1.15, hi:'#fff59a', mid:'#e6c200', dark:'#4a3d00', edge:'#ffe14d', leg:'rgba(240,210,60,0.85)',  glow:'#ffdd00', eye:'rgba(255,255,160,0.9)' }, // yellow star
   pentagon: { sides:5, star:false, hi:'#ff99ee', mid:'#d01fa8', dark:'#440636', edge:'#ff77dd', leg:'rgba(255,90,210,0.85)',  glow:'#ff22cc', eye:'rgba(255,150,240,0.9)' }, // magenta pentagon
@@ -280,7 +280,9 @@ function traceEnemyBody(look, r){
 // ── STANDARD ENEMY: small hexapod crawler bot ──
 function drawGruntEnemy(e){
   const look = enemyLook(e);
-  const r = e.minion ? 8 : 10;
+  // tougher kinds render bigger so they read as threats at a glance
+  const kind = typeof ENEMY_KINDS!=='undefined' && ENEMY_KINDS.find(k=>k.id===e.kind);
+  const r = e.minion ? 8 : 10 * (kind ? 0.8 + 0.2*kind.hpMult : 1);
   const frozen = e.slow>0;
   const phase = (e.walkDist||0)*0.15;
 

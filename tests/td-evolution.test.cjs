@@ -147,8 +147,8 @@ test('grunt kinds spawn with their own health and pay their own XP', () => {
     state.waveEnemiesLeft = 10;
     state.waveEnemyCount = 10;
     const realRandom = Math.random;
-    // wave 1 only fields the weakest kind; a high roll late on picks the newest (toughest)
-    const spawned = [[1, 0.5], [20, 0.999]].map(([wave, roll]) => {
+    // a low roll on wave 1 picks the weakest kind; a high roll late on picks the newest (toughest)
+    const spawned = [[1, 0.01], [20, 0.999]].map(([wave, roll]) => {
       state.wave = wave;
       Math.random = () => roll;
       spawnEnemy();
@@ -187,7 +187,7 @@ test('later waves field progressively tougher enemy kinds', () => {
     return { curve, wave1: unlockedEnemyKinds(1).map(k => k.id).join(','),
              late: unlockedEnemyKinds(20).map(k => k.id).join(',') };
   })()`, context);
-  assert.equal(result.wave1, 'triangle');
+  assert.equal(result.wave1, 'triangle,star,hexagon', 'wave 1 already mixes several kinds');
   assert.ok(!result.late.includes('triangle'), 'weak kinds retire late game');
   assert.ok(result.late.includes('square'));
   for(let i=1; i<result.curve.length; i++) assert.ok(result.curve[i] >= result.curve[i-1]);
