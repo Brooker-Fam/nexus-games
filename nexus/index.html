@@ -108,6 +108,7 @@
     <button class="tab" id="tab-btn-skins">✦ SKINS</button>
     <button class="tab" id="tab-btn-book">📖 THE BOOK</button>
     <button class="tab" id="tab-btn-memberships">★ MEMBERSHIPS</button>
+    <button class="tab tab-beta" id="tab-btn-beta">⚑ BETA</button>
   </div>
 </header>
 
@@ -1128,6 +1129,23 @@
   </div>
 
   <div id="tab-tkd" class="tab-content"></div>
+
+  <div id="tab-beta" class="tab-content">
+    <div class="dso-title-wrap">
+      <div class="dso-pre">TESTER ACCESS</div>
+      <div class="dso-title">BETA</div>
+      <div class="dso-sub">Enter the beta code to unlock every skin, the full book and the Neon Dojo for testing.</div>
+    </div>
+    <form class="beta-panel" id="beta-form" autocomplete="off">
+      <label class="beta-label" for="beta-code">BETA CODE</label>
+      <div class="beta-row">
+        <input class="beta-input" id="beta-code" type="password" inputmode="numeric" placeholder="•••••" maxlength="16">
+        <button class="beta-btn" id="beta-submit" type="submit">UNLOCK</button>
+      </div>
+      <div class="beta-msg" id="beta-msg" role="status"></div>
+      <button class="beta-btn beta-btn-off" id="beta-lock" type="button" hidden>TURN OFF BETA ACCESS</button>
+    </form>
+  </div>
 </main>
 </div>
 

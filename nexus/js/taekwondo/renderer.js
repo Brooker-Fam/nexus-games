@@ -59,7 +59,10 @@ export class DojoRenderer {
       ctx.restore();
       ctx.fillStyle = 'rgba(3, 12, 27, 0.12)';
       ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
-    } else if (!scene.landmarks) {
+    } else if (!this.reducedMotion) {
+      this.drawMotes();
+    }
+    if (!hasVideo && !scene.landmarks) {
       this.drawGuide(scene.target ? scene.target.x : 0.72);
       if (!scene.target && ['idle', 'menu', 'ready'].includes(scene.phase)) {
         this.drawPad({ x: 0.56, y: 0.47, radius: 0.065, side: 'left', remaining: 1, total: 1 }, 0, true);
@@ -71,6 +74,24 @@ export class DojoRenderer {
     if (scene.target) this.drawPad(scene.target, this.reducedMotion ? 0 : scene.time || 0);
     this.drawImpacts(Math.max(0, Math.min(scene.delta || 0, 0.1)));
     return this.viewport;
+  }
+
+  // Dust motes drifting up through the spotlights.
+  drawMotes() {
+    const ctx = this.context;
+    const t = performance.now() / 1000;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 28; i++) {
+      const seed = Math.sin(i * 91.7) * 43758.5453;
+      const r = seed - Math.floor(seed);
+      const lane = [0.6, 0.75, 0.9][i % 3];
+      const x = this.width * (lane + (r - 0.5) * 0.16 + Math.sin(t * 0.3 + i) * 0.01);
+      const y = this.height * (1 - ((t * (0.012 + r * 0.02) + r) % 1) * 0.8);
+      ctx.fillStyle = `rgba(200, 230, 255, ${0.12 + r * 0.25})`;
+      ctx.fillRect(x, y, 1.5, 1.5);
+    }
+    ctx.restore();
   }
 
   point(x, y) {
@@ -133,6 +154,60 @@ export class DojoRenderer {
       ctx.stroke();
       ctx.restore();
     }
+    // Taegeuk emblem on the back wall.
+    {
+      const cx = w * 0.72, cy = h * 0.3, r = h * 0.13;
+      ctx.save();
+      ctx.globalAlpha = 0.16;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#9fd8ff';
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - r);
+      ctx.arc(cx, cy - r / 2, r / 2, -Math.PI / 2, Math.PI / 2, false);
+      ctx.arc(cx, cy + r / 2, r / 2, -Math.PI / 2, Math.PI / 2, true);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(122, 252, 255, 0.5)';
+      ctx.beginPath(); ctx.arc(cx, cy - r / 2, r * 0.1, 0, TAU); ctx.fill();
+      ctx.fillStyle = 'rgba(198, 155, 255, 0.5)';
+      ctx.beginPath(); ctx.arc(cx, cy + r / 2, r * 0.1, 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+    // Ceiling spotlights: soft cones with pools of light on the mat.
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const [x, tint] of [[0.6, '122, 200, 255'], [0.75, '210, 230, 255'], [0.9, '198, 155, 255']]) {
+      const top = w * x, spread = w * 0.11;
+      const cone = ctx.createLinearGradient(0, 0, 0, floor);
+      cone.addColorStop(0, `rgba(${tint}, 0.10)`);
+      cone.addColorStop(1, `rgba(${tint}, 0.015)`);
+      ctx.fillStyle = cone;
+      ctx.beginPath();
+      ctx.moveTo(top - w * 0.012, 0);
+      ctx.lineTo(top + w * 0.012, 0);
+      ctx.lineTo(top + spread, floor + h * 0.06);
+      ctx.lineTo(top - spread, floor + h * 0.06);
+      ctx.closePath();
+      ctx.fill();
+      const pool = ctx.createRadialGradient(top, floor + h * 0.07, 0, top, floor + h * 0.07, spread * 1.2);
+      pool.addColorStop(0, `rgba(${tint}, 0.16)`);
+      pool.addColorStop(1, `rgba(${tint}, 0)`);
+      ctx.fillStyle = pool;
+      ctx.beginPath();
+      ctx.ellipse(top, floor + h * 0.07, spread * 1.2, h * 0.06, 0, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = `rgba(${tint}, 0.8)`;
+      ctx.fillRect(top - w * 0.014, 0, w * 0.028, 3);
+    }
+    ctx.restore();
+    // Polished mat: a glossy band just past the wall line.
+    const sheen = ctx.createLinearGradient(0, floor, 0, h);
+    sheen.addColorStop(0, 'rgba(140, 210, 255, 0.10)');
+    sheen.addColorStop(0.25, 'rgba(140, 210, 255, 0.02)');
+    sheen.addColorStop(1, 'rgba(0, 0, 0, 0.25)');
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0, floor, w, h - floor);
+
     const shade = ctx.createLinearGradient(0, 0, w * 0.63, 0);
     shade.addColorStop(0, 'rgba(3, 10, 23, 0.88)');
     shade.addColorStop(0.6, 'rgba(3, 10, 23, 0.42)');
@@ -214,17 +289,34 @@ export class DojoRenderer {
     const ctx = this.context;
     const visible = point => point && (point.visibility ?? 1) >= 0.5;
     ctx.save();
-    ctx.lineWidth = Math.max(2, this.viewport.height * 0.004);
-    ctx.strokeStyle = 'rgba(128, 247, 255, 0.6)';
     ctx.lineCap = 'round';
+    const bones = new Path2D();
     for (const [from, to] of BONES) {
       if (!visible(landmarks[from]) || !visible(landmarks[to])) continue;
       const start = this.point(landmarks[from].x, landmarks[from].y);
       const end = this.point(landmarks[to].x, landmarks[to].y);
-      ctx.beginPath();
-      ctx.moveTo(start.x, start.y);
-      ctx.lineTo(end.x, end.y);
-      ctx.stroke();
+      bones.moveTo(start.x, start.y);
+      bones.lineTo(end.x, end.y);
+    }
+    // Neon tube: a wide soft glow under a bright thin core.
+    const base = Math.max(2, this.viewport.height * 0.004);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.strokeStyle = 'rgba(80, 220, 255, 0.16)';
+    ctx.lineWidth = base * 4.5;
+    ctx.stroke(bones);
+    ctx.strokeStyle = 'rgba(128, 247, 255, 0.75)';
+    ctx.lineWidth = base;
+    ctx.stroke(bones);
+    ctx.globalCompositeOperation = 'source-over';
+    // Head ring centred on the nose, sized from shoulder width.
+    if (visible(landmarks[0]) && visible(landmarks[11]) && visible(landmarks[12])) {
+      const nose = this.point(landmarks[0].x, landmarks[0].y);
+      const a = this.point(landmarks[11].x, landmarks[11].y);
+      const b = this.point(landmarks[12].x, landmarks[12].y);
+      const r = Math.max(8, Math.hypot(a.x - b.x, a.y - b.y) * 0.3);
+      ctx.strokeStyle = 'rgba(128, 247, 255, 0.55)';
+      ctx.lineWidth = base;
+      ctx.beginPath(); ctx.arc(nose.x, nose.y, r, 0, TAU); ctx.stroke();
     }
     for (const index of [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 31, 32]) {
       if (!visible(landmarks[index])) continue;
@@ -277,9 +369,21 @@ export class DojoRenderer {
     ctx.fillStyle = glow;
     ctx.fillRect(-radius * 2, -radius * 2, radius * 4, radius * 4);
     ctx.scale(1 + pulse, 1 + pulse);
+    // Rotating targeting ring.
+    ctx.save();
+    ctx.rotate(time * (target.side === 'left' ? 0.9 : -0.9));
+    ctx.setLineDash([radius * 0.35, radius * 0.22]);
+    ctx.strokeStyle = color;
+    ctx.globalAlpha *= 0.45;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(0, 0, radius * 1.22, 0, TAU); ctx.stroke();
+    ctx.restore();
     ctx.lineWidth = 2;
     ctx.strokeStyle = color;
-    ctx.fillStyle = 'rgba(5, 21, 40, 0.88)';
+    const core = ctx.createRadialGradient(0, 0, 0, 0, 0, radius * 0.85);
+    core.addColorStop(0, target.side === 'left' ? 'rgba(30, 110, 140, 0.92)' : 'rgba(80, 50, 140, 0.92)');
+    core.addColorStop(1, 'rgba(5, 21, 40, 0.92)');
+    ctx.fillStyle = core;
     ctx.beginPath();
     for (let i = 0; i < 8; i++) {
       const angle = i * TAU / 8 - Math.PI / 8;
@@ -354,19 +458,41 @@ export class DojoRenderer {
       const opacity = Math.max(0, 1 - age / 0.7);
       ctx.save();
       ctx.globalAlpha = opacity;
-      ctx.fillStyle = CYAN;
-      for (const particle of impact.particles) {
-        const x = point.x + particle.vx * age * this.viewport.height;
-        const y = point.y + (particle.vy * age + age * age * 0.12) * this.viewport.height;
-        ctx.fillRect(x, y, particle.size, particle.size);
-      }
+      ctx.globalCompositeOperation = 'lighter';
+      const vh = this.viewport.height;
       if (!this.reducedMotion) {
+        // white-hot flash at the moment of contact
+        const flashR = vh * (0.05 + age * 0.2);
+        const flash = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, flashR);
+        flash.addColorStop(0, `rgba(255, 255, 255, ${0.7 * Math.max(0, 1 - age * 4)})`);
+        flash.addColorStop(0.4, 'rgba(122, 252, 255, 0.25)');
+        flash.addColorStop(1, 'rgba(122, 252, 255, 0)');
+        ctx.fillStyle = flash;
+        ctx.beginPath(); ctx.arc(point.x, point.y, flashR, 0, TAU); ctx.fill();
+      }
+      ctx.strokeStyle = CYAN;
+      ctx.lineCap = 'round';
+      for (const particle of impact.particles) {
+        const x = point.x + particle.vx * age * vh;
+        const y = point.y + (particle.vy * age + age * age * 0.12) * vh;
+        ctx.lineWidth = particle.size * 0.7;
         ctx.beginPath();
-        ctx.arc(point.x, point.y, this.viewport.height * (0.04 + age * 0.12), 0, TAU);
-        ctx.strokeStyle = CYAN;
-        ctx.lineWidth = 2;
+        ctx.moveTo(x, y);
+        ctx.lineTo(x - particle.vx * vh * 0.06, y - particle.vy * vh * 0.06);
         ctx.stroke();
       }
+      if (!this.reducedMotion) {
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, vh * (0.04 + age * 0.12), 0, TAU);
+        ctx.stroke();
+        ctx.strokeStyle = PURPLE;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, vh * (0.02 + age * 0.22), 0, TAU);
+        ctx.stroke();
+      }
+      ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = '#ffffff';
       ctx.shadowColor = '#062235';
       ctx.shadowBlur = 6;

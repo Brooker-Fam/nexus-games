@@ -12,6 +12,60 @@ window.nexusProActive = false;
 window.nexusMaxActive = false;
 let membershipBuyInFlight = false;
 
+// ── BETA ACCESS ──
+// Testers enter BETA_CODE on the BETA tab to unlock everything a MAX member
+// gets, without paying. Client-side only (remembered in localStorage): it
+// grants no server-side entitlement, so nothing is written to the
+// memberships or unlocks tables.
+const BETA_CODE = '12345';
+const BETA_KEY = 'nexus-beta-unlocked';
+function betaUnlocked(){
+  try { return localStorage.getItem(BETA_KEY) === '1'; } catch(e){ return false; }
+}
+// Called after every membership-status update so a server response can't
+// re-lock a beta tester mid-session.
+function applyBetaOverride(){
+  if(!betaUnlocked()) return;
+  window.nexusProActive = true;
+  window.nexusMaxActive = true;
+}
+applyBetaOverride();
+
+function renderBetaPanel(){
+  const on = betaUnlocked();
+  const msg=document.getElementById('beta-msg');
+  const lock=document.getElementById('beta-lock');
+  const tab=document.getElementById('tab-btn-beta');
+  if(msg && !msg.dataset.error){
+    msg.textContent = on ? '✓ BETA ACCESS ACTIVE — every skin, the full book and the Neon Dojo are unlocked.' : '';
+    msg.className = 'beta-msg' + (on ? ' beta-msg-ok' : '');
+  }
+  if(lock) lock.hidden = !on;
+  if(tab) tab.classList.toggle('tab-beta-on', on);
+}
+
+function submitBetaCode(code){
+  const msg=document.getElementById('beta-msg');
+  if(String(code).trim() !== BETA_CODE){
+    if(msg){ msg.dataset.error='1'; msg.textContent='✕ That code is not valid.'; msg.className='beta-msg beta-msg-err'; }
+    return false;
+  }
+  try { localStorage.setItem(BETA_KEY, '1'); } catch(e){}
+  if(msg) delete msg.dataset.error;
+  applyBetaOverride();
+  refreshDependentUI();
+  if(window.posthog) posthog.capture('beta_access_unlocked');
+  return true;
+}
+
+function clearBetaAccess(){
+  try { localStorage.removeItem(BETA_KEY); } catch(e){}
+  window.nexusProActive = false;
+  window.nexusMaxActive = false;
+  // Re-check the real subscription so paying members keep their tier.
+  loadMembershipStatus();
+}
+
 function renderMembershipStatus(tier){
   const proCard=document.getElementById('membership-card-pro');
   const proBtn=document.getElementById('membership-btn-pro');
@@ -65,6 +119,7 @@ function refreshDependentUI(){
   if(typeof renderBookList==='function') renderBookList();
   if(typeof renderBookReader==='function') renderBookReader();
   if(typeof window.renderTkdLock==='function') window.renderTkdLock();
+  renderBetaPanel();
 }
 
 async function loadMembershipStatus(){
@@ -75,6 +130,7 @@ async function loadMembershipStatus(){
     window.nexusProActive = !!body.active && (body.tier==='pro' || body.tier==='max');
     window.nexusMaxActive = !!body.active && body.tier==='max';
   } catch(e){ /* offline — treat as not active */ }
+  applyBetaOverride();
   refreshDependentUI();
 }
 
@@ -138,6 +194,7 @@ async function handleMembershipCheckoutReturn(){
       if(tabBtn) tabBtn.click();
     }
   } catch(e){ console.warn('membership confirm failed', e); }
+  applyBetaOverride();
   refreshDependentUI();
 }
 
@@ -145,6 +202,22 @@ registerGame('memberships', {
   init(){ refreshDependentUI(); },
   cleanup(){},
 });
+
+registerGame('beta', {
+  init(){ renderBetaPanel(); const input=document.getElementById('beta-code'); if(input && !betaUnlocked()) input.focus(); },
+  cleanup(){},
+});
+
+document.getElementById('beta-form').addEventListener('submit', e=>{
+  e.preventDefault();
+  const input=document.getElementById('beta-code');
+  if(submitBetaCode(input.value)) input.value='';
+});
+document.getElementById('beta-code').addEventListener('input', ()=>{
+  const msg=document.getElementById('beta-msg');
+  if(msg && msg.dataset.error){ delete msg.dataset.error; renderBetaPanel(); }
+});
+document.getElementById('beta-lock').addEventListener('click', clearBetaAccess);
 
 document.getElementById('membership-btn-pro').addEventListener('click', ()=>buyMembership('pro'));
 document.getElementById('membership-btn-max').addEventListener('click', ()=>buyMembership('max'));

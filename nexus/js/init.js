@@ -138,6 +138,10 @@ document.getElementById('tab-btn-memberships').onclick=function(){
   switchTab('memberships', this);
   if(window.posthog) posthog.capture('game_tab_switched', { tab: 'memberships' });
 };
+document.getElementById('tab-btn-beta').onclick=function(){
+  switchTab('beta', this);
+  if(window.posthog) posthog.capture('game_tab_switched', { tab: 'beta' });
+};
 
 // TD controls
 document.getElementById('btn-reset').onclick=resetGame;

@@ -518,3 +518,44 @@ canvas {
 .membership-card:hover::after { left: 140%; }
 .membership-features li::first-letter { color: rgb(var(--tier)); text-shadow: 0 0 8px rgba(var(--tier),.8); }
 @media (prefers-reduced-motion: reduce) { .membership-card::after { display: none; } }
+
+/* ── BETA TAB ── */
+.tab-beta { color: #ffcf4d; }
+.tab-beta.tab-beta-on::after { content: ' ✓'; color: var(--neon-green); }
+.beta-panel {
+  max-width: 440px; margin: 0 auto; padding: 28px 28px 24px;
+  display: flex; flex-direction: column; gap: 14px;
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,207,77,.12), transparent 70%),
+    linear-gradient(160deg, rgba(16,32,48,.92), rgba(4,10,20,.96));
+  border: 1px solid rgba(255,207,77,.35);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+}
+.beta-label { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 4px; color: #ffcf4d; }
+.beta-row { display: flex; gap: 10px; }
+.beta-input {
+  flex: 1; min-width: 0; padding: 12px 14px;
+  font-family: 'Orbitron', sans-serif; font-size: 16px; letter-spacing: 6px;
+  color: var(--text-bright); background: rgba(0,0,0,.45);
+  border: 1px solid rgba(255,207,77,.35); outline: none;
+}
+.beta-input:focus { border-color: #ffcf4d; box-shadow: 0 0 16px rgba(255,207,77,.25); }
+.beta-btn {
+  font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 2px;
+  padding: 12px 18px; cursor: pointer;
+  border: 1px solid #ffcf4d; background: rgba(255,207,77,.12); color: #ffcf4d;
+  transition: all .2s ease;
+}
+.beta-btn:hover { background: rgba(255,207,77,.24); box-shadow: 0 0 20px rgba(255,207,77,.3); }
+.beta-btn-off { border-color: rgba(255,255,255,.2); background: transparent; color: var(--text-dim); }
+.beta-btn-off:hover { color: var(--text-bright); background: rgba(255,255,255,.06); box-shadow: none; }
+.beta-msg { min-height: 18px; font-size: 13px; letter-spacing: 1px; }
+.beta-msg-ok { color: var(--neon-green); }
+.beta-msg-err { color: #ff4d6d; }
+/* Seven tabs: tighten spacing on mid-width screens so they all fit without scrolling. */
+@media (min-width: 901px) {
+  .tab { padding-left: clamp(8px, 1.1vw, 28px); padding-right: clamp(8px, 1.1vw, 28px); letter-spacing: clamp(1px, .2vw, 3px); }
+}
+@media (min-width: 901px) and (max-width: 1300px) {
+  .tab { font-size: 10px; }
+}
