@@ -9,14 +9,21 @@ export const DEMO_STANCE = Object.freeze({
 // Kick catalog. `reach` is the ideal target height as a fraction of the
 // player's standing height (0.58 ≈ belt, 0.72 ≈ solar plexus, 0.9 ≈ head);
 // `spread` is the sideways distance from the body centre in body heights.
+// Each kick gets its own height and lane so pads for different kicks never
+// land on the same spot: axe drops close in, front kicks straight ahead,
+// back and side kicks drive low and long, and the turning kicks go high and wide.
 export const KICKS = Object.freeze({
-  front: Object.freeze({ name: 'Front kick', korean: 'Ap chagi', reach: 0.7, spread: 0.3 }),
-  roundhouse: Object.freeze({ name: 'Roundhouse', korean: 'Dollyo chagi', reach: 0.74, spread: 0.52 }),
-  side: Object.freeze({ name: 'Side kick', korean: 'Yeop chagi', reach: 0.68, spread: 0.6 }),
-  back: Object.freeze({ name: 'Back kick', korean: 'Dwit chagi', reach: 0.64, spread: 0.5 }),
-  axe: Object.freeze({ name: 'Axe kick', korean: 'Naeryo chagi', reach: 0.92, spread: 0.26 }),
-  hook: Object.freeze({ name: 'Hook kick', korean: 'Huryeo chagi', reach: 0.9, spread: 0.56 }),
+  front: Object.freeze({ name: 'Front kick', korean: 'Ap chagi', reach: 0.7, spread: 0.26 }),
+  roundhouse: Object.freeze({ name: 'Roundhouse', korean: 'Dollyo chagi', reach: 0.8, spread: 0.5 }),
+  side: Object.freeze({ name: 'Side kick', korean: 'Yeop chagi', reach: 0.62, spread: 0.74 }),
+  back: Object.freeze({ name: 'Back kick', korean: 'Dwit chagi', reach: 0.58, spread: 0.4 }),
+  axe: Object.freeze({ name: 'Axe kick', korean: 'Naeryo chagi', reach: 0.94, spread: 0.14 }),
+  hook: Object.freeze({ name: 'Hook kick', korean: 'Huryeo chagi', reach: 0.88, spread: 0.64 }),
 });
+
+// Span of natural kick heights, squeezed under a less flexible player's cap.
+const LOWEST_REACH = 0.58;
+const HIGHEST_REACH = 0.94;
 
 // The highest a player is comfortable kicking, as a fraction of their height.
 export const FLEXIBILITY = Object.freeze({
@@ -53,9 +60,13 @@ export function formatHeight(cm, units = 'cm') {
 }
 
 // Fraction of standing height a kick's pad sits at: the kick's natural
-// target, lowered to what the player's flexibility allows.
+// target, with the whole kick range compressed under what the player's
+// flexibility allows so kicks keep their relative heights instead of all
+// collapsing onto the cap.
 export function kickReach(kick, flexibility, difficulty = 'easy') {
-  const reach = Math.min(KICKS[kick].reach, FLEXIBILITY[flexibility].cap);
+  const top = Math.min(FLEXIBILITY[flexibility].cap, HIGHEST_REACH);
+  const bottom = Math.max(0.36, Math.min(LOWEST_REACH, top - 0.2));
+  const reach = bottom + (KICKS[kick].reach - LOWEST_REACH) * (top - bottom) / (HIGHEST_REACH - LOWEST_REACH);
   return difficulty === 'easy' ? reach * 0.92 : reach;
 }
 

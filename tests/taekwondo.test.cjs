@@ -111,8 +111,22 @@ test('flexibility caps kick height and taller players get higher real-world pads
   assert.ok(pad('stiff').y > stance.hipY - 0.05, 'stiff players kick around waist height');
   assert.ok(pad('splits').y < stance.shoulderY, 'head-height kicks sit above the shoulders');
   assert.equal(pad('splits', 150).heightCm < pad('splits', 190).heightCm, true);
-  assert.equal(pad('stiff', 170, 'front').heightCm, pad('stiff', 170, 'axe').heightCm);
+  assert.ok(pad('stiff', 170, 'front').heightCm < pad('stiff', 170, 'axe').heightCm, 'capped kicks keep distinct heights');
+  assert.ok(pad('stiff', 170, 'axe').heightCm <= 0.5 * 170 + 1e-9, 'no pad rises above the flexibility cap');
   assert.ok(pad('splits', 170, 'front').y > pad('splits', 170, 'axe').y, 'kick type sets the target height');
+});
+
+test('every kick gets its own pad position', async () => {
+  const { DojoRound, KICKS, FLEXIBILITY } = await model;
+  for (const flexibility of Object.keys(FLEXIBILITY)) {
+    const pads = Object.keys(KICKS).map(kick => new DojoRound(stance, 'normal', { heightCm: 170, flexibility, kicks: [kick] }).target);
+    for (let a = 0; a < pads.length; a++) {
+      for (let b = a + 1; b < pads.length; b++) {
+        const apart = Math.hypot((pads[a].x - pads[b].x) * stance.aspect, pads[a].y - pads[b].y);
+        assert.ok(apart > pads[a].radius * 0.6, `${pads[a].kick} and ${pads[b].kick} overlap at ${flexibility}`);
+      }
+    }
+  }
 });
 
 test('profile input is sanitised and heights format in either unit', async () => {
