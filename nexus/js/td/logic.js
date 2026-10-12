@@ -121,16 +121,37 @@ const TOWER_TYPES = {
 // whichever kind of kill it has scored more of: 'swarm' (fast, numerous
 // grunts) rewards rate of fire; 'armored' (bosses, diggers, shielded
 // enemies) rewards raw damage/range.
-// Grunt kinds: each spawn rolls one at random. Tougher kinds take more hits
-// to kill and pay towers more evolution XP. `id` also selects the look in rendering.js.
+// Grunt kinds, weakest to toughest. Tougher kinds take more hits to kill and
+// pay towers more evolution XP. Each kind joins the mix at `unlockWave`, so
+// later waves field progressively harder enemies (see pickEnemyKind).
+// `id` also selects the look in rendering.js.
 const ENEMY_KINDS = [
-  { id:'triangle', name:'Skitter',  hpMult:0.6, xp:6  }, // orange triangle: fragile
-  { id:'star',     name:'Spark',    hpMult:0.8, xp:8  }, // yellow star
-  { id:'hexagon',  name:'Crawler',  hpMult:1.0, xp:10 }, // red hexagon: baseline
-  { id:'diamond',  name:'Prism',    hpMult:1.3, xp:13 }, // green diamond
-  { id:'pentagon', name:'Brute',    hpMult:1.7, xp:17 }, // magenta pentagon
-  { id:'square',   name:'Bulwark',  hpMult:2.2, xp:22 }, // purple square: tank
+  { id:'triangle', name:'Skitter',  hpMult:0.6, xp:6,  unlockWave:1 }, // orange triangle: fragile
+  { id:'star',     name:'Spark',    hpMult:0.8, xp:8,  unlockWave:2 }, // yellow star
+  { id:'hexagon',  name:'Crawler',  hpMult:1.0, xp:10, unlockWave:4 }, // red hexagon: baseline
+  { id:'diamond',  name:'Prism',    hpMult:1.3, xp:13, unlockWave:6 }, // green diamond
+  { id:'pentagon', name:'Brute',    hpMult:1.7, xp:17, unlockWave:8 }, // magenta pentagon
+  { id:'square',   name:'Bulwark',  hpMult:2.2, xp:22, unlockWave:11 }, // purple square: tank
 ];
+// Only the newest few unlocked kinds spawn, weighted toward the newest, so
+// weak kinds retire as tougher ones arrive.
+const ENEMY_KIND_WINDOW = 3;
+
+function unlockedEnemyKinds(wave){
+  const unlocked = ENEMY_KINDS.filter(k => k.unlockWave <= Math.max(1, wave));
+  return unlocked.slice(-ENEMY_KIND_WINDOW);
+}
+function pickEnemyKind(wave){
+  const pool = unlockedEnemyKinds(wave);
+  // weights 1..n, newest kind heaviest
+  const total = pool.length*(pool.length+1)/2;
+  let roll = Math.random()*total;
+  for(let i=0;i<pool.length;i++){
+    roll -= i+1;
+    if(roll < 0) return pool[i];
+  }
+  return pool[pool.length-1];
+}
 
 const TOWER_EVOLUTIONS = {
   gun: {
@@ -361,6 +382,9 @@ function startWave(){
   sfx('tdWave');
   const bossNotice = isBossWave(state.wave) ? ' + BOSS' : '';
   addLog(`▶ WAVE ${state.wave} INCOMING — ${count} enemies${bossNotice}`,'info');
+  for(const k of ENEMY_KINDS){
+    if(k.unlockWave===state.wave && state.wave>1) addLog(`⚠ New enemy: ${k.name.toUpperCase()} (${k.hpMult}x HP)`,'bad');
+  }
   updateHUD();
   if(window.posthog) posthog.capture('td_wave_started', { wave: state.wave, map: activeMap.name, enemy_count: count, boss_wave: isBossWave(state.wave), towers: state.towers.length, gold: state.gold, score: state.score });
 }
@@ -396,7 +420,7 @@ function spawnEnemy(){
     state.waveEnemiesLeft === Math.ceil(state.waveEnemyCount/2);
   if(isBoss) addLog('⚠ BOSS INCOMING','bad');
   if(isDigger) addLog('⚠ A DIGGER IS HEADING FOR THE WALL','bad');
-  const kind = (isBoss || isDigger) ? null : ENEMY_KINDS[Math.floor(Math.random()*ENEMY_KINDS.length)];
+  const kind = (isBoss || isDigger) ? null : pickEnemyKind(state.wave);
   const maxHp = isBoss ? hp*TD_CONFIG.bossHpMultiplier : (isDigger ? hp*1.6 : hp*kind.hpMult);
 
   const enemy = {

@@ -144,20 +144,19 @@ test('grunt kinds spawn with their own health and pay their own XP', () => {
   const context = makeContext();
   const result = vm.runInContext(`(() => {
     state.towers = [];
-    state.wave = 1;
     state.waveEnemiesLeft = 10;
     state.waveEnemyCount = 10;
-    const kinds = [ENEMY_KINDS[0], ENEMY_KINDS[ENEMY_KINDS.length-1]];
     const realRandom = Math.random;
-    const spawned = kinds.map(k => {
-      const idx = ENEMY_KINDS.indexOf(k);
-      // a constant roll picks this kind; hp jitter uses the same roll
-      const roll = (idx + 0.5) / ENEMY_KINDS.length;
+    // wave 1 only fields the weakest kind; a high roll late on picks the newest (toughest)
+    const spawned = [[1, 0.5], [20, 0.999]].map(([wave, roll]) => {
+      state.wave = wave;
       Math.random = () => roll;
       spawnEnemy();
       Math.random = realRandom;
       const e = state.enemies[state.enemies.length-1];
-      e.expectedHp = (TD_CONFIG.enemyBaseHp + TD_CONFIG.enemyHpScaling + roll*20) * k.hpMult;
+      const k = ENEMY_KINDS.find(k => k.id === e.kind);
+      e.expectedHp = (TD_CONFIG.enemyBaseHp + wave*TD_CONFIG.enemyHpScaling + roll*20) * k.hpMult;
+      e.expectedXp = k.xp;
       return e;
     });
     const t = createTower('gun', 0, 0);
@@ -165,12 +164,32 @@ test('grunt kinds spawn with their own health and pay their own XP', () => {
     const weakXp = t.xp;
     awardTowerXP(t, spawned[1]);
     return { kinds: spawned.map(e => e.kind), hp: spawned.map(e => e.maxHp), weakXp, toughXp: t.xp - weakXp,
-             expectedXp: kinds.map(k => k.xp), expectedHp: spawned.map(e => e.expectedHp) };
+             expectedXp: spawned.map(e => e.expectedXp), expectedHp: spawned.map(e => e.expectedHp) };
   })()`, context);
   assert.equal(result.kinds.join(','), 'triangle,square');
   assert.equal(result.hp.join(','), result.expectedHp.join(','));
-  assert.ok(result.hp[1] > result.hp[0]);
   assert.equal(result.weakXp, result.expectedXp[0]);
   assert.equal(result.toughXp, result.expectedXp[1]);
   assert.ok(result.toughXp > result.weakXp);
+});
+
+test('later waves field progressively tougher enemy kinds', () => {
+  const context = makeContext();
+  const result = vm.runInContext(`(() => {
+    // expected HP multiplier of a spawn at each wave, from the weighted pool
+    const avgMult = wave => {
+      const pool = unlockedEnemyKinds(wave);
+      const total = pool.length*(pool.length+1)/2;
+      return pool.reduce((sum, k, i) => sum + k.hpMult*(i+1)/total, 0);
+    };
+    const curve = [];
+    for(let w=1; w<=20; w++) curve.push(avgMult(w));
+    return { curve, wave1: unlockedEnemyKinds(1).map(k => k.id).join(','),
+             late: unlockedEnemyKinds(20).map(k => k.id).join(',') };
+  })()`, context);
+  assert.equal(result.wave1, 'triangle');
+  assert.ok(!result.late.includes('triangle'), 'weak kinds retire late game');
+  assert.ok(result.late.includes('square'));
+  for(let i=1; i<result.curve.length; i++) assert.ok(result.curve[i] >= result.curve[i-1]);
+  assert.ok(result.curve[19] > result.curve[0] * 2);
 });
