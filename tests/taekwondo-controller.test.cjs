@@ -10,7 +10,8 @@ const controllerSource = fs.readFileSync(path.join(__dirname, '../nexus/js/taekw
 
 async function controller() {
   let now = 1000;
-  const element = () => ({ value: 'easy', dataset: {}, addEventListener() {}, setAttribute() {} });
+  const element = () => ({ value: 'easy', dataset: {}, addEventListener() {}, setAttribute() {},
+    querySelectorAll: () => [], classList: { add() {}, remove() {} } });
   const refs = new Proxy({}, { get: (target, key) => target[key] ||= element() });
   const context = vm.createContext({
     ...await model,

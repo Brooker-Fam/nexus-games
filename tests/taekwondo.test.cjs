@@ -73,17 +73,52 @@ test('rounds expire targets, reset combos, and finish after 60 active seconds', 
   assert.equal(round.hit(), null);
 });
 
-test('calibrated targets stay below hips and inside the video on narrow screens', async () => {
+test('targets stay inside the video on narrow screens', async () => {
   const { DojoRound } = await model;
   for (const aspect of [9 / 16, 4 / 3, 16 / 9]) {
-    const round = new DojoRound({ ...stance, aspect }, 'normal');
+    const round = new DojoRound({ ...stance, aspect }, 'normal', { heightCm: 170, flexibility: 'splits', kicks: ['axe', 'side', 'hook'] });
     for (let n = 0; n < 8; n++) {
       const target = round.target;
       assert.ok(target.x > target.radius / aspect && target.x < 1 - target.radius / aspect);
-      assert.ok(target.y >= stance.hipY);
-      assert.ok(target.y < stance.floorY - 0.1);
+      assert.ok(target.y > target.radius && target.y < stance.floorY - 0.1);
       round.hit();
       round.advance(0.5);
     }
   }
+});
+
+test('targets cycle through known kicks on alternating legs', async () => {
+  const { DojoRound } = await model;
+  const round = new DojoRound(stance, 'normal', { kicks: ['side', 'axe'] });
+  const seen = [];
+  for (let n = 0; n < 5; n++) {
+    seen.push(`${round.target.kick}:${round.target.side}`);
+    round.hit();
+    round.advance(0.5);
+  }
+  assert.deepEqual(seen, ['side:left', 'side:right', 'axe:left', 'axe:right', 'side:left']);
+  assert.deepEqual(new DojoRound(stance, 'easy', { kicks: [] }).profile.kicks, ['front', 'roundhouse', 'side']);
+});
+
+test('flexibility caps kick height and taller players get higher real-world pads', async () => {
+  const { DojoRound } = await model;
+  const pad = (flexibility, heightCm = 170, kick = 'axe') => new DojoRound(stance, 'normal', { heightCm, flexibility, kicks: [kick] }).target;
+  const heights = ['stiff', 'average', 'flexible', 'splits'].map(level => pad(level));
+  for (let n = 1; n < heights.length; n++) {
+    assert.ok(heights[n].y < heights[n - 1].y, 'more flexibility raises the pad on screen');
+    assert.ok(heights[n].heightCm > heights[n - 1].heightCm);
+  }
+  assert.ok(pad('stiff').y > stance.hipY - 0.05, 'stiff players kick around waist height');
+  assert.ok(pad('splits').y < stance.shoulderY, 'head-height kicks sit above the shoulders');
+  assert.equal(pad('splits', 150).heightCm < pad('splits', 190).heightCm, true);
+  assert.equal(pad('stiff', 170, 'front').heightCm, pad('stiff', 170, 'axe').heightCm);
+  assert.ok(pad('splits', 170, 'front').y > pad('splits', 170, 'axe').y, 'kick type sets the target height');
+});
+
+test('profile input is sanitised and heights format in either unit', async () => {
+  const { normalizeProfile, formatHeight } = await model;
+  assert.deepEqual(normalizeProfile({ heightCm: 999, units: 'x', flexibility: 'rubber', kicks: ['axe', 'axe', 'flying'] }),
+    { heightCm: 230, units: 'cm', flexibility: 'average', kicks: ['axe'] });
+  assert.equal(formatHeight(152.4, 'ftin'), '5′0″');
+  assert.equal(formatHeight(120.2), '120 cm');
 });

@@ -1,3 +1,5 @@
+import { KICKS, FLEXIBILITY } from './model.js';
+
 export function createDojoView(container) {
   container.innerHTML = `
     <section class="tkd-dojo" aria-labelledby="tkd-title">
@@ -65,14 +67,41 @@ export function createDojoView(container) {
             </div>
             <p class="tkd-privacy"><span aria-hidden="true">◈</span> Camera footage is processed locally on your device.</p>
           </div>
+          <form class="tkd-control-card tkd-profile" data-ref="profileForm" aria-labelledby="tkd-profile-title">
+            <div class="tkd-card-heading"><span class="tkd-step">02</span><h2 id="tkd-profile-title">Your training profile</h2></div>
+            <p class="tkd-card-copy">Pads are placed at real heights for your body and the kicks you know.</p>
+            <fieldset class="tkd-field">
+              <legend>Height</legend>
+              <div class="tkd-height-row">
+                <label class="tkd-unit-input"><input data-ref="heightMain" type="number" inputmode="numeric" min="90" max="230" step="1" aria-label="Height"><span data-ref="heightMainUnit">cm</span></label>
+                <label class="tkd-unit-input" data-ref="heightInchesWrap" hidden><input data-ref="heightInches" type="number" inputmode="numeric" min="0" max="11" step="1" aria-label="Inches"><span>in</span></label>
+                <select data-ref="heightUnit" aria-label="Height units">
+                  <option value="cm">cm</option>
+                  <option value="ftin">ft / in</option>
+                </select>
+              </div>
+            </fieldset>
+            <label class="tkd-difficulty" for="tkd-flexibility">Flexibility
+              <select data-ref="flexibilitySelect" id="tkd-flexibility">
+                ${Object.entries(FLEXIBILITY).map(([id, level]) => `<option value="${id}">${level.name}</option>`).join('')}
+              </select>
+            </label>
+            <fieldset class="tkd-field">
+              <legend>Kicks you know</legend>
+              <div class="tkd-kick-list" data-ref="kickList">
+                ${Object.entries(KICKS).map(([id, kick]) => `<label class="tkd-kick"><input type="checkbox" name="kick" value="${id}"><span><strong>${kick.name}</strong><small>${kick.korean}</small></span></label>`).join('')}
+              </div>
+            </fieldset>
+            <p class="tkd-profile-summary" data-ref="profileSummary" aria-live="polite"></p>
+          </form>
           <div class="tkd-howto">
-            <div class="tkd-card-heading"><span class="tkd-step">02</span><h2>Make room to move</h2></div>
+            <div class="tkd-card-heading"><span class="tkd-step">03</span><h2>Make room to move</h2></div>
             <ol>
               <li><strong>Frame your whole body.</strong> One person, good light, head and feet visible.</li>
               <li><strong>Stand comfortably.</strong> Hold still while the game finds your stance.</li>
               <li><strong>Kick the pads.</strong> Use either foot and return to your stance.</li>
             </ol>
-            <p class="tkd-space-note">Clear the area around you. Keep kicks low and controlled. This is a game, not a technique assessment.</p>
+            <p class="tkd-space-note">Clear the area around you. Warm up first, and only kick as high as feels comfortable. This is a game, not a technique assessment.</p>
           </div>
           <div class="tkd-demo-help"><strong>JUST EXPLORING?</strong><p>In demo, tap or click a pad, or use <kbd>A</kbd> / <kbd>D</kbd> or <kbd>←</kbd> / <kbd>→</kbd> to strike. <kbd>Esc</kbd> pauses.</p></div>
         </aside>

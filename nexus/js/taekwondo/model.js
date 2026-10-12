@@ -6,6 +6,59 @@ export const DEMO_STANCE = Object.freeze({
   centerX: 0.5, shoulderY: 0.25, hipY: 0.55, floorY: 0.9, bodyHeight: 0.65, aspect: 16 / 9,
 });
 
+// Kick catalog. `reach` is the ideal target height as a fraction of the
+// player's standing height (0.58 ≈ belt, 0.72 ≈ solar plexus, 0.9 ≈ head);
+// `spread` is the sideways distance from the body centre in body heights.
+export const KICKS = Object.freeze({
+  front: Object.freeze({ name: 'Front kick', korean: 'Ap chagi', reach: 0.7, spread: 0.3 }),
+  roundhouse: Object.freeze({ name: 'Roundhouse', korean: 'Dollyo chagi', reach: 0.74, spread: 0.52 }),
+  side: Object.freeze({ name: 'Side kick', korean: 'Yeop chagi', reach: 0.68, spread: 0.6 }),
+  back: Object.freeze({ name: 'Back kick', korean: 'Dwit chagi', reach: 0.64, spread: 0.5 }),
+  axe: Object.freeze({ name: 'Axe kick', korean: 'Naeryo chagi', reach: 0.92, spread: 0.26 }),
+  hook: Object.freeze({ name: 'Hook kick', korean: 'Huryeo chagi', reach: 0.9, spread: 0.56 }),
+});
+
+// The highest a player is comfortable kicking, as a fraction of their height.
+export const FLEXIBILITY = Object.freeze({
+  stiff: Object.freeze({ name: 'Stiff · waist high', cap: 0.5 }),
+  average: Object.freeze({ name: 'Average · stomach high', cap: 0.64 }),
+  flexible: Object.freeze({ name: 'Flexible · chest high', cap: 0.78 }),
+  splits: Object.freeze({ name: 'Very flexible · head high', cap: 0.94 }),
+});
+
+export const DEFAULT_PROFILE = Object.freeze({
+  heightCm: 160, units: 'cm', flexibility: 'average', kicks: Object.freeze(['front', 'roundhouse', 'side']),
+});
+
+// Standing proportions used to map real heights onto the calibrated body,
+// whose span runs from the ankles to the shoulders.
+const ANKLE_HEIGHT = 0.039;
+const SHOULDER_HEIGHT = 0.818;
+
+export function normalizeProfile(profile = {}) {
+  const heightCm = Number(profile.heightCm);
+  const kicks = Array.isArray(profile.kicks) ? profile.kicks.filter(kick => KICKS[kick]) : [];
+  return {
+    heightCm: Number.isFinite(heightCm) ? clamp(Math.round(heightCm), 90, 230) : DEFAULT_PROFILE.heightCm,
+    units: profile.units === 'ftin' ? 'ftin' : 'cm',
+    flexibility: FLEXIBILITY[profile.flexibility] ? profile.flexibility : DEFAULT_PROFILE.flexibility,
+    kicks: [...new Set(kicks)],
+  };
+}
+
+export function formatHeight(cm, units = 'cm') {
+  if (units !== 'ftin') return `${Math.round(cm)} cm`;
+  const inches = Math.round(cm / 2.54);
+  return `${Math.floor(inches / 12)}′${inches % 12}″`;
+}
+
+// Fraction of standing height a kick's pad sits at: the kick's natural
+// target, lowered to what the player's flexibility allows.
+export function kickReach(kick, flexibility, difficulty = 'easy') {
+  const reach = Math.min(KICKS[kick].reach, FLEXIBILITY[flexibility].cap);
+  return difficulty === 'easy' ? reach * 0.92 : reach;
+}
+
 export function bodyVisible(points) {
   return [11, 12, 23, 24, 25, 26, 27, 28, 31, 32].every(index => visible(points?.[index]));
 }
@@ -76,9 +129,11 @@ export class KickDetector {
 }
 
 export class DojoRound {
-  constructor(calibration, difficulty = 'easy') {
+  constructor(calibration, difficulty = 'easy', profile = DEFAULT_PROFILE) {
     this.calibration = calibration;
     this.difficulty = difficulty;
+    this.profile = normalizeProfile(profile);
+    if (!this.profile.kicks.length) this.profile.kicks = [...DEFAULT_PROFILE.kicks];
     this.remaining = 60;
     this.score = 0;
     this.hits = 0;
@@ -94,16 +149,20 @@ export class DojoRound {
   get accuracy() { return this.hits + this.misses ? Math.round(this.hits / (this.hits + this.misses) * 100) : 0; }
 
   spawn() {
-    const { centerX, floorY, hipY, bodyHeight, aspect } = this.calibration;
+    const { centerX, floorY, bodyHeight, aspect } = this.calibration;
+    const { heightCm, units, flexibility, kicks } = this.profile;
     const radius = clamp(bodyHeight * (this.difficulty === 'easy' ? 0.12 : 0.095), 0.04, 0.078);
     const side = this.sequence % 2 ? 'right' : 'left';
-    const offset = bodyHeight * 0.48 / aspect;
-    const height = this.difficulty === 'easy' ? 0.5 : [0.55, 0.72, 0.62, 0.8][this.sequence % 4];
+    const kick = kicks[Math.floor(this.sequence / 2) % kicks.length];
+    const reach = kickReach(kick, flexibility, this.difficulty);
+    const stature = bodyHeight / (SHOULDER_HEIGHT - ANKLE_HEIGHT);
+    const offset = bodyHeight * KICKS[kick].spread / aspect;
     const total = this.difficulty === 'easy' ? 4 : 2.8;
     this.target = {
       x: clamp(centerX + (side === 'left' ? -offset : offset), radius / aspect + 0.03, 1 - radius / aspect - 0.03),
-      y: floorY - (floorY - hipY) * height,
+      y: clamp(floorY - (reach - ANKLE_HEIGHT) * stature, radius + 0.03, floorY - bodyHeight * 0.2),
       radius, remaining: total, total, side, id: this.sequence++,
+      kick, kickName: KICKS[kick].name, heightCm: reach * heightCm, heightLabel: formatHeight(reach * heightCm, units),
     };
   }
 

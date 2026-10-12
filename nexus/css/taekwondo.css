@@ -80,6 +80,24 @@
 .tkd-button:disabled { opacity: 0.45; cursor: default; }
 .tkd-difficulty { display: block; margin-top: 19px; font-size: 12px; color: #b8cada; font-weight: 600; }
 .tkd-difficulty select { display: block; margin-top: 7px; width: 100%; min-height: 39px; border: 1px solid #2c4356; border-radius: 4px; background: #0b1727; color: #cde0ed; padding: 8px; font: 400 13px/1.2 'Rajdhani', sans-serif; }
+.tkd-field { border: 0; margin: 17px 0 0; padding: 0; min-width: 0; }
+.tkd-field > legend { font-size: 12px; color: #b8cada; font-weight: 600; padding: 0; margin-bottom: 7px; }
+.tkd-height-row { display: flex; gap: 6px; }
+.tkd-unit-input { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 5px; border: 1px solid #2c4356; border-radius: 4px; background: #0b1727; padding: 0 8px; color: #8ca5bd; font-size: 12px; }
+.tkd-unit-input input { width: 100%; min-width: 0; min-height: 37px; border: 0; background: transparent; color: #cde0ed; font: 400 14px/1.2 'Rajdhani', sans-serif; }
+.tkd-unit-input:focus-within { outline: 2px solid #c79bff; outline-offset: 2px; }
+.tkd-unit-input input:focus { outline: none; }
+.tkd-height-row select { flex: 0 0 auto; min-height: 39px; border: 1px solid #2c4356; border-radius: 4px; background: #0b1727; color: #cde0ed; padding: 6px; font: 400 13px/1.2 'Rajdhani', sans-serif; }
+.tkd-kick-list { display: grid; gap: 5px; }
+.tkd-kick { display: flex; align-items: center; gap: 9px; padding: 6px 8px; border: 1px solid #22394b; border-radius: 4px; cursor: pointer; }
+.tkd-kick:has(input:checked) { border-color: #4f8ea3; background: rgba(122, 252, 255, 0.06); }
+.tkd-kick input { accent-color: #7afcff; width: 15px; height: 15px; flex: none; }
+.tkd-kick span { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; flex: 1; min-width: 0; }
+.tkd-kick strong { color: #d5e6f2; font-size: 14px; font-weight: 600; }
+.tkd-kick small { color: #7f97ab; font-size: 11px; white-space: nowrap; }
+.tkd-profile fieldset:disabled, .tkd-profile select:disabled { opacity: 0.55; }
+.tkd-profile-summary { margin-top: 12px; color: #8daabe; font-size: 12px; line-height: 1.5; }
+.tkd-profile-summary.is-error { color: #ff9db8; }
 .tkd-session-controls { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .tkd-button-small { flex: 1 1 43%; width: auto; min-height: 34px; justify-content: center; padding: 7px; border-color: #2c4356; background: transparent; color: #b7ccdd; font-size: 12px; }
 .tkd-privacy { display: flex; align-items: start; gap: 7px; color: #8daabe; font-size: 12px; line-height: 1.45; margin-top: 16px; }

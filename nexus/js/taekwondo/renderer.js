@@ -314,12 +314,21 @@ export class DojoRenderer {
       ctx.font = `700 ${fontSize}px Rajdhani, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      const text = target.side === 'left' ? 'LEFT PAD' : 'RIGHT PAD';
-      const textWidth = ctx.measureText(text).width;
+      const side = target.side === 'left' ? 'LEFT' : 'RIGHT';
+      const lines = target.kickName
+        ? [`${side} ${target.kickName.toUpperCase()}`, target.heightLabel]
+        : [`${side} PAD`];
+      const lineHeight = fontSize + 3;
+      const textWidth = Math.max(...lines.map(line => ctx.measureText(line).width));
+      // Flip the label above the pad when it would run off the bottom.
+      const below = point.y + radius + 18 + lines.length * lineHeight < this.viewport.y + this.viewport.height;
+      const top = below ? radius + 10 : -radius - 14 - lines.length * lineHeight;
       ctx.fillStyle = 'rgba(3, 12, 24, 0.86)';
-      ctx.fillRect(-textWidth / 2 - 7, radius + 10, textWidth + 14, fontSize + 8);
-      ctx.fillStyle = color;
-      ctx.fillText(text, 0, radius + 14);
+      ctx.fillRect(-textWidth / 2 - 7, top, textWidth + 14, lines.length * lineHeight + 5);
+      lines.forEach((line, index) => {
+        ctx.fillStyle = index ? '#d5e6f2' : color;
+        ctx.fillText(line, 0, top + 4 + index * lineHeight);
+      });
     }
     ctx.restore();
   }

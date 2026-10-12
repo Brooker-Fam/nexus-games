@@ -1,6 +1,16 @@
 # Neon Dojo
 
-The Taekwondo tab is a single-player camera game, gated behind the Nexus MAX subscription (see `js/shared/memberships.js` and `docs` for the membership tiers — BASIC, PRO, MAX). A signed-in player without an active MAX membership sees a locked overlay with an upgrade prompt instead of the dojo controls. A round lasts 60 active seconds. Kick a virtual pad with either foot, then lower the foot before kicking again. Consecutive hits increase the score multiplier. Easy uses larger pads and longer target windows; Normal uses smaller pads at varying heights below the calibrated hips.
+The Taekwondo tab is a single-player camera game, gated behind the Nexus MAX subscription (see `js/shared/memberships.js` and `docs` for the membership tiers — BASIC, PRO, MAX). A signed-in player without an active MAX membership sees a locked overlay with an upgrade prompt instead of the dojo controls. A round lasts 60 active seconds. Kick a virtual pad with either foot, then lower the foot before kicking again. Consecutive hits increase the score multiplier. Easy uses larger pads, longer target windows, and pads 8% lower; Normal uses smaller pads at full height.
+
+## Training profile
+
+Before a round, the player sets a training profile, saved on the device under `nexus-dojo-profile`:
+
+- **Height** in cm or feet and inches. Each pad's height is computed in real units (shown on the pad and in the profile summary) and mapped onto the calibrated body using standard ankle and shoulder proportions.
+- **Flexibility** caps how high any pad can go: stiff (waist, 50% of height), average (stomach, 64%), flexible (chest, 78%), or very flexible (head, 94%).
+- **Kicks you know**: front, roundhouse, side, back, axe, and hook. At least one is required. Rounds cycle through the selected kicks, each on the left then the right leg. Every kick has its own target height (for example, body level for front and side kicks, head level for axe and hook kicks) and sideways distance from the body; the flexibility cap lowers anything above it.
+
+The game still detects only foot contact with the pad. It does not check which kick was used.
 
 ## Playing locally
 
@@ -29,6 +39,6 @@ Stop, tab changes, leaving or hiding the page, errors, and completed rounds rele
 
 ## Validation
 
-`npm test` covers calibration, fast kicks crossing between samples, low-confidence/stale samples, foot rearming, score progression, expiry, target placement, and delayed worker callbacks. Browser checks exercised demo input, pause, camera rejection, synthetic camera calibration and kicks, tracking loss, and camera cleanup. The worker was also run with MediaPipe's sample person image and returned 33 landmarks.
+`npm test` covers calibration, fast kicks crossing between samples, low-confidence/stale samples, foot rearming, score progression, expiry, target placement by kick, height and flexibility, profile sanitising, and delayed worker callbacks. Browser checks exercised demo input, pause, camera rejection, synthetic camera calibration and kicks, tracking loss, and camera cleanup. The worker was also run with MediaPipe's sample person image and returned 33 landmarks.
 
 Physical-camera kick accuracy has not been validated. It depends on lighting, framing, camera speed, and device performance.

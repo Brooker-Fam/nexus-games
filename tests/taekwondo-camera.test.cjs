@@ -11,7 +11,8 @@ const controllerSource = fs.readFileSync(path.join(__dirname, '../nexus/js/taekw
 async function harness() {
   const captured = [];
   const exceptions = [];
-  const element = () => ({ value: 'easy', dataset: {}, addEventListener() {}, setAttribute() {} });
+  const element = () => ({ value: 'easy', dataset: {}, addEventListener() {}, setAttribute() {},
+    querySelectorAll: () => [], classList: { add() {}, remove() {} } });
   const refs = new Proxy({}, { get: (target, key) => target[key] ||= element() });
   const posthog = {
     capture: (event, props) => captured.push({ event, props }),

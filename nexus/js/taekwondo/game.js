@@ -1,7 +1,7 @@
 import { createDojoView } from './view.js';
 import { DojoRenderer } from './renderer.js';
 import { createPoseTracker } from './tracker.js';
-import { bodyVisible, measureStance, KickDetector, DojoRound, DEMO_STANCE } from './model.js';
+import { bodyVisible, measureStance, KickDetector, DojoRound, DEMO_STANCE, KICKS, DEFAULT_PROFILE, normalizeProfile, kickReach, formatHeight } from './model.js';
 
 const container = document.getElementById('tab-tkd');
 const view = createDojoView(container);
@@ -24,6 +24,8 @@ let animation = 0;
 let startAttempt = 0;
 let savedPhase = null;
 let wasTracked = false;
+const PROFILE_KEY = 'nexus-dojo-profile';
+let profile = loadProfile();
 
 const tracker = createPoseTracker({
   video: view.video,
@@ -45,13 +47,80 @@ function setStatus(message) {
 function applyLock() {
   locked = !window.nexusMaxActive;
   view.lockPanel.hidden = !locked;
-  view.startButton.disabled = locked;
-  view.demoButton.disabled = locked;
+  view.startButton.disabled = locked || !profileReady();
+  view.demoButton.disabled = locked || !profileReady();
   if (locked && active && !['idle', 'results', 'error'].includes(phase)) {
     stopSession('Locked. Upgrade to Nexus PRO to keep training.');
   }
 }
 window.renderTkdLock = applyLock;
+
+function loadProfile() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PROFILE_KEY));
+    if (saved) return normalizeProfile(saved);
+  } catch {}
+  return normalizeProfile(DEFAULT_PROFILE);
+}
+
+function saveProfile() {
+  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch {}
+}
+
+function profileReady() {
+  return profile.kicks.length > 0;
+}
+
+// Fill the profile form from the saved profile.
+function showProfile() {
+  const imperial = profile.units === 'ftin';
+  const inches = Math.round(profile.heightCm / 2.54);
+  view.heightUnit.value = profile.units;
+  view.heightMain.value = String(imperial ? Math.floor(inches / 12) : profile.heightCm);
+  view.heightMain.min = imperial ? '3' : '90';
+  view.heightMain.max = imperial ? '7' : '230';
+  view.heightMainUnit.textContent = imperial ? 'ft' : 'cm';
+  view.heightInchesWrap.hidden = !imperial;
+  view.heightInches.value = String(inches % 12);
+  view.flexibilitySelect.value = profile.flexibility;
+  view.kickList.querySelectorAll('input').forEach(input => {
+    input.checked = profile.kicks.includes(input.value);
+  });
+  summarizeProfile();
+}
+
+// Read the form back into the profile. Incomplete height entries keep the last valid height.
+function readProfile() {
+  const units = view.heightUnit.value;
+  const main = Number(view.heightMain.value);
+  const heightCm = units === 'ftin'
+    ? (main * 12 + (Number(view.heightInches.value) || 0)) * 2.54
+    : main;
+  profile = normalizeProfile({
+    heightCm: main > 0 && heightCm >= 90 && heightCm <= 230 ? heightCm : profile.heightCm,
+    units,
+    flexibility: view.flexibilitySelect.value,
+    kicks: [...view.kickList.querySelectorAll('input:checked')].map(input => input.value),
+  });
+  saveProfile();
+  summarizeProfile();
+  applyLock();
+}
+
+function summarizeProfile() {
+  const summary = view.profileSummary;
+  if (!profileReady()) {
+    summary.textContent = 'Pick at least one kick you know to start training.';
+    summary.classList.add('is-error');
+    return;
+  }
+  summary.classList.remove('is-error');
+  const difficulty = view.difficultySelect.value;
+  summary.textContent = 'Pads: ' + profile.kicks.map(kick => {
+    const cm = kickReach(kick, profile.flexibility, difficulty) * profile.heightCm;
+    return `${KICKS[kick].name} ${formatHeight(cm, profile.units)}`;
+  }).join(' · ');
+}
 
 function bestKey() {
   return `nexus-dojo-best-${mode}-${view.difficultySelect.value}`;
@@ -78,6 +147,7 @@ function controls() {
   view.pauseButton.hidden = !['countdown', 'playing', 'paused'].includes(phase);
   view.pauseButton.textContent = phase === 'paused' ? 'Resume' : 'Pause';
   view.difficultySelect.disabled = ongoing;
+  view.profileForm.querySelectorAll('input, select').forEach(input => { input.disabled = ongoing; });
   view.overlay.hidden = !['idle', 'loading', 'error', 'paused'].includes(phase);
   view.countdown.hidden = phase !== 'countdown';
   view.calibrationFill.hidden = phase !== 'calibrating';
@@ -108,7 +178,7 @@ function stopSession(message = 'Camera off. Ready when you are.') {
 }
 
 async function startCamera() {
-  if (locked) return;
+  if (locked || !profileReady()) return;
   stopSession();
   mode = 'camera';
   phase = 'loading';
@@ -116,7 +186,9 @@ async function startCamera() {
   view.overlayTitle.textContent = 'Opening the dojo';
   view.overlayText.textContent = 'Your camera stays on this device. Stand where your whole body fits in view.';
   controls();
-  if(window.posthog) posthog.capture('taekwondo_camera_started', { difficulty: view.difficultySelect.value });
+  if(window.posthog) posthog.capture('taekwondo_camera_started', {
+    difficulty: view.difficultySelect.value, flexibility: profile.flexibility, kicks: profile.kicks,
+  });
   try {
     await tracker.start();
     if (!active || attempt !== startAttempt) return;
@@ -166,7 +238,7 @@ function recalibrate() {
 }
 
 function startDemo() {
-  if (locked) return;
+  if (locked || !profileReady()) return;
   stopSession();
   mode = 'demo';
   calibration = { ...DEMO_STANCE };
@@ -177,12 +249,12 @@ function beginCountdown() {
   phase = 'countdown';
   countdown = 3;
   previousFrame = performance.now();
-  round = new DojoRound(calibration, view.difficultySelect.value);
+  round = new DojoRound(calibration, view.difficultySelect.value, profile);
   detector = new KickDetector(calibration);
   view.countdown.textContent = '3';
   view.hint.textContent = mode === 'demo'
     ? 'DEMO · Click or tap a pad. A / ← = left, D / → = right. Esc pauses.'
-    : 'Kick the pad, then put your foot down. Pads stay below hip height. Esc pauses.';
+    : 'Use the kick shown on each pad, then put your foot down. Esc pauses.';
   setStatus(mode === 'demo' ? 'Demo mode. No camera needed.' : 'Body calibrated. Get ready.');
   controls();
   updateHud();
@@ -325,7 +397,21 @@ view.stopButton.addEventListener('click', () => stopSession());
 view.recalibrateButton.addEventListener('click', recalibrate);
 view.pauseButton.addEventListener('click', togglePause);
 view.retryButton.addEventListener('click', () => mode === 'demo' ? startDemo() : startCamera());
-view.difficultySelect.addEventListener('change', updateHud);
+view.difficultySelect.addEventListener('change', () => {
+  updateHud();
+  summarizeProfile();
+});
+view.profileForm.addEventListener('submit', event => event.preventDefault());
+view.profileForm.addEventListener('input', event => {
+  if (event.target !== view.heightUnit) readProfile();
+});
+view.heightUnit.addEventListener('change', () => {
+  profile = normalizeProfile({ ...profile, units: view.heightUnit.value });
+  saveProfile();
+  showProfile();
+});
+view.heightMain.addEventListener('change', showProfile);
+view.heightInches.addEventListener('change', showProfile);
 view.soundButton.addEventListener('click', () => {
   sound = !sound;
   view.soundButton.textContent = sound ? 'Sound on' : 'Sound off';
@@ -360,6 +446,7 @@ window.registerGame('tkd', {
   init() {
     active = true;
     stopSession();
+    showProfile();
     applyLock();
     previousFrame = performance.now();
     animation = requestAnimationFrame(frame);
