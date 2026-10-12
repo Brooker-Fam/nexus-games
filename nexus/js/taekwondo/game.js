@@ -24,6 +24,7 @@ let animation = 0;
 let startAttempt = 0;
 let savedPhase = null;
 let wasTracked = false;
+let announcedTarget = null;
 const PROFILE_KEY = 'nexus-dojo-profile';
 let profile = loadProfile();
 
@@ -122,6 +123,22 @@ function summarizeProfile() {
   }).join(' · ');
 }
 
+// Call out each new pad's leg and kick, e.g. "Left roundhouse".
+function announceTarget(target) {
+  if (!target || target.id === announcedTarget) return;
+  announcedTarget = target.id;
+  if (!sound || !window.speechSynthesis) return;
+  const kick = target.kickName.toLowerCase();
+  const utterance = new SpeechSynthesisUtterance(`${target.side === 'left' ? 'Left' : 'Right'} ${kick}`);
+  utterance.rate = 1.15;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utterance);
+}
+
+function silenceAnnouncer() {
+  window.speechSynthesis?.cancel();
+}
+
 function bestKey() {
   return `nexus-dojo-best-${mode}-${view.difficultySelect.value}`;
 }
@@ -169,6 +186,7 @@ function stopSession(message = 'Camera off. Ready when you are.') {
   detector = null;
   savedPhase = null;
   wasTracked = false;
+  silenceAnnouncer();
   view.overlayTitle.textContent = 'Your body. Your controller.';
   view.overlayText.textContent = 'Step into the frame. Kick the glowing pads. Build your combo.';
   view.hint.textContent = 'One player · 60 seconds · Controlled kicks';
@@ -251,6 +269,7 @@ function beginCountdown() {
   previousFrame = performance.now();
   round = new DojoRound(calibration, view.difficultySelect.value, profile);
   detector = new KickDetector(calibration);
+  announcedTarget = null;
   view.countdown.textContent = '3';
   view.hint.textContent = mode === 'demo'
     ? 'DEMO · Click or tap a pad. A / ← = left, D / → = right. Esc pauses.'
@@ -320,6 +339,7 @@ function registerHit() {
 function finishRound() {
   phase = 'results';
   tracker.stop();
+  silenceAnnouncer();
   landmarks = null;
   if (round.score > readBest()) {
     try { localStorage.setItem(bestKey(), String(round.score)); } catch {}
@@ -342,6 +362,7 @@ function togglePause() {
   } else if (phase === 'playing' || phase === 'countdown') {
     savedPhase = phase;
     phase = 'paused';
+    silenceAnnouncer();
     view.overlayTitle.textContent = 'Take a breath';
     view.overlayText.textContent = 'Your round is paused. Resume when you are ready.';
     setStatus(mode === 'camera' ? 'Paused. Camera is on; Stop turns it off.' : 'Demo paused.');
@@ -379,6 +400,7 @@ function frame(now) {
     }
   }
   wasTracked = tracked;
+  if (phase === 'playing') announceTarget(round?.target);
   renderer.render({
     video: mode === 'camera' && view.video.srcObject ? view.video : null,
     landmarks: now - lastPoseTime < 350 ? landmarks : null,
@@ -414,6 +436,7 @@ view.heightMain.addEventListener('change', showProfile);
 view.heightInches.addEventListener('change', showProfile);
 view.soundButton.addEventListener('click', () => {
   sound = !sound;
+  if (!sound) silenceAnnouncer();
   view.soundButton.textContent = sound ? 'Sound on' : 'Sound off';
   view.soundButton.setAttribute('aria-pressed', String(sound));
 });
