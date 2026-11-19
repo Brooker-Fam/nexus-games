@@ -1243,13 +1243,15 @@
     { id: 'ruby', name: 'Ruby', x: 570, skin: '#e8a978', hair: '#e8641c', style: 'long', shirt: '#a77bff' },
     { id: 'leo', name: 'Leo', x: 690, skin: '#f6c891', hair: '#6b3a1e', style: 'spiky', shirt: '#4d9bff', hoodie: true, freckles: true },
   ];
+  // Voice settings stay close to natural (pitch ~1, rate ~1): big pitch shifts are what make
+  // browser speech sound like chipmunks/robots. Kids get a gentle lift, not a cartoon squeak.
   const SPEAKERS = {
-    'Ms. Rivera': { color: '#5ecbc4', pitch: 1.15, rate: 1.0, female: true },
-    'Class': { color: '#ffd23f', pitch: 1.7, rate: 1.1 },
-    'Maya': { color: '#ff9f43', pitch: 1.6, rate: 1.1, female: true },
-    'Sam': { color: '#ff6b6b', pitch: 1.5, rate: 1.1 },
-    'Ruby': { color: '#c9adff', pitch: 1.7, rate: 1.1, female: true },
-    'Leo': { color: '#6cb8ff', pitch: 1.45, rate: 1.05 },
+    'Ms. Rivera': { color: '#5ecbc4', pitch: 1.02, rate: 0.96, female: true, slot: 0 },
+    'Class': { color: '#ffd23f', pitch: 1.2, rate: 1.0, female: true, slot: 3 },
+    'Maya': { color: '#ff9f43', pitch: 1.22, rate: 1.03, female: true, slot: 1 },
+    'Sam': { color: '#ff6b6b', pitch: 1.18, rate: 1.04, slot: 0 },
+    'Ruby': { color: '#c9adff', pitch: 1.25, rate: 1.02, female: true, slot: 2 },
+    'Leo': { color: '#6cb8ff', pitch: 1.12, rate: 1.0, slot: 1 },
   };
   const DESK_Y = 340;
   const MACH_DESK_Y = 314;
@@ -1440,13 +1442,48 @@
     });
   }
   let voices = [];
-  function loadVoices() { try { voices = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); } catch (e) { voices = []; } }
+  const FEM = /female|woman|samantha|victoria|zira|karen|moira|tessa|fiona|susan|aria|jenny|ava|allison|serena|kate|libby|sonia|emma|michelle|ana|joanna|salli|kimberly|ivy|nicky|zoe|siri.*voice [24]|google us english|google uk english female/i;
+  const MALE = /\bmale|daniel|alex|david|guy|mark|tom|aaron|arthur|oliver|ryan|christopher|eric|roger|steffan|brian|matthew|justin|evan|google uk english male/i;
+  // Novelty / formant-synth voices that sound robotic no matter what.
+  const ROBOTIC = /albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|pipe|princess|superstar|trinoids|whisper|wobble|zarvox|fred|ralph|junior|kathy|espeak|robot/i;
+  function voiceScore(v) {
+    const n = v.name;
+    let s = 0;
+    if (/natural|neural|online/i.test(n)) s += 60;        // Edge / Windows neural voices
+    if (/premium|enhanced|siri/i.test(n)) s += 45;         // Apple high-quality voices
+    if (/^google/i.test(n)) s += 35;                       // Chrome's cloud voices
+    if (/samantha|ava|allison|serena|daniel|karen|moira|tessa/i.test(n)) s += 15;
+    if (/^en[-_]us/i.test(v.lang)) s += 8; else if (/^en[-_](gb|au|ie|ca)/i.test(v.lang)) s += 5;
+    if (!v.localService) s += 5;
+    if (ROBOTIC.test(n)) s -= 200;
+    return s;
+  }
+  function loadVoices() {
+    try {
+      voices = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang) && !ROBOTIC.test(v.name))
+        .sort((a, b) => voiceScore(b) - voiceScore(a));
+    } catch (e) { voices = []; }
+  }
   if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
-  function pickVoice(female) {
+  // Pick the best-sounding voices of the right gender; `slot` spreads characters across
+  // different voices so everyone doesn't sound like the same person.
+  function pickVoice(female, slot) {
     if (!voices.length) return null;
-    const fem = /female|samantha|victoria|zira|karen|moira|tessa|fiona|susan|aria|jenny/i;
-    const male = /male|daniel|alex|fred|david|guy|mark/i;
-    return voices.find(v => female ? fem.test(v.name) : (male.test(v.name) && !fem.test(v.name))) || voices[0];
+    let pool = voices.filter(v => female ? FEM.test(v.name) : (MALE.test(v.name) && !FEM.test(v.name)));
+    if (!pool.length) pool = voices;
+    const best = voiceScore(pool[0]);
+    const good = pool.filter(v => voiceScore(v) >= best - 25);
+    return good[(slot || 0) % good.length];
+  }
+  // Break a line into sentence-sized chunks: gives natural breaths between sentences and
+  // avoids Chrome cutting off long utterances.
+  function speechChunks(text) {
+    const clean = text
+      .replace(/\s*[—–]\s*/g, ', ')
+      .replace(/\.\.\.|…/g, ', ')
+      .replace(/[*_~#]/g, '')
+      .replace(/\s+/g, ' ').trim().replace(/,$/, '.');
+    return (clean.match(/[^.!?]+[.!?]*["')\]]*/g) || [clean]).map(c => c.trim()).filter(Boolean);
   }
   function speak(who, text) {
     return new Promise(res => {
@@ -1454,13 +1491,22 @@
       try {
         speechSynthesis.cancel();
         const v = SPEAKERS[who] || {};
-        const u = new SpeechSynthesisUtterance(text.replace(/—/g, ', '));
-        u.pitch = v.pitch || 1; u.rate = v.rate || 1;
-        const voice = pickVoice(v.female);
-        if (voice) u.voice = voice;
-        u.onend = u.onerror = () => res();
-        speechSynthesis.speak(u);
-        setTimeout(res, 2000 + text.length * 85);
+        const voice = pickVoice(v.female, v.slot);
+        const chunks = speechChunks(text);
+        let left = chunks.length;
+        if (!left) return res();
+        const done = () => { if (--left <= 0) res(); };
+        chunks.forEach((c, i) => {
+          const u = new SpeechSynthesisUtterance(c);
+          // Tiny per-sentence variation so delivery isn't perfectly flat; questions lift a touch.
+          const jitter = (Math.random() - 0.5) * 0.06;
+          u.pitch = Math.min(2, (v.pitch || 1) + jitter + (/\?$/.test(c) ? 0.04 : 0));
+          u.rate = (v.rate || 1) * (/!$/.test(c) ? 1.04 : 1) * (i === 0 ? 1 : 0.99);
+          if (voice) { u.voice = voice; u.lang = voice.lang; }
+          u.onend = u.onerror = done;
+          speechSynthesis.speak(u);
+        });
+        setTimeout(res, 2500 + text.length * 90);
       } catch (e) { res(); }
     });
   }
