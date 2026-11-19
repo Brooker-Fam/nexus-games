@@ -1278,9 +1278,9 @@
       blurb: 'This is a <b>eukaryotic</b> cell: its DNA is kept safe inside a <b>nucleus</b>.',
       parts: ['wall', 'membrane', 'cytoplasm', 'nucleus', 'chloroplast', 'centralVacuole', 'mitochondria', 'ribosome', 'roughER', 'smoothER', 'golgi'],
       labels: {
-        wall: [400, 50], membrane: [612, 70], cytoplasm: [652, 400], nucleus: [175, 116], chloroplast: [640, 182],
-        centralVacuole: [445, 200], mitochondria: [520, 150], ribosome: [282, 352], roughER: [205, 296],
-        smoothER: [160, 414], golgi: [300, 148],
+        wall: [400, 50], membrane: [600, 70], cytoplasm: [604, 404], nucleus: [175, 88], chloroplast: [652, 228],
+        centralVacuole: [452, 214], mitochondria: [542, 520], ribosome: [302, 394], roughER: [296, 252],
+        smoothER: [168, 340], golgi: [380, 82],
       },
       build() {
         let s = '';
@@ -1297,14 +1297,14 @@
           `${M} fill="none" stroke="${C.membraneP}" stroke-width="10"/>` +
           `${M} fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="4" stroke-dasharray="0.1 13" stroke-linecap="round"/>`,
           { bob: false, big: true });
-        s += part('centralVacuole', 445, 300, 0, 1, SHAPE.centralVacuole(), { big: true });
-        s += part('roughER', 0, 0, 0, 1, roughER(175, 175, [82, 99, 116], 22, 128, 12), { bob: false, big: true });
-        s += part('smoothER', 162, 362, 0, 0.74, SHAPE.smoothER());
-        s += part('golgi', 392, 96, 90, 0.8, SHAPE.golgi());
-        s += part('nucleus', 175, 175, 0, 0.8, SHAPE.nucleus());
-        [[640, 128, 18], [662, 300, 84], [632, 470, -18], [180, 470, 14], [420, 486, -4]].forEach(c => { s += part('chloroplast', c[0], c[1], c[2], 1, SHAPE.chloroplast()); });
-        [[284, 486, 22], [526, 488, 8], [522, 106, -10]].forEach(m => { s += part('mitochondria', m[0], m[1], m[2], 0.82, SHAPE.mitochondria()); });
-        [[262, 112], [458, 128], [258, 330], [608, 206], [344, 450], [582, 438], [112, 420]].forEach(r => { s += part('ribosome', r[0], r[1], 0, 1, SHAPE.ribosome()); });
+        s += part('centralVacuole', 452, 300, 0, 0.74, SHAPE.centralVacuole(), { big: true });
+        s += part('roughER', 0, 0, 0, 1, roughER(175, 160, [80, 96, 112], 18, 118, 12), { bob: false, big: true });
+        s += part('smoothER', 172, 395, 0, 0.7, SHAPE.smoothER());
+        s += part('golgi', 372, 132, 90, 0.72, SHAPE.golgi());
+        s += part('nucleus', 175, 160, 0, 0.72, SHAPE.nucleus());
+        [[628, 132, 18], [652, 316, 84], [182, 482, 6], [430, 472, -4]].forEach(c => { s += part('chloroplast', c[0], c[1], c[2], 1, SHAPE.chloroplast()); });
+        [[522, 124, -12], [306, 482, 14], [592, 470, -20]].forEach(m => { s += part('mitochondria', m[0], m[1], m[2], 0.82, SHAPE.mitochondria()); });
+        [[288, 102], [290, 350], [606, 214], [342, 430], [528, 418], [686, 450]].forEach(r => { s += part('ribosome', r[0], r[1], 0, 1, SHAPE.ribosome()); });
         return s;
       },
     },
