@@ -470,7 +470,7 @@
 <section class="screen active" id="screen-intro">
   <div class="intro-wrap">
     <div class="cine" id="cine">
-      <svg id="scene" viewBox="0 0 800 450" role="img" aria-label="Cartoon classroom: Ms. Rivera's science class"></svg>
+      <svg id="scene" viewBox="0 0 800 450" role="img" aria-label="Cartoon classroom: Ms. Bolebrunch's science class"></svg>
       <div class="cine-start" id="cine-start">
         <div class="cine-kicker">Exploring Cells &middot; Chapter 1</div>
         <div class="cine-title">The Field Trip</div>
@@ -1208,8 +1208,8 @@
     $('pick-eu').hidden = step !== 'eu';
     $('pick-back').hidden = step !== 'eu';
     $('title-bubble').innerHTML = step === 'kind'
-      ? 'Whoa, a visitor! I\'m <b>Professor Goo</b>. That machine shrank you way down, Leo &mdash; you\'ve landed in the world of cells! There are two big kinds. <b>Eukaryotic</b> cells keep their DNA inside a nucleus. <b>Prokaryotic</b> cells, like bacteria, don\'t have one. Which will you explore?'
-      : '<b>Eukaryotic</b> it is! Plants and animals are both made of eukaryotic cells, but they\'re not quite the same. Which one do you want to shrink into, Leo?';
+      ? 'Whoa, a visitor! I\'m <b>Professor Goo</b>. That machine shrank you way down, Emmett &mdash; you\'ve landed in the world of cells! There are two big kinds. <b>Eukaryotic</b> cells keep their DNA inside a nucleus. <b>Prokaryotic</b> cells, like bacteria, don\'t have one. Which will you explore?'
+      : '<b>Eukaryotic</b> it is! Plants and animals are both made of eukaryotic cells, but they\'re not quite the same. Which one do you want to shrink into, Emmett?';
   }
   document.querySelector('[data-kind-pick="eu"]').onclick = () => { sfx.pop(); setPickStep('eu'); };
   $('pick-back').onclick = () => { sfx.pop(); setPickStep('kind'); };
@@ -1426,20 +1426,20 @@
   // ================= INTRO CINEMATIC: "The Field Trip" =================
   // =====================================================================
   const KIDS = [
-    { id: 'maya', name: 'Maya', x: 330, skin: '#8d5524', hair: '#1f130c', style: 'puffs', shirt: '#ffd23f' },
-    { id: 'sam', name: 'Sam', x: 450, skin: '#ffd9b8', hair: '#f4c542', style: 'side', shirt: '#ff6b6b', glasses: true },
-    { id: 'ruby', name: 'Ruby', x: 570, skin: '#e8a978', hair: '#e8641c', style: 'long', shirt: '#a77bff' },
-    { id: 'leo', name: 'Leo', x: 690, skin: '#f6c891', hair: '#6b3a1e', style: 'spiky', shirt: '#4d9bff', hoodie: true, freckles: true },
+    { id: 'westley', name: 'Westley', x: 330, skin: '#ffd9b8', hair: '#f4c542', style: 'side', shirt: '#ff6b6b', glasses: true },
+    { id: 'abby', name: 'Abby', x: 450, skin: '#e8a978', hair: '#e8641c', style: 'long', shirt: '#a77bff' },
+    { id: 'cole', name: 'Cole', x: 570, skin: '#8d5524', hair: '#1f130c', style: 'side', shirt: '#ffd23f' },
+    { id: 'leo', name: 'Emmett', x: 690, skin: '#f6c891', hair: '#6b3a1e', style: 'spiky', shirt: '#4d9bff', hoodie: true, freckles: true },
   ];
   // Voice settings stay close to natural (pitch ~1, rate ~1): big pitch shifts are what make
   // browser speech sound like chipmunks/robots. Kids get a gentle lift, not a cartoon squeak.
   const SPEAKERS = {
-    'Ms. Rivera': { color: '#5ecbc4', pitch: 1.02, rate: 0.96, female: true, slot: 0 },
+    'Ms. Bolebrunch': { color: '#5ecbc4', pitch: 1.02, rate: 0.96, female: true, slot: 0 },
     'Class': { color: '#ffd23f', pitch: 1.2, rate: 1.0, female: true, slot: 3 },
-    'Maya': { color: '#ff9f43', pitch: 1.22, rate: 1.03, female: true, slot: 1 },
-    'Sam': { color: '#ff6b6b', pitch: 1.18, rate: 1.04, slot: 0 },
-    'Ruby': { color: '#c9adff', pitch: 1.25, rate: 1.02, female: true, slot: 2 },
-    'Leo': { color: '#6cb8ff', pitch: 1.12, rate: 1.0, slot: 1 },
+    'Westley': { color: '#ff6b6b', pitch: 1.18, rate: 1.04, slot: 0 },
+    'Abby': { color: '#c9adff', pitch: 1.25, rate: 1.02, female: true, slot: 2 },
+    'Cole': { color: '#ff9f43', pitch: 1.15, rate: 1.03, slot: 2 },
+    'Emmett': { color: '#6cb8ff', pitch: 1.12, rate: 1.0, slot: 1 },
   };
   const DESK_Y = 340;
   const MACH_DESK_Y = 314;
@@ -1600,7 +1600,7 @@
       if (k.id === 'leo') return;
       s += `<g class="kid-hands" id="hands-${k.id}" transform="translate(${k.x} ${DESK_Y})">${handsMarkup(k)}</g>`;
     });
-    // vortex + machine + Leo's hands (on top so the press reads)
+    // vortex + machine + Emmett's hands (on top so the press reads)
     s += `<g id="vortex" transform="translate(690 ${MACH_DESK_Y})"><g id="vortex-grow">
         <circle class="ring" r="150" fill="none" stroke="#b06bff" stroke-width="16" stroke-dasharray="80 50" stroke-linecap="round" opacity=".7"/>
         <circle class="ring r2" r="105" fill="none" stroke="#3bd5ff" stroke-width="14" stroke-dasharray="60 40" stroke-linecap="round" opacity=".8"/>
@@ -1709,7 +1709,7 @@
       const sp = SPEAKERS[who] || { color: '#fff' };
       subs.innerHTML = `<span class="speaker" style="background:${sp.color}">${esc(who)}</span><span id="subs-text"></span><span class="subs-hint">tap to speed up</span>`;
       const out = $('subs-text');
-      teacherTalking(who === 'Ms. Rivera');
+      teacherTalking(who === 'Ms. Bolebrunch');
       let spoken = false;
       speak(who, text).then(() => { spoken = true; });
       let i = 0;
@@ -1734,7 +1734,7 @@
         function finish() {
           clearInterval(poll);
           intro.advance = null;
-          if (who === 'Ms. Rivera') teacherTalking(false);
+          if (who === 'Ms. Bolebrunch') teacherTalking(false);
           res();
         }
         intro.advance = () => { try { speechSynthesis.cancel(); } catch (e) {} spoken = true; finish(); };
@@ -1809,37 +1809,37 @@
     const leoPressed = { done: false };
     try {
       await iwait(500);
-      await line('Ms. Rivera', 'Good morning, class! Settle down, settle down. I have some very exciting news!');
+      await line('Ms. Bolebrunch', 'Good morning, class! Settle down, settle down. I have some very exciting news!');
       board(['trip']);
-      await line('Ms. Rivera', 'Today... we are going on a FIELD TRIP!', { onType: p => { if (p >= 1) { kids('cheer', true); KIDS.forEach(k => q1('#yay-' + k.id).classList.add('on')); sfx.right(); } } });
+      await line('Ms. Bolebrunch', 'Today... we are going on a FIELD TRIP!', { onType: p => { if (p >= 1) { kids('cheer', true); KIDS.forEach(k => q1('#yay-' + k.id).classList.add('on')); sfx.right(); } } });
       await line('Class', 'Yaaay! Is it the zoo? The aquarium? The candy factory?!');
       kids('cheer', false);
       KIDS.forEach(k => q1('#yay-' + k.id).classList.remove('on'));
-      await line('Ms. Rivera', 'Even better! We’re going somewhere so tiny, you can’t even see it with your eyes.');
+      await line('Ms. Bolebrunch', 'Even better! We’re going somewhere so tiny, you can’t even see it with your eyes.');
       q1('#teacher').classList.add('holding');
       moveMachine(MACH_TEACHER[0], MACH_TEACHER[1], false);
       q1('#mach-pos').classList.add('on');
       sfx.newFind();
       board(['trip', 'cell']);
-      await line('Ms. Rivera', 'With this machine, the Micro-Explorer, we’re going to explore the inside of a CELL!');
+      await line('Ms. Bolebrunch', 'With this machine, the Micro-Explorer, we’re going to explore the inside of a CELL!');
       kids('wow', true);
       await line('Class', 'Ooooooh!', { hold: 500 });
       kids('wow', false);
-      await line('Ms. Rivera', 'Go ahead and pass it around, carefully, so everyone gets a good look.', { hold: 300 });
+      await line('Ms. Bolebrunch', 'Go ahead and pass it around, carefully, so everyone gets a good look.', { hold: 300 });
       q1('#teacher').classList.remove('holding');
       moveMachine(KIDS[0].x, MACH_DESK_Y, true);
       await iwait(1000);
-      await line('Maya', 'Whoa, it’s so shiny!', { hold: 400 });
+      await line('Westley', 'Whoa, it’s so shiny!', { hold: 400 });
       moveMachine(KIDS[1].x, MACH_DESK_Y, true);
       await iwait(1000);
-      await line('Sam', 'Beep boop! I’m a robot scientist!', { hold: 400 });
+      await line('Abby', 'Beep boop! I’m a robot scientist!', { hold: 400 });
       moveMachine(KIDS[2].x, MACH_DESK_Y, true);
       await iwait(1000);
-      await line('Ruby', 'Here you go, Leo. Your turn!', { hold: 300 });
+      await line('Cole', 'Here you go, Emmett. Your turn!', { hold: 300 });
       moveMachine(KIDS[3].x, MACH_DESK_Y, true);
       camTo(640, 262, 2);
       await iwait(1400);
-      await line('Leo', 'Cool! I wonder what this big red button does...');
+      await line('Emmett', 'Cool! I wonder what this big red button does...');
       const press = () => {
         if (leoPressed.done) return;
         leoPressed.done = true;
@@ -1850,14 +1850,14 @@
           startWhirr();
         });
       };
-      await line('Ms. Rivera', 'Now remember, class, this machine is only EXPERIMENTAL, so whatever you do, don’t press the—', { onType: p => { if (p >= 0.6) press(); }, hold: 200 });
+      await line('Ms. Bolebrunch', 'Now remember, class, this machine is only EXPERIMENTAL, so whatever you do, don’t press the—', { onType: p => { if (p >= 0.6) press(); }, hold: 200 });
       press();
       q1('#vortex').classList.add('on');
-      await line('Ms. Rivera', '...red button.', { hold: 300 });
+      await line('Ms. Bolebrunch', '...red button.', { hold: 300 });
       q1('#leo-spin-body').classList.add('swept');
       q1('#leo-spin-hands').classList.add('swept');
       tone(1300, 1.6, 'triangle', 0.1, 0, 90);
-      await line('Leo', 'WHOA-WHOA-WHOAAAAAA!', { hold: 900 });
+      await line('Emmett', 'WHOA-WHOA-WHOAAAAAA!', { hold: 900 });
       stopWhirr();
       q1('#vortex').classList.add('off');
       q1('#machine').classList.remove('active');
@@ -1865,8 +1865,8 @@
       kids('gasp', true, ['maya', 'sam', 'ruby']);
       await iwait(1300);
       await line('Class', 'LEO?!', { hold: 600 });
-      await line('Ms. Rivera', 'Oh my. Well... it looks like Leo is going on our field trip a little early!');
-      await line('Ms. Rivera', 'Hang on, Leo! Explore that cell, and we’ll figure out how to get you back!');
+      await line('Ms. Bolebrunch', 'Oh my. Well... it looks like Emmett is going on our field trip a little early!');
+      await line('Ms. Bolebrunch', 'Hang on, Emmett! Explore that cell, and we’ll figure out how to get you back!');
       $('flash').classList.add('on');
       await iwait(700);
     } catch (e) {
