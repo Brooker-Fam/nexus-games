@@ -1372,7 +1372,11 @@
         }).join('') + `</div>`;
       progress.querySelectorAll('[data-sticker]').forEach(b => b.onclick = () => {
         const id = b.dataset.sticker;
-        if (state.found[state.cell].has(id)) exploreTap(id);
+        if (state.found[state.cell].has(id)) {
+          exploreTap(id);
+          // in swim mode Professor Goo reads it out, so parts Emmett can't swim to (like the wall) still get explained
+          if (state.mode === 'swim') { const p = info(id); speak('Professor Goo', 'That’s the ' + p.name + '! ' + p.job); }
+        }
         else { sfx.wrong(); setBubble(`<p>That part is still a mystery! ${state.mode === 'swim' ? 'Swim' : 'Tap'} around the cell to discover it.</p>`); }
       });
     } else {
@@ -2129,6 +2133,32 @@
     s += `<g class="a-prot-face"><g class="eyes"><circle cx="${outerX + 3}" cy="${PY - 41}" r="3.2" fill="${INK}"/><circle cx="${outerX + 12}" cy="${PY - 41}" r="3.2" fill="${INK}"/></g>
       <path d="M${outerX + 1} ${PY - 33} Q${outerX + 7.5} ${PY - 28} ${outerX + 14} ${PY - 33}" fill="none" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/></g>`;
     s += `<text x="${outerX + 30}" y="${PY + 76}" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="14" fill="#fff" opacity=".7">channel protein</text>`;
+    // a bacterium's outside bits: lots of short pili and one long, wiggling flagellum
+    if (cell === 'prokaryote') {
+      for (let th = 167.6; th <= 192.4; th += 0.85) {
+        const a = th * Math.PI / 180, y = SC.cy + Math.sin(a) * SC.r;
+        if (Math.abs(y - PY) < 70 || (y > 385 && y < 425)) continue;
+        const L = 24 + 10 * Math.abs(Math.sin(th * 7)), c = Math.cos(a), sn = Math.sin(a);
+        const x0 = SC.cx + c * (SC.r - 4), y0 = SC.cy + sn * (SC.r - 4), x1 = SC.cx + c * (SC.r + L), y1 = SC.cy + sn * (SC.r + L);
+        s += `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} L${x1.toFixed(1)} ${y1.toFixed(1)}" stroke="${INK}" stroke-width="7" stroke-linecap="round"/>` +
+          `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} L${x1.toFixed(1)} ${y1.toFixed(1)}" stroke="${C.pili}" stroke-width="3" stroke-linecap="round"/>`;
+      }
+      const by = 405, bx = surfX(by, SC.r) + 6;
+      const wave = ph => smoothPath(Array.from({ length: 25 }, (_, i) => { const t = i / 24; return [bx - 330 * t, by + 8 * t + 24 * Math.sqrt(t) * Math.sin(t * 4 * Math.PI + ph)]; }), false);
+      const d1 = wave(0), d2 = wave(Math.PI);
+      const anim = `<animate attributeName="d" dur="0.7s" repeatCount="indefinite" values="${d1};${d2};${d1}"/>`;
+      s += `<path d="${d1}" fill="none" stroke="${INK}" stroke-width="13" stroke-linecap="round">${anim}</path>`;
+      s += `<path d="${d1}" fill="none" stroke="${C.flagellum}" stroke-width="6" stroke-linecap="round">${anim}</path>`;
+      s += `<circle cx="${bx}" cy="${by}" r="10" fill="${C.flagellum}" stroke="${INK}" stroke-width="4"/>`;
+      const extraTag = (id, tx, ty, px, py) => {
+        const name = info(id, cell).name, w = name.length * 8.4 + 44;
+        return `<g class="layer-tag" id="tag-${id}"><path d="M${tx + w} ${ty} L${px} ${py}" stroke="#fff" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round"/><circle cx="${px}" cy="${py}" r="5" fill="#fff" stroke="${INK}" stroke-width="2.5"/>
+          <rect x="${tx}" y="${ty - 15}" width="${w}" height="30" rx="15" fill="#fff" stroke="${INK}" stroke-width="3"/>
+          <text x="${tx + w / 2}" y="${ty + 6}" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="16" fill="${INK}">${name}<tspan class="tick"> ✓</tspan></text></g>`;
+      };
+      s += extraTag('flagellum', bx - 420, 372, bx - 250, 398);
+      s += extraTag('pili', surfX(190, SC.r) - 150, 190, surfX(190, SC.r + 16), 190);
+    }
     // name tags for each layer (tick when Emmett passes through)
     bands.forEach((b, i) => {
       const ty = 56 + i * 42, mid = (b.r0 + b.r1) / 2, bx = surfX(ty, mid), name = info(b.id, cell).name, w = name.length * 8.4 + 44;
@@ -2291,6 +2321,20 @@
       arr.camTarget = 880;                            // look over at the glowing cell
       await iwait(2200, arr);
       await line('Emmett', 'Whoa... is that a CELL?! It’s GIGANTIC!', ctx);
+      let gooHi = false;
+      const goo = text => { const t = gooHi ? text : 'Hi Emmett, it’s Professor Goo! ' + text; gooHi = true; return line('Professor Goo', t, ctx); };
+      const partTalk = id => {
+        const pi = info(id, cell), like = pi.like.charAt(0).toLowerCase() + pi.like.slice(1);
+        return `${id === 'pili' ? 'Those are the' : 'This is the'} ${pi.name}! ${pi.job} It’s like ${like}`;
+      };
+      if (cell === 'prokaryote') {
+        // the flagellum and pili stick OUT of the bacterium, so Goo explains them out here
+        for (const id of ['flagellum', 'pili']) {
+          aq('#tag-' + id).classList.add('on', 'done');
+          sfx.newFind();
+          await goo(partTalk(id));
+        }
+      }
       LAYERS[cell].forEach((id, i) => later2(i * 400, () => { aq('#tag-' + id).classList.add('on'); sfx.pop(); }));
       await line('Ms. Bolebrunch (radio)', 'Emmett! Can you hear me? It’s Ms. Bolebrunch, talking to you through the Micro-Explorer!', ctx);
       await line('Ms. Bolebrunch (radio)', `To get inside, you need to get through the ${through}. They don’t let just anything in!`, ctx);
@@ -2313,13 +2357,19 @@
       // slip down into the channel's mouth...
       const x0 = P.x, y0 = P.y, mx = arr.outerX - 6, my = PY + 20;
       await tween(700, k => { P.x = x0 + (mx - x0) * k; P.y = y0 + (my - y0) * k - Math.sin(k * Math.PI) * 50; P.scale = PS - 0.12 * k; });
-      // ...and get pulled through every layer
-      const marks = arr.bands.map(b => ({ id: b.id, x: surfX(PY, b.r1), done: false }));
+      // ...and get pulled through every layer, stopping in each one so Professor Goo can explain it
+      await goo('Stay still in there and I’ll tell you about each layer you go through.');
+      let at = mx;
+      for (const b of arr.bands) {
+        const stop = surfX(PY, (b.r0 + b.r1) / 2), from = at;
+        await tween(Math.max(500, (stop - from) * 14), k => { P.x = from + (stop - from) * k; });
+        at = stop;
+        aq('#tag-' + b.id).classList.add('done');
+        sfx.newFind();
+        await line('Professor Goo', partTalk(b.id), ctx);
+      }
       const endX = arr.innerX + 70;
-      await tween(3200, k => {
-        P.x = mx + (endX - mx) * k;
-        marks.forEach(m => { if (!m.done && P.x > m.x) { m.done = true; aq('#tag-' + m.id).classList.add('done'); sfx.newFind(); } });
-      });
+      await tween(1400, k => { P.x = at + (endX - at) * k; });
       // suit up!
       aFlash(); sfx.fanfare();
       P.swim = true; P.y = PY; P.face = 1;
@@ -2347,7 +2397,7 @@
     Object.keys(keys).forEach(k => { keys[k] = false; });
     $('arrive').classList.remove('playing');
     pad.classList.remove('on');
-    const entered = done ? LAYERS[arr.cell].filter(id => CELLS[arr.cell].parts.includes(id) && !state.found[arr.cell].has(id)) : [];
+    const entered = done ? LAYERS[arr.cell].concat(arr.cell === 'prokaryote' ? ['flagellum', 'pili'] : []).filter(id => CELLS[arr.cell].parts.includes(id) && !state.found[arr.cell].has(id)) : [];
     startGame(arr.cell, 'swim', entered);
     const fl = $('flash');
     fl.classList.add('on');
@@ -2407,7 +2457,7 @@
     const names = (entered || []).map(id => `<b>${esc(info(id).name)}</b>`);
     const list = names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : names[0];
     setBubble(`<span class="kind-tag">${c.kind}</span>` +
-      (names.length ? `<p>You made it through the ${list}! ${names.length > 1 ? 'They’re' : 'It’s'} already in your discoveries.</p>` : '') +
+      (names.length ? `<p>On your way in you discovered the ${list}! Tap a sticker under <b>Parts discovered</b> to hear about it again.</p>` : '') +
       `<p>You’re swimming inside the <b>${c.name}</b>! Swim up to any part and I’ll tell you all about it.</p>` +
       `<p style="opacity:.7;font-size:.9rem">Swim with the <b>arrow keys</b> (or WASD), or press and hold where you want to go.</p>`);
   }
