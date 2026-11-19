@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<!-- Exploring Cells - Kitty Games educational game -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exploring Cells · Kitty Games</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script>
+  if(location.protocol!=='file:'){
+    const l=document.createElement('link');
+    l.rel='stylesheet';
+    l.href='https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap';
+    document.head.appendChild(l);
+  }
+</script>
+<style>
+  :root {
+    --ink: #2b1640;
+    --sky: #bfeaff;
+    --paper: #fffdf5;
+    --pink: #ff8fb8;
+    --yellow: #ffd23f;
+    --green: #8be36b;
+    --purple: #a77bff;
+    --coral: #ff6a3d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { min-height: 100%; }
+  body {
+    font-family: 'Baloo 2', 'Comic Sans MS', system-ui, sans-serif;
+    color: var(--ink);
+    background-color: var(--sky);
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,0.7) 3px, transparent 4px),
+      radial-gradient(circle, rgba(255,255,255,0.4) 2px, transparent 3px);
+    background-size: 46px 46px, 46px 46px;
+    background-position: 0 0, 23px 23px;
+    overflow-x: hidden;
+  }
+  button { font-family: inherit; color: inherit; }
+
+  /* ---------- cartoon buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 8px 18px;
+    font-size: 1rem; font-weight: 800; letter-spacing: 0.02em;
+    background: #fff;
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    box-shadow: 0 5px 0 var(--ink);
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--ink);
+    transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
+    user-select: none;
+  }
+  .btn:hover { background: #fff7d6; }
+  .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink); }
+  .btn.primary { background: var(--yellow); }
+  .btn.primary:hover { background: #ffe066; }
+  .btn:focus-visible { outline: 4px solid var(--coral); outline-offset: 3px; }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    max-width: 1180px; margin: 0 auto;
+    padding: 14px 16px 0;
+  }
+  .topbar .btn { padding: 6px 14px; font-size: 0.9rem; }
+  .icon-btn { width: 46px; padding: 6px !important; }
+  .icon-btn svg { width: 24px; height: 24px; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ---------- title screen ---------- */
+  .title-wrap {
+    max-width: 920px; margin: 0 auto;
+    padding: 16px 16px 48px;
+    text-align: center;
+  }
+  .title-mascot { width: 150px; height: 150px; margin: 4px auto 0; display: block; animation: mascot-bounce 2.4s ease-in-out infinite; }
+  @keyframes mascot-bounce {
+    0%,100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-10px) rotate(3deg); }
+  }
+  .big-title {
+    font-size: clamp(2.4rem, 8vw, 4.4rem);
+    font-weight: 800;
+    line-height: 1;
+    color: #fff;
+    -webkit-text-stroke: 8px var(--ink);
+    paint-order: stroke fill;
+    text-shadow: 0 7px 0 var(--ink);
+    letter-spacing: 0.02em;
+  }
+  .big-title .t1 { color: var(--yellow); }
+  .big-title .t2 { color: var(--pink); }
+  .intro-bubble {
+    position: relative;
+    display: inline-block;
+    max-width: 560px;
+    margin: 26px auto 0;
+    padding: 14px 22px;
+    font-size: 1.1rem; font-weight: 600; line-height: 1.35;
+    background: #fff;
+    border: 3px solid var(--ink);
+    border-radius: 22px;
+    box-shadow: 0 5px 0 var(--ink);
+  }
+  .intro-bubble::before {
+    content: ''; position: absolute; left: 50%; top: -15px;
+    width: 24px; height: 24px; margin-left: -12px;
+    background: #fff;
+    border-left: 3px solid var(--ink); border-top: 3px solid var(--ink);
+    transform: rotate(45deg);
+  }
+  .pick-row {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px;
+    margin-top: 32px;
+  }
+  .pick-card {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 14px 14px 18px;
+    background: var(--paper);
+    border: 4px solid var(--ink);
+    border-radius: 28px;
+    box-shadow: 0 8px 0 var(--ink);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .pick-card:hover { transform: translateY(-5px) rotate(-1deg); box-shadow: 0 13px 0 var(--ink); }
+  .pick-card:nth-child(2):hover { transform: translateY(-5px) rotate(1deg); }
+  .pick-card:active { transform: translateY(4px); box-shadow: 0 4px 0 var(--ink); }
+  .pick-card:focus-visible { outline: 4px solid var(--coral); outline-offset: 4px; }
+  .pick-card svg { width: 100%; height: auto; pointer-events: none; }
+  .pick-name { margin-top: 6px; font-size: 1.6rem; font-weight: 800; }
+  .pick-sub { font-size: 0.95rem; font-weight: 600; opacity: 0.7; }
+  .pick-progress { margin-top: 8px; font-size: 0.85rem; font-weight: 800; padding: 2px 12px; border-radius: 999px; background: #fff; border: 2px solid var(--ink); }
+
+  /* ---------- game screen ---------- */
+  .game-wrap { max-width: 1180px; margin: 0 auto; padding: 14px 16px 40px; }
+  .toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px;
+    margin-bottom: 16px;
+  }
+  .seg {
+    display: inline-flex;
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 5px 0 var(--ink);
+    overflow: hidden;
+  }
+  .seg button {
+    padding: 7px 16px;
+    font-size: 1rem; font-weight: 800;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+  }
+  .seg button + button { border-left: 3px solid var(--ink); }
+  .seg button.on { background: var(--yellow); }
+  .seg button:hover:not(.on) { background: #fff7d6; }
+  .seg button:focus-visible { outline: 3px solid var(--coral); outline-offset: -5px; }
+  .btn.toggle.on { background: var(--green); }
+
+  .game-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 22px;
+    align-items: start;
+  }
+  .stage {
+    position: relative;
+    background-color: var(--paper);
+    background-image: radial-gradient(circle, rgba(43,22,64,0.08) 2px, transparent 2.5px);
+    background-size: 24px 24px;
+    border: 4px solid var(--ink);
+    border-radius: 30px;
+    box-shadow: 0 9px 0 var(--ink);
+    padding: 10px;
+  }
+  .quiz-banner {
+    display: none;
+    margin: 4px 4px 8px;
+    padding: 10px 16px;
+    font-size: 1.15rem; font-weight: 800; line-height: 1.25;
+    text-align: center;
+    background: var(--yellow);
+    border: 3px solid var(--ink);
+    border-radius: 18px;
+  }
+  .quiz-banner small { display: block; font-size: 0.8rem; opacity: 0.7; letter-spacing: 0.06em; text-transform: uppercase; }
+  .stage.quiz .quiz-banner { display: block; }
+  .quiz-banner .fb { display: block; font-size: 0.9rem; min-height: 0; }
+  .quiz-banner .fb:empty { display: none; }
+  .quiz-banner .fb.good { color: #1f7a1f; }
+  .quiz-banner .fb.bad { color: #b3261e; }
+  #cell { display: block; width: 100%; height: auto; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+
+  /* parts */
+  .part { cursor: pointer; }
+  .part:hover > .pos { filter: brightness(1.07); }
+  .bob { animation: bob 3.2s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  .fx { transform-box: fill-box; transform-origin: center; }
+  .eyes { transform-box: fill-box; transform-origin: center; animation: blink 4.5s infinite; }
+  @keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+  .part.selected > .pos, .part.correct > .pos {
+    animation: glow 0.9s ease-in-out infinite alternate;
+  }
+  @keyframes glow {
+    from { filter: drop-shadow(0 0 2px #fff36b) drop-shadow(0 0 4px #ffb800); }
+    to   { filter: drop-shadow(0 0 7px #fff36b) drop-shadow(0 0 12px #ffb800); }
+  }
+  .part.correct > .pos { animation-name: glow-green; }
+  @keyframes glow-green {
+    from { filter: drop-shadow(0 0 3px #b6ff7a) drop-shadow(0 0 6px #3ccf3c); }
+    to   { filter: drop-shadow(0 0 9px #b6ff7a) drop-shadow(0 0 14px #3ccf3c); }
+  }
+  .part.hint > .pos { animation: glow 0.45s ease-in-out infinite alternate; }
+  .part.wrong .fx { animation: shake 0.45s ease; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0) rotate(0); }
+    20% { transform: translateX(-6px) rotate(-4deg); }
+    40% { transform: translateX(6px) rotate(4deg); }
+    60% { transform: translateX(-4px) rotate(-2deg); }
+    80% { transform: translateX(4px) rotate(2deg); }
+  }
+  .part.selected .fx, .part.correct .fx { animation: boing 0.5s ease; }
+  @keyframes boing {
+    0% { transform: scale(1); } 30% { transform: scale(1.12, 0.9); } 55% { transform: scale(0.95, 1.06); } 100% { transform: scale(1); }
+  }
+  .part.big.selected .fx, .part.big.correct .fx { animation: none; }
+  .floaty { animation: drift 7s ease-in-out infinite; }
+  @keyframes drift { 0%,100% { transform: translate(0,0); } 33% { transform: translate(6px,-5px); } 66% { transform: translate(-5px,4px); } }
+  #labels { display: none; }
+  #cell.show-labels #labels { display: inline; }
+  #labels text { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 15px; fill: var(--ink); }
+
+  /* side panel */
+  .side { display: flex; flex-direction: column; gap: 18px; }
+  .guide { display: flex; flex-direction: column; }
+  .guide-head { display: flex; align-items: flex-end; gap: 8px; margin-left: 6px; }
+  .guide-head svg { width: 76px; height: 76px; flex: none; }
+  .guide-name { font-weight: 800; font-size: 1.05rem; margin-bottom: 14px; }
+  .bubble {
+    position: relative;
+    margin-top: 10px;
+    padding: 16px 18px;
+    background: #fff;
+    border: 3px solid var(--ink);
+    border-radius: 22px;
+    box-shadow: 0 6px 0 var(--ink);
+    font-size: 1rem; font-weight: 600; line-height: 1.4;
+    min-height: 120px;
+  }
+  .bubble::before {
+    content: ''; position: absolute; left: 34px; top: -14px;
+    width: 22px; height: 22px;
+    background: #fff;
+    border-left: 3px solid var(--ink); border-top: 3px solid var(--ink);
+    transform: rotate(45deg);
+  }
+  .bubble.pop { animation: bubble-pop 0.3s ease; }
+  @keyframes bubble-pop { 0% { transform: scale(0.94); } 60% { transform: scale(1.03); } 100% { transform: scale(1); } }
+  .part-title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 1.45rem; font-weight: 800; line-height: 1.1;
+    margin-bottom: 4px;
+  }
+  .swatch { width: 22px; height: 22px; flex: none; border-radius: 50%; border: 3px solid var(--ink); }
+  .new-badge {
+    font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em;
+    padding: 1px 8px; border-radius: 999px;
+    background: var(--coral); color: #fff; border: 2px solid var(--ink);
+  }
+  .fullname { font-size: 0.85rem; opacity: 0.65; margin-bottom: 6px; }
+  .info-row { margin-top: 10px; padding: 8px 12px; border-radius: 14px; background: #f3f0ff; }
+  .info-row b { display: block; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .info-row.like { background: #e5f8ff; }
+  .info-row.fact { background: #fff4cc; }
+  .bubble .btn { margin-top: 12px; }
+  .bubble p + p { margin-top: 8px; }
+
+  .progress-card {
+    padding: 14px 16px 16px;
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 22px;
+    box-shadow: 0 6px 0 var(--ink);
+  }
+  .progress-head { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 1.05rem; }
+  .meter { margin-top: 8px; height: 16px; border: 3px solid var(--ink); border-radius: 999px; background: #fff; overflow: hidden; }
+  .meter > div { height: 100%; width: 0; background: repeating-linear-gradient(45deg, #6fdc5a 0 10px, #8be36b 10px 20px); transition: width 0.4s ease; }
+  .stickers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .sticker {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px 3px 4px;
+    font-size: 0.85rem; font-weight: 800;
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .sticker .dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ink); background: #ddd; }
+  .sticker.locked { opacity: 0.55; }
+  .sticker.locked .dot { background: repeating-linear-gradient(45deg, #ccc 0 3px, #eee 3px 6px); }
+  .sticker.current { background: #fff36b; }
+  .sticker:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
+  .star-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+  .star-row svg { width: 30px; height: 30px; }
+  .big-stars { display: flex; justify-content: center; flex-wrap: wrap; gap: 2px; margin: 8px 0; }
+  .big-stars svg { width: 34px; height: 34px; }
+
+  #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+
+  @media (max-width: 900px) {
+    .game-grid { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .pick-row { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+    .seg button { padding: 6px 11px; font-size: 0.9rem; }
+    .btn { padding: 6px 12px; font-size: 0.9rem; }
+    .stage { padding: 6px; border-radius: 22px; }
+    .quiz-banner { font-size: 1rem; }
+    .topbar .crumb { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bob, .eyes, .floaty, .title-mascot, .part .fx { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="btn" href="/">&larr; <span class="crumb">Kitty Games</span></a>
+  <button class="btn icon-btn" id="sound-btn" aria-label="Turn sound off" title="Sound"></button>
+</header>
+
+<!-- ============ TITLE SCREEN ============ -->
+<section class="screen active" id="screen-title">
+  <div class="title-wrap">
+    <svg class="title-mascot" id="title-mascot" viewBox="0 0 120 120" aria-hidden="true"></svg>
+    <h1 class="big-title"><span class="t1">Exploring</span> <span class="t2">Cells</span></h1>
+    <div class="intro-bubble">Hi, I'm <b>Professor Goo</b>! Every living thing is made of tiny cells. Pick a cell and let's peek inside!</div>
+    <div class="pick-row">
+      <button class="pick-card" data-pick="animal">
+        <svg viewBox="0 0 800 600" id="preview-animal" aria-hidden="true"></svg>
+        <span class="pick-name">Animal Cell</span>
+        <span class="pick-sub">Like the cells in you and your cat!</span>
+        <span class="pick-progress" id="pp-animal"></span>
+      </button>
+      <button class="pick-card" data-pick="plant">
+        <svg viewBox="0 0 800 600" id="preview-plant" aria-hidden="true"></svg>
+        <span class="pick-name">Plant Cell</span>
+        <span class="pick-sub">Like the cells in leaves and flowers!</span>
+        <span class="pick-progress" id="pp-plant"></span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GAME SCREEN ============ -->
+<section class="screen" id="screen-game">
+  <div class="game-wrap">
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Cell type">
+        <button data-cell="animal">Animal</button><button data-cell="plant">Plant</button>
+      </div>
+      <div class="seg" role="group" aria-label="Mode">
+        <button data-mode="explore">Explore</button><button data-mode="quiz">Quiz</button>
+      </div>
+      <button class="btn toggle" id="labels-btn">Labels</button>
+    </div>
+    <div class="game-grid">
+      <div class="stage" id="stage">
+        <div class="quiz-banner" id="quiz-banner"></div>
+        <svg id="cell" viewBox="0 0 800 600" role="img" aria-label="Cartoon cell. Tap a part to learn about it."></svg>
+      </div>
+      <aside class="side">
+        <div class="guide">
+          <div class="guide-head">
+            <svg id="side-mascot" viewBox="0 0 120 120" aria-hidden="true"></svg>
+            <div class="guide-name">Professor Goo says…</div>
+          </div>
+          <div class="bubble" id="bubble" aria-live="polite"></div>
+        </div>
+        <div class="progress-card" id="progress"></div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<canvas id="confetti"></canvas>
+
+<script>
+(function(){
+  'use strict';
+
+  // ================= colors =================
+  const INK = '#2b1640';
+  const C = {
+    membraneA: '#ff8fb8', cytoA: '#ffe9f2', cytoAdot: '#ff9fc4',
+    nucleus: '#a77bff', nucleusRing: '#c9adff', chromatin: '#8455ee', nucleolus: '#6b3fd1',
+    mito: '#ff9f43', mitoIn: '#ffd9ab', cristae: '#e8731c',
+    ribo: '#3d2c8d',
+    rough: '#6cb8ff', smooth: '#3fd0b0', golgi: '#ffd23f',
+    lyso: '#ff6b6b', lysoDot: '#c93c4f',
+    vac: '#9be7ff', centro: '#b8e04a', centroLine: '#6f9a12',
+    wall: '#9bd56f', wallDark: '#5e9c3f',
+    cytoP: '#effce0', cytoPdot: '#a5d98a', membraneP: '#ffcd4d',
+    chloro: '#49c25a', chloroIn: '#8fe07f', grana: '#23863a',
+    cvac: '#a9e4ff', cvacWave: '#62c3ee',
+  };
+
+  // ================= the parts =================
+  const PARTS = {
+    membrane: {
+      name: 'Cell Membrane', color: C.membraneA,
+      job: 'A thin, bendy skin around the cell. It decides what gets in (like food and water) and what goes out (like waste).',
+      like: 'A security guard at the door, checking who comes in and out.',
+      fact: 'It’s made of fatty molecules lined up in two rows, tail-to-tail, like a double row of tiny lollipops!',
+      clues: ['Tap the part that controls what goes in and out of the cell!', 'Find the thin, bendy skin that wraps around the cell!'],
+    },
+    cytoplasm: {
+      name: 'Cytoplasm', color: '#ffc2da',
+      job: 'The squishy jelly that fills the cell. All the other parts float in it, and lots of the cell’s chemistry happens here.',
+      like: 'The streets and parks of a city, where everyone gets around.',
+      fact: 'Cytoplasm is mostly water, which is why cells are so squishy!',
+      clues: ['Tap the jelly that all the cell parts float in!', 'Find the squishy, watery stuff that fills the cell!'],
+    },
+    nucleus: {
+      name: 'Nucleus', color: C.nucleus,
+      job: 'The control center! It holds the DNA, the instruction book that tells the cell how to grow, work and make copies of itself.',
+      like: 'The mayor’s office, or the cell’s brain.',
+      fact: 'If you stretched out all the DNA from just one of your cells, it would be about 2 meters long, taller than a grown-up!',
+      clues: ['Tap the control center that holds the DNA!', 'Where does the cell keep its instruction book?'],
+    },
+    mitochondria: {
+      name: 'Mitochondria', color: C.mito,
+      job: 'The powerhouses! They turn food (sugar) and oxygen into energy the cell can use.',
+      like: 'A power plant that keeps all the lights on.',
+      fact: 'Mitochondria have their own tiny bit of DNA, and you got all of yours from your mom!',
+      clues: ['Tap the powerhouse that makes energy for the cell!', 'Which part turns food into energy?'],
+    },
+    ribosome: {
+      name: 'Ribosomes', color: C.ribo,
+      job: 'Tiny builders that read instructions from the DNA and use them to put together proteins.',
+      like: 'Workers in a factory, snapping parts together.',
+      fact: 'One cell can have millions of ribosomes! They’re the little dots floating around.',
+      clues: ['Tap one of the tiny floating dots that build proteins!', 'Find a little protein builder floating in the jelly!'],
+    },
+    roughER: {
+      name: 'Rough ER', full: 'Rough Endoplasmic Reticulum', color: C.rough,
+      job: 'Folded tubes covered in ribosomes. Proteins get built here and then sent off to be packed up.',
+      like: 'A factory assembly line.',
+      fact: 'It looks bumpy, or “rough”, because ribosomes are stuck all over it!',
+      clues: ['Tap the bumpy tubes covered in ribosomes!', 'Find the folded tubes with dots all over them, wrapped near the nucleus!'],
+    },
+    smoothER: {
+      name: 'Smooth ER', full: 'Smooth Endoplasmic Reticulum', color: C.smooth,
+      job: 'Wiggly tubes with no ribosomes. They make fats and help clean harmful stuff out of the cell.',
+      like: 'A workshop that makes oils and cleaning supplies.',
+      fact: 'Your liver cells are packed with smooth ER to help break down things that could hurt you.',
+      clues: ['Tap the smooth, wiggly tubes that make fats!', 'Find the tubes that have NO bumps on them!'],
+    },
+    golgi: {
+      name: 'Golgi Apparatus', color: C.golgi,
+      job: 'Packs proteins into little bubbles called vesicles and ships them to where they need to go.',
+      like: 'The post office of the cell.',
+      fact: 'It’s named after Camillo Golgi, an Italian scientist who discovered it in 1898.',
+      clues: ['Tap the cell’s post office that packs and ships proteins!', 'Find the stack of curvy pancakes that wraps up packages!'],
+    },
+    lysosome: {
+      name: 'Lysosomes', color: C.lyso,
+      job: 'Little bubbles full of digestive juices. They break down waste and worn-out cell parts.',
+      like: 'The recycling and clean-up crew.',
+      fact: 'Lysosomes are acidic inside, which helps their special enzymes chop things into tiny pieces.',
+      clues: ['Tap the clean-up crew that breaks down waste!', 'Which little bubble recycles old cell parts?'],
+    },
+    vacuole: {
+      name: 'Vacuole', color: C.vac,
+      job: 'A small storage bubble that holds water, food or waste until the cell needs it.',
+      like: 'A storage closet.',
+      fact: 'Animal cells have small vacuoles, but plant cells have one GIANT one!',
+      clues: ['Tap the small storage bubble!', 'Where does an animal cell keep extra water and food?'],
+    },
+    centrosome: {
+      name: 'Centrosome', color: C.centro,
+      job: 'Helps the cell split in two by organizing fibers that pull the copied DNA apart.',
+      like: 'A coach directing the team during a big play.',
+      fact: 'It has two tiny tube bundles called centrioles that sit at right angles to each other.',
+      clues: ['Tap the part that helps the cell split in two!', 'Find the two little striped tubes sitting at right angles!'],
+    },
+    wall: {
+      name: 'Cell Wall', color: C.wall,
+      job: 'A tough, stiff layer outside the membrane. It protects the plant cell and keeps its boxy shape.',
+      like: 'The strong walls of a castle.',
+      fact: 'Cell walls are made of cellulose, the same stuff that paper and cotton are made of!',
+      clues: ['Tap the tough outer wall that protects the plant cell!', 'Which stiff layer gives a plant cell its boxy shape?'],
+    },
+    chloroplast: {
+      name: 'Chloroplasts', color: C.chloro,
+      job: 'They use sunlight, water and air (carbon dioxide) to make sugar for food. This is called photosynthesis!',
+      like: 'Solar panels that cook lunch.',
+      fact: 'They’re green because of chlorophyll, and that’s why leaves are green too!',
+      clues: ['Tap the part that uses sunlight to make food!', 'Where does photosynthesis happen?'],
+    },
+    centralVacuole: {
+      name: 'Central Vacuole', color: C.cvac,
+      job: 'A huge water balloon. It stores water and pushes against the wall to keep the plant firm.',
+      like: 'A water tower for the whole cell.',
+      fact: 'When a plant doesn’t get enough water, its vacuoles shrink. That’s why it wilts and droops!',
+      clues: ['Tap the giant water balloon of the plant cell!', 'Which part keeps a plant from wilting?'],
+    },
+  };
+
+  // ================= drawing helpers =================
+  const fmt = p => p[0].toFixed(1) + ' ' + p[1].toFixed(1);
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  function smoothPath(pts, closed) {
+    const n = pts.length;
+    const get = i => closed ? pts[(i + n) % n] : pts[Math.max(0, Math.min(n - 1, i))];
+    let d = 'M' + fmt(pts[0]);
+    const last = closed ? n : n - 1;
+    for (let i = 0; i < last; i++) {
+      const p0 = get(i - 1), p1 = get(i), p2 = get(i + 1), p3 = get(i + 2);
+      const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+      const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+      d += ' C' + fmt(c1) + ' ' + fmt(c2) + ' ' + fmt(p2);
+    }
+    return d + (closed ? 'Z' : '');
+  }
+  function blob(cx, cy, rx, ry, n, amp, ph) {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const a = i / n * Math.PI * 2;
+      const k = 1 + amp * Math.sin(3 * a + ph) + amp * 0.6 * Math.sin(5 * a + ph * 2);
+      pts.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]);
+    }
+    return smoothPath(pts, true);
+  }
+  function arcPts(cx, cy, r, a0, a1, wob, n) {
+    n = n || 18;
+    const pts = [];
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const a = (a0 + (a1 - a0) * t) * Math.PI / 180;
+      const rr = r + wob * Math.sin(t * Math.PI * 4);
+      pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]);
+    }
+    return pts;
+  }
+  function face(x, y, s) {
+    const d = rnd(0, 4.5).toFixed(2);
+    return `<g transform="translate(${x} ${y}) scale(${s})">
+      <ellipse cx="-16" cy="6" rx="4.5" ry="2.8" fill="#ff4f86" opacity=".45"/>
+      <ellipse cx="16" cy="6" rx="4.5" ry="2.8" fill="#ff4f86" opacity=".45"/>
+      <g class="eyes" style="animation-delay:-${d}s">
+        <ellipse cx="-8.5" cy="-4" rx="6" ry="7.5" fill="#fff" stroke="${INK}" stroke-width="2.5"/>
+        <ellipse cx="8.5" cy="-4" rx="6" ry="7.5" fill="#fff" stroke="${INK}" stroke-width="2.5"/>
+        <circle cx="-7.5" cy="-2.5" r="3.5" fill="${INK}"/><circle cx="9.5" cy="-2.5" r="3.5" fill="${INK}"/>
+        <circle cx="-6.2" cy="-4.2" r="1.4" fill="#fff"/><circle cx="10.8" cy="-4.2" r="1.4" fill="#fff"/>
+      </g>
+      <path d="M-6 6 Q0 13 6 6" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>
+    </g>`;
+  }
+  function shine(cx, cy, rx, ry, rot) {
+    return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#fff" opacity=".55" transform="rotate(${rot == null ? -30 : rot} ${cx} ${cy})"/>`;
+  }
+  function tube(d, color, w) {
+    return `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w + 9}" stroke-linecap="round" stroke-linejoin="round"/>` +
+      `<path d="${d}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>` +
+      `<path d="${d}" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="${Math.max(2, w * 0.22).toFixed(1)}" stroke-linecap="round" transform="translate(-1 -2)"/>`;
+  }
+  function part(id, x, y, rot, scale, inner, opts) {
+    opts = opts || {};
+    let t = `translate(${x} ${y})`;
+    if (rot) t += ` rotate(${rot})`;
+    if (scale && scale !== 1) t += ` scale(${scale})`;
+    const bob = opts.bob === false ? '' : 'bob';
+    return `<g class="part${opts.big ? ' big' : ''}" data-part="${id}"><g class="pos" transform="${t}">` +
+      `<g class="${bob}" style="animation-delay:-${rnd(0, 3.2).toFixed(2)}s"><g class="fx">${inner}</g></g></g></g>`;
+  }
+  function star(filled) {
+    return `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3 L25 14.5 L37.5 15.5 L28 24 L31 36.5 L20 30 L9 36.5 L12 24 L2.5 15.5 L15 14.5 Z" fill="${filled ? '#ffd23f' : '#e9e4f2'}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>${filled ? '<ellipse cx="16" cy="16" rx="4" ry="2.2" fill="#fff" opacity=".7" transform="rotate(-30 16 16)"/>' : ''}</svg>`;
+  }
+
+  // ---------- organelle shapes (drawn around 0,0) ----------
+  const SHAPE = {
+    nucleus() {
+      return `<circle r="78" fill="${C.nucleus}" stroke="${INK}" stroke-width="6"/>
+        <circle r="66" fill="none" stroke="${C.nucleusRing}" stroke-width="4" stroke-dasharray="1 12" stroke-linecap="round"/>
+        <path d="M-56 -8 q8 -14 18 -4 t18 -2 M-48 14 q10 -8 16 2 M30 30 q10 -10 20 0 t14 -6 M14 52 q8 -8 18 0" fill="none" stroke="${C.chromatin}" stroke-width="3.5" stroke-linecap="round"/>
+        ${shine(-34, -44, 20, 8, -35)}
+        <circle cx="28" cy="-30" r="21" fill="${C.nucleolus}" stroke="${INK}" stroke-width="4"/>
+        ${shine(21, -37, 6, 3, -35)}
+        ${face(-6, 22, 1.35)}`;
+    },
+    mitochondria() {
+      return `<rect x="-48" y="-24" width="96" height="48" rx="24" fill="${C.mito}" stroke="${INK}" stroke-width="5"/>
+        <rect x="-38" y="-15" width="76" height="30" rx="15" fill="${C.mitoIn}"/>
+        <path d="M-34 0 L-27 -11 L-19 11 L-11 -11 L-3 11 L5 -11 L13 11 L21 -11 L29 11 L34 0" fill="none" stroke="${C.cristae}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+        ${shine(-24, -16, 12, 3.5, -8)}
+        ${face(0, 1, 0.68)}`;
+    },
+    ribosome() {
+      return `<circle r="22" fill="transparent"/>
+        <circle r="6.5" fill="${C.ribo}" stroke="${INK}" stroke-width="2"/>
+        <circle cx="-2" cy="-2.2" r="1.9" fill="#fff" opacity=".75"/>`;
+    },
+    lysosome(r) {
+      r = r || 22;
+      const k = r / 22;
+      return `<circle r="${r}" fill="${C.lyso}" stroke="${INK}" stroke-width="4.5"/>
+        <circle cx="${-11 * k}" cy="${10 * k}" r="${2.4 * k}" fill="${C.lysoDot}"/>
+        <circle cx="${12 * k}" cy="${12 * k}" r="${2 * k}" fill="${C.lysoDot}"/>
+        <circle cx="${14 * k}" cy="${-8 * k}" r="${1.8 * k}" fill="${C.lysoDot}"/>
+        ${shine(-8 * k, -11 * k, 6 * k, 3 * k)}
+        ${face(0, 1 * k, 0.6 * k)}`;
+    },
+    vacuole() {
+      return `<circle r="34" fill="${C.vac}" stroke="${INK}" stroke-width="5"/>
+        <path d="M-20 18 q5 -4 10 0 t10 0 t10 0" fill="none" stroke="#5fc6e8" stroke-width="3" stroke-linecap="round"/>
+        ${shine(-13, -16, 10, 4.5)}
+        ${face(0, 0, 0.8)}`;
+    },
+    centrosome() {
+      const cyl = (x, y, rot) => `<g transform="translate(${x} ${y}) rotate(${rot})">
+          <rect x="-22" y="-9" width="44" height="18" rx="7" fill="${C.centro}" stroke="${INK}" stroke-width="4"/>
+          <path d="M-11 -7V7M0 -7V7M11 -7V7" stroke="${C.centroLine}" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="-12" cy="-4" rx="6" ry="1.6" fill="#fff" opacity=".6"/>
+        </g>`;
+      return `<circle r="32" fill="transparent"/>${cyl(-8, -2, 0)}${cyl(12, 6, 90)}`;
+    },
+    golgi() {
+      let s = '<circle cx="20" cy="0" r="58" fill="transparent"/>';
+      [30, 46, 62, 78].forEach((r, i) => {
+        const span = 62 - i * 8;
+        s += tube(smoothPath(arcPts(60, 0, r, 180 - span, 180 + span, 0, 10)), C.golgi, 11);
+      });
+      [[-4, -62, 7], [20, -52, 5.5], [-2, 62, 6.5], [24, 50, 5], [64, -20, 5]].forEach(v => {
+        s += `<circle cx="${v[0]}" cy="${v[1]}" r="${v[2]}" fill="${C.golgi}" stroke="${INK}" stroke-width="3"/>`;
+      });
+      return s;
+    },
+    smoothER() {
+      const pts = [[-60, -28], [-30, -40], [0, -26], [30, -40], [58, -26], [72, -8], [55, 6], [25, -4], [-5, 8], [-35, -2], [-62, 10], [-72, 26], [-50, 40], [-20, 30], [10, 42], [40, 32], [64, 40]];
+      return `<rect x="-82" y="-50" width="164" height="100" rx="30" fill="transparent"/>` + tube(smoothPath(pts), C.smooth, 12);
+    },
+    chloroplast() {
+      const grana = x => [0, 1, 2].map(k => `<ellipse cx="${x}" cy="${-6 + k * 6}" rx="9" ry="3.6" fill="${C.grana}" stroke="${INK}" stroke-width="1.5"/>`).join('');
+      return `<ellipse rx="54" ry="28" fill="${C.chloro}" stroke="${INK}" stroke-width="5"/>
+        <ellipse rx="44" ry="19" fill="${C.chloroIn}"/>
+        <path d="M-21 0 H-12 M12 0 H21" stroke="${C.grana}" stroke-width="2.5"/>
+        ${grana(-31)}${grana(31)}
+        ${shine(-20, -15, 12, 3.5, -8)}
+        ${face(0, 1, 0.66)}`;
+    },
+    centralVacuole() {
+      return `<rect x="-155" y="-140" width="310" height="280" rx="95" fill="${C.cvac}" stroke="${INK}" stroke-width="6"/>
+        <path d="M-110 88 q12 -9 24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 M-80 108 q12 -9 24 0 t24 0 t24 0 t24 0 t24 0 t24 0" fill="none" stroke="${C.cvacWave}" stroke-width="4" stroke-linecap="round"/>
+        ${shine(-92, -92, 40, 14, -32)}
+        ${shine(-48, -118, 10, 5, -10)}
+        ${face(0, 0, 2.3)}`;
+    },
+  };
+
+  function roughER(cx, cy, radii, a0, a1, w) {
+    let tubes = '', dots = '';
+    radii.forEach((r, i) => {
+      const A0 = a0 + i * 5, A1 = a1 - i * 5;
+      tubes += tube(smoothPath(arcPts(cx, cy, r, A0, A1, 3)), C.rough, w);
+      const step = 22 / r * 180 / Math.PI;
+      let j = 0;
+      for (let a = A0 + step * 0.6; a < A1 - step * 0.3; a += step, j++) {
+        const t = (a - A0) / (A1 - A0);
+        const rr = r + 3 * Math.sin(t * Math.PI * 4) + (j % 2 ? -1 : 1) * (w / 2 + 3);
+        const rad = a * Math.PI / 180;
+        dots += `<circle cx="${(cx + Math.cos(rad) * rr).toFixed(1)}" cy="${(cy + Math.sin(rad) * rr).toFixed(1)}" r="4.3" fill="${C.ribo}" stroke="${INK}" stroke-width="1.5"/>`;
+      }
+    });
+    return tubes + dots;
+  }
+  function floaties(list, color) {
+    return '<g pointer-events="none">' + list.map(p =>
+      `<circle class="floaty" style="animation-delay:-${rnd(0, 7).toFixed(2)}s" cx="${p[0]}" cy="${p[1]}" r="${p[2] || 4}" fill="${color}" opacity=".45"/>`
+    ).join('') + '</g>';
+  }
+
+  // ================= the two cells =================
+  const CELLS = {
+    animal: {
+      name: 'Animal Cell',
+      parts: ['membrane', 'cytoplasm', 'nucleus', 'mitochondria', 'ribosome', 'roughER', 'smoothER', 'golgi', 'lysosome', 'vacuole', 'centrosome'],
+      labels: {
+        membrane: [668, 82], cytoplasm: [470, 428], nucleus: [390, 205], mitochondria: [190, 222],
+        ribosome: [125, 420], roughER: [252, 318], smoothER: [580, 500], golgi: [588, 350],
+        lysosome: [702, 290], vacuole: [140, 352], centrosome: [500, 122],
+      },
+      build() {
+        const D = blob(400, 300, 352, 258, 16, 0.03, 0.6);
+        let s = '';
+        s += part('cytoplasm', 0, 0, 0, 1, `<path d="${D}" fill="${C.cytoA}"/>`, { bob: false, big: true });
+        s += floaties([[160, 130, 5], [260, 210], [530, 120, 5], [690, 210], [610, 410, 6], [470, 360], [270, 460, 5], [420, 540], [90, 300, 3], [720, 440, 3], [330, 380], [560, 210, 3]], C.cytoAdot);
+        s += part('membrane', 0, 0, 0, 1,
+          `<path d="${D}" fill="none" stroke="${INK}" stroke-width="27"/>` +
+          `<path d="${D}" fill="none" stroke="${C.membraneA}" stroke-width="16"/>` +
+          `<path d="${D}" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="5" stroke-dasharray="0.1 15" stroke-linecap="round"/>`,
+          { bob: false, big: true });
+        s += part('roughER', 0, 0, 0, 1, roughER(390, 300, [104, 124, 144], 100, 250, 13), { bob: false, big: true });
+        s += part('smoothER', 580, 442, -6, 1, SHAPE.smoothER());
+        s += part('golgi', 576, 282, 0, 1, SHAPE.golgi());
+        s += part('nucleus', 390, 300, 0, 1, SHAPE.nucleus());
+        [[192, 168, -25], [218, 440, 30], [612, 145, 18], [470, 498, -8]].forEach(m => { s += part('mitochondria', m[0], m[1], m[2], 1, SHAPE.mitochondria()); });
+        [[308, 102, 22], [690, 330, 20], [318, 503, 16]].forEach(l => { s += part('lysosome', l[0], l[1], 0, 1, SHAPE.lysosome(l[2])); });
+        s += part('vacuole', 140, 300, 0, 1, SHAPE.vacuole());
+        s += part('centrosome', 500, 162, 0, 1, SHAPE.centrosome());
+        [[110, 220], [120, 390], [250, 95], [420, 112], [455, 180], [660, 222], [700, 410], [535, 372], [640, 372]].forEach(r => { s += part('ribosome', r[0], r[1], 0, 1, SHAPE.ribosome()); });
+        return s;
+      },
+    },
+    plant: {
+      name: 'Plant Cell',
+      parts: ['wall', 'membrane', 'cytoplasm', 'nucleus', 'chloroplast', 'centralVacuole', 'mitochondria', 'ribosome', 'roughER', 'smoothER', 'golgi'],
+      labels: {
+        wall: [400, 50], membrane: [612, 70], cytoplasm: [652, 400], nucleus: [175, 116], chloroplast: [640, 182],
+        centralVacuole: [445, 200], mitochondria: [520, 150], ribosome: [282, 352], roughER: [205, 296],
+        smoothER: [160, 414], golgi: [300, 148],
+      },
+      build() {
+        let s = '';
+        s += part('wall', 0, 0, 0, 1,
+          `<rect x="46" y="30" width="708" height="540" rx="50" fill="${C.wall}" stroke="${INK}" stroke-width="6"/>` +
+          `<rect x="64" y="48" width="672" height="504" rx="42" fill="none" stroke="${C.wallDark}" stroke-width="3" stroke-dasharray="20 14" stroke-linecap="round"/>` +
+          `<path d="M80 120 Q76 70 124 58" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="6" stroke-linecap="round"/>`,
+          { bob: false, big: true });
+        s += part('cytoplasm', 0, 0, 0, 1, `<rect x="84" y="68" width="632" height="464" rx="32" fill="${C.cytoP}"/>`, { bob: false, big: true });
+        s += floaties([[250, 140, 5], [560, 150], [700, 230, 3], [130, 270], [240, 520, 4], [600, 410, 5], [470, 470], [690, 520, 3], [340, 460, 3]], C.cytoPdot);
+        const M = `<rect x="84" y="68" width="632" height="464" rx="32"`;
+        s += part('membrane', 0, 0, 0, 1,
+          `${M} fill="none" stroke="${INK}" stroke-width="19"/>` +
+          `${M} fill="none" stroke="${C.membraneP}" stroke-width="10"/>` +
+          `${M} fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="4" stroke-dasharray="0.1 13" stroke-linecap="round"/>`,
+          { bob: false, big: true });
+        s += part('centralVacuole', 445, 300, 0, 1, SHAPE.centralVacuole(), { big: true });
+        s += part('roughER', 0, 0, 0, 1, roughER(175, 175, [82, 99, 116], 22, 128, 12), { bob: false, big: true });
+        s += part('smoothER', 162, 362, 0, 0.74, SHAPE.smoothER());
+        s += part('golgi', 392, 96, 90, 0.8, SHAPE.golgi());
+        s += part('nucleus', 175, 175, 0, 0.8, SHAPE.nucleus());
+        [[640, 128, 18], [662, 300, 84], [632, 470, -18], [180, 470, 14], [420, 486, -4]].forEach(c => { s += part('chloroplast', c[0], c[1], c[2], 1, SHAPE.chloroplast()); });
+        [[284, 486, 22], [526, 488, 8], [522, 106, -10]].forEach(m => { s += part('mitochondria', m[0], m[1], m[2], 0.82, SHAPE.mitochondria()); });
+        [[262, 112], [458, 128], [258, 330], [608, 206], [344, 450], [582, 438], [112, 420]].forEach(r => { s += part('ribosome', r[0], r[1], 0, 1, SHAPE.ribosome()); });
+        return s;
+      },
+    },
+  };
+
+  function labelsMarkup(key) {
+    const L = CELLS[key].labels;
+    return '<g id="labels" pointer-events="none">' + Object.keys(L).map(id => {
+      const p = PARTS[id], x = L[id][0], y = L[id][1];
+      const w = Math.round(p.name.length * 8.1 + 36);
+      return `<g transform="translate(${x} ${y})"><rect x="${-w / 2}" y="-14" width="${w}" height="28" rx="14" fill="#fff" stroke="${INK}" stroke-width="2.5"/>` +
+        `<circle cx="${-w / 2 + 13}" cy="0" r="6" fill="${p.color}" stroke="${INK}" stroke-width="2"/>` +
+        `<text x="${8}" y="5" text-anchor="middle">${p.name}</text></g>`;
+    }).join('') + '</g>';
+  }
+
+  // ================= mascot =================
+  function mascot() {
+    const body = blob(60, 68, 44, 40, 10, 0.05, 1.3);
+    return `<path d="M60 30 q-4 -14 6 -20 q8 -4 10 4" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="76" cy="14" r="6" fill="${C.yellow || '#ffd23f'}" stroke="${INK}" stroke-width="3.5"/>
+      <path d="${body}" fill="#8be36b" stroke="${INK}" stroke-width="5"/>
+      <circle cx="36" cy="92" r="4" fill="#5bbf45"/><circle cx="86" cy="96" r="3" fill="#5bbf45"/><circle cx="92" cy="54" r="3.5" fill="#5bbf45"/>
+      ${shine(38, 44, 12, 5, -35)}
+      <g class="eyes" style="animation-delay:-1s">
+        <circle cx="46" cy="62" r="13" fill="#fff" stroke="${INK}" stroke-width="4"/>
+        <circle cx="76" cy="62" r="13" fill="#fff" stroke="${INK}" stroke-width="4"/>
+        <circle cx="48" cy="63" r="5.5" fill="${INK}"/><circle cx="78" cy="63" r="5.5" fill="${INK}"/>
+        <circle cx="50" cy="60.5" r="2" fill="#fff"/><circle cx="80" cy="60.5" r="2" fill="#fff"/>
+      </g>
+      <path d="M59 62 h4" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="34" cy="80" rx="6" ry="3.5" fill="#ff4f86" opacity=".45"/><ellipse cx="88" cy="80" rx="6" ry="3.5" fill="#ff4f86" opacity=".45"/>
+      <path d="M49 82 Q61 98 73 82 Z" fill="#d6336c" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M55 88 Q61 92 67 88" fill="none" stroke="#ff8fb8" stroke-width="3" stroke-linecap="round"/>`;
+  }
+
+  // ================= sound =================
+  let ac = null;
+  function tone(freq, dur, type, vol, delay, slideTo) {
+    if (!state.sound) return;
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      const t = ac.currentTime + (delay || 0);
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type || 'sine';
+      o.frequency.setValueAtTime(freq, t);
+      if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+      g.gain.setValueAtTime(vol || 0.12, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g); g.connect(ac.destination);
+      o.start(t); o.stop(t + dur + 0.02);
+    } catch (e) { /* no audio available */ }
+  }
+  const sfx = {
+    pop() { tone(420, 0.13, 'triangle', 0.14, 0, 820); },
+    newFind() { tone(660, 0.1, 'triangle', 0.12); tone(990, 0.16, 'triangle', 0.12, 0.08); },
+    right() { tone(523, 0.12, 'triangle', 0.13); tone(659, 0.12, 'triangle', 0.13, 0.1); tone(784, 0.22, 'triangle', 0.13, 0.2); },
+    wrong() { tone(220, 0.25, 'square', 0.06, 0, 140); },
+    fanfare() { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, 0.18, 'triangle', 0.12, i * 0.12)); },
+  };
+
+  // ================= confetti =================
+  const cv = document.getElementById('confetti');
+  const cx2 = cv.getContext('2d');
+  let bits = [], confettiRunning = false;
+  function confetti() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    cv.width = innerWidth; cv.height = innerHeight;
+    const cols = ['#ff8fb8', '#ffd23f', '#8be36b', '#6cb8ff', '#a77bff', '#ff9f43'];
+    for (let i = 0; i < 140; i++) {
+      bits.push({ x: innerWidth / 2 + rnd(-80, 80), y: innerHeight * 0.35, vx: rnd(-9, 9), vy: rnd(-15, -5), r: rnd(5, 10), c: cols[i % cols.length], rot: rnd(0, 6), vr: rnd(-0.3, 0.3), round: Math.random() < 0.4 });
+    }
+    if (!confettiRunning) { confettiRunning = true; requestAnimationFrame(tick); }
+  }
+  function tick() {
+    cx2.clearRect(0, 0, cv.width, cv.height);
+    bits.forEach(b => {
+      b.vy += 0.35; b.vx *= 0.99; b.x += b.vx; b.y += b.vy; b.rot += b.vr;
+      cx2.save(); cx2.translate(b.x, b.y); cx2.rotate(b.rot);
+      cx2.fillStyle = b.c; cx2.strokeStyle = INK; cx2.lineWidth = 2;
+      cx2.beginPath();
+      if (b.round) cx2.arc(0, 0, b.r * 0.6, 0, Math.PI * 2); else cx2.rect(-b.r / 2, -b.r / 3, b.r, b.r * 0.66);
+      cx2.fill(); cx2.stroke(); cx2.restore();
+    });
+    bits = bits.filter(b => b.y < cv.height + 30);
+    if (bits.length) requestAnimationFrame(tick);
+    else { confettiRunning = false; cx2.clearRect(0, 0, cv.width, cv.height); }
+  }
+
+  // ================= state =================
+  const QUIZ_LEN = 8;
+  const state = {
+    cell: 'animal', mode: 'explore', selected: null, labels: false, sound: true,
+    found: { animal: new Set(), plant: new Set() },
+    quiz: null,
+  };
+  try {
+    const saved = JSON.parse(localStorage.getItem('kg-cells') || '{}');
+    if (saved.found) {
+      ['animal', 'plant'].forEach(k => (saved.found[k] || []).forEach(id => { if (CELLS[k].parts.includes(id)) state.found[k].add(id); }));
+    }
+    if (saved.sound === false) state.sound = false;
+  } catch (e) { /* storage unavailable */ }
+  function save() {
+    try {
+      localStorage.setItem('kg-cells', JSON.stringify({
+        found: { animal: [...state.found.animal], plant: [...state.found.plant] },
+        sound: state.sound,
+      }));
+    } catch (e) { /* storage unavailable */ }
+  }
+
+  // ================= DOM =================
+  const $ = id => document.getElementById(id);
+  const svg = $('cell'), bubble = $('bubble'), progress = $('progress'), banner = $('quiz-banner'), stage = $('stage');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+
+  $('title-mascot').innerHTML = mascot();
+  $('side-mascot').innerHTML = mascot();
+
+  function renderSoundBtn() {
+    const b = $('sound-btn');
+    b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z" fill="#ffd23f"/>${state.sound ? '<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="M17 9l5 6M22 9l-5 6"/>'}</svg>`;
+    b.setAttribute('aria-label', state.sound ? 'Turn sound off' : 'Turn sound on');
+  }
+  $('sound-btn').onclick = () => { state.sound = !state.sound; save(); renderSoundBtn(); sfx.pop(); };
+  renderSoundBtn();
+
+  function renderTitle() {
+    $('preview-animal').innerHTML = CELLS.animal.build();
+    $('preview-plant').innerHTML = CELLS.plant.build();
+    ['animal', 'plant'].forEach(k => {
+      const n = state.found[k].size, t = CELLS[k].parts.length;
+      $('pp-' + k).textContent = n === t ? '★ All ' + t + ' parts found!' : n + ' / ' + t + ' parts found';
+    });
+  }
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === 'screen-' + name));
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => { sfx.pop(); startGame(b.dataset.pick); });
+
+  // ================= game =================
+  function startGame(cell) {
+    state.cell = cell;
+    state.mode = 'explore';
+    state.selected = null;
+    state.quiz = null;
+    showScreen('game');
+    renderAll();
+    exploreWelcome();
+  }
+  function renderAll() {
+    document.querySelectorAll('[data-cell]').forEach(b => b.classList.toggle('on', b.dataset.cell === state.cell));
+    document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === state.mode));
+    $('labels-btn').classList.toggle('on', state.labels);
+    $('labels-btn').style.display = state.mode === 'explore' ? '' : 'none';
+    stage.classList.toggle('quiz', state.mode === 'quiz');
+    svg.innerHTML = CELLS[state.cell].build() + labelsMarkup(state.cell);
+    svg.classList.toggle('show-labels', state.labels && state.mode === 'explore');
+    applyClasses();
+    renderProgress();
+  }
+  function forParts(id, fn) { svg.querySelectorAll('.part[data-part="' + id + '"]').forEach(fn); }
+  function applyClasses() {
+    svg.querySelectorAll('.part').forEach(g => {
+      g.classList.toggle('selected', state.mode === 'explore' && g.dataset.part === state.selected);
+    });
+  }
+  function setBubble(html) {
+    bubble.innerHTML = html;
+    bubble.classList.remove('pop'); void bubble.offsetWidth; bubble.classList.add('pop');
+  }
+
+  function exploreWelcome() {
+    const c = CELLS[state.cell];
+    const left = c.parts.length - state.found[state.cell].size;
+    setBubble(`<p>Welcome to the <b>${c.name}</b>! Tap any part of the cell to find out what it does.</p>` +
+      (left ? `<p>Can you discover all <b>${c.parts.length}</b> parts?</p>` : `<p>You've already found every part. Try the <b>Quiz</b> to test yourself!</p>`) +
+      `<p style="opacity:.7;font-size:.9rem">Tip: the <b>Labels</b> button shows every part's name.</p>`);
+  }
+
+  function showInfo(id, isNew) {
+    const p = PARTS[id];
+    let extra = '';
+    if (state.cell === 'plant' && id === 'membrane') extra = ' In plants it sits just inside the cell wall.';
+    setBubble(`<div class="part-title"><span class="swatch" style="background:${p.color}"></span>${esc(p.name)}${isNew ? ' <span class="new-badge">NEW!</span>' : ''}</div>` +
+      (p.full ? `<div class="fullname">${esc(p.full)}</div>` : '') +
+      `<div class="info-row"><b>What it does</b>${esc(p.job + extra)}</div>` +
+      `<div class="info-row like"><b>It’s like…</b>${esc(p.like)}</div>` +
+      `<div class="info-row fact"><b>Fun fact!</b>${esc(p.fact)}</div>`);
+  }
+
+  function renderProgress() {
+    const c = CELLS[state.cell];
+    if (state.mode === 'explore') {
+      const f = state.found[state.cell];
+      progress.innerHTML = `<div class="progress-head"><span>Parts discovered</span><span>${f.size} / ${c.parts.length}</span></div>` +
+        `<div class="meter"><div style="width:${(f.size / c.parts.length * 100).toFixed(1)}%"></div></div>` +
+        `<div class="stickers">` + c.parts.map(id => {
+          const ok = f.has(id), p = PARTS[id];
+          return `<button class="sticker${ok ? '' : ' locked'}${state.selected === id ? ' current' : ''}" data-sticker="${id}" aria-label="${ok ? esc(p.name) : 'Undiscovered part'}">` +
+            `<span class="dot" style="${ok ? 'background:' + p.color : ''}"></span>${ok ? esc(p.name) : '???'}</button>`;
+        }).join('') + `</div>`;
+      progress.querySelectorAll('[data-sticker]').forEach(b => b.onclick = () => {
+        const id = b.dataset.sticker;
+        if (state.found[state.cell].has(id)) exploreTap(id);
+        else { sfx.wrong(); setBubble(`<p>That part is still a mystery! Tap around the cell to discover it.</p>`); }
+      });
+    } else {
+      const q = state.quiz;
+      const results = q ? q.results : [];
+      progress.innerHTML = `<div class="progress-head"><span>Quiz stars</span><span>${q ? q.stars : 0} / ${QUIZ_LEN}</span></div>` +
+        `<div class="star-row">` + Array.from({ length: QUIZ_LEN }, (_, i) => star(results[i] === true)).join('') + `</div>` +
+        `<p style="margin-top:10px;font-weight:600;font-size:.9rem;opacity:.75">Get it right on the first try to earn a star!</p>`;
+    }
+  }
+
+  function exploreTap(id) {
+    const f = state.found[state.cell];
+    const isNew = !f.has(id);
+    state.selected = id;
+    f.add(id);
+    save();
+    applyClasses();
+    showInfo(id, isNew);
+    renderProgress();
+    if (isNew) sfx.newFind(); else sfx.pop();
+    if (isNew && f.size === CELLS[state.cell].parts.length) {
+      setTimeout(() => {
+        sfx.fanfare(); confetti();
+        bubble.insertAdjacentHTML('beforeend', `<div class="info-row" style="background:#e3ffd6"><b>You did it!</b>You discovered every part of the ${CELLS[state.cell].name}! Ready to test yourself?</div><button class="btn primary" data-go="quiz">Take the Quiz →</button>`);
+        bubble.querySelector('[data-go="quiz"]').onclick = () => setMode('quiz');
+      }, 500);
+    }
+  }
+
+  // ---------- quiz ----------
+  function startQuiz() {
+    const ids = shuffle(CELLS[state.cell].parts.slice()).slice(0, QUIZ_LEN);
+    state.quiz = { ids, i: 0, stars: 0, misses: 0, results: [], locked: false };
+    renderProgress();
+    nextQuestion();
+  }
+  function clearQuizMarks() {
+    svg.querySelectorAll('.part').forEach(g => g.classList.remove('correct', 'hint', 'wrong'));
+  }
+  function nextQuestion() {
+    const q = state.quiz;
+    clearQuizMarks();
+    if (q.i >= q.ids.length) return endQuiz();
+    const id = q.ids[q.i];
+    q.misses = 0;
+    banner.innerHTML = `<small>Question ${q.i + 1} of ${q.ids.length}</small>${esc(pick(PARTS[id].clues))}<span class="fb" id="quiz-fb"></span>`;
+    setBubble(`<p>Read the clue at the top, then tap the matching part of the cell!</p><p style="opacity:.7;font-size:.9rem">Stuck? After two tries I'll give you a hint.</p>`);
+  }
+  function quizTap(id) {
+    const q = state.quiz;
+    if (!q || q.locked || q.i >= q.ids.length) return;
+    const target = q.ids[q.i];
+    if (id === target) {
+      q.locked = true;
+      const first = q.misses === 0;
+      q.results[q.i] = first;
+      if (first) q.stars++;
+      svg.querySelectorAll('.part.hint').forEach(g => g.classList.remove('hint'));
+      forParts(id, g => g.classList.add('correct'));
+      sfx.right();
+      renderProgress();
+      setFeedback((first ? 'Yes! ' : 'Got it! ') + 'That\u2019s the ' + PARTS[id].name + '!', 'good');
+      setBubble(`<div class="part-title"><span class="swatch" style="background:${PARTS[id].color}"></span>${first ? 'Yes! ' : 'Got it! '}${esc(PARTS[id].name)}</div><p>${esc(PARTS[id].job)}</p>`);
+      setTimeout(() => { q.i++; q.locked = false; nextQuestion(); }, 2100);
+    } else {
+      q.misses++;
+      forParts(id, g => { g.classList.remove('wrong'); void g.getBBox(); g.classList.add('wrong'); setTimeout(() => g.classList.remove('wrong'), 500); });
+      sfx.wrong();
+      let msg = `<p>Oops! That's the <b>${esc(PARTS[id].name)}</b>. ${esc(PARTS[id].job.split('. ')[0].replace(/\.$/, ''))}.</p>`;
+      if (q.misses >= 2) {
+        forParts(target, g => g.classList.add('hint'));
+        msg += `<p><b>Hint:</b> look for the part that's glowing!</p>`;
+      } else msg += `<p>Try again!</p>`;
+      setFeedback('Oops! That\u2019s the ' + PARTS[id].name + '. ' + (q.misses >= 2 ? 'Look for the glowing part!' : 'Try again!'), 'bad');
+      setBubble(msg);
+    }
+  }
+  function setFeedback(text, kind) {
+    const el = $('quiz-fb');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'fb ' + kind;
+  }
+  function endQuiz() {
+    const q = state.quiz;
+    banner.innerHTML = `<small>All done!</small>Quiz complete!`;
+    const s = q.stars;
+    const msg = s === QUIZ_LEN ? 'PERFECT! You’re a real cell scientist!' : s >= 6 ? 'Amazing work! You really know your cell parts!' : s >= 3 ? 'Nice job! Explore a bit more and try again!' : 'Good try! Explore the cell, then come back for more stars!';
+    setBubble(`<div class="part-title">You earned ${s} star${s === 1 ? '' : 's'}!</div>` +
+      `<div class="big-stars">${q.results.map(r => star(r)).join('')}</div><p>${msg}</p>` +
+      `<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" data-go="again">Play again</button><button class="btn" data-go="explore">Explore</button>` +
+      `<button class="btn" data-go="other">Try the ${state.cell === 'animal' ? 'Plant' : 'Animal'} Cell</button></div>`);
+    bubble.querySelector('[data-go="again"]').onclick = () => { sfx.pop(); startQuiz(); };
+    bubble.querySelector('[data-go="explore"]').onclick = () => setMode('explore');
+    bubble.querySelector('[data-go="other"]').onclick = () => { sfx.pop(); setCell(state.cell === 'animal' ? 'plant' : 'animal'); };
+    if (s >= 6) { sfx.fanfare(); confetti(); }
+  }
+
+  // ---------- switching ----------
+  function setMode(mode) {
+    sfx.pop();
+    state.mode = mode;
+    state.selected = null;
+    renderAll();
+    if (mode === 'quiz') startQuiz(); else { state.quiz = null; exploreWelcome(); }
+  }
+  function setCell(cell) {
+    state.cell = cell;
+    state.selected = null;
+    renderAll();
+    if (state.mode === 'quiz') startQuiz(); else exploreWelcome();
+  }
+  document.querySelectorAll('[data-cell]').forEach(b => b.onclick = () => { if (b.dataset.cell !== state.cell) { sfx.pop(); setCell(b.dataset.cell); } });
+  document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { if (b.dataset.mode !== state.mode) setMode(b.dataset.mode); });
+  $('labels-btn').onclick = () => {
+    sfx.pop();
+    state.labels = !state.labels;
+    $('labels-btn').classList.toggle('on', state.labels);
+    svg.classList.toggle('show-labels', state.labels);
+  };
+  svg.addEventListener('click', e => {
+    const p = e.target.closest('.part');
+    if (!p) return;
+    if (state.mode === 'explore') exploreTap(p.dataset.part); else quizTap(p.dataset.part);
+  });
+
+  renderTitle();
+  // allow deep links like /cells/#plant
+  const h = location.hash.replace('#', '');
+  if (h === 'animal' || h === 'plant') startGame(h);
+})();
+</script>
+</body>
+</html>

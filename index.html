@@ -245,6 +245,21 @@
     transform: scale(1.05);
     box-shadow: 0 8px 28px rgba(255,106,61,0.6);
   }
+  /* cartoon-style screen for educational games */
+  .game-screen.cartoon {
+    background-color: #bfeaff;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.75) 3px, transparent 4px);
+    background-size: 26px 26px;
+  }
+  .game-screen.cartoon::before, .game-screen.cartoon::after { display: none; }
+  .game-emblem.cell-emblem {
+    width: 132px;
+    height: 110px;
+    filter: drop-shadow(0 6px 0 rgba(43,22,64,0.25));
+  }
+  @media (max-width: 560px) {
+    .tab-btn { padding: 14px 6px; font-size: 0.8rem; letter-spacing: 0.03em; }
+  }
   @media (prefers-reduced-motion: reduce) {
     .game-card, .game-screen::before, .game-emblem { animation: none; }
     .game-card::after { display: none; }
@@ -293,6 +308,7 @@
 
   <div class="tabs">
     <button class="tab-btn active" id="tab-btn-games">GAMES</button>
+    <button class="tab-btn" id="tab-btn-educational">EDUCATIONAL GAMES</button>
     <button class="tab-btn" id="tab-btn-memberships">MEMBERSHIPS</button>
   </div>
 
@@ -323,6 +339,35 @@
     </a>
   </div>
 
+  <div class="tab-panel" id="tab-educational">
+    <a class="game-card" href="/cells/">
+      <div class="game-screen cartoon" aria-hidden="true">
+        <svg class="game-emblem cell-emblem" viewBox="0 0 120 100">
+          <path d="M60 8 C92 6 114 26 112 52 C110 80 86 94 58 92 C28 90 6 74 8 48 C10 22 30 9 60 8 Z" fill="#ffe9f2" stroke="#2b1640" stroke-width="10"/>
+          <path d="M60 8 C92 6 114 26 112 52 C110 80 86 94 58 92 C28 90 6 74 8 48 C10 22 30 9 60 8 Z" fill="none" stroke="#ff8fb8" stroke-width="5"/>
+          <rect x="18" y="24" width="28" height="14" rx="7" fill="#ff9f43" stroke="#2b1640" stroke-width="3" transform="rotate(-20 32 31)"/>
+          <rect x="74" y="66" width="26" height="13" rx="6.5" fill="#ff9f43" stroke="#2b1640" stroke-width="3" transform="rotate(15 87 72)"/>
+          <circle cx="92" cy="34" r="7" fill="#ff6b6b" stroke="#2b1640" stroke-width="3"/>
+          <circle cx="26" cy="66" r="3" fill="#3d2c8d"/><circle cx="80" cy="20" r="3" fill="#3d2c8d"/><circle cx="46" cy="82" r="3" fill="#3d2c8d"/>
+          <circle cx="58" cy="50" r="22" fill="#a77bff" stroke="#2b1640" stroke-width="4"/>
+          <circle cx="66" cy="41" r="6" fill="#6b3fd1" stroke="#2b1640" stroke-width="2.5"/>
+          <ellipse cx="51" cy="51" rx="3.6" ry="4.4" fill="#fff" stroke="#2b1640" stroke-width="1.8"/>
+          <ellipse cx="61" cy="51" rx="3.6" ry="4.4" fill="#fff" stroke="#2b1640" stroke-width="1.8"/>
+          <circle cx="51.6" cy="52" r="2" fill="#2b1640"/><circle cx="61.6" cy="52" r="2" fill="#2b1640"/>
+          <path d="M52.5 58 Q56 62 59.5 58" fill="none" stroke="#2b1640" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="game-body">
+        <div class="game-name">EXPLORING CELLS</div>
+        <div class="game-desc">Peek inside cartoon animal and plant cells, meet the organelles, and test what you learned in a quiz.</div>
+        <div class="game-modes">
+          <span>Science</span><span>Animal Cell</span><span>Plant Cell</span><span>Quiz</span>
+        </div>
+        <span class="game-play">PLAY →</span>
+      </div>
+    </a>
+  </div>
+
   <div class="tab-panel" id="tab-memberships">
     <div class="membership-empty">No memberships available right now.</div>
   </div>
@@ -331,16 +376,23 @@
 <script>
   const tabs = {
     games: { btn: document.getElementById('tab-btn-games'), panel: document.getElementById('tab-games') },
+    educational: { btn: document.getElementById('tab-btn-educational'), panel: document.getElementById('tab-educational') },
     memberships: { btn: document.getElementById('tab-btn-memberships'), panel: document.getElementById('tab-memberships') },
   };
+  function showTab(key) {
+    Object.keys(tabs).forEach(function(k) {
+      tabs[k].btn.classList.toggle('active', k === key);
+      tabs[k].panel.classList.toggle('active', k === key);
+    });
+  }
   Object.keys(tabs).forEach(function(key) {
     tabs[key].btn.onclick = function() {
-      Object.keys(tabs).forEach(function(k) {
-        tabs[k].btn.classList.toggle('active', k === key);
-        tabs[k].panel.classList.toggle('active', k === key);
-      });
+      showTab(key);
+      history.replaceState(null, '', key === 'games' ? location.pathname : '#' + key);
     };
   });
+  var initialTab = location.hash.replace('#', '');
+  if (tabs[initialTab]) showTab(initialTab);
 </script>
 </body>
 </html>
