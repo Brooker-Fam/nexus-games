@@ -705,7 +705,7 @@
 <section class="screen active" id="screen-intro">
   <div class="intro-wrap">
     <div class="cine" id="cine">
-      <svg id="scene" viewBox="0 0 800 450" role="img" aria-label="Cartoon classroom: Ms. Bolebrunch's science class"></svg>
+      <svg id="scene" viewBox="0 0 800 450" role="img" aria-label="Cartoon classroom: Ms. Bullbrook's science class"></svg>
       <div class="cine-start" id="cine-start">
         <div class="cine-kicker">Exploring Cells &middot; Chapter 1</div>
         <div class="cine-title">The Field Trip</div>
@@ -1687,13 +1687,13 @@
   // Voice settings stay close to natural (pitch ~1, rate ~1): big pitch shifts are what make
   // browser speech sound like chipmunks/robots. Kids get a gentle lift, not a cartoon squeak.
   const SPEAKERS = {
-    'Ms. Bolebrunch': { color: '#5ecbc4', pitch: 1.02, rate: 0.96, female: true, slot: 0 },
+    'Ms. Bullbrook': { color: '#5ecbc4', pitch: 1.02, rate: 0.96, female: true, slot: 0 },
     'Class': { color: '#ffd23f', pitch: 1.2, rate: 1.0, female: true, slot: 3 },
     'Westley': { color: '#ff6b6b', pitch: 1.18, rate: 1.04, slot: 0 },
     'Abby': { color: '#c9adff', pitch: 1.25, rate: 1.02, female: true, slot: 2 },
     'Cole': { color: '#ff9f43', pitch: 1.15, rate: 1.03, slot: 2 },
     'Emmett': { color: '#6cb8ff', pitch: 1.12, rate: 1.0, slot: 1 },
-    'Ms. Bolebrunch (radio)': { color: '#5ecbc4', pitch: 1.02, rate: 0.98, female: true, slot: 0 },
+    'Ms. Bullbrook (radio)': { color: '#5ecbc4', pitch: 1.02, rate: 0.98, female: true, slot: 0 },
     'Professor Goo': { color: '#8be36b', pitch: 0.92, rate: 1.0, slot: 3 },
   };
   const DESK_Y = 340;
@@ -1966,7 +1966,7 @@
       const sp = SPEAKERS[who] || { color: '#fff' };
       box.innerHTML = `<span class="speaker" style="background:${sp.color}">${esc(who)}</span><span class="subs-text"></span><span class="subs-hint">tap to speed up</span>`;
       const out = box.querySelector('.subs-text');
-      teacherTalking(who === 'Ms. Bolebrunch');
+      teacherTalking(who === 'Ms. Bullbrook');
       let spoken = false;
       speak(who, text).then(() => { spoken = true; });
       let i = 0;
@@ -1991,7 +1991,7 @@
         function finish() {
           clearInterval(poll);
           ctx.advance = null;
-          if (who === 'Ms. Bolebrunch') teacherTalking(false);
+          if (who === 'Ms. Bullbrook') teacherTalking(false);
           res();
         }
         ctx.advance = () => { try { speechSynthesis.cancel(); } catch (e) {} spoken = true; finish(); };
@@ -2066,23 +2066,23 @@
     const leoPressed = { done: false };
     try {
       await iwait(500);
-      await line('Ms. Bolebrunch', 'Good morning, class! Settle down, settle down. I have some very exciting news!');
+      await line('Ms. Bullbrook', 'Good morning, class! Settle down, settle down. I have some very exciting news!');
       board(['trip']);
-      await line('Ms. Bolebrunch', 'Today... we are going on a FIELD TRIP!', { onType: p => { if (p >= 1) { kids('cheer', true); KIDS.forEach(k => q1('#yay-' + k.id).classList.add('on')); sfx.right(); } } });
+      await line('Ms. Bullbrook', 'Today... we are going on a FIELD TRIP!', { onType: p => { if (p >= 1) { kids('cheer', true); KIDS.forEach(k => q1('#yay-' + k.id).classList.add('on')); sfx.right(); } } });
       await line('Class', 'Yaaay! Is it the zoo? The aquarium? The candy factory?!');
       kids('cheer', false);
       KIDS.forEach(k => q1('#yay-' + k.id).classList.remove('on'));
-      await line('Ms. Bolebrunch', 'Even better! We’re going somewhere so tiny, you can’t even see it with your eyes.');
+      await line('Ms. Bullbrook', 'Even better! We’re going somewhere so tiny, you can’t even see it with your eyes.');
       q1('#teacher').classList.add('holding');
       moveMachine(MACH_TEACHER[0], MACH_TEACHER[1], false);
       q1('#mach-pos').classList.add('on');
       sfx.newFind();
       board(['trip', 'cell']);
-      await line('Ms. Bolebrunch', 'With this machine, the Micro-Explorer, we’re going to explore the inside of a CELL!');
+      await line('Ms. Bullbrook', 'With this machine, the Micro-Explorer, we’re going to explore the inside of a CELL!');
       kids('wow', true);
       await line('Class', 'Ooooooh!', { hold: 500 });
       kids('wow', false);
-      await line('Ms. Bolebrunch', 'Go ahead and pass it around, carefully, so everyone gets a good look.', { hold: 300 });
+      await line('Ms. Bullbrook', 'Go ahead and pass it around, carefully, so everyone gets a good look.', { hold: 300 });
       q1('#teacher').classList.remove('holding');
       moveMachine(KIDS[0].x, MACH_DESK_Y, true);
       await iwait(1000);
@@ -2107,10 +2107,10 @@
           startWhirr();
         });
       };
-      await line('Ms. Bolebrunch', 'Now remember, class, this machine is only EXPERIMENTAL, so whatever you do, don’t press the—', { onType: p => { if (p >= 0.6) press(); }, hold: 200 });
+      await line('Ms. Bullbrook', 'Now remember, class, this machine is only EXPERIMENTAL, so whatever you do, don’t press the—', { onType: p => { if (p >= 0.6) press(); }, hold: 200 });
       press();
       q1('#vortex').classList.add('on');
-      await line('Ms. Bolebrunch', '...red button.', { hold: 300 });
+      await line('Ms. Bullbrook', '...red button.', { hold: 300 });
       q1('#leo-spin-body').classList.add('swept');
       q1('#leo-spin-hands').classList.add('swept');
       tone(1300, 1.6, 'triangle', 0.1, 0, 90);
@@ -2122,8 +2122,8 @@
       kids('gasp', true, ['westley', 'abby', 'cole']);
       await iwait(1300);
       await line('Class', 'EMMETT?!', { hold: 600 });
-      await line('Ms. Bolebrunch', 'Oh my. Well... it looks like Emmett is going on our field trip a little early!');
-      await line('Ms. Bolebrunch', 'Hang on, Emmett! Explore that cell, and we’ll figure out how to get you back!');
+      await line('Ms. Bullbrook', 'Oh my. Well... it looks like Emmett is going on our field trip a little early!');
+      await line('Ms. Bullbrook', 'Hang on, Emmett! Explore that cell, and we’ll figure out how to get you back!');
       $('flash').classList.add('on');
       await iwait(700);
     } catch (e) {
@@ -2502,9 +2502,9 @@
         }
       }
       LAYERS[cell].forEach((id, i) => later2(i * 400, () => { aq('#tag-' + id).classList.add('on'); sfx.pop(); }));
-      await line('Ms. Bolebrunch (radio)', 'Emmett! Can you hear me? It’s Ms. Bolebrunch, talking to you through the Micro-Explorer!', ctx);
-      await line('Ms. Bolebrunch (radio)', `To get inside, you need to get through the ${through}. They don’t let just anything in!`, ctx);
-      await line('Ms. Bolebrunch (radio)', 'See that purple protein poking out? It’s a channel protein, a doorway into the cell. Hop across those floating molecules and jump onto it!', ctx);
+      await line('Ms. Bullbrook (radio)', 'Emmett! Can you hear me? It’s Ms. Bullbrook, talking to you through the Micro-Explorer!', ctx);
+      await line('Ms. Bullbrook (radio)', `To get inside, you need to get through the ${through}. They don’t let just anything in!`, ctx);
+      await line('Ms. Bullbrook (radio)', 'See that purple protein poking out? It’s a channel protein, a doorway into the cell. Hop across those floating molecules and jump onto it!', ctx);
       aq('#a-kid').classList.remove('wow');
       arr.camFollow = true;
       arr.phase = 'play';
@@ -2519,7 +2519,7 @@
       await line('Emmett', 'Made it! Um... hi there, little protein!', ctx);
       aq('#a-chan').classList.add('open');
       tone(200, 1.2, 'sine', 0.08, 0, 600);
-      await line('Ms. Bolebrunch (radio)', 'Hold on tight! The channel is opening up. Here you go!', Object.assign({ hold: 200 }, ctx));
+      await line('Ms. Bullbrook (radio)', 'Hold on tight! The channel is opening up. Here you go!', Object.assign({ hold: 200 }, ctx));
       // slip down into the channel's mouth...
       const x0 = P.x, y0 = P.y, mx = arr.outerX - 6, my = PY + 20;
       await tween(700, k => { P.x = x0 + (mx - x0) * k; P.y = y0 + (my - y0) * k - Math.sin(k * Math.PI) * 50; P.scale = PS - 0.12 * k; });
@@ -2542,7 +2542,7 @@
       puffBubbles(P.x, P.y, 14);
       await tween(900, k => { P.x = endX + 40 * k; P.y = PY - 30 * k; });
       await line('Emmett', 'Whoa, my suit just changed! Flippers! A bubble helmet!', ctx);
-      await line('Ms. Bolebrunch (radio)', 'That’s the Micro-Suit’s SWIM MODE! The inside of a cell is mostly water, so swim around and explore. Professor Goo will tell you about everything you find!', ctx);
+      await line('Ms. Bullbrook (radio)', 'That’s the Micro-Suit’s SWIM MODE! The inside of a cell is mostly water, so swim around and explore. Professor Goo will tell you about everything you find!', ctx);
       await iwait(300, arr);
     } catch (e) {
       if (e === SKIP) return;
