@@ -441,6 +441,61 @@
   #vortex.on #vortex-grow { transform: scale(1); }
   #vortex.off #vortex-grow { transform: scale(0); transition-duration: 0.6s; }
 
+  /* ---------- arrival: the dark world outside the cell ---------- */
+  .cine.arrive { background: #0b0820; cursor: default; }
+  #arena { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .pad { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; visibility: hidden; }
+  .pad.on { visibility: visible; }
+  .pad .group { display: flex; gap: 12px; }
+  .pad .btn { font-size: 1.5rem; padding: 10px 0; width: 84px; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .pad .btn.jump { width: 140px; background: var(--yellow); font-size: 1.15rem; }
+  .pad .btn.held { transform: translateY(3px); box-shadow: 0 2px 0 var(--ink); filter: brightness(0.95); }
+  .pad .keys-hint { font-weight: 700; font-size: 0.9rem; opacity: 0.7; text-align: center; }
+  .a-speck { animation: twinkle 3s ease-in-out infinite alternate; }
+  @keyframes twinkle { from { opacity: 0.15; } to { opacity: 0.8; } }
+  .a-drift { animation: drift 9s ease-in-out infinite; }
+  .a-vortex { opacity: 0; transition: opacity 0.4s ease; }
+  .a-vortex.on { opacity: 1; }
+  .a-vortex .ring { transform-box: fill-box; transform-origin: center; animation: spin 0.9s linear infinite; }
+  .a-vortex .ring.r2 { animation-direction: reverse; animation-duration: 0.6s; }
+  #a-kid .leg { transform-box: fill-box; transform-origin: top center; }
+  #a-kid.walking .l1 { animation: legswing 0.26s ease-in-out infinite alternate; }
+  #a-kid.walking .l2 { animation: legswing 0.26s ease-in-out infinite alternate-reverse; }
+  @keyframes legswing { from { transform: rotate(-22deg); } to { transform: rotate(22deg); } }
+  #a-kid.airborne .l1 { transform: rotate(-28deg); }
+  #a-kid.airborne .l2 { transform: rotate(18deg); }
+  #a-chan { opacity: 0.35; }
+  #a-chan.open { animation: chan 0.45s ease-in-out infinite alternate; }
+  @keyframes chan { from { opacity: 0.5; } to { opacity: 1; } }
+  .a-prot-face .eyes { animation: blink 3.6s infinite; }
+  .layer-tag { opacity: 0; transition: opacity 0.5s ease; }
+  .layer-tag.on { opacity: 1; }
+  .layer-tag .tick { display: none; }
+  .layer-tag.done rect { fill: #b6ff7a; }
+  .layer-tag.done .tick { display: inline; }
+  #a-flash { opacity: 0; transition: opacity 0.35s ease; pointer-events: none; }
+  #a-flash.on { opacity: 1; transition-duration: 0.12s; }
+
+  /* swimmer */
+  .swimmer .fin { transform-box: fill-box; transform-origin: right center; animation: kick 0.35s ease-in-out infinite alternate; }
+  .swimmer .fin.f2 { animation-direction: alternate-reverse; }
+  @keyframes kick { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
+  .bubl { animation: bubl 1.1s ease-out forwards; }
+  @keyframes bubl { to { transform: translate(-4px, -28px); opacity: 0; } }
+
+  /* swim mode in the game */
+  .stage.swim #cell { touch-action: none; cursor: crosshair; }
+  .swim-hint { display: none; margin: 8px 6px 2px; font-size: 0.9rem; font-weight: 700; text-align: center; opacity: 0.75; }
+  .stage.swim .swim-hint { display: block; }
+  .swim-toast {
+    position: absolute; left: 50%; top: 22px; transform: translate(-50%, -8px) scale(0.9);
+    padding: 4px 16px; font-weight: 800; font-size: 1.1rem; white-space: nowrap;
+    background: #fff; border: 3px solid var(--ink); border-radius: 999px; box-shadow: 0 4px 0 var(--ink);
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s cubic-bezier(.3,1.6,.5,1);
+  }
+  .swim-toast.on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  .swim-toast .new-badge { margin-left: 6px; vertical-align: 2px; }
+
   @media (max-width: 900px) {
     .game-grid { grid-template-columns: minmax(0, 1fr); }
   }
@@ -453,6 +508,9 @@
     .topbar .crumb { display: none; }
     .subs { font-size: 1rem; min-height: 80px; }
     .cine-start { gap: 8px; }
+    .pad .keys-hint { display: none; }
+    .pad .btn { width: 68px; }
+    .pad .btn.jump { width: 110px; }
     .btn.big { font-size: 1.05rem; padding: 8px 18px; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -520,6 +578,25 @@
   </div>
 </section>
 
+<!-- ============ ARRIVAL: the dark world outside the cell ============ -->
+<section class="screen" id="screen-arrive">
+  <div class="intro-wrap">
+    <div class="cine arrive" id="arrive">
+      <svg id="arena" viewBox="0 0 800 450" role="img" aria-label="Emmett in a dark world, outside a giant glowing cell"></svg>
+      <button class="btn cine-skip" id="arrive-skip">Skip &#9656;&#9656;</button>
+    </div>
+    <div class="pad" id="pad">
+      <div class="group">
+        <button class="btn" data-hold="left" aria-label="Move left">&#9664;</button>
+        <button class="btn" data-hold="right" aria-label="Move right">&#9654;</button>
+      </div>
+      <div class="keys-hint">Keyboard: &larr; &rarr; to move, &uarr; or Space to jump</div>
+      <button class="btn jump" data-hold="up">Jump!</button>
+    </div>
+    <div class="subs" id="arrive-subs" aria-live="polite"></div>
+  </div>
+</section>
+
 <!-- ============ GAME SCREEN ============ -->
 <section class="screen" id="screen-game">
   <div class="game-wrap">
@@ -531,7 +608,7 @@
         <button data-cell="animal">Animal</button><button data-cell="plant">Plant</button>
       </div>
       <div class="seg" role="group" aria-label="Mode">
-        <button data-mode="explore">Explore</button><button data-mode="quiz">Quiz</button>
+        <button data-mode="swim">Swim</button><button data-mode="explore">Explore</button><button data-mode="quiz">Quiz</button>
       </div>
       <button class="btn toggle" id="labels-btn">Labels</button>
     </div>
@@ -539,6 +616,8 @@
       <div class="stage" id="stage">
         <div class="quiz-banner" id="quiz-banner"></div>
         <svg id="cell" viewBox="0 0 800 600" role="img" aria-label="Cartoon cell. Tap a part to learn about it."></svg>
+        <div class="swim-toast" id="swim-toast"></div>
+        <div class="swim-hint">Swim with the arrow keys (or WASD), or press and hold where you want to go.</div>
       </div>
       <aside class="side">
         <div class="guide">
@@ -1217,17 +1296,19 @@
     document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === 'screen-' + name));
     window.scrollTo(0, 0);
   }
-  document.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => { sfx.pop(); startGame(b.dataset.pick); });
+  document.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => { sfx.pop(); playArrival(b.dataset.pick); });
 
   // ================= game =================
-  function startGame(cell) {
+  function startGame(cell, mode, entered) {
     state.cell = cell;
-    state.mode = 'explore';
+    state.mode = mode || 'swim';
     state.selected = null;
     state.quiz = null;
+    (entered || []).forEach(id => state.found[cell].add(id));
+    if (entered && entered.length) save();
     showScreen('game');
     renderAll();
-    exploreWelcome();
+    if (state.mode === 'swim') swimWelcome(entered); else exploreWelcome();
   }
   function renderAll() {
     const isPro = state.cell === 'prokaryote';
@@ -1237,17 +1318,19 @@
     document.querySelectorAll('[data-cell]').forEach(b => b.classList.toggle('on', b.dataset.cell === state.cell));
     document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === state.mode));
     $('labels-btn').classList.toggle('on', state.labels);
-    $('labels-btn').style.display = state.mode === 'explore' ? '' : 'none';
+    $('labels-btn').style.display = state.mode !== 'quiz' ? '' : 'none';
     stage.classList.toggle('quiz', state.mode === 'quiz');
-    svg.innerHTML = CELLS[state.cell].build() + labelsMarkup(state.cell);
-    svg.classList.toggle('show-labels', state.labels && state.mode === 'explore');
+    stage.classList.toggle('swim', state.mode === 'swim');
+    svg.innerHTML = CELLS[state.cell].build() + labelsMarkup(state.cell) + (state.mode === 'swim' ? swimLayerMarkup() : '');
+    svg.classList.toggle('show-labels', state.labels && state.mode !== 'quiz');
+    if (state.mode === 'swim') initSwim(); else svg.setAttribute('viewBox', '0 0 800 600');
     applyClasses();
     renderProgress();
   }
   function forParts(id, fn) { svg.querySelectorAll('.part[data-part="' + id + '"]').forEach(fn); }
   function applyClasses() {
     svg.querySelectorAll('.part').forEach(g => {
-      g.classList.toggle('selected', state.mode === 'explore' && g.dataset.part === state.selected);
+      g.classList.toggle('selected', state.mode !== 'quiz' && g.dataset.part === state.selected);
     });
   }
   function setBubble(html) {
@@ -1278,7 +1361,7 @@
 
   function renderProgress() {
     const c = CELLS[state.cell];
-    if (state.mode === 'explore') {
+    if (state.mode !== 'quiz') {
       const f = state.found[state.cell];
       progress.innerHTML = `<div class="progress-head"><span>Parts discovered</span><span>${f.size} / ${c.parts.length}</span></div>` +
         `<div class="meter"><div style="width:${(f.size / c.parts.length * 100).toFixed(1)}%"></div></div>` +
@@ -1290,7 +1373,7 @@
       progress.querySelectorAll('[data-sticker]').forEach(b => b.onclick = () => {
         const id = b.dataset.sticker;
         if (state.found[state.cell].has(id)) exploreTap(id);
-        else { sfx.wrong(); setBubble(`<p>That part is still a mystery! Tap around the cell to discover it.</p>`); }
+        else { sfx.wrong(); setBubble(`<p>That part is still a mystery! ${state.mode === 'swim' ? 'Swim' : 'Tap'} around the cell to discover it.</p>`); }
       });
     } else {
       const q = state.quiz;
@@ -1395,13 +1478,13 @@
     state.mode = mode;
     state.selected = null;
     renderAll();
-    if (mode === 'quiz') startQuiz(); else { state.quiz = null; exploreWelcome(); }
+    if (mode === 'quiz') startQuiz(); else { state.quiz = null; if (mode === 'swim') swimWelcome(); else exploreWelcome(); }
   }
   function setCell(cell) {
     state.cell = cell;
     state.selected = null;
     renderAll();
-    if (state.mode === 'quiz') startQuiz(); else exploreWelcome();
+    if (state.mode === 'quiz') startQuiz(); else if (state.mode === 'swim') swimWelcome(); else exploreWelcome();
   }
   document.querySelectorAll('[data-cell]').forEach(b => b.onclick = () => { if (b.dataset.cell !== state.cell) { sfx.pop(); setCell(b.dataset.cell); } });
   document.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => {
@@ -1417,7 +1500,7 @@
   };
   svg.addEventListener('click', e => {
     const p = e.target.closest('.part');
-    if (!p) return;
+    if (!p || state.mode === 'swim') return;
     if (state.mode === 'explore') exploreTap(p.dataset.part); else quizTap(p.dataset.part);
   });
 
@@ -1440,6 +1523,8 @@
     'Abby': { color: '#c9adff', pitch: 1.25, rate: 1.02, female: true, slot: 2 },
     'Cole': { color: '#ff9f43', pitch: 1.15, rate: 1.03, slot: 2 },
     'Emmett': { color: '#6cb8ff', pitch: 1.12, rate: 1.0, slot: 1 },
+    'Ms. Bolebrunch (radio)': { color: '#5ecbc4', pitch: 1.02, rate: 0.98, female: true, slot: 0 },
+    'Professor Goo': { color: '#8be36b', pitch: 0.92, rate: 1.0, slot: 3 },
   };
   const DESK_Y = 340;
   const MACH_DESK_Y = 314;
@@ -1621,12 +1706,13 @@
   const q1 = sel => scene.querySelector(sel);
 
   function later(ms, fn) { intro.timers.push(setTimeout(() => { if (!intro.skipped) fn(); }, ms)); }
-  function iwait(ms) {
+  function iwait(ms, ctx) {
+    ctx = ctx || intro;
     return new Promise((res, rej) => {
-      if (intro.skipped) return rej(SKIP);
+      if (ctx.skipped) return rej(SKIP);
       const t = setTimeout(done, ms);
-      function done() { clearTimeout(t); intro.advance = null; intro.cancel = null; res(); }
-      intro.cancel = () => { clearTimeout(t); rej(SKIP); };
+      function done() { clearTimeout(t); ctx.advance = null; ctx.cancel = null; res(); }
+      ctx.cancel = () => { clearTimeout(t); rej(SKIP); };
     });
   }
   let voices = [];
@@ -1703,41 +1789,42 @@
   // Show one line of dialogue: type it out, speak it, then hold. Tapping the scene speeds it up.
   function line(who, text, opts) {
     opts = opts || {};
+    const ctx = opts.ctx || intro, box = ctx.subs || subs;
     return new Promise((res, rej) => {
-      if (intro.skipped) return rej(SKIP);
-      subs.classList.add('on');
+      if (ctx.skipped) return rej(SKIP);
+      box.classList.add('on');
       const sp = SPEAKERS[who] || { color: '#fff' };
-      subs.innerHTML = `<span class="speaker" style="background:${sp.color}">${esc(who)}</span><span id="subs-text"></span><span class="subs-hint">tap to speed up</span>`;
-      const out = $('subs-text');
+      box.innerHTML = `<span class="speaker" style="background:${sp.color}">${esc(who)}</span><span class="subs-text"></span><span class="subs-hint">tap to speed up</span>`;
+      const out = box.querySelector('.subs-text');
       teacherTalking(who === 'Ms. Bolebrunch');
       let spoken = false;
       speak(who, text).then(() => { spoken = true; });
       let i = 0;
       const iv = setInterval(step, 30);
       function step() {
-        if (intro.skipped) { clearInterval(iv); return rej(SKIP); }
+        if (ctx.skipped) { clearInterval(iv); return rej(SKIP); }
         i++;
         out.textContent = text.slice(0, i);
         if (opts.onType) opts.onType(i / text.length);
         if (i >= text.length) { clearInterval(iv); typed(); }
       }
-      intro.finishType = () => { i = text.length - 1; step(); };
+      ctx.finishType = () => { i = text.length - 1; step(); };
       function typed() {
-        intro.finishType = null;
+        ctx.finishType = null;
         const start = Date.now();
         const hold = opts.hold == null ? 900 : opts.hold;
         const poll = setInterval(() => {
-          if (intro.skipped) { clearInterval(poll); return rej(SKIP); }
+          if (ctx.skipped) { clearInterval(poll); return rej(SKIP); }
           const waited = Date.now() - start;
           if ((waited >= hold && spoken) || waited >= hold + 6000) finish();
         }, 60);
         function finish() {
           clearInterval(poll);
-          intro.advance = null;
+          ctx.advance = null;
           if (who === 'Ms. Bolebrunch') teacherTalking(false);
           res();
         }
-        intro.advance = () => { try { speechSynthesis.cancel(); } catch (e) {} spoken = true; finish(); };
+        ctx.advance = () => { try { speechSynthesis.cancel(); } catch (e) {} spoken = true; finish(); };
       }
     });
   }
@@ -1862,9 +1949,9 @@
       q1('#vortex').classList.add('off');
       q1('#machine').classList.remove('active');
       camTo(400, 225, 1);
-      kids('gasp', true, ['maya', 'sam', 'ruby']);
+      kids('gasp', true, ['westley', 'abby', 'cole']);
       await iwait(1300);
-      await line('Class', 'LEO?!', { hold: 600 });
+      await line('Class', 'EMMETT?!', { hold: 600 });
       await line('Ms. Bolebrunch', 'Oh my. Well... it looks like Emmett is going on our field trip a little early!');
       await line('Ms. Bolebrunch', 'Hang on, Emmett! Explore that cell, and we’ll figure out how to get you back!');
       $('flash').classList.add('on');
@@ -1909,6 +1996,526 @@
   $('cine-skip0').onclick = () => { sfx.pop(); finishIntro(); };
   $('cine-skip').onclick = () => { sfx.pop(); finishIntro(); };
   $('replay-intro').onclick = () => { sfx.pop(); resetScene(); showScreen('intro'); };
+
+  // =====================================================================
+  // ================= SHARED: keyboard + Emmett's swim suit =============
+  // =====================================================================
+  const keys = { left: false, right: false, up: false, down: false };
+  const KEYMAP = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right', ArrowUp: 'up', w: 'up', W: 'up', ' ': 'up', ArrowDown: 'down', s: 'down', S: 'down' };
+  function arrivePlaying() { return $('screen-arrive').classList.contains('active') && arr.phase === 'play'; }
+  function swimming() { return $('screen-game').classList.contains('active') && state.mode === 'swim'; }
+  addEventListener('keydown', e => {
+    const k = KEYMAP[e.key];
+    if (!k || e.ctrlKey || e.metaKey || e.altKey) return;
+    const inArrive = arrivePlaying(), inSwim = swimming();
+    if (!inArrive && !inSwim) return;
+    if (inSwim && e.key === ' ') return; // space keeps pressing buttons in the game
+    e.preventDefault();
+    if (k === 'up' && !keys.up) arr.jumpBuf = 0.15;
+    keys[k] = true;
+  });
+  addEventListener('keyup', e => { const k = KEYMAP[e.key]; if (k) keys[k] = false; });
+  addEventListener('blur', () => { Object.keys(keys).forEach(k => { keys[k] = false; }); });
+
+  // Emmett in his Micro-Suit, swim mode. Drawn facing right around 0,0 (about 90 wide).
+  function swimmerMarkup() {
+    const E = KIDS[3];
+    return `<g class="swimmer">
+      <g class="fin f1"><path d="M-30 -5 L-52 -17 L-49 1 Z" fill="#ffd23f" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/></g>
+      <g class="fin f2"><path d="M-30 3 L-52 15 L-49 -3 Z" fill="#ffd23f" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/></g>
+      <rect x="-36" y="-8" width="26" height="16" rx="8" fill="#2ec4b6" stroke="${INK}" stroke-width="3"/>
+      <rect x="-16" y="-24" width="22" height="12" rx="5" fill="#9aa3b5" stroke="${INK}" stroke-width="3"/>
+      <circle cx="-16" cy="-18" r="3" fill="#ff3b3b" stroke="${INK}" stroke-width="2"/>
+      <rect x="-20" y="-14" width="38" height="28" rx="14" fill="#2ec4b6" stroke="${INK}" stroke-width="3.5"/>
+      <path d="M-15 1 H13" stroke="#ffd23f" stroke-width="5" stroke-linecap="round"/>
+      <path d="M4 7 Q16 16 28 11" fill="none" stroke="${INK}" stroke-width="10" stroke-linecap="round"/>
+      <path d="M4 7 Q16 16 28 11" fill="none" stroke="#2ec4b6" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="30" cy="10" r="5" fill="${E.skin}" stroke="${INK}" stroke-width="2.5"/>
+      <circle cx="25" cy="-7" r="12" fill="${E.skin}" stroke="${INK}" stroke-width="3"/>
+      <path d="M13 -9 L12 -19 L17 -15 L19 -23 L23 -16 L28 -22 L29 -15 Q20 -16 13 -9Z" fill="${E.hair}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="30" cy="-8" r="2.8" fill="${INK}"/><circle cx="31" cy="-9" r="1" fill="#fff"/>
+      <path d="M27 -1 Q31 2 34 -1" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="22" cy="-2" rx="3" ry="1.8" fill="#ff4f86" opacity=".45"/>
+      <circle cx="24" cy="-7" r="18.5" fill="#bfeaff" fill-opacity=".28" stroke="${INK}" stroke-width="3"/>
+      <circle cx="24" cy="-7" r="15.5" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2"/>
+      <path d="M14 -19 Q22 -25 32 -21" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="24" cy="-27" r="3.5" fill="#fff36b" stroke="${INK}" stroke-width="2"/>
+    </g>`;
+  }
+
+  // =====================================================================
+  // ================= ARRIVAL: the dark world outside the cell ==========
+  // =====================================================================
+  const arena = $('arena'), pad = $('pad');
+  const arr = { skipped: true, timers: [], advance: null, finishType: null, cancel: null, subs: $('arrive-subs'), raf: 0, phase: 'idle', jumpBuf: 0 };
+  const AW = 2000;                                     // world width
+  const SC = { cx: 2550, cy: 225, r: 1250 };           // the giant cell's outline (a huge circle)
+  const PY = 300;                                      // height of the protein's channel
+  const G = 1500, JUMP = 640, RUN = 240, PS = 0.42;    // physics + player scale
+  const surfX = (y, r) => SC.cx - Math.sqrt(r * r - (y - SC.cy) * (y - SC.cy));
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const LAYERS = { animal: ['membrane'], plant: ['wall', 'membrane'], prokaryote: ['capsule', 'wall', 'membrane'] };
+  const LAYER_W = { capsule: 46, wall: 56, membrane: 36 };
+  const aq = sel => arena.querySelector(sel);
+
+  function layerColors(cell, id) {
+    if (id === 'capsule') return { fill: C.capsule, dark: '#e0c95a' };
+    if (id === 'wall') return cell === 'plant' ? { fill: C.wall, dark: C.wallDark } : { fill: C.bwall, dark: C.bwallDark };
+    return { fill: cell === 'plant' ? C.membraneP : C.membraneA, dark: '#fff' };
+  }
+  const CYTO = { animal: C.cytoA, plant: C.cytoP, prokaryote: C.cytoB };
+
+  function platMarkup(p) {
+    const w = p.w, lab = t => `<text x="${w / 2}" y="60" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="14" fill="#fff" opacity=".65">${t}</text>`;
+    const st = `stroke="${INK}" stroke-width="4" stroke-linejoin="round"`;
+    if (p.kind === 'goo') return `<path d="M0 8 Q0 0 12 0 H${w - 12} Q${w} 0 ${w} 8 Q${w - 14} 46 ${w * 0.62} 54 Q${w * 0.52} 78 ${w * 0.42} 58 Q${w * 0.2} 56 0 8Z" fill="#5a3f8f" ${st}/>
+      <path d="M10 6 H${w - 10}" stroke="#c9adff" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+      <circle cx="${w * 0.3}" cy="22" r="5" fill="#7a5bb5"/><circle cx="${w * 0.7}" cy="28" r="7" fill="#7a5bb5"/><circle cx="${w * 0.5}" cy="40" r="4" fill="#7a5bb5"/>`;
+    if (p.kind === 'sugar') return `<path d="M12 0 H${w - 12} L${w} 17 L${w - 12} 34 H12 L0 17Z" fill="#ffd23f" ${st}/>
+      <path d="M24 9 H${w - 24} L${w - 16} 17 L${w - 24} 25 H24 L16 17Z" fill="none" stroke="#e8a400" stroke-width="3"/>${lab('sugar')}`;
+    if (p.kind === 'water') return `<circle cx="${w / 2 - 28}" cy="26" r="13" fill="#fff" ${st}/><circle cx="${w / 2 + 28}" cy="26" r="13" fill="#fff" ${st}/>
+      <circle cx="${w / 2}" cy="22" r="22" fill="#ff6b6b" ${st}/>${shine(w / 2 - 8, 12, 7, 3.5)}
+      <text x="${w / 2}" y="29" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="18" fill="#fff">O</text>${lab('water')}`;
+    if (p.kind === 'amino') return `<path d="M${w / 6} 18 H${w * 5 / 6}" stroke="${INK}" stroke-width="10" stroke-linecap="round"/>
+      ${[1, 3, 5].map(i => `<circle cx="${w * i / 6}" cy="18" r="18" fill="#8be36b" ${st}/>${shine(w * i / 6 - 6, 9, 6, 3)}`).join('')}${lab('amino acids')}`;
+    if (p.kind === 'fat') return `<ellipse cx="${w / 2}" cy="20" rx="${w / 2}" ry="21" fill="#ff9f43" ${st}/>${shine(w / 2 - 14, 9, 12, 4)}${lab('fat droplet')}`;
+    if (p.kind === 'salt') return `<rect x="0" y="0" width="${w}" height="34" rx="6" fill="#bfeaff" ${st}/><path d="M${w / 2} 4 V30 M6 17 H${w - 6}" stroke="#7fc4e0" stroke-width="3"/>${lab('salt crystal')}`;
+    return '';
+  }
+
+  function arenaMarkup(cell) {
+    let s = `<defs>
+      <radialGradient id="a-bg" cx="80%" cy="45%" r="85%"><stop offset="0" stop-color="#2a1c52"/><stop offset=".55" stop-color="#120c2c"/><stop offset="1" stop-color="#07051a"/></radialGradient>
+      <radialGradient id="a-glow"><stop offset=".9" stop-color="#fff" stop-opacity="0"/><stop offset=".95" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="800" height="450" fill="url(#a-bg)"/>`;
+    // far-away stuff (parallax): other cells' silhouettes and drifting specks
+    s += '<g id="a-far">';
+    [[260, 120, 70], [620, 380, 110], [1100, 90, 55], [40, 400, 60]].forEach(b => { s += `<circle cx="${b[0]}" cy="${b[1]}" r="${b[2]}" fill="#2b2160" opacity=".55"/><circle cx="${b[0] + b[2] * 0.2}" cy="${b[1]}" r="${b[2] * 0.3}" fill="#3a2d78" opacity=".6"/>`; });
+    for (let i = 0; i < 70; i++) s += `<circle class="a-speck" cx="${rnd(0, 1400).toFixed(0)}" cy="${rnd(0, 450).toFixed(0)}" r="${rnd(0.8, 2.6).toFixed(1)}" fill="${pick(['#fff', '#bfeaff', '#ffd9f0', '#fff36b'])}" style="animation-delay:-${rnd(0, 3).toFixed(2)}s"/>`;
+    s += '</g><g id="a-cam">';
+    // the giant cell, as nested bands
+    let r = SC.r;
+    const bands = [];
+    LAYERS[cell].forEach(id => { bands.push({ id, r0: r, r1: r - LAYER_W[id] }); r -= LAYER_W[id]; });
+    arr.bands = bands; arr.innerR = r;
+    const glowCol = layerColors(cell, LAYERS[cell][0]).fill;
+    s += `<circle cx="${SC.cx}" cy="${SC.cy}" r="${SC.r + 70}" fill="none" stroke="${glowCol}" stroke-opacity=".07" stroke-width="140"/>`;
+    s += `<circle cx="${SC.cx}" cy="${SC.cy}" r="${SC.r + 24}" fill="none" stroke="${glowCol}" stroke-opacity=".16" stroke-width="48"/>`;
+    bands.forEach(b => { s += `<circle cx="${SC.cx}" cy="${SC.cy}" r="${b.r0}" fill="${layerColors(cell, b.id).fill}" stroke="${INK}" stroke-width="5"/>`; });
+    s += `<circle cx="${SC.cx}" cy="${SC.cy}" r="${r}" fill="${CYTO[cell]}" stroke="${INK}" stroke-width="4"/>`;
+    bands.forEach(b => {
+      const mid = (b.r0 + b.r1) / 2, col = layerColors(cell, b.id);
+      if (b.id === 'wall') s += `<circle cx="${SC.cx}" cy="${SC.cy}" r="${mid}" fill="none" stroke="${col.dark}" stroke-width="4" stroke-dasharray="22 14" stroke-linecap="round"/>`;
+      if (b.id === 'capsule') s += `<circle cx="${SC.cx}" cy="${SC.cy}" r="${b.r0 - 8}" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="5" stroke-dasharray="3 16" stroke-linecap="round"/>`;
+      if (b.id === 'membrane') {
+        // phospholipid bilayer: heads on both edges, wiggly tails between
+        s += `<circle cx="${SC.cx}" cy="${SC.cy}" r="${mid}" fill="none" stroke="${INK}" stroke-opacity=".25" stroke-width="10" stroke-dasharray="2 9"/>`;
+        [b.r0 - 7, b.r1 + 7].forEach(rr => { s += `<circle cx="${SC.cx}" cy="${SC.cy}" r="${rr}" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width="9" stroke-dasharray="0.1 11" stroke-linecap="round"/>`; });
+      }
+    });
+    // stuff floating inside the cell
+    [[1520, 120, 9], [1620, 260, 6], [1580, 400, 8], [1760, 160, 12], [1840, 330, 7], [1700, 60, 5], [1930, 230, 10]].forEach(d => {
+      s += `<circle class="a-drift" cx="${d[0]}" cy="${d[1]}" r="${d[2]}" fill="${pick(['#ff9fc4', '#8fc6ee', '#a5d98a', '#c9adff'])}" stroke="${INK}" stroke-width="2.5" style="animation-delay:-${rnd(0, 9).toFixed(1)}s"/>`;
+    });
+    // the channel protein: a doorway poking through every layer
+    const outerX = surfX(PY, SC.r) - 80, innerX = surfX(PY, r) + 30;
+    arr.outerX = outerX; arr.innerX = innerX;
+    const pil = (y0) => `<rect x="${outerX}" y="${y0}" width="${innerX - outerX}" height="28" rx="14" fill="#8f5bff" stroke="${INK}" stroke-width="4.5"/>` +
+      `<path d="M${outerX + 14} ${y0 + 8} H${innerX - 14}" stroke="#c9adff" stroke-width="4" stroke-linecap="round" opacity=".8"/>`;
+    s += `<rect id="a-chan" x="${outerX + 6}" y="${PY - 24}" width="${innerX - outerX - 12}" height="48" fill="#6bf3ff"/>`;
+    s += pil(PY - 52) + pil(PY + 24);
+    [[outerX + 6, PY - 38], [outerX + 6, PY + 38]].forEach(c => { s += `<circle cx="${c[0]}" cy="${c[1]}" r="16" fill="#a77bff" stroke="${INK}" stroke-width="4"/>`; });
+    s += `<g class="a-prot-face"><g class="eyes"><circle cx="${outerX + 3}" cy="${PY - 41}" r="3.2" fill="${INK}"/><circle cx="${outerX + 12}" cy="${PY - 41}" r="3.2" fill="${INK}"/></g>
+      <path d="M${outerX + 1} ${PY - 33} Q${outerX + 7.5} ${PY - 28} ${outerX + 14} ${PY - 33}" fill="none" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/></g>`;
+    s += `<text x="${outerX + 30}" y="${PY + 76}" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="14" fill="#fff" opacity=".7">channel protein</text>`;
+    // name tags for each layer (tick when Emmett passes through)
+    bands.forEach((b, i) => {
+      const ty = 56 + i * 42, mid = (b.r0 + b.r1) / 2, bx = surfX(ty, mid), name = info(b.id, cell).name, w = name.length * 8.4 + 44;
+      const tx = surfX(ty, SC.r) - 40 - w;
+      s += `<g class="layer-tag" id="tag-${b.id}"><path d="M${tx + w} ${ty} H${bx}" stroke="#fff" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round"/><circle cx="${bx}" cy="${ty}" r="5" fill="#fff" stroke="${INK}" stroke-width="2.5"/>
+        <rect x="${tx}" y="${ty - 15}" width="${w}" height="30" rx="15" fill="#fff" stroke="${INK}" stroke-width="3"/>
+        <text x="${tx + w / 2}" y="${ty + 6}" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="16" fill="${INK}">${name}<tspan class="tick"> ✓</tspan></text></g>`;
+    });
+    // floating molecule platforms
+    arr.plats = [
+      { kind: 'goo', x0: 40, y0: 340, w: 250 },
+      { kind: 'sugar', x0: 352, y0: 300, w: 96, ay: 22, sp: 1.6 },
+      { kind: 'water', x0: 536, y0: 250, w: 96, ay: 10, sp: 2.2, ph: 1 },
+      { kind: 'amino', x0: 722, y0: 318, w: 124, ax: 55, sp: 1.1 },
+      { kind: 'fat', x0: 936, y0: 268, w: 96, ay: 20, sp: 1.5, ph: 2 },
+      { kind: 'salt', x0: 1094, y0: 222, w: 78, ay: 8, sp: 2, ph: 0.5 },
+      { kind: 'protein', x0: outerX - 10, y0: PY - 52, w: surfX(PY - 52, SC.r) - outerX + 4 },
+    ];
+    arr.plats.forEach((p, i) => {
+      p.x = p.x0; p.y = p.y0; p.dx = 0; p.py = p.y0;
+      if (p.kind !== 'protein') s += `<g id="plat-${i}" transform="translate(${p.x} ${p.y})">${platMarkup(p)}</g>`;
+    });
+    // vortex Emmett pops out of
+    s += `<g class="a-vortex" id="a-vortex" transform="translate(165 70)">
+      <circle class="ring" r="44" fill="none" stroke="#b06bff" stroke-width="9" stroke-dasharray="40 24" stroke-linecap="round"/>
+      <circle class="ring r2" r="28" fill="none" stroke="#3bd5ff" stroke-width="8" stroke-dasharray="26 16" stroke-linecap="round"/>
+      <circle class="ring" r="12" fill="none" stroke="#fff36b" stroke-width="6" stroke-dasharray="12 8" stroke-linecap="round"/></g>`;
+    // Emmett (walking form + swim form)
+    const E = KIDS[3];
+    const leg = (cls, x) => `<g class="leg ${cls}"><rect x="${x}" y="0" width="14" height="30" rx="6" fill="#3d4a7a" stroke="${INK}" stroke-width="4"/><ellipse cx="${x + 7}" cy="32" rx="11" ry="6" fill="#fff" stroke="${INK}" stroke-width="4"/></g>`;
+    s += `<g id="a-player" style="display:none"><g id="a-kid" class="kid">${leg('l1', -20)}${leg('l2', 6)}${kidMarkup(E)}${handsMarkup(E)}</g></g>`;
+    s += `<g id="a-swim" style="display:none">${swimmerMarkup()}</g>`;
+    s += `<g id="a-bubbles"></g>`;
+    s += '</g>';
+    s += `<rect id="a-flash" width="800" height="450" fill="#fff"/>`;
+    return s;
+  }
+
+  // ---------- arrival physics ----------
+  const P = { x: 0, y: 0, vx: 0, vy: 0, face: 1, ground: null, coyote: 0, safe: null, scale: PS, hidden: true, swim: false, walking: false };
+  function stepPlayer(dt) {
+    const ctl = arr.phase === 'play';
+    const dir = ctl ? (keys.right ? 1 : 0) - (keys.left ? 1 : 0) : 0;
+    P.vx += (dir * RUN - P.vx) * Math.min(1, dt * (P.ground ? 14 : 6));
+    if (dir) P.face = dir;
+    arr.jumpBuf -= dt; P.coyote -= dt;
+    if (P.ground) { P.x += P.ground.dx; P.y = P.ground.y; P.coyote = 0.1; }
+    if (ctl && arr.jumpBuf > 0 && (P.ground || P.coyote > 0)) {
+      P.vy = -JUMP; P.ground = null; P.coyote = 0; arr.jumpBuf = 0;
+      tone(380, 0.16, 'triangle', 0.08, 0, 760);
+    }
+    P.x += P.vx * dt;
+    P.x = Math.max(20, P.x);
+    const wallX = surfX(clamp(P.y - 30, -200, 650), SC.r) - 14;
+    if (P.x > wallX) { P.x = wallX; P.vx = 0; }
+    if (P.ground && (P.x < P.ground.x - 10 || P.x > P.ground.x + P.ground.w + 10)) P.ground = null;
+    if (!P.ground) {
+      const prevY = P.y;
+      // let go of jump early for a little hop
+      P.vy = Math.min(P.vy + G * dt * (P.vy < 0 && !keys.up && ctl ? 2.2 : 1), 950);
+      P.y += P.vy * dt;
+      if (P.vy >= 0) for (const g of arr.plats) {
+        if (prevY <= g.py + 2 && P.y >= g.y && P.x >= g.x - 10 && P.x <= g.x + g.w + 10) {
+          P.y = g.y; P.vy = 0; P.ground = g; P.safe = g;
+          if (ctl) tone(180, 0.08, 'sine', 0.1);
+          if (g.kind === 'protein' && ctl && arr.onArrive) arr.onArrive();
+          break;
+        }
+      }
+      if (P.y > 640) respawn();
+    }
+    P.walking = !!P.ground && Math.abs(P.vx) > 30;
+  }
+  function respawn() {
+    const g = P.safe || arr.plats[0];
+    P.x = g.x + g.w / 2; P.y = g.y - 160; P.vx = 0; P.vy = 0; P.ground = null;
+    sfx.wrong();
+    if (arr.phase === 'play') playHint('Whoops! You floated away. Try again: hop from molecule to molecule!');
+  }
+  function playHint(text) {
+    arr.subs.classList.add('on');
+    arr.subs.innerHTML = `<span class="speaker" style="background:#ffd23f">Goal</span><span>${esc(text)}</span>`;
+  }
+  function renderPlayer() {
+    const pl = aq('#a-player'), sw = aq('#a-swim');
+    pl.style.display = P.hidden || P.swim ? 'none' : '';
+    sw.style.display = P.hidden || !P.swim ? 'none' : '';
+    if (P.swim) sw.setAttribute('transform', `translate(${P.x.toFixed(1)} ${P.y.toFixed(1)}) scale(${0.9 * P.face} 0.9)`);
+    else pl.setAttribute('transform', `translate(${P.x.toFixed(1)} ${P.y.toFixed(1)}) scale(${(P.scale * P.face).toFixed(3)} ${P.scale.toFixed(3)}) translate(0 -38)`);
+    const k = aq('#a-kid');
+    k.classList.toggle('walking', P.walking);
+    k.classList.toggle('airborne', !P.ground && !arr.manual);
+  }
+  function arrLoop(ts) {
+    if (arr.skipped) return;
+    const dt = Math.min(0.05, (ts - (arr.last || ts)) / 1000);
+    arr.last = ts; arr.t += dt;
+    arr.plats.forEach((p, i) => {
+      const nx = p.x0 + (p.ax || 0) * Math.sin(arr.t * (p.sp || 1) + (p.ph || 0));
+      const ny = p.y0 + (p.ay || 0) * Math.sin(arr.t * (p.sp || 1) + (p.ph || 0));
+      p.dx = nx - p.x; p.py = p.y; p.x = nx; p.y = ny;
+      if (p.kind !== 'protein') aq('#plat-' + i).setAttribute('transform', `translate(${nx.toFixed(1)} ${ny.toFixed(1)})`);
+    });
+    if (!arr.manual) stepPlayer(dt);
+    const tx = arr.camFollow ? clamp(P.x - 330, 0, AW - 800) : arr.camTarget;
+    arr.cam += (tx - arr.cam) * Math.min(1, dt * (arr.camFollow ? 5 : 1.4));
+    aq('#a-cam').setAttribute('transform', `translate(${(-arr.cam).toFixed(1)} 0)`);
+    aq('#a-far').setAttribute('transform', `translate(${(-arr.cam * 0.3).toFixed(1)} 0)`);
+    renderPlayer();
+    arr.raf = requestAnimationFrame(arrLoop);
+  }
+  function tween(ms, fn) {
+    return new Promise((res, rej) => {
+      if (arr.skipped) return rej(SKIP);
+      const t0 = performance.now();
+      (function f(now) {
+        if (arr.skipped) return rej(SKIP);
+        const k = Math.min(1, (now - t0) / ms);
+        fn(k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2, k);
+        if (k < 1) requestAnimationFrame(f); else res();
+      })(t0);
+    });
+  }
+  function aFlash() { const f = aq('#a-flash'); f.classList.add('on'); setTimeout(() => f.classList.remove('on'), 160); }
+  function puffBubbles(x, y, n) {
+    const g = aq('#a-bubbles');
+    for (let i = 0; i < n; i++) {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', (x + rnd(-30, 30)).toFixed(0)); c.setAttribute('cy', (y + rnd(-20, 20)).toFixed(0)); c.setAttribute('r', rnd(3, 7).toFixed(1));
+      c.setAttribute('fill', '#fff'); c.setAttribute('fill-opacity', '.7'); c.setAttribute('stroke', INK); c.setAttribute('stroke-width', '1.5');
+      c.setAttribute('class', 'bubl'); c.style.animationDelay = rnd(0, 0.5).toFixed(2) + 's';
+      g.appendChild(c); setTimeout(() => c.remove(), 1800);
+    }
+  }
+
+  // ---------- the arrival story ----------
+  async function playArrival(cell) {
+    arr.cell = cell;
+    arena.innerHTML = arenaMarkup(cell);
+    Object.assign(P, { x: 165, y: 60, vx: 0, vy: 0, face: 1, ground: null, safe: arr.plats[0], scale: PS, hidden: true, swim: false });
+    Object.assign(arr, { skipped: false, phase: 'cine', manual: true, camFollow: false, camTarget: 0, cam: 0, t: 0, last: 0, jumpBuf: 0, onArrive: null });
+    arr.subs.classList.remove('on'); arr.subs.innerHTML = '';
+    pad.classList.remove('on');
+    $('arrive').classList.add('playing');
+    showScreen('arrive');
+    arr.raf = requestAnimationFrame(arrLoop);
+    const ctx = { ctx: arr };
+    const passing = LAYERS[cell].map(id => info(id, cell).name);
+    const through = passing.length > 1 ? passing.slice(0, -1).join(', ') + ' and the ' + passing[passing.length - 1] : passing[0];
+    try {
+      await iwait(400, arr);
+      aq('#a-vortex').classList.add('on');
+      tone(1300, 0.9, 'triangle', 0.08, 0, 200);
+      await iwait(600, arr);
+      P.hidden = false; arr.manual = false;          // Emmett tumbles out and lands
+      await iwait(900, arr);
+      aq('#a-vortex').classList.remove('on');
+      await line('Emmett', 'Oof! Wh-where am I? It’s so dark down here...', ctx);
+      aq('#a-kid').classList.add('wow');
+      arr.camTarget = 880;                            // look over at the glowing cell
+      await iwait(2200, arr);
+      await line('Emmett', 'Whoa... is that a CELL?! It’s GIGANTIC!', ctx);
+      LAYERS[cell].forEach((id, i) => later2(i * 400, () => { aq('#tag-' + id).classList.add('on'); sfx.pop(); }));
+      await line('Ms. Bolebrunch (radio)', 'Emmett! Can you hear me? It’s Ms. Bolebrunch, talking to you through the Micro-Explorer!', ctx);
+      await line('Ms. Bolebrunch (radio)', `To get inside, you need to get through the ${through}. They don’t let just anything in!`, ctx);
+      await line('Ms. Bolebrunch (radio)', 'See that purple protein poking out? It’s a channel protein, a doorway into the cell. Hop across those floating molecules and jump onto it!', ctx);
+      aq('#a-kid').classList.remove('wow');
+      arr.camFollow = true;
+      arr.phase = 'play';
+      pad.classList.add('on');
+      playHint('Hop across the floating molecules and jump onto the purple channel protein!');
+      await new Promise((res, rej) => { arr.onArrive = res; arr.cancel = () => rej(SKIP); });
+      arr.onArrive = null; arr.cancel = null;
+      arr.phase = 'cine'; arr.manual = true; P.walking = false; P.vx = 0;
+      Object.keys(keys).forEach(k => { keys[k] = false; });
+      pad.classList.remove('on');
+      sfx.right();
+      await line('Emmett', 'Made it! Um... hi there, little protein!', ctx);
+      aq('#a-chan').classList.add('open');
+      tone(200, 1.2, 'sine', 0.08, 0, 600);
+      await line('Ms. Bolebrunch (radio)', 'Hold on tight! The channel is opening up. Here you go!', Object.assign({ hold: 200 }, ctx));
+      // slip down into the channel's mouth...
+      const x0 = P.x, y0 = P.y, mx = arr.outerX - 6, my = PY + 20;
+      await tween(700, k => { P.x = x0 + (mx - x0) * k; P.y = y0 + (my - y0) * k - Math.sin(k * Math.PI) * 50; P.scale = PS - 0.12 * k; });
+      // ...and get pulled through every layer
+      const marks = arr.bands.map(b => ({ id: b.id, x: surfX(PY, b.r1), done: false }));
+      const endX = arr.innerX + 70;
+      await tween(3200, k => {
+        P.x = mx + (endX - mx) * k;
+        marks.forEach(m => { if (!m.done && P.x > m.x) { m.done = true; aq('#tag-' + m.id).classList.add('done'); sfx.newFind(); } });
+      });
+      // suit up!
+      aFlash(); sfx.fanfare();
+      P.swim = true; P.y = PY; P.face = 1;
+      puffBubbles(P.x, P.y, 14);
+      await tween(900, k => { P.x = endX + 40 * k; P.y = PY - 30 * k; });
+      await line('Emmett', 'Whoa, my suit just changed! Flippers! A bubble helmet!', ctx);
+      await line('Ms. Bolebrunch (radio)', 'That’s the Micro-Suit’s SWIM MODE! The inside of a cell is mostly water, so swim around and explore. Professor Goo will tell you about everything you find!', ctx);
+      await iwait(300, arr);
+    } catch (e) {
+      if (e === SKIP) return;
+      throw e;
+    }
+    finishArrival(true);
+  }
+  function later2(ms, fn) { arr.timers.push(setTimeout(() => { if (!arr.skipped) fn(); }, ms)); }
+  function finishArrival(done) {
+    if (arr.skipped) return;
+    arr.skipped = true;
+    arr.phase = 'idle';
+    arr.timers.forEach(clearTimeout); arr.timers = [];
+    if (arr.cancel) { try { arr.cancel(); } catch (e) {} }
+    arr.advance = arr.finishType = arr.cancel = arr.onArrive = null;
+    try { speechSynthesis.cancel(); } catch (e) {}
+    cancelAnimationFrame(arr.raf);
+    Object.keys(keys).forEach(k => { keys[k] = false; });
+    $('arrive').classList.remove('playing');
+    pad.classList.remove('on');
+    const entered = done ? LAYERS[arr.cell].filter(id => CELLS[arr.cell].parts.includes(id) && !state.found[arr.cell].has(id)) : [];
+    startGame(arr.cell, 'swim', entered);
+    const fl = $('flash');
+    fl.classList.add('on');
+    setTimeout(() => fl.classList.remove('on'), 60);
+  }
+  $('arrive-skip').onclick = () => { sfx.pop(); finishArrival(false); };
+  $('arrive').addEventListener('click', e => {
+    if (arr.skipped || e.target.closest('button')) return;
+    if (arr.finishType) arr.finishType(); else if (arr.advance) arr.advance();
+  });
+  arr.subs.addEventListener('click', () => {
+    if (arr.skipped) return;
+    if (arr.finishType) arr.finishType(); else if (arr.advance) arr.advance();
+  });
+  pad.querySelectorAll('[data-hold]').forEach(b => {
+    const k = b.dataset.hold;
+    const on = e => { e.preventDefault(); if (k === 'up') arr.jumpBuf = 0.15; keys[k] = true; b.classList.add('held'); try { b.setPointerCapture(e.pointerId); } catch (er) {} };
+    const off = () => { keys[k] = false; b.classList.remove('held'); };
+    b.addEventListener('pointerdown', on);
+    b.addEventListener('pointerup', off);
+    b.addEventListener('pointercancel', off);
+    b.addEventListener('lostpointercapture', off);
+    b.addEventListener('contextmenu', e => e.preventDefault());
+  });
+
+  // =====================================================================
+  // ================= SWIM MODE: swim around inside the cell ============
+  // =====================================================================
+  const inRR = (x, y, x0, y0, x1, y1, r) => {
+    if (x < x0 || x > x1 || y < y0 || y > y1) return false;
+    const cx = clamp(x, x0 + r, x1 - r), cy = clamp(y, y0 + r, y1 - r);
+    return (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r;
+  };
+  // Where Emmett's middle may go (just inside the membrane), how big he is, how far we zoom, where he starts.
+  const SWIM = {
+    animal: { inside: (x, y) => ((x - 400) / 326) ** 2 + ((y - 300) / 234) ** 2 <= 1, size: 0.65, zoom: 2, start: [250, 250] },
+    plant: { inside: (x, y) => inRR(x, y, 102, 86, 698, 514, 20), size: 0.65, zoom: 2, start: [124, 290] },
+    prokaryote: { inside: (x, y) => inRR(x, y, 224, 209, 696, 391, 91), size: 0.5, zoom: 2.3, start: [300, 300] },
+  };
+  const swim = { x: 0, y: 0, vx: 0, vy: 0, face: 1, ang: 0, cell: null, raf: 0, last: 0, frame: 0, cur: null, since: 0, fired: false, bubbleT: 0, pointer: null, bumpT: 0 };
+  const NS = 'http://www.w3.org/2000/svg';
+  function swimLayerMarkup() {
+    return `<g id="swim-bubbles" pointer-events="none"></g><g id="swim-me" pointer-events="none">${swimmerMarkup()}</g>`;
+  }
+  function initSwim() {
+    const S = SWIM[state.cell];
+    if (swim.cell !== state.cell) {
+      swim.cell = state.cell;
+      swim.x = S.start[0]; swim.y = S.start[1]; swim.vx = swim.vy = 0; swim.face = 1; swim.ang = 0;
+    }
+    swim.cur = null; swim.fired = false; swim.pointer = null; swim.armed = false;
+    renderSwim();
+    if (!swim.raf) { swim.last = 0; swim.raf = requestAnimationFrame(swimLoop); }
+  }
+  function swimWelcome(entered) {
+    const c = CELLS[state.cell];
+    const names = (entered || []).map(id => `<b>${esc(info(id).name)}</b>`);
+    const list = names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : names[0];
+    setBubble(`<span class="kind-tag">${c.kind}</span>` +
+      (names.length ? `<p>You made it through the ${list}! ${names.length > 1 ? 'They’re' : 'It’s'} already in your discoveries.</p>` : '') +
+      `<p>You’re swimming inside the <b>${c.name}</b>! Swim up to any part and I’ll tell you all about it.</p>` +
+      `<p style="opacity:.7;font-size:.9rem">Swim with the <b>arrow keys</b> (or WASD), or press and hold where you want to go.</p>`);
+  }
+  function svgPoint(x, y, toScreen) {
+    const m = svg.getScreenCTM();
+    if (!m) return null;
+    const p = svg.createSVGPoint(); p.x = x; p.y = y;
+    return p.matrixTransform(toScreen ? m : m.inverse());
+  }
+  function partAt(x, y) {
+    const sp = svgPoint(x, y, true);
+    if (!sp) return null;
+    const r = svg.getBoundingClientRect();
+    if (sp.x < r.left || sp.x > r.right || sp.y < r.top || sp.y > r.bottom) return null;
+    const el = document.elementFromPoint(sp.x, sp.y);
+    if (!el || !svg.contains(el)) return null;
+    const p = el.closest('.part');
+    return p ? p.dataset.part : null;
+  }
+  function toast(id, isNew) {
+    const t = $('swim-toast');
+    t.innerHTML = esc(info(id).name) + (isNew ? '<span class="new-badge">NEW!</span>' : '');
+    t.classList.add('on');
+    clearTimeout(toast.t);
+    toast.t = setTimeout(() => t.classList.remove('on'), 1800);
+  }
+  function swimTouch(id) {
+    const isNew = !state.found[state.cell].has(id);
+    // drifting through open jelly shouldn't keep re-explaining the cytoplasm
+    if (!isNew && (id === 'cytoplasm' || id === state.selected)) return;
+    exploreTap(id);
+    toast(id, isNew);
+    const p = info(id);
+    speak('Professor Goo', (isNew ? 'Ooh, you found the ' : 'That’s the ') + p.name + '! ' + p.job);
+  }
+  function renderSwim() {
+    const S = SWIM[state.cell];
+    const me = svg.querySelector('#swim-me');
+    if (me) me.setAttribute('transform', `translate(${swim.x.toFixed(1)} ${swim.y.toFixed(1)}) scale(${(S.size * swim.face).toFixed(2)} ${S.size}) rotate(${swim.ang.toFixed(1)})`);
+    const w = 800 / S.zoom, h = 600 / S.zoom;
+    const vx = clamp(swim.x - w / 2, -30, 830 - w), vy = clamp(swim.y - h / 2, -30, 630 - h);
+    svg.setAttribute('viewBox', `${vx.toFixed(1)} ${vy.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`);
+  }
+  function swimLoop(ts) {
+    if (!swimming()) { swim.raf = 0; return; }
+    const dt = Math.min(0.05, (ts - (swim.last || ts)) / 1000);
+    swim.last = ts;
+    const S = SWIM[state.cell];
+    let dx = (keys.right ? 1 : 0) - (keys.left ? 1 : 0), dy = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
+    if (!dx && !dy && swim.pointer) {
+      const t = svgPoint(swim.pointer[0], swim.pointer[1]);
+      if (t) { const ddx = t.x - swim.x, ddy = t.y - swim.y, d = Math.hypot(ddx, ddy); if (d > 6) { dx = ddx / d; dy = ddy / d; } }
+    }
+    const dl = Math.hypot(dx, dy);
+    if (dl) { dx /= dl; dy /= dl; }
+    const ACC = 700, MAX = 170;
+    swim.vx += dx * ACC * dt; swim.vy += dy * ACC * dt;
+    const drag = Math.exp(-2.8 * dt);
+    swim.vx *= drag; swim.vy *= drag;
+    const sp = Math.hypot(swim.vx, swim.vy);
+    if (sp > MAX) { swim.vx *= MAX / sp; swim.vy *= MAX / sp; }
+    // move, sliding along the membrane when we bump it
+    const nx = swim.x + swim.vx * dt, ny = swim.y + swim.vy * dt;
+    let bumped = false;
+    if (S.inside(nx, ny)) { swim.x = nx; swim.y = ny; }
+    else if (S.inside(nx, swim.y)) { swim.x = nx; swim.vy *= 0.3; bumped = true; }
+    else if (S.inside(swim.x, ny)) { swim.y = ny; swim.vx *= 0.3; bumped = true; }
+    else { swim.vx *= -0.3; swim.vy *= -0.3; bumped = true; }
+    swim.bumpT -= dt;
+    if (bumped && sp > 90 && swim.bumpT <= 0) { swim.bumpT = 0.4; tone(160, 0.12, 'sine', 0.08, 0, 260); }
+    if (Math.abs(swim.vx) > 8) swim.face = swim.vx > 0 ? 1 : -1;
+    const target = sp > 15 ? clamp(Math.atan2(swim.vy, Math.abs(swim.vx)) * 180 / Math.PI, -40, 40) : 0;
+    swim.ang += (target - swim.ang) * Math.min(1, dt * 6);
+    // bubbles trail
+    swim.bubbleT -= dt;
+    if (sp > 40 && swim.bubbleT <= 0) {
+      swim.bubbleT = 0.16;
+      const g = svg.querySelector('#swim-bubbles');
+      if (g) {
+        const c = document.createElementNS(NS, 'circle');
+        c.setAttribute('cx', (swim.x - swim.face * 22 * S.size * 2 + rnd(-3, 3)).toFixed(1));
+        c.setAttribute('cy', (swim.y + rnd(-4, 4)).toFixed(1));
+        c.setAttribute('r', rnd(1.8, 3.6).toFixed(1));
+        c.setAttribute('fill', '#fff'); c.setAttribute('fill-opacity', '.75'); c.setAttribute('stroke', INK); c.setAttribute('stroke-width', '1');
+        c.setAttribute('class', 'bubl');
+        g.appendChild(c); setTimeout(() => c.remove(), 1150);
+      }
+    }
+    renderSwim();
+    // what is Emmett's helmet touching?
+    if (sp > 30) swim.armed = true; // don't interrupt the welcome until Emmett starts swimming
+    if (swim.armed && ++swim.frame % 3 === 0) {
+      const a = swim.ang * Math.PI / 180, reach = 40 * S.size;
+      const id = partAt(swim.x + swim.face * Math.cos(a) * reach, swim.y + Math.sin(a) * reach);
+      if (id !== swim.cur) { swim.cur = id; swim.since = ts; swim.fired = false; }
+      else if (id && !swim.fired && ts - swim.since > 120) { swim.fired = true; swimTouch(id); }
+    }
+    swim.raf = requestAnimationFrame(swimLoop);
+  }
+  svg.addEventListener('pointerdown', e => {
+    if (state.mode !== 'swim') return;
+    e.preventDefault();
+    swim.pointer = [e.clientX, e.clientY];
+    try { svg.setPointerCapture(e.pointerId); } catch (er) {}
+  });
+  svg.addEventListener('pointermove', e => { if (swim.pointer) swim.pointer = [e.clientX, e.clientY]; });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => svg.addEventListener(n, () => { swim.pointer = null; }));
+
   resetScene();
 
   renderTitle();
