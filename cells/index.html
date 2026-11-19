@@ -317,6 +317,128 @@
 
   #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
 
+
+  /* ---------- intro cinematic ---------- */
+  .intro-wrap { max-width: 980px; margin: 0 auto; padding: 14px 16px 40px; }
+  .cine {
+    position: relative;
+    border: 4px solid var(--ink);
+    border-radius: 26px;
+    box-shadow: 0 9px 0 var(--ink);
+    overflow: hidden;
+    background: #ffe7b3;
+    cursor: pointer;
+  }
+  #scene { display: block; width: 100%; height: auto; }
+  #cam { transition: transform 1.3s cubic-bezier(.6,0,.3,1); }
+  .cine-start {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    background: rgba(43,22,64,0.55);
+    cursor: default;
+    text-align: center;
+    padding: 16px;
+  }
+  .cine-start.hidden { display: none; }
+  .cine-kicker { color: #fff; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; font-size: 0.95rem; }
+  .cine-title {
+    font-size: clamp(2rem, 7vw, 3.6rem); font-weight: 800; line-height: 1;
+    color: var(--yellow);
+    -webkit-text-stroke: 7px var(--ink); paint-order: stroke fill;
+    text-shadow: 0 6px 0 var(--ink);
+    margin-bottom: 8px;
+  }
+  .btn.big { font-size: 1.25rem; padding: 10px 26px; }
+  .cine-skip {
+    position: absolute; top: 12px; right: 12px;
+    padding: 4px 14px; font-size: 0.9rem;
+    display: none;
+  }
+  .cine.playing .cine-skip { display: inline-flex; }
+  .subs {
+    position: relative;
+    margin-top: 18px;
+    min-height: 92px;
+    padding: 14px 18px 12px;
+    background: #fff;
+    border: 3px solid var(--ink);
+    border-radius: 20px;
+    box-shadow: 0 6px 0 var(--ink);
+    font-size: 1.2rem; font-weight: 700; line-height: 1.35;
+    visibility: hidden;
+  }
+  .subs.on { visibility: visible; }
+  .subs .speaker {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 0 12px;
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    font-weight: 800; font-size: 0.95rem;
+    vertical-align: 2px;
+  }
+  .subs-hint { position: absolute; right: 14px; bottom: 4px; font-size: 0.75rem; opacity: 0.45; font-weight: 700; }
+  #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 60; transition: opacity 0.6s ease; }
+  #flash.on { opacity: 1; }
+  .title-actions { margin-top: 22px; }
+
+  /* scene animation */
+  .kid .hop, .kid-hands .hop { transform-box: fill-box; transform-origin: bottom center; }
+  .kid.cheer .hop, .kid-hands.cheer .hop { animation: cheer 0.45s ease-in-out infinite alternate; }
+  @keyframes cheer { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+  .m-o { display: none; }
+  .kid.gasp .m-o, .kid.wow .m-o { display: inline; }
+  .kid.gasp .m-smile, .kid.wow .m-smile { display: none; }
+  .yay { opacity: 0; transform-box: fill-box; transform-origin: center bottom; transform: scale(0.3); transition: opacity 0.2s ease, transform 0.25s cubic-bezier(.3,1.6,.5,1); }
+  .yay.on { opacity: 1; transform: scale(1); }
+  .t-talk { display: none; }
+  .teacher.talking .t-talk { display: inline; }
+  .teacher.talking .t-smile { display: none; }
+  .t-talk { transform-box: fill-box; transform-origin: center; animation: talk 0.22s ease-in-out infinite alternate; }
+  @keyframes talk { from { transform: scaleY(0.35); } to { transform: scaleY(1); } }
+  .arm-up { display: none; }
+  .teacher.holding .arm-up { display: inline; }
+  .teacher.holding .arm-down { display: none; }
+  .board-part { opacity: 0; transition: opacity 0.6s ease; }
+  .board-part.on { opacity: 1; }
+  #mach-pos { transition: transform 0.9s ease-in-out, opacity 0.3s ease; opacity: 0; }
+  #mach-pos.on { opacity: 1; }
+  #mach-hop.hop { animation: mach-hop 0.9s ease-in-out; }
+  @keyframes mach-hop { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-46px); } }
+  #mach-shake { transform-box: fill-box; transform-origin: center; }
+  .machine.active #mach-shake { animation: mach-shake 0.08s linear infinite; }
+  @keyframes mach-shake { 0% { transform: translate(-1.5px, 0) rotate(-2deg); } 50% { transform: translate(1.5px, -1px) rotate(2deg); } 100% { transform: translate(-1px, 1px) rotate(-1deg); } }
+  .mlight { animation: mlight 1.2s steps(2) infinite; }
+  .machine.active .mlight { animation-duration: 0.15s; }
+  @keyframes mlight { 0% { fill: #6bff8a; } 50% { fill: #1f8a3a; } }
+  .machine.active .mscreen { animation: mscreen 0.3s linear infinite; }
+  @keyframes mscreen { 0% { fill: #ff3bd5; } 33% { fill: #3bd5ff; } 66% { fill: #ffe53b; } }
+  .machine.pressed .mbtn { transform-box: fill-box; transform-origin: bottom center; transform: scaleY(0.6); filter: drop-shadow(0 0 6px #ff3b3b); }
+  #leo-hand { transition: none; }
+  #leo-hand.press { animation: press 0.7s ease-in-out forwards; }
+  @keyframes press {
+    0% { transform: translate(0, 0); }
+    55% { transform: translate(-8px, -78px); }
+    80% { transform: translate(-8px, -60px); }
+    100% { transform: translate(-8px, -62px); }
+  }
+  .leo-spin { transform-box: view-box; transform-origin: 690px 290px; }
+  .leo-spin.swept { animation: swept 1.7s cubic-bezier(.5,0,.8,.4) forwards; }
+  @keyframes swept {
+    0% { transform: translate(0, 0) rotate(0) scale(1); }
+    25% { transform: translate(0, -10px) rotate(-30deg) scale(1.05); }
+    100% { transform: translate(0, 24px) rotate(1080deg) scale(0); }
+  }
+  #vortex { opacity: 0; transition: opacity 0.4s ease; }
+  #vortex.on { opacity: 1; }
+  #vortex .ring { transform-box: fill-box; transform-origin: center; animation: spin 1s linear infinite; }
+  #vortex .ring.r2 { animation-duration: 0.7s; animation-direction: reverse; }
+  #vortex .ring.r3 { animation-duration: 1.4s; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #vortex-grow { transform-box: fill-box; transform-origin: center; transform: scale(0.1); transition: transform 1.2s ease-out; }
+  #vortex.on #vortex-grow { transform: scale(1); }
+  #vortex.off #vortex-grow { transform: scale(0); transition-duration: 0.6s; }
+
   @media (max-width: 900px) {
     .game-grid { grid-template-columns: minmax(0, 1fr); }
   }
@@ -327,6 +449,9 @@
     .stage { padding: 6px; border-radius: 22px; }
     .quiz-banner { font-size: 1rem; }
     .topbar .crumb { display: none; }
+    .subs { font-size: 1rem; min-height: 80px; }
+    .cine-start { gap: 8px; }
+    .btn.big { font-size: 1.05rem; padding: 8px 18px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .bob, .eyes, .floaty, .title-mascot, .part .fx { animation: none !important; }
@@ -340,11 +465,27 @@
 </header>
 
 <!-- ============ TITLE SCREEN ============ -->
-<section class="screen active" id="screen-title">
+<section class="screen active" id="screen-intro">
+  <div class="intro-wrap">
+    <div class="cine" id="cine">
+      <svg id="scene" viewBox="0 0 800 450" role="img" aria-label="Cartoon classroom: Ms. Rivera's science class"></svg>
+      <div class="cine-start" id="cine-start">
+        <div class="cine-kicker">Exploring Cells &middot; Chapter 1</div>
+        <div class="cine-title">The Field Trip</div>
+        <button class="btn primary big" id="cine-play">&#9654; Play the story</button>
+        <button class="btn" id="cine-skip0">Skip to the game</button>
+      </div>
+      <button class="btn cine-skip" id="cine-skip">Skip &#9656;&#9656;</button>
+    </div>
+    <div class="subs" id="subs" aria-live="polite"></div>
+  </div>
+</section>
+
+<section class="screen" id="screen-title">
   <div class="title-wrap">
     <svg class="title-mascot" id="title-mascot" viewBox="0 0 120 120" aria-hidden="true"></svg>
     <h1 class="big-title"><span class="t1">Exploring</span> <span class="t2">Cells</span></h1>
-    <div class="intro-bubble">Hi, I'm <b>Professor Goo</b>! Every living thing is made of tiny cells. Pick a cell and let's peek inside!</div>
+    <div class="intro-bubble">Whoa, a visitor! I'm <b>Professor Goo</b>. That machine shrank you way down, Leo &mdash; you've landed inside the world of cells! Every living thing is made of them. Pick one and let's explore!</div>
     <div class="pick-row">
       <button class="pick-card" data-pick="animal">
         <svg viewBox="0 0 800 600" id="preview-animal" aria-hidden="true"></svg>
@@ -359,6 +500,7 @@
         <span class="pick-progress" id="pp-plant"></span>
       </button>
     </div>
+    <div class="title-actions"><button class="btn" id="replay-intro">&#9654; Watch the story again</button></div>
   </div>
 </section>
 
@@ -394,6 +536,7 @@
 </section>
 
 <canvas id="confetti"></canvas>
+<div id="flash"></div>
 
 <script>
 (function(){
@@ -1089,6 +1232,450 @@
     if (!p) return;
     if (state.mode === 'explore') exploreTap(p.dataset.part); else quizTap(p.dataset.part);
   });
+
+
+  // =====================================================================
+  // ================= INTRO CINEMATIC: "The Field Trip" =================
+  // =====================================================================
+  const KIDS = [
+    { id: 'maya', name: 'Maya', x: 330, skin: '#8d5524', hair: '#1f130c', style: 'puffs', shirt: '#ffd23f' },
+    { id: 'sam', name: 'Sam', x: 450, skin: '#ffd9b8', hair: '#f4c542', style: 'side', shirt: '#ff6b6b', glasses: true },
+    { id: 'ruby', name: 'Ruby', x: 570, skin: '#e8a978', hair: '#e8641c', style: 'long', shirt: '#a77bff' },
+    { id: 'leo', name: 'Leo', x: 690, skin: '#f6c891', hair: '#6b3a1e', style: 'spiky', shirt: '#4d9bff', hoodie: true, freckles: true },
+  ];
+  const SPEAKERS = {
+    'Ms. Rivera': { color: '#5ecbc4', pitch: 1.15, rate: 1.0, female: true },
+    'Class': { color: '#ffd23f', pitch: 1.7, rate: 1.1 },
+    'Maya': { color: '#ff9f43', pitch: 1.6, rate: 1.1, female: true },
+    'Sam': { color: '#ff6b6b', pitch: 1.5, rate: 1.1 },
+    'Ruby': { color: '#c9adff', pitch: 1.7, rate: 1.1, female: true },
+    'Leo': { color: '#6cb8ff', pitch: 1.45, rate: 1.05 },
+  };
+  const DESK_Y = 340;
+  const MACH_DESK_Y = 314;
+  const MACH_TEACHER = [180, 194];
+
+  function kidMarkup(k) {
+    const S = k.skin, H = k.hair;
+    let hairBack = '', hairFront = '';
+    if (k.style === 'puffs') {
+      hairBack = `<circle cx="-32" cy="-122" r="17" fill="${H}" stroke="${INK}" stroke-width="4"/><circle cx="32" cy="-122" r="17" fill="${H}" stroke="${INK}" stroke-width="4"/>`;
+      hairFront = `<path d="M-32 -102 Q-32 -133 0 -133 Q32 -133 32 -102 Q16 -117 0 -115 Q-16 -117 -32 -102Z" fill="${H}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`;
+    } else if (k.style === 'side') {
+      hairFront = `<path d="M-33 -98 Q-36 -135 2 -134 Q36 -133 33 -100 Q24 -120 -4 -113 Q-22 -110 -33 -98Z" fill="${H}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`;
+    } else if (k.style === 'long') {
+      hairBack = `<path d="M-37 -104 Q-44 -62 -32 -56 L32 -56 Q44 -62 37 -104 Z" fill="${H}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`;
+      hairFront = `<path d="M-34 -96 Q-36 -134 0 -134 Q36 -134 34 -96 Q30 -116 10 -118 Q-2 -108 -18 -116 Q-30 -112 -34 -96Z" fill="${H}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`;
+    } else {
+      hairFront = `<path d="M-33 -98 L-38 -122 L-23 -117 L-20 -140 L-6 -124 L4 -145 L13 -123 L28 -136 L25 -115 L39 -117 L33 -98 Q0 -116 -33 -98Z" fill="${H}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`;
+    }
+    const glasses = k.glasses ? `<g fill="none" stroke="${INK}" stroke-width="3"><circle cx="-11" cy="-98" r="10"/><circle cx="11" cy="-98" r="10"/><path d="M-1 -98 h2"/></g>` : '';
+    const freckles = k.freckles ? `<g fill="#c9783f"><circle cx="-20" cy="-88" r="1.6"/><circle cx="-16" cy="-85" r="1.6"/><circle cx="-23" cy="-84" r="1.6"/><circle cx="20" cy="-88" r="1.6"/><circle cx="16" cy="-85" r="1.6"/><circle cx="23" cy="-84" r="1.6"/></g>` : '';
+    const hood = k.hoodie ? `<path d="M-24 -66 Q0 -54 24 -66" fill="none" stroke="#2f6fd0" stroke-width="7" stroke-linecap="round"/><path d="M-7 -60 v18 M7 -60 v18" stroke="#fff" stroke-width="3" stroke-linecap="round"/>` : '';
+    return `<g class="hop">
+      <rect x="-33" y="-70" width="66" height="76" rx="24" fill="${k.shirt}" stroke="${INK}" stroke-width="4"/>
+      ${hood}
+      ${hairBack}
+      <circle cx="0" cy="-98" r="32" fill="${S}" stroke="${INK}" stroke-width="4"/>
+      <circle cx="-31" cy="-96" r="6" fill="${S}" stroke="${INK}" stroke-width="3.5"/>
+      <circle cx="31" cy="-96" r="6" fill="${S}" stroke="${INK}" stroke-width="3.5"/>
+      ${hairFront}
+      ${freckles}
+      <ellipse cx="-18" cy="-84" rx="5" ry="3" fill="#ff4f86" opacity=".4"/><ellipse cx="18" cy="-84" rx="5" ry="3" fill="#ff4f86" opacity=".4"/>
+      <g class="eyes" style="animation-delay:-${rnd(0, 4).toFixed(2)}s">
+        <ellipse cx="-11" cy="-98" rx="6" ry="7.5" fill="#fff" stroke="${INK}" stroke-width="2.5"/>
+        <ellipse cx="11" cy="-98" rx="6" ry="7.5" fill="#fff" stroke="${INK}" stroke-width="2.5"/>
+        <circle cx="-10" cy="-97" r="3.6" fill="${INK}"/><circle cx="12" cy="-97" r="3.6" fill="${INK}"/>
+        <circle cx="-8.7" cy="-98.6" r="1.4" fill="#fff"/><circle cx="13.3" cy="-98.6" r="1.4" fill="#fff"/>
+      </g>
+      ${glasses}
+      <path class="m-smile" d="M-8 -82 Q0 -74 8 -82" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
+      <ellipse class="m-o" cx="0" cy="-79" rx="5.5" ry="7" fill="#8a1c3f" stroke="${INK}" stroke-width="2.5"/>
+    </g>`;
+  }
+  function handsMarkup(k, rightId) {
+    const h = (x, id) => `<g${id ? ` id="${id}"` : ''}><circle cx="${x}" cy="-2" r="9" fill="${k.skin}" stroke="${INK}" stroke-width="3.5"/></g>`;
+    return `<g class="hop">${h(-26)}${h(26, rightId)}</g>`;
+  }
+  function deskMarkup() {
+    return `<rect x="-54" y="8" width="108" height="64" rx="6" fill="#a96535" stroke="${INK}" stroke-width="4"/>
+      <rect x="-40" y="22" width="80" height="34" rx="6" fill="none" stroke="#8a4f26" stroke-width="3"/>
+      <rect x="-62" y="-4" width="124" height="14" rx="5" fill="#d18c52" stroke="${INK}" stroke-width="4"/>
+      <path d="M-54 2 h70" stroke="#fff" stroke-opacity=".4" stroke-width="3" stroke-linecap="round"/>`;
+  }
+  function machineMarkup() {
+    return `<g id="mach-shake">
+      <path d="M-22 -22 L-27 -52" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
+      <circle class="mlight" cx="-27" cy="-55" r="6.5" fill="#6bff8a" stroke="${INK}" stroke-width="3"/>
+      <rect x="6" y="-32" width="24" height="10" rx="3" fill="#9aa3b5" stroke="${INK}" stroke-width="3"/>
+      <g class="mbtn"><circle cx="18" cy="-33" r="9" fill="#ff3b3b" stroke="${INK}" stroke-width="3.5"/><ellipse cx="15" cy="-36" rx="3.2" ry="2" fill="#fff" opacity=".7"/></g>
+      <rect x="-37" y="-24" width="74" height="48" rx="13" fill="#7fd6e8" stroke="${INK}" stroke-width="4.5"/>
+      <path d="M-33 10 H33" stroke="#4fb3c9" stroke-width="6"/>
+      <rect x="-28" y="-15" width="32" height="22" rx="5" fill="#1d3557" stroke="${INK}" stroke-width="3"/>
+      <circle class="mscreen" cx="-12" cy="-4" r="6.5" fill="#6bff8a" opacity=".85"/>
+      <circle cx="-10" cy="-5" r="2.4" fill="#1d3557"/>
+      <circle cx="19" cy="-5" r="7" fill="#ffd23f" stroke="${INK}" stroke-width="3"/>
+      <path d="M19 -5 l3 -4" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="-22" cy="-19" rx="9" ry="2.5" fill="#fff" opacity=".6"/>
+    </g>`;
+  }
+  function teacherMarkup() {
+    const S = '#c68a5e', H = '#3b1f12', SHIRT = '#ff7aa8', SKIRT = '#5ecbc4';
+    const arm = (d, hx, hy, cls) => `<g class="${cls}"><path d="${d}" fill="none" stroke="${INK}" stroke-width="23" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#fff" stroke-width="15" stroke-linecap="round"/><circle cx="${hx}" cy="${hy}" r="9.5" fill="${S}" stroke="${INK}" stroke-width="3.5"/></g>`;
+    return `<g class="teacher" id="teacher" transform="translate(110 434)">
+      <ellipse cx="-14" cy="-5" rx="14" ry="7" fill="${INK}"/><ellipse cx="14" cy="-5" rx="14" ry="7" fill="${INK}"/>
+      <rect x="-19" y="-72" width="11" height="66" fill="#6b4a8a" stroke="${INK}" stroke-width="3"/>
+      <rect x="8" y="-72" width="11" height="66" fill="#6b4a8a" stroke="${INK}" stroke-width="3"/>
+      <path d="M-30 -222 L30 -222 L32 -146 L-32 -146Z" fill="${SHIRT}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-30 -150 L-40 -68 Q0 -60 40 -68 L30 -150 Z" fill="${SKIRT}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-40 -224 Q-54 -200 -54 -150 L-52 -70 L-24 -70 L-15 -150 L-13 -224 Z" fill="#fff" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M40 -224 Q54 -200 54 -150 L52 -70 L24 -70 L15 -150 L13 -224 Z" fill="#fff" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      <rect x="-46" y="-196" width="20" height="16" rx="3" fill="#eef4ff" stroke="${INK}" stroke-width="3"/>
+      <path d="M-41 -196 v-8 M-35 -196 v-10" stroke="#ff3b3b" stroke-width="3" stroke-linecap="round"/>
+      <rect x="-8" y="-240" width="16" height="20" fill="${S}" stroke="${INK}" stroke-width="3"/>
+      <circle cx="0" cy="-310" r="17" fill="${H}" stroke="${INK}" stroke-width="4"/>
+      <path d="M-38 -262 Q-46 -230 -36 -222 L-24 -240 Z" fill="${H}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M38 -262 Q46 -230 36 -222 L24 -240 Z" fill="${H}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>
+      <circle cx="0" cy="-264" r="35" fill="${S}" stroke="${INK}" stroke-width="4"/>
+      <path d="M-37 -264 Q-38 -302 0 -302 Q38 -302 37 -264 Q30 -288 4 -284 Q-6 -276 -14 -286 Q-30 -284 -37 -264Z" fill="${H}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      <ellipse cx="-20" cy="-248" rx="6" ry="3.5" fill="#ff4f86" opacity=".4"/><ellipse cx="20" cy="-248" rx="6" ry="3.5" fill="#ff4f86" opacity=".4"/>
+      <g class="eyes" style="animation-delay:-2s">
+        <ellipse cx="-13" cy="-264" rx="5.5" ry="6.5" fill="#fff" stroke="${INK}" stroke-width="2"/>
+        <ellipse cx="13" cy="-264" rx="5.5" ry="6.5" fill="#fff" stroke="${INK}" stroke-width="2"/>
+        <circle cx="-11.5" cy="-263" r="3.2" fill="${INK}"/><circle cx="14.5" cy="-263" r="3.2" fill="${INK}"/>
+      </g>
+      <g fill="none" stroke="${INK}" stroke-width="3"><circle cx="-13" cy="-264" r="11.5"/><circle cx="13" cy="-264" r="11.5"/><path d="M-1.5 -265 h3"/></g>
+      <path class="t-smile" d="M-9 -246 Q0 -238 9 -246" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
+      <ellipse class="t-talk" cx="0" cy="-243" rx="7" ry="6" fill="#8a1c3f" stroke="${INK}" stroke-width="2.5"/>
+      ${arm('M-42 -214 Q-60 -182 -55 -148', -55, -144, '')}
+      ${arm('M42 -214 Q60 -182 55 -148', 55, -144, 'arm-down')}
+      ${arm('M42 -214 Q62 -196 70 -214', 70, -218, 'arm-up')}
+    </g>`;
+  }
+  function sceneMarkup() {
+    let s = '<g id="cam">';
+    // room
+    s += `<rect x="-400" y="-300" width="1600" height="1050" fill="#ffe7b3"/>
+      <rect x="-400" y="276" width="1600" height="64" fill="#f6c97a"/>
+      <path d="M-400 276 H1200" stroke="${INK}" stroke-width="4"/>
+      <rect x="-400" y="340" width="1600" height="420" fill="#d39a63"/>
+      <path d="M-400 340 H1200" stroke="${INK}" stroke-width="4"/>
+      <path d="M-400 380 H1200 M-400 425 H1200" stroke="#b97f4a" stroke-width="3"/>`;
+    // window
+    s += `<rect x="20" y="52" width="124" height="132" rx="8" fill="#9fe0ff" stroke="${INK}" stroke-width="5"/>
+      <circle cx="112" cy="84" r="16" fill="#ffd23f" stroke="${INK}" stroke-width="3"/>
+      <path d="M36 140 q8 -14 22 -8 q8 -12 22 -2 q14 0 12 12 Z" fill="#fff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M82 52 V184 M20 118 H144" stroke="${INK}" stroke-width="5"/>`;
+    // chalkboard
+    s += `<rect x="186" y="36" width="408" height="178" rx="12" fill="#a96535" stroke="${INK}" stroke-width="5"/>
+      <rect x="200" y="50" width="380" height="150" rx="6" fill="#2f6b4f" stroke="${INK}" stroke-width="3"/>
+      <rect x="230" y="210" width="320" height="10" rx="4" fill="#c9824a" stroke="${INK}" stroke-width="3"/>
+      <rect x="260" y="203" width="18" height="7" rx="2" fill="#fff"/><rect x="290" y="203" width="14" height="7" rx="2" fill="#ffd23f"/>
+      <g fill="#fff" font-family="'Baloo 2', 'Comic Sans MS', sans-serif" font-weight="800" text-anchor="middle" opacity=".92">
+        <g class="board-part on" id="board-hello">
+          <text x="390" y="112" font-size="38">Science Class</text>
+          <text x="390" y="160" font-size="24" opacity=".8">Today: ???</text>
+        </g>
+        <g class="board-part" id="board-trip">
+          <text x="390" y="104" font-size="46" fill="#ffe066">FIELD TRIP!</text>
+        </g>
+        <g class="board-part" id="board-cell">
+          <ellipse cx="300" cy="158" rx="52" ry="27" fill="none" stroke="#fff" stroke-width="4"/>
+          <circle cx="306" cy="156" r="11" fill="none" stroke="#fff" stroke-width="4"/>
+          <path d="M270 150 q8 -6 14 0 M326 170 q8 -6 14 0" fill="none" stroke="#fff" stroke-width="3"/>
+          <text x="458" y="170" font-size="30">to a CELL!</text>
+        </g>
+      </g>`;
+    // clock + poster
+    s += `<circle cx="690" cy="66" r="28" fill="#fff" stroke="${INK}" stroke-width="5"/>
+      <path d="M690 66 V48 M690 66 L703 72" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
+      <rect x="638" y="110" width="110" height="118" rx="8" fill="#fff" stroke="${INK}" stroke-width="4" transform="rotate(3 693 169)"/>
+      <g transform="rotate(3 693 169)">
+        <text x="693" y="136" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="17" fill="${INK}">CELLS!</text>
+        <ellipse cx="693" cy="178" rx="38" ry="28" fill="#ffe9f2" stroke="${INK}" stroke-width="3"/>
+        <circle cx="696" cy="176" r="11" fill="#a77bff" stroke="${INK}" stroke-width="2.5"/>
+        <rect x="664" y="186" width="16" height="8" rx="4" fill="#ff9f43" stroke="${INK}" stroke-width="2"/>
+      </g>`;
+    s += teacherMarkup();
+    // kid bodies, desks, hands
+    KIDS.forEach(k => {
+      const body = `<g class="kid" id="kid-${k.id}" transform="translate(${k.x} ${DESK_Y})">${kidMarkup(k)}</g>`;
+      s += k.id === 'leo' ? `<g class="leo-spin" id="leo-spin-body">${body}</g>` : body;
+    });
+    KIDS.forEach(k => {
+      s += `<g transform="translate(${k.x} ${DESK_Y})">${deskMarkup()}</g>`;
+      s += `<g transform="translate(${k.x} 170)"><g class="yay" id="yay-${k.id}"><path d="M-38 -16 Q-38 -34 0 -34 Q38 -34 38 -16 Q38 2 6 2 L-2 14 L-6 2 Q-38 2 -38 -16Z" fill="#fff" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/><text x="0" y="-8" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="20" fill="${INK}">${pick(['Yay!', 'Woo!', 'Yes!'])}</text></g></g>`;
+    });
+    KIDS.forEach(k => {
+      if (k.id === 'leo') return;
+      s += `<g class="kid-hands" id="hands-${k.id}" transform="translate(${k.x} ${DESK_Y})">${handsMarkup(k)}</g>`;
+    });
+    // vortex + machine + Leo's hands (on top so the press reads)
+    s += `<g id="vortex" transform="translate(690 ${MACH_DESK_Y})"><g id="vortex-grow">
+        <circle class="ring" r="150" fill="none" stroke="#b06bff" stroke-width="16" stroke-dasharray="80 50" stroke-linecap="round" opacity=".7"/>
+        <circle class="ring r2" r="105" fill="none" stroke="#3bd5ff" stroke-width="14" stroke-dasharray="60 40" stroke-linecap="round" opacity=".8"/>
+        <circle class="ring r3" r="62" fill="none" stroke="#ff8fb8" stroke-width="12" stroke-dasharray="40 26" stroke-linecap="round" opacity=".9"/>
+        <circle class="ring r2" r="28" fill="none" stroke="#fff36b" stroke-width="10" stroke-dasharray="20 14" stroke-linecap="round"/>
+      </g></g>`;
+    s += `<g id="mach-pos"><g id="mach-hop"><g class="machine" id="machine">${machineMarkup()}</g></g></g>`;
+    const leo = KIDS[3];
+    s += `<g class="leo-spin" id="leo-spin-hands"><g class="kid-hands" id="hands-leo" transform="translate(${leo.x} ${DESK_Y})">${handsMarkup(leo, 'leo-hand')}</g></g>`;
+    s += '</g>';
+    return s;
+  }
+
+  // ---------- cinematic engine ----------
+  const SKIP = { skip: true };
+  const intro = { skipped: true, timers: [], advance: null, finishType: null, whirr: null };
+  const scene = $('scene'), cine = $('cine'), subs = $('subs');
+  const q1 = sel => scene.querySelector(sel);
+
+  function later(ms, fn) { intro.timers.push(setTimeout(() => { if (!intro.skipped) fn(); }, ms)); }
+  function iwait(ms) {
+    return new Promise((res, rej) => {
+      if (intro.skipped) return rej(SKIP);
+      const t = setTimeout(done, ms);
+      function done() { clearTimeout(t); intro.advance = null; intro.cancel = null; res(); }
+      intro.cancel = () => { clearTimeout(t); rej(SKIP); };
+    });
+  }
+  let voices = [];
+  function loadVoices() { try { voices = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); } catch (e) { voices = []; } }
+  if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+  function pickVoice(female) {
+    if (!voices.length) return null;
+    const fem = /female|samantha|victoria|zira|karen|moira|tessa|fiona|susan|aria|jenny/i;
+    const male = /male|daniel|alex|fred|david|guy|mark/i;
+    return voices.find(v => female ? fem.test(v.name) : (male.test(v.name) && !fem.test(v.name))) || voices[0];
+  }
+  function speak(who, text) {
+    return new Promise(res => {
+      if (!state.sound || !('speechSynthesis' in window)) return res();
+      try {
+        speechSynthesis.cancel();
+        const v = SPEAKERS[who] || {};
+        const u = new SpeechSynthesisUtterance(text.replace(/—/g, ', '));
+        u.pitch = v.pitch || 1; u.rate = v.rate || 1;
+        const voice = pickVoice(v.female);
+        if (voice) u.voice = voice;
+        u.onend = u.onerror = () => res();
+        speechSynthesis.speak(u);
+        setTimeout(res, 2000 + text.length * 85);
+      } catch (e) { res(); }
+    });
+  }
+  function teacherTalking(on) { const t = q1('#teacher'); if (t) t.classList.toggle('talking', on); }
+
+  // Show one line of dialogue: type it out, speak it, then hold. Tapping the scene speeds it up.
+  function line(who, text, opts) {
+    opts = opts || {};
+    return new Promise((res, rej) => {
+      if (intro.skipped) return rej(SKIP);
+      subs.classList.add('on');
+      const sp = SPEAKERS[who] || { color: '#fff' };
+      subs.innerHTML = `<span class="speaker" style="background:${sp.color}">${esc(who)}</span><span id="subs-text"></span><span class="subs-hint">tap to speed up</span>`;
+      const out = $('subs-text');
+      teacherTalking(who === 'Ms. Rivera');
+      let spoken = false;
+      speak(who, text).then(() => { spoken = true; });
+      let i = 0;
+      const iv = setInterval(step, 30);
+      function step() {
+        if (intro.skipped) { clearInterval(iv); return rej(SKIP); }
+        i++;
+        out.textContent = text.slice(0, i);
+        if (opts.onType) opts.onType(i / text.length);
+        if (i >= text.length) { clearInterval(iv); typed(); }
+      }
+      intro.finishType = () => { i = text.length - 1; step(); };
+      function typed() {
+        intro.finishType = null;
+        const start = Date.now();
+        const hold = opts.hold == null ? 900 : opts.hold;
+        const poll = setInterval(() => {
+          if (intro.skipped) { clearInterval(poll); return rej(SKIP); }
+          const waited = Date.now() - start;
+          if ((waited >= hold && spoken) || waited >= hold + 6000) finish();
+        }, 60);
+        function finish() {
+          clearInterval(poll);
+          intro.advance = null;
+          if (who === 'Ms. Rivera') teacherTalking(false);
+          res();
+        }
+        intro.advance = () => { try { speechSynthesis.cancel(); } catch (e) {} spoken = true; finish(); };
+      }
+    });
+  }
+
+  function camTo(cx, cy, z) {
+    const cam = q1('#cam');
+    cam.style.transform = z === 1 ? '' : `translate(${400 - z * cx}px, ${225 - z * cy}px) scale(${z})`;
+  }
+  function moveMachine(x, y, hop) {
+    const p = q1('#mach-pos');
+    p.style.transform = `translate(${x}px, ${y}px)`;
+    if (hop) {
+      const h = q1('#mach-hop');
+      h.classList.remove('hop'); void h.getBBox(); h.classList.add('hop');
+      tone(500, 0.18, 'triangle', 0.08, 0, 900);
+    }
+  }
+  function board(which) { ['hello', 'trip', 'cell'].forEach(b => { if (which.includes(b)) q1('#board-' + b).classList.add('on'); else q1('#board-' + b).classList.remove('on'); }); }
+  function kids(cls, on, only) {
+    KIDS.forEach(k => {
+      if (only && !only.includes(k.id)) return;
+      const body = q1('#kid-' + k.id), hands = q1('#hands-' + k.id);
+      body.classList.toggle(cls, on);
+      if (cls === 'cheer' && hands) hands.classList.toggle('cheer', on);
+    });
+  }
+  function startWhirr() {
+    if (!state.sound) return;
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      const t = ac.currentTime;
+      const o = ac.createOscillator(), g = ac.createGain(), lfo = ac.createOscillator(), lg = ac.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(70, t);
+      o.frequency.exponentialRampToValueAtTime(700, t + 4);
+      lfo.frequency.value = 9; lg.gain.value = 40;
+      lfo.connect(lg); lg.connect(o.frequency);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.05, t + 0.4);
+      o.connect(g); g.connect(ac.destination);
+      o.start(t); lfo.start(t);
+      intro.whirr = { o, g, lfo };
+    } catch (e) { /* no audio */ }
+  }
+  function stopWhirr() {
+    const w = intro.whirr;
+    if (!w) return;
+    intro.whirr = null;
+    try {
+      const t = ac.currentTime;
+      w.g.gain.cancelScheduledValues(t);
+      w.g.gain.setValueAtTime(w.g.gain.value, t);
+      w.g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+      w.o.stop(t + 0.35); w.lfo.stop(t + 0.35);
+    } catch (e) { /* ignore */ }
+  }
+
+  function resetScene() {
+    scene.innerHTML = sceneMarkup();
+    subs.classList.remove('on');
+    subs.innerHTML = '';
+  }
+
+  async function playIntro() {
+    resetScene();
+    intro.skipped = false;
+    cine.classList.add('playing');
+    $('cine-start').classList.add('hidden');
+    const leoPressed = { done: false };
+    try {
+      await iwait(500);
+      await line('Ms. Rivera', 'Good morning, class! Settle down, settle down. I have some very exciting news!');
+      board(['trip']);
+      await line('Ms. Rivera', 'Today... we are going on a FIELD TRIP!', { onType: p => { if (p >= 1) { kids('cheer', true); KIDS.forEach(k => q1('#yay-' + k.id).classList.add('on')); sfx.right(); } } });
+      await line('Class', 'Yaaay! Is it the zoo? The aquarium? The candy factory?!');
+      kids('cheer', false);
+      KIDS.forEach(k => q1('#yay-' + k.id).classList.remove('on'));
+      await line('Ms. Rivera', 'Even better! We’re going somewhere so tiny, you can’t even see it with your eyes.');
+      q1('#teacher').classList.add('holding');
+      moveMachine(MACH_TEACHER[0], MACH_TEACHER[1], false);
+      q1('#mach-pos').classList.add('on');
+      sfx.newFind();
+      board(['trip', 'cell']);
+      await line('Ms. Rivera', 'With this machine, the Micro-Explorer, we’re going to explore the inside of a CELL!');
+      kids('wow', true);
+      await line('Class', 'Ooooooh!', { hold: 500 });
+      kids('wow', false);
+      await line('Ms. Rivera', 'Go ahead and pass it around, carefully, so everyone gets a good look.', { hold: 300 });
+      q1('#teacher').classList.remove('holding');
+      moveMachine(KIDS[0].x, MACH_DESK_Y, true);
+      await iwait(1000);
+      await line('Maya', 'Whoa, it’s so shiny!', { hold: 400 });
+      moveMachine(KIDS[1].x, MACH_DESK_Y, true);
+      await iwait(1000);
+      await line('Sam', 'Beep boop! I’m a robot scientist!', { hold: 400 });
+      moveMachine(KIDS[2].x, MACH_DESK_Y, true);
+      await iwait(1000);
+      await line('Ruby', 'Here you go, Leo. Your turn!', { hold: 300 });
+      moveMachine(KIDS[3].x, MACH_DESK_Y, true);
+      camTo(640, 262, 2);
+      await iwait(1400);
+      await line('Leo', 'Cool! I wonder what this big red button does...');
+      const press = () => {
+        if (leoPressed.done) return;
+        leoPressed.done = true;
+        q1('#leo-hand').classList.add('press');
+        later(480, () => {
+          q1('#machine').classList.add('pressed', 'active');
+          tone(1400, 0.06, 'square', 0.08);
+          startWhirr();
+        });
+      };
+      await line('Ms. Rivera', 'Now remember, class, this machine is only EXPERIMENTAL, so whatever you do, don’t press the—', { onType: p => { if (p >= 0.6) press(); }, hold: 200 });
+      press();
+      q1('#vortex').classList.add('on');
+      await line('Ms. Rivera', '...red button.', { hold: 300 });
+      q1('#leo-spin-body').classList.add('swept');
+      q1('#leo-spin-hands').classList.add('swept');
+      tone(1300, 1.6, 'triangle', 0.1, 0, 90);
+      await line('Leo', 'WHOA-WHOA-WHOAAAAAA!', { hold: 900 });
+      stopWhirr();
+      q1('#vortex').classList.add('off');
+      q1('#machine').classList.remove('active');
+      camTo(400, 225, 1);
+      kids('gasp', true, ['maya', 'sam', 'ruby']);
+      await iwait(1300);
+      await line('Class', 'LEO?!', { hold: 600 });
+      await line('Ms. Rivera', 'Oh my. Well... it looks like Leo is going on our field trip a little early!');
+      await line('Ms. Rivera', 'Hang on, Leo! Explore that cell, and we’ll figure out how to get you back!');
+      $('flash').classList.add('on');
+      await iwait(700);
+    } catch (e) {
+      if (e === SKIP) return;
+      throw e;
+    }
+    finishIntro();
+  }
+
+  function finishIntro() {
+    intro.skipped = true;
+    intro.timers.forEach(clearTimeout); intro.timers = [];
+    if (intro.cancel) { try { intro.cancel(); } catch (e) {} }
+    intro.advance = intro.finishType = intro.cancel = null;
+    try { speechSynthesis.cancel(); } catch (e) {}
+    stopWhirr();
+    cine.classList.remove('playing');
+    $('cine-start').classList.remove('hidden');
+    showTitleAfterStory();
+    const fl = $('flash');
+    fl.classList.add('on');
+    setTimeout(() => fl.classList.remove('on'), 60);
+  }
+  function showTitleAfterStory() {
+    renderTitle();
+    showScreen('title');
+  }
+
+  cine.addEventListener('click', e => {
+    if (intro.skipped || e.target.closest('button')) return;
+    if (intro.finishType) intro.finishType();
+    else if (intro.advance) intro.advance();
+  });
+  subs.addEventListener('click', () => {
+    if (intro.skipped) return;
+    if (intro.finishType) intro.finishType();
+    else if (intro.advance) intro.advance();
+  });
+  $('cine-play').onclick = () => { sfx.pop(); playIntro(); };
+  $('cine-skip0').onclick = () => { sfx.pop(); finishIntro(); };
+  $('cine-skip').onclick = () => { sfx.pop(); finishIntro(); };
+  $('replay-intro').onclick = () => { sfx.pop(); resetScene(); showScreen('intro'); };
+  resetScene();
 
   renderTitle();
   // allow deep links like /cells/#plant
