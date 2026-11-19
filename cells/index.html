@@ -137,6 +137,7 @@
   .pick-card svg { width: 100%; height: auto; pointer-events: none; }
   .pick-name { margin-top: 6px; font-size: 1.6rem; font-weight: 800; }
   .pick-sub { font-size: 0.95rem; font-weight: 600; opacity: 0.7; }
+  [hidden] { display: none !important; }
   .pick-progress { margin-top: 8px; font-size: 0.85rem; font-weight: 800; padding: 2px 12px; border-radius: 999px; background: #fff; border: 2px solid var(--ink); }
 
   /* ---------- game screen ---------- */
@@ -165,6 +166,7 @@
   .seg button:hover:not(.on) { background: #fff7d6; }
   .seg button:focus-visible { outline: 3px solid var(--coral); outline-offset: -5px; }
   .btn.toggle.on { background: var(--green); }
+  .kind-tag { display: inline-block; margin-bottom: 4px; padding: 0 10px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; border: 2px solid var(--ink); border-radius: 999px; background: #e5f8ff; }
 
   .game-grid {
     display: grid;
@@ -485,8 +487,22 @@
   <div class="title-wrap">
     <svg class="title-mascot" id="title-mascot" viewBox="0 0 120 120" aria-hidden="true"></svg>
     <h1 class="big-title"><span class="t1">Exploring</span> <span class="t2">Cells</span></h1>
-    <div class="intro-bubble">Whoa, a visitor! I'm <b>Professor Goo</b>. That machine shrank you way down, Leo &mdash; you've landed inside the world of cells! Every living thing is made of them. Pick one and let's explore!</div>
-    <div class="pick-row">
+    <div class="intro-bubble" id="title-bubble"></div>
+    <div class="pick-row" id="pick-kind">
+      <button class="pick-card" data-kind-pick="eu">
+        <svg viewBox="0 0 800 600" id="preview-eu" aria-hidden="true"></svg>
+        <span class="pick-name">Eukaryotic Cell</span>
+        <span class="pick-sub">Has a nucleus! Like the cells in plants, animals and you.</span>
+        <span class="pick-progress" id="pp-eu"></span>
+      </button>
+      <button class="pick-card" data-pick="prokaryote">
+        <svg viewBox="0 0 800 600" id="preview-prokaryote" aria-hidden="true"></svg>
+        <span class="pick-name">Prokaryotic Cell</span>
+        <span class="pick-sub">No nucleus! A tiny, simple bacterium.</span>
+        <span class="pick-progress" id="pp-prokaryote"></span>
+      </button>
+    </div>
+    <div class="pick-row" id="pick-eu" hidden>
       <button class="pick-card" data-pick="animal">
         <svg viewBox="0 0 800 600" id="preview-animal" aria-hidden="true"></svg>
         <span class="pick-name">Animal Cell</span>
@@ -500,7 +516,7 @@
         <span class="pick-progress" id="pp-plant"></span>
       </button>
     </div>
-    <div class="title-actions"><button class="btn" id="replay-intro">&#9654; Watch the story again</button></div>
+    <div class="title-actions"><button class="btn" id="pick-back" hidden>&larr; Back</button> <button class="btn" id="replay-intro">&#9654; Watch the story again</button></div>
   </div>
 </section>
 
@@ -508,7 +524,10 @@
 <section class="screen" id="screen-game">
   <div class="game-wrap">
     <div class="toolbar">
-      <div class="seg" role="group" aria-label="Cell type">
+      <div class="seg" role="group" aria-label="Cell kind">
+        <button data-kind="eu">Eukaryotic</button><button data-kind="pro">Prokaryotic</button>
+      </div>
+      <div class="seg" role="group" aria-label="Eukaryotic cell type" id="eu-seg">
         <button data-cell="animal">Animal</button><button data-cell="plant">Plant</button>
       </div>
       <div class="seg" role="group" aria-label="Mode">
@@ -556,6 +575,8 @@
     cytoP: '#effce0', cytoPdot: '#a5d98a', membraneP: '#ffcd4d',
     chloro: '#49c25a', chloroIn: '#8fe07f', grana: '#23863a',
     cvac: '#a9e4ff', cvacWave: '#62c3ee',
+    capsule: '#fff1a8', bwall: '#7ed9a0', bwallDark: '#3f9c68', cytoB: '#e6f6ff', cytoBdot: '#8fc6ee',
+    nucleoid: '#a77bff', plasmid: '#ff6b9a', flagellum: '#6cb8ff', pili: '#ffb35c',
   };
 
   // ================= the parts =================
@@ -658,7 +679,65 @@
       fact: 'When a plant doesn’t get enough water, its vacuoles shrink. That’s why it wilts and droops!',
       clues: ['Tap the giant water balloon of the plant cell!', 'Which part keeps a plant from wilting?'],
     },
+    capsule: {
+      name: 'Capsule', color: C.capsule,
+      job: 'A slimy, sticky coat around the outside of the bacterium. It helps it stick to things and hide from your body’s germ fighters.',
+      like: 'A slippery raincoat.',
+      fact: 'Capsules help some bacteria stick to your teeth. That’s part of how plaque forms, so keep brushing!',
+      clues: ['Tap the slimy coat on the very outside of the bacterium!', 'Find the sticky layer that helps bacteria hide and hold on!'],
+    },
+    nucleoid: {
+      name: 'Nucleoid', color: C.nucleoid,
+      job: 'The area where the bacterium keeps its DNA. There’s no nucleus around it, so the DNA just floats in a big tangled loop!',
+      like: 'Instruction pages piled on an open desk instead of locked in an office.',
+      fact: 'Having NO nucleus is exactly what makes a cell prokaryotic. “Pro-karyotic” means “before the nucleus”!',
+      clues: ['Tap the tangled DNA that floats with no nucleus around it!', 'Where does a bacterium keep its main instruction book?'],
+    },
+    plasmid: {
+      name: 'Plasmids', color: C.plasmid,
+      job: 'Tiny extra rings of DNA with bonus instructions, like how to survive certain medicines.',
+      like: 'Trading cards with special powers.',
+      fact: 'Bacteria can pass plasmids to their neighbors, sharing new tricks with each other!',
+      clues: ['Tap one of the tiny extra rings of DNA!', 'Find the little bonus DNA loops that bacteria can share!'],
+    },
+    flagellum: {
+      name: 'Flagellum', color: C.flagellum,
+      job: 'A long, whip-like tail that spins like a propeller to push the bacterium through water.',
+      like: 'The motor on the back of a speedboat.',
+      fact: 'Some flagella can spin more than 100 times every second!',
+      clues: ['Tap the long tail that spins to make the bacterium swim!', 'Which part works like a propeller?'],
+    },
+    pili: {
+      name: 'Pili', color: C.pili,
+      job: 'Short, hair-like threads all over the outside. They help the bacterium grab onto surfaces and other cells.',
+      like: 'Velcro hooks.',
+      fact: 'Just one is called a pilus. Some bacteria use pili like grappling hooks to pull themselves along!',
+      clues: ['Tap the short little hairs that stick out all around!', 'Find the tiny threads that help bacteria grab on to things!'],
+    },
   };
+
+  // Some parts work a bit differently depending on the cell.
+  const OVERRIDES = {
+    prokaryote: {
+      wall: {
+        color: C.bwall,
+        job: 'A tough layer just outside the membrane. It gives the bacterium its shape and keeps it from bursting.',
+        like: 'A suit of armor.',
+        fact: 'Bacteria walls are made of something called peptidoglycan, not cellulose like plants. The medicine penicillin works by breaking it!',
+        clues: ['Tap the tough layer that keeps the bacterium from bursting!', 'Find the strong layer between the slimy coat and the membrane!'],
+      },
+      ribosome: {
+        fact: 'Bacteria ribosomes are a bit smaller than yours, so some medicines can jam them without hurting your own cells!',
+      },
+      cytoplasm: {
+        color: '#bfe4ff',
+        job: 'The watery jelly inside the bacterium. The DNA, ribosomes and plasmids all float around in it.',
+      },
+    },
+  };
+  function info(id, cell) {
+    return Object.assign({}, PARTS[id], (OVERRIDES[cell || state.cell] || {})[id] || {});
+  }
 
   // ================= drawing helpers =================
   const fmt = p => p[0].toFixed(1) + ' ' + p[1].toFixed(1);
@@ -834,10 +913,60 @@
     ).join('') + '</g>';
   }
 
-  // ================= the two cells =================
+  // ---------- bacterium bits ----------
+  const BAC = { cx: 460, cy: 300 };
+  function stadium(x, y, w, h) { return `x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}"`; }
+  function bacPili() {
+    // wall stadium: x 175..745, y 160..440, cap centers at 315 & 605, r 140
+    const hairs = [];
+    [340, 420, 500, 580].forEach(x => hairs.push([x, 160, 0, -1]));
+    [360, 440, 520, 600].forEach(x => hairs.push([x, 440, 0, 1]));
+    [-62, -22, 22, 62].forEach(a => { const r = a * Math.PI / 180; hairs.push([605 + Math.cos(r) * 140, 300 + Math.sin(r) * 140, Math.cos(r), Math.sin(r)]); });
+    [128, 232].forEach(a => { const r = a * Math.PI / 180; hairs.push([315 + Math.cos(r) * 140, 300 + Math.sin(r) * 140, Math.cos(r), Math.sin(r)]); });
+    let s = '';
+    hairs.forEach(h => {
+      const x0 = h[0] - h[2] * 6, y0 = h[1] - h[3] * 6, x1 = h[0] + h[2] * 58, y1 = h[1] + h[3] * 58;
+      s += `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="transparent" stroke-width="22" stroke-linecap="round"/>`;
+      s += tube(`M${x0.toFixed(1)} ${y0.toFixed(1)} L${x1.toFixed(1)} ${y1.toFixed(1)}`, C.pili, 4);
+      s += `<circle cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="5" fill="${C.pili}" stroke="${INK}" stroke-width="2.5"/>`;
+    });
+    return s;
+  }
+  function bacFlagellum() {
+    const pts = [];
+    for (let i = 0; i <= 28; i++) {
+      const t = i / 28;
+      pts.push([185 - t * 168, 300 + Math.sin(t * Math.PI * 3) * 32 * Math.min(1, t * 3)]);
+    }
+    const d = smoothPath(pts);
+    return `<path d="${d}" fill="none" stroke="transparent" stroke-width="40" stroke-linecap="round"/>` + tube(d, C.flagellum, 8);
+  }
+  function bacNucleoid() {
+    let s = `<ellipse rx="150" ry="80" fill="transparent"/>`;
+    [[0, '#8455ee'], [1.7, C.nucleoid]].forEach(([ph, col]) => {
+      const pts = [];
+      for (let i = 0; i < 40; i++) {
+        const a = i / 40 * Math.PI * 2;
+        const r = 72 + 20 * Math.sin(5 * a + ph) + 12 * Math.sin(9 * a + ph * 2);
+        pts.push([Math.cos(a) * r * 1.45, Math.sin(a) * r * 0.72]);
+      }
+      s += tube(smoothPath(pts, true), col, 6);
+    });
+    return s + face(0, 2, 1.1);
+  }
+  function plasmidShape(r) {
+    const k = r / 20;
+    return `<circle r="${r + 8}" fill="transparent"/>
+      <circle r="${r}" fill="none" stroke="${INK}" stroke-width="${12 * k}"/>
+      <circle r="${r}" fill="none" stroke="${C.plasmid}" stroke-width="${6 * k}"/>
+      <circle r="${r}" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="${1.6 * k}" stroke-dasharray="2 7" stroke-linecap="round"/>`;
+  }
+
+  // ================= the cells =================
   const CELLS = {
     animal: {
-      name: 'Animal Cell',
+      name: 'Animal Cell', kind: 'Eukaryotic', short: 'Animal',
+      blurb: 'This is a <b>eukaryotic</b> cell: its DNA is kept safe inside a <b>nucleus</b>.',
       parts: ['membrane', 'cytoplasm', 'nucleus', 'mitochondria', 'ribosome', 'roughER', 'smoothER', 'golgi', 'lysosome', 'vacuole', 'centrosome'],
       labels: {
         membrane: [668, 82], cytoplasm: [470, 428], nucleus: [390, 205], mitochondria: [190, 222],
@@ -866,8 +995,43 @@
         return s;
       },
     },
+    prokaryote: {
+      name: 'Prokaryotic Cell', kind: 'Prokaryotic', short: 'Bacterium',
+      blurb: 'This is a <b>prokaryotic</b> cell, a bacterium! It has <b>no nucleus</b>, so its DNA just floats around inside.',
+      parts: ['capsule', 'wall', 'membrane', 'cytoplasm', 'nucleoid', 'plasmid', 'ribosome', 'flagellum', 'pili'],
+      labels: {
+        capsule: [255, 128], wall: [690, 150], membrane: [460, 196], cytoplasm: [612, 238], nucleoid: [440, 392],
+        plasmid: [652, 344], ribosome: [292, 244], flagellum: [84, 236], pili: [700, 488],
+      },
+      build() {
+        let s = '';
+        s += part('pili', 0, 0, 0, 1, bacPili(), { bob: false, big: true });
+        s += part('flagellum', 0, 0, 0, 1, bacFlagellum(), { bob: false, big: true });
+        s += part('capsule', 0, 0, 0, 1,
+          `<rect ${stadium(150, 135, 620, 330)} fill="${C.capsule}" fill-opacity=".88" stroke="${INK}" stroke-width="4" stroke-dasharray="14 9" stroke-linecap="round"/>` +
+          `<path d="M232 170 Q262 150 300 146" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="6" stroke-linecap="round"/>`,
+          { bob: false, big: true });
+        s += part('wall', 0, 0, 0, 1,
+          `<rect ${stadium(175, 160, 570, 280)} fill="${C.bwall}" stroke="${INK}" stroke-width="6"/>` +
+          `<rect ${stadium(187, 172, 546, 256)} fill="none" stroke="${C.bwallDark}" stroke-width="3" stroke-dasharray="16 12" stroke-linecap="round"/>`,
+          { bob: false, big: true });
+        const M = `<rect ${stadium(205, 190, 510, 220)}`;
+        s += part('cytoplasm', 0, 0, 0, 1, `${M} fill="${C.cytoB}"/>`, { bob: false, big: true });
+        s += floaties([[262, 300, 4], [360, 228], [540, 230, 5], [620, 380, 3], [380, 372], [690, 300, 3], [520, 400, 3]], C.cytoBdot);
+        s += part('membrane', 0, 0, 0, 1,
+          `${M} fill="none" stroke="${INK}" stroke-width="19"/>` +
+          `${M} fill="none" stroke="${C.membraneA}" stroke-width="10"/>` +
+          `${M} fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="4" stroke-dasharray="0.1 13" stroke-linecap="round"/>`,
+          { bob: false, big: true });
+        s += part('nucleoid', 440, 298, 0, 1, bacNucleoid(), { big: true });
+        [[652, 296, 20], [282, 342, 15]].forEach(p => { s += part('plasmid', p[0], p[1], 0, 1, plasmidShape(p[2])); });
+        [[252, 268], [330, 218], [338, 384], [560, 216], [596, 382], [668, 246], [494, 392], [404, 208], [262, 390], [690, 352]].forEach(r => { s += part('ribosome', r[0], r[1], 0, 1, SHAPE.ribosome()); });
+        return s;
+      },
+    },
     plant: {
-      name: 'Plant Cell',
+      name: 'Plant Cell', kind: 'Eukaryotic', short: 'Plant',
+      blurb: 'This is a <b>eukaryotic</b> cell: its DNA is kept safe inside a <b>nucleus</b>.',
       parts: ['wall', 'membrane', 'cytoplasm', 'nucleus', 'chloroplast', 'centralVacuole', 'mitochondria', 'ribosome', 'roughER', 'smoothER', 'golgi'],
       labels: {
         wall: [400, 50], membrane: [612, 70], cytoplasm: [652, 400], nucleus: [175, 116], chloroplast: [640, 182],
@@ -905,7 +1069,7 @@
   function labelsMarkup(key) {
     const L = CELLS[key].labels;
     return '<g id="labels" pointer-events="none">' + Object.keys(L).map(id => {
-      const p = PARTS[id], x = L[id][0], y = L[id][1];
+      const p = info(id, key), x = L[id][0], y = L[id][1];
       const w = Math.round(p.name.length * 8.1 + 36);
       return `<g transform="translate(${x} ${y})"><rect x="${-w / 2}" y="-14" width="${w}" height="28" rx="14" fill="#fff" stroke="${INK}" stroke-width="2.5"/>` +
         `<circle cx="${-w / 2 + 13}" cy="0" r="6" fill="${p.color}" stroke="${INK}" stroke-width="2"/>` +
@@ -990,20 +1154,21 @@
   const QUIZ_LEN = 8;
   const state = {
     cell: 'animal', mode: 'explore', selected: null, labels: false, sound: true,
-    found: { animal: new Set(), plant: new Set() },
+    found: { animal: new Set(), plant: new Set(), prokaryote: new Set() },
+    lastEu: 'animal',
     quiz: null,
   };
   try {
     const saved = JSON.parse(localStorage.getItem('kg-cells') || '{}');
     if (saved.found) {
-      ['animal', 'plant'].forEach(k => (saved.found[k] || []).forEach(id => { if (CELLS[k].parts.includes(id)) state.found[k].add(id); }));
+      Object.keys(CELLS).forEach(k => (saved.found[k] || []).forEach(id => { if (CELLS[k].parts.includes(id)) state.found[k].add(id); }));
     }
     if (saved.sound === false) state.sound = false;
   } catch (e) { /* storage unavailable */ }
   function save() {
     try {
       localStorage.setItem('kg-cells', JSON.stringify({
-        found: { animal: [...state.found.animal], plant: [...state.found.plant] },
+        found: Object.fromEntries(Object.keys(CELLS).map(k => [k, [...state.found[k]]])),
         sound: state.sound,
       }));
     } catch (e) { /* storage unavailable */ }
@@ -1027,14 +1192,27 @@
   $('sound-btn').onclick = () => { state.sound = !state.sound; save(); renderSoundBtn(); sfx.pop(); };
   renderSoundBtn();
 
+  const ppText = (n, t) => n === t ? '★ All ' + t + ' parts found!' : n + ' / ' + t + ' parts found';
   function renderTitle() {
-    $('preview-animal').innerHTML = CELLS.animal.build();
-    $('preview-plant').innerHTML = CELLS.plant.build();
-    ['animal', 'plant'].forEach(k => {
-      const n = state.found[k].size, t = CELLS[k].parts.length;
-      $('pp-' + k).textContent = n === t ? '★ All ' + t + ' parts found!' : n + ' / ' + t + ' parts found';
-    });
+    const a = CELLS.animal.build(), p = CELLS.plant.build();
+    $('preview-animal').innerHTML = a;
+    $('preview-plant').innerHTML = p;
+    $('preview-eu').innerHTML = `<g transform="translate(0 150) scale(.5)">${a}</g><g transform="translate(400 150) scale(.5)">${p}</g>`;
+    $('preview-prokaryote').innerHTML = CELLS.prokaryote.build();
+    Object.keys(CELLS).forEach(k => { $('pp-' + k).textContent = ppText(state.found[k].size, CELLS[k].parts.length); });
+    $('pp-eu').textContent = ppText(state.found.animal.size + state.found.plant.size, CELLS.animal.parts.length + CELLS.plant.parts.length);
+    setPickStep('kind');
   }
+  function setPickStep(step) {
+    $('pick-kind').hidden = step !== 'kind';
+    $('pick-eu').hidden = step !== 'eu';
+    $('pick-back').hidden = step !== 'eu';
+    $('title-bubble').innerHTML = step === 'kind'
+      ? 'Whoa, a visitor! I\'m <b>Professor Goo</b>. That machine shrank you way down, Leo &mdash; you\'ve landed in the world of cells! There are two big kinds. <b>Eukaryotic</b> cells keep their DNA inside a nucleus. <b>Prokaryotic</b> cells, like bacteria, don\'t have one. Which will you explore?'
+      : '<b>Eukaryotic</b> it is! Plants and animals are both made of eukaryotic cells, but they\'re not quite the same. Which one do you want to shrink into, Leo?';
+  }
+  document.querySelector('[data-kind-pick="eu"]').onclick = () => { sfx.pop(); setPickStep('eu'); };
+  $('pick-back').onclick = () => { sfx.pop(); setPickStep('kind'); };
   function showScreen(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === 'screen-' + name));
     window.scrollTo(0, 0);
@@ -1052,6 +1230,10 @@
     exploreWelcome();
   }
   function renderAll() {
+    const isPro = state.cell === 'prokaryote';
+    if (!isPro) state.lastEu = state.cell;
+    document.querySelectorAll('[data-kind]').forEach(b => b.classList.toggle('on', (b.dataset.kind === 'pro') === isPro));
+    $('eu-seg').hidden = isPro;
     document.querySelectorAll('[data-cell]').forEach(b => b.classList.toggle('on', b.dataset.cell === state.cell));
     document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === state.mode));
     $('labels-btn').classList.toggle('on', state.labels);
@@ -1076,15 +1258,17 @@
   function exploreWelcome() {
     const c = CELLS[state.cell];
     const left = c.parts.length - state.found[state.cell].size;
-    setBubble(`<p>Welcome to the <b>${c.name}</b>! Tap any part of the cell to find out what it does.</p>` +
+    setBubble(`<span class="kind-tag">${c.kind}</span><p>Welcome to the <b>${c.name}</b>! ${c.blurb} Tap any part to find out what it does.</p>` +
       (left ? `<p>Can you discover all <b>${c.parts.length}</b> parts?</p>` : `<p>You've already found every part. Try the <b>Quiz</b> to test yourself!</p>`) +
       `<p style="opacity:.7;font-size:.9rem">Tip: the <b>Labels</b> button shows every part's name.</p>`);
   }
 
   function showInfo(id, isNew) {
-    const p = PARTS[id];
+    const p = info(id);
     let extra = '';
     if (state.cell === 'plant' && id === 'membrane') extra = ' In plants it sits just inside the cell wall.';
+    if (state.cell === 'prokaryote' && id === 'membrane') extra = ' In bacteria it sits just inside the cell wall.';
+    if (id === 'nucleus') extra = ' Having a nucleus is what makes a cell eukaryotic!';
     setBubble(`<div class="part-title"><span class="swatch" style="background:${p.color}"></span>${esc(p.name)}${isNew ? ' <span class="new-badge">NEW!</span>' : ''}</div>` +
       (p.full ? `<div class="fullname">${esc(p.full)}</div>` : '') +
       `<div class="info-row"><b>What it does</b>${esc(p.job + extra)}</div>` +
@@ -1099,7 +1283,7 @@
       progress.innerHTML = `<div class="progress-head"><span>Parts discovered</span><span>${f.size} / ${c.parts.length}</span></div>` +
         `<div class="meter"><div style="width:${(f.size / c.parts.length * 100).toFixed(1)}%"></div></div>` +
         `<div class="stickers">` + c.parts.map(id => {
-          const ok = f.has(id), p = PARTS[id];
+          const ok = f.has(id), p = info(id);
           return `<button class="sticker${ok ? '' : ' locked'}${state.selected === id ? ' current' : ''}" data-sticker="${id}" aria-label="${ok ? esc(p.name) : 'Undiscovered part'}">` +
             `<span class="dot" style="${ok ? 'background:' + p.color : ''}"></span>${ok ? esc(p.name) : '???'}</button>`;
         }).join('') + `</div>`;
@@ -1152,7 +1336,7 @@
     if (q.i >= q.ids.length) return endQuiz();
     const id = q.ids[q.i];
     q.misses = 0;
-    banner.innerHTML = `<small>Question ${q.i + 1} of ${q.ids.length}</small>${esc(pick(PARTS[id].clues))}<span class="fb" id="quiz-fb"></span>`;
+    banner.innerHTML = `<small>Question ${q.i + 1} of ${q.ids.length}</small>${esc(pick(info(id).clues))}<span class="fb" id="quiz-fb"></span>`;
     setBubble(`<p>Read the clue at the top, then tap the matching part of the cell!</p><p style="opacity:.7;font-size:.9rem">Stuck? After two tries I'll give you a hint.</p>`);
   }
   function quizTap(id) {
@@ -1168,19 +1352,19 @@
       forParts(id, g => g.classList.add('correct'));
       sfx.right();
       renderProgress();
-      setFeedback((first ? 'Yes! ' : 'Got it! ') + 'That\u2019s the ' + PARTS[id].name + '!', 'good');
-      setBubble(`<div class="part-title"><span class="swatch" style="background:${PARTS[id].color}"></span>${first ? 'Yes! ' : 'Got it! '}${esc(PARTS[id].name)}</div><p>${esc(PARTS[id].job)}</p>`);
+      setFeedback((first ? 'Yes! ' : 'Got it! ') + 'That\u2019s the ' + info(id).name + '!', 'good');
+      setBubble(`<div class="part-title"><span class="swatch" style="background:${info(id).color}"></span>${first ? 'Yes! ' : 'Got it! '}${esc(info(id).name)}</div><p>${esc(info(id).job)}</p>`);
       setTimeout(() => { q.i++; q.locked = false; nextQuestion(); }, 2100);
     } else {
       q.misses++;
       forParts(id, g => { g.classList.remove('wrong'); void g.getBBox(); g.classList.add('wrong'); setTimeout(() => g.classList.remove('wrong'), 500); });
       sfx.wrong();
-      let msg = `<p>Oops! That's the <b>${esc(PARTS[id].name)}</b>. ${esc(PARTS[id].job.split('. ')[0].replace(/\.$/, ''))}.</p>`;
+      let msg = `<p>Oops! That's the <b>${esc(info(id).name)}</b>. ${esc(info(id).job.split('. ')[0].replace(/\.$/, ''))}.</p>`;
       if (q.misses >= 2) {
         forParts(target, g => g.classList.add('hint'));
         msg += `<p><b>Hint:</b> look for the part that's glowing!</p>`;
       } else msg += `<p>Try again!</p>`;
-      setFeedback('Oops! That\u2019s the ' + PARTS[id].name + '. ' + (q.misses >= 2 ? 'Look for the glowing part!' : 'Try again!'), 'bad');
+      setFeedback('Oops! That\u2019s the ' + info(id).name + '. ' + (q.misses >= 2 ? 'Look for the glowing part!' : 'Try again!'), 'bad');
       setBubble(msg);
     }
   }
@@ -1198,10 +1382,10 @@
     setBubble(`<div class="part-title">You earned ${s} star${s === 1 ? '' : 's'}!</div>` +
       `<div class="big-stars">${q.results.map(r => star(r)).join('')}</div><p>${msg}</p>` +
       `<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" data-go="again">Play again</button><button class="btn" data-go="explore">Explore</button>` +
-      `<button class="btn" data-go="other">Try the ${state.cell === 'animal' ? 'Plant' : 'Animal'} Cell</button></div>`);
+      Object.keys(CELLS).filter(k => k !== state.cell).map(k => `<button class="btn" data-go="cell" data-to="${k}">Try the ${CELLS[k].short}</button>`).join('') + `</div>`);
     bubble.querySelector('[data-go="again"]').onclick = () => { sfx.pop(); startQuiz(); };
     bubble.querySelector('[data-go="explore"]').onclick = () => setMode('explore');
-    bubble.querySelector('[data-go="other"]').onclick = () => { sfx.pop(); setCell(state.cell === 'animal' ? 'plant' : 'animal'); };
+    bubble.querySelectorAll('[data-go="cell"]').forEach(b => b.onclick = () => { sfx.pop(); setCell(b.dataset.to); });
     if (s >= 6) { sfx.fanfare(); confetti(); }
   }
 
@@ -1220,6 +1404,10 @@
     if (state.mode === 'quiz') startQuiz(); else exploreWelcome();
   }
   document.querySelectorAll('[data-cell]').forEach(b => b.onclick = () => { if (b.dataset.cell !== state.cell) { sfx.pop(); setCell(b.dataset.cell); } });
+  document.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => {
+    const to = b.dataset.kind === 'pro' ? 'prokaryote' : state.lastEu;
+    if (to !== state.cell) { sfx.pop(); setCell(to); }
+  });
   document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { if (b.dataset.mode !== state.mode) setMode(b.dataset.mode); });
   $('labels-btn').onclick = () => {
     sfx.pop();
@@ -1726,7 +1914,9 @@
   renderTitle();
   // allow deep links like /cells/#plant
   const h = location.hash.replace('#', '');
-  if (h === 'animal' || h === 'plant') startGame(h);
+  if (h === 'prokaryotic' || h === 'bacteria') startGame('prokaryote');
+  else if (Object.prototype.hasOwnProperty.call(CELLS, h)) startGame(h);
+  else if (h === 'eukaryotic') { showScreen('title'); setPickStep('eu'); }
 })();
 </script>
 </body>
