@@ -659,6 +659,22 @@
   @media (orientation: portrait) and (max-width: 900px) {
     .swim-hint { display: none !important; }
   }
+  /* very short screens (phones on their side): the story/dark-world scene takes the whole
+     height, and the speech box + move buttons float on top of it instead of stacking below */
+  @media (max-height: 500px) {
+    .intro-wrap { position: relative; }
+    .cine { flex: 1 1 auto; }
+    .intro-wrap .subs {
+      position: absolute; top: 18px; left: 28px; right: 120px; margin: 0;
+      padding: 5px 12px; font-size: 0.85rem; line-height: 1.25;
+      background: rgba(255, 255, 255, 0.93); border-width: 2px; box-shadow: 0 3px 0 var(--ink); border-radius: 14px;
+    }
+    .intro-wrap .subs .speaker { font-size: 0.72rem; border-width: 2px; padding: 0 8px; }
+    .pad { position: absolute; left: 28px; right: 28px; bottom: 22px; margin: 0; pointer-events: none; }
+    .pad .btn { pointer-events: auto; opacity: 0.82; width: 62px; padding: 6px 0; }
+    .pad .btn.jump { width: 96px; }
+    .pad .keys-hint { display: none; }
+  }
   @media (max-width: 560px) {
     .toolbar .seg button { padding: 4px 8px; font-size: 0.82rem; }
     .toolbar .btn { padding: 4px 10px; font-size: 0.82rem; }
