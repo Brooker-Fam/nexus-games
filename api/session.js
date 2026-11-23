@@ -29,13 +29,19 @@ export default async function handler(req, res) {
     }
 
     const user = session?.user;
+    let role = null;
     let student = null;
-    if (user && !user.isAnonymous) {
+    if (user?.id) {
       try {
-        const rows = await getSql()`SELECT username FROM student WHERE "userId" = ${user.id}`;
-        if (rows[0]) student = { username: rows[0].username };
-      } catch (e) {
-        console.warn("student lookup failed:", e?.message);
+        const rows = await getSql()`
+          SELECT u.role, s.username
+          FROM "user" u LEFT JOIN student s ON s."userId" = u.id
+          WHERE u.id = ${user.id}
+        `;
+        role = rows[0]?.role ?? null;
+        if (rows[0]?.username) student = { username: rows[0].username };
+      } catch (err) {
+        console.error("session role lookup failed:", err);
       }
     }
     res.status(200).json({
@@ -45,6 +51,7 @@ export default async function handler(req, res) {
         email: student ? null : user.email,
         image: user.image,
         isAnonymous: !!user.isAnonymous,
+        role,
         isStudent: !!student,
         username: student?.username ?? null,
       } : null,

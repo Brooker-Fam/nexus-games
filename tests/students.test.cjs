@@ -10,6 +10,7 @@ async function setup() {
   const { memoryAdapter } = await import("better-auth/adapters/memory");
   const { anonymous } = await import("better-auth/plugins");
   const { students } = await import("../lib/students.js");
+  const created = [];
   const db = { user: [], session: [], account: [], verification: [], student: [], studentLoginRequest: [] };
   const auth = betterAuth({
     baseURL: BASE,
@@ -17,7 +18,7 @@ async function setup() {
     database: memoryAdapter(db),
     emailAndPassword: { enabled: true },
     rateLimit: { enabled: false },
-    plugins: [students(), anonymous()],
+    plugins: [students({ onStudentCreated: async (id) => { created.push(id); } }), anonymous()],
   });
 
   async function call(path, { method = "POST", body, cookie } = {}) {
@@ -39,11 +40,11 @@ async function setup() {
     return r.cookie;
   }
 
-  return { auth, db, call, signUp };
+  return { auth, db, call, signUp, created };
 }
 
 test("educator adds students by username and approves their logins", async () => {
-  const { call, signUp, db } = await setup();
+  const { call, signUp, db, created } = await setup();
   const teacher = await signUp("teacher@example.com");
   const other = await signUp("other@example.com");
 
@@ -60,6 +61,7 @@ test("educator adds students by username and approves their logins", async () =>
   r = await call("/students/list", { method: "GET", cookie: teacher });
   assert.deepEqual(r.json.students.map((s) => s.username), ["alex.k", "sam_1"]);
   const alexId = r.json.students[0].id;
+  assert.deepEqual(created, r.json.students.map((s) => s.id));
 
   // Unknown usernames are rejected.
   r = await call("/student-login/request", { body: { username: "nobody" } });
