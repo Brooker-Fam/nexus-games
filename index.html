@@ -780,7 +780,25 @@
       store('localStorage', ROLE_KEY, selectedRole());
       window.applyRoleTabs(selectedRole());
       syncButtons();
+      saveRoleToAccount(selectedRole());
     });
+
+    // The role saved on the account wins over the one remembered in this browser.
+    function adoptRole(role) {
+      if (!role) return;
+      store('localStorage', ROLE_KEY, role);
+      var input = document.getElementById('role-' + role);
+      if (input) input.checked = true;
+      window.applyRoleTabs(role);
+      syncButtons();
+    }
+    function saveRoleToAccount(role) {
+      var a = window.NexusAuth;
+      if (!role || !a || !a.user() || !a.setRole) return;
+      a.setRole(role).then(function(r) {
+        if (r.role && r.role !== role) adoptRole(r.role);
+      }).catch(function(err) { console.warn('could not save role', err); });
+    }
     syncButtons();
 
     function openLogin() {
@@ -836,6 +854,8 @@
 
     function render(user) {
       chip.innerHTML = '';
+      if (user && user.role) adoptRole(user.role);
+      else if (user) saveRoleToAccount(store('localStorage', ROLE_KEY));
       var role = store('localStorage', ROLE_KEY);
       if (user && !user.isAnonymous) {
         closeLogin();

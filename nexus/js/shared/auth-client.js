@@ -113,6 +113,21 @@
     await refresh();
   }
 
+  // Save the Kitty Games role on the account. Resolves to the role the server
+  // ended up with (a signed-in student can't switch away from "student").
+  async function setRole(role){
+    const res = await fetch('/api/role', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ role }),
+    });
+    const body = await res.json().catch(() => ({}));
+    const saved = res.ok ? body.role : (body.role ?? null);
+    if (state.user && (res.ok || res.status === 403)) state.user.role = saved;
+    return { ok: res.ok, role: saved };
+  }
+
   window.NexusAuth = {
     state,
     refresh,
@@ -121,6 +136,7 @@
     signInWithPasskey,
     registerPasskey,
     signOut,
+    setRole,
     onChange(fn){ state.listeners.add(fn); if (state.ready) fn(state.user); return () => state.listeners.delete(fn); },
     user(){ return state.user; },
     isLoggedIn(){ return !!state.user && !state.user.isAnonymous; },

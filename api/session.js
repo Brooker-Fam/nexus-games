@@ -1,5 +1,6 @@
 import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
+import { getSql } from "../lib/db.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -28,6 +29,15 @@ export default async function handler(req, res) {
     }
 
     const user = session?.user;
+    let role = null;
+    if (user?.id) {
+      try {
+        const rows = await getSql()`SELECT role FROM "user" WHERE id = ${user.id}`;
+        role = rows[0]?.role ?? null;
+      } catch (err) {
+        console.error("session role lookup failed:", err);
+      }
+    }
     res.status(200).json({
       user: user ? {
         id: user.id,
@@ -35,6 +45,7 @@ export default async function handler(req, res) {
         email: user.email,
         image: user.image,
         isAnonymous: !!user.isAnonymous,
+        role,
       } : null,
     });
   } catch (err) {
