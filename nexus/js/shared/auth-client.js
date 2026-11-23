@@ -4,7 +4,7 @@
 
 (function(){
   const state = {
-    user: null,       // { id, name, email, image, isAnonymous } or null
+    user: null,       // { id, name, email, image, isAnonymous, isStudent, username } or null
     ready: false,
     listeners: new Set(),
   };
@@ -113,6 +113,32 @@
     await refresh();
   }
 
+  // Student accounts: ask the educator who added this username for permission,
+  // then poll until they answer. Returns { token, username }.
+  async function requestStudentLogin(username){
+    const res = await fetch('/api/auth/student-login/request', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ username }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const err = new Error(body?.code || `student login request failed (${res.status})`);
+      err.code = res.status === 404 ? 'unknown_username' : res.status === 429 ? 'too_many_requests' : 'failed';
+      throw err;
+    }
+    return body;
+  }
+
+  // -> 'pending' | 'approved' | 'denied' | 'expired'. On 'approved' the
+  // session cookie is set and listeners are notified.
+  async function checkStudentLogin(token){
+    const body = await postJson('/api/auth/sign-in/student', { token });
+    if (body?.status === 'approved') await refresh();
+    return body?.status || 'expired';
+  }
+
   window.NexusAuth = {
     state,
     refresh,
@@ -121,6 +147,8 @@
     signInWithPasskey,
     registerPasskey,
     signOut,
+    requestStudentLogin,
+    checkStudentLogin,
     onChange(fn){ state.listeners.add(fn); if (state.ready) fn(state.user); return () => state.listeners.delete(fn); },
     user(){ return state.user; },
     isLoggedIn(){ return !!state.user && !state.user.isAnonymous; },

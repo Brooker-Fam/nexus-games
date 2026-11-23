@@ -31,6 +31,36 @@
   .card p { color: var(--text-dim); font-size: 1rem; }
   .soon { display: inline-block; margin-top: 10px; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--neon-coral); }
   .gate { text-align: center; padding: 40px 0; }
+  .panel { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 16px; padding: 18px; margin-bottom: 14px; }
+  .panel h2 { font-family: 'Baloo 2', sans-serif; font-size: 1.25rem; margin-bottom: 4px; }
+  .panel > p { color: var(--text-dim); font-size: 1rem; margin-bottom: 12px; }
+  .panel.alert { border-color: var(--neon-coral); box-shadow: 0 0 0 3px rgba(255,106,61,0.15); }
+  .add-form { display: flex; flex-direction: column; gap: 8px; }
+  .add-form textarea {
+    font: inherit; font-size: 1.05rem; font-weight: 600; color: var(--ink); resize: vertical; min-height: 70px;
+    background: #fff; border: 1px solid var(--panel-border); border-radius: 12px; padding: 10px 14px;
+  }
+  .add-form textarea:focus { outline: 2px solid var(--neon-purple); outline-offset: 1px; }
+  .btn {
+    font-family: 'Baloo 2', sans-serif; font-weight: 800; letter-spacing: 0.06em; font-size: 0.9rem;
+    border: 1px solid var(--panel-border); border-radius: 999px; padding: 8px 16px; cursor: pointer;
+    background: #fff; color: var(--ink);
+  }
+  .btn:disabled { opacity: 0.5; cursor: wait; }
+  .btn.primary { align-self: flex-start; background: var(--neon-purple); border-color: var(--neon-purple); color: #fff; }
+  .btn.yes { background: #1f9d55; border-color: #1f9d55; color: #fff; }
+  .btn.small { padding: 4px 12px; font-size: 0.8rem; }
+  .status { min-height: 1.3em; font-weight: 700; font-size: 0.95rem; }
+  .status.ok { color: #1f9d55; } .status.err { color: #d63a1a; }
+  .list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .list li {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    background: #fff; border: 1px solid var(--panel-border); border-radius: 12px; padding: 8px 12px;
+    font-size: 1.05rem; font-weight: 600;
+  }
+  .list li .acts { display: flex; gap: 6px; }
+  .list li small { color: var(--text-dim); font-weight: 600; }
+  .empty { color: var(--text-dim); font-style: italic; }
 </style>
 </head>
 <body>
@@ -49,18 +79,146 @@
       content.textContent = text;
     }
     function render(user) {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
       if (!user || user.isAnonymous) return gate('Please sign in as an educator to manage your students.');
+      if (user.isStudent) return gate('Student accounts can\'t manage students.');
       if (role !== 'educator') return gate('This page is for educators. Sign in as an Educator to use it.');
       content.className = '';
       content.innerHTML =
         '<h1>🍎 Educator Dashboard</h1>' +
         '<div class="sub"></div>' +
+        '<section class="panel" id="requests-panel" hidden>' +
+          '<h2>🔔 Waiting to sign in</h2>' +
+          '<p>These students are asking to sign in. Only let in students you can see.</p>' +
+          '<ul class="list" id="request-list"></ul>' +
+        '</section>' +
+        '<section class="panel">' +
+          '<h2>👩‍🎓 Students</h2>' +
+          '<p>Type usernames to add students. Separate several with commas, spaces or new lines. ' +
+            'Students sign in by typing their username, and you approve each sign-in here.</p>' +
+          '<form class="add-form" id="add-form">' +
+            '<textarea id="add-names" placeholder="e.g. alex.k, sam_1, jordan" aria-label="Student usernames" autocapitalize="none" spellcheck="false"></textarea>' +
+            '<button class="btn primary" type="submit" id="add-btn">ADD STUDENTS</button>' +
+            '<div class="status" id="add-status" role="status" aria-live="polite"></div>' +
+          '</form>' +
+          '<ul class="list" id="student-list" style="margin-top:12px"></ul>' +
+        '</section>' +
         '<div class="grid">' +
-          '<div class="card"><h2>👩‍🎓 Students</h2><p>Add students and see who is playing.</p><span class="soon">COMING SOON</span></div>' +
           '<div class="card"><h2>📈 Progress</h2><p>Track quiz scores and games completed.</p><span class="soon">COMING SOON</span></div>' +
           '<div class="card"><h2>🎮 Assign Games</h2><p>Pick which educational games your class should play.</p><span class="soon">COMING SOON</span></div>' +
         '</div>';
       content.querySelector('.sub').textContent = 'Signed in as ' + (user.name || user.email || 'Educator');
+      startStudents();
+    }
+
+    var REASONS = {
+      invalid: 'must be 3–24 letters, numbers, dots, dashes or underscores',
+      taken: 'is already used by someone else, try another',
+      already_yours: 'is already one of your students',
+    };
+    var pollTimer = null;
+    function api(path, body) {
+      var opts = { credentials: 'same-origin' };
+      if (body !== undefined) {
+        opts.method = 'POST';
+        opts.headers = { 'content-type': 'application/json' };
+        opts.body = JSON.stringify(body);
+      }
+      return fetch('/api/auth' + path, opts).then(function(res) {
+        return res.json().catch(function() { return {}; }).then(function(json) {
+          if (!res.ok) { var e = new Error(json.code || 'request_failed'); e.status = res.status; throw e; }
+          return json;
+        });
+      });
+    }
+    function el(tag, text, cls) {
+      var n = document.createElement(tag);
+      if (text != null) n.textContent = text;
+      if (cls) n.className = cls;
+      return n;
+    }
+    function ago(d) {
+      var s = Math.max(0, Math.round((Date.now() - new Date(d).getTime()) / 1000));
+      return s < 60 ? 'just now' : Math.round(s / 60) + ' min ago';
+    }
+
+    function renderStudents(students) {
+      var list = document.getElementById('student-list');
+      list.innerHTML = '';
+      if (!students.length) { list.appendChild(el('li', 'No students yet. Add some above.', 'empty')); return; }
+      students.forEach(function(st) {
+        var li = el('li');
+        li.appendChild(el('span', '🎒 ' + st.username));
+        var rm = el('button', 'REMOVE', 'btn small');
+        rm.addEventListener('click', function() {
+          if (!confirm('Remove ' + st.username + '? Their account and game progress will be deleted.')) return;
+          rm.disabled = true;
+          api('/students/remove', { studentId: st.id }).then(refresh).catch(function() { rm.disabled = false; alert('Could not remove. Please try again.'); });
+        });
+        li.appendChild(rm);
+        list.appendChild(li);
+      });
+    }
+    function renderRequests(requests) {
+      var panel = document.getElementById('requests-panel');
+      var list = document.getElementById('request-list');
+      panel.hidden = !requests.length;
+      panel.classList.toggle('alert', requests.length > 0);
+      list.innerHTML = '';
+      requests.forEach(function(rq) {
+        var li = el('li');
+        var who = el('span', '🎒 ' + rq.username + ' ');
+        who.appendChild(el('small', ago(rq.createdAt)));
+        li.appendChild(who);
+        var acts = el('span', null, 'acts');
+        var yes = el('button', 'LET IN', 'btn small yes');
+        var no = el('button', 'NOT NOW', 'btn small');
+        function decide(approve) {
+          yes.disabled = no.disabled = true;
+          api('/students/decide', { requestId: rq.id, approve: approve }).then(refresh).catch(refresh);
+        }
+        yes.addEventListener('click', function() { decide(true); });
+        no.addEventListener('click', function() { decide(false); });
+        acts.appendChild(yes); acts.appendChild(no);
+        li.appendChild(acts);
+        list.appendChild(li);
+      });
+    }
+    function refresh() {
+      return api('/students/list').then(function(data) {
+        renderStudents(data.students || []);
+        renderRequests(data.requests || []);
+      }).catch(function(err) {
+        if (err.status === 403) gate('Student accounts can\'t manage students.');
+      });
+    }
+    function startStudents() {
+      var form = document.getElementById('add-form');
+      var input = document.getElementById('add-names');
+      var status = document.getElementById('add-status');
+      var btn = document.getElementById('add-btn');
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var names = input.value.split(/[\s,;]+/).map(function(n) { return n.trim(); }).filter(Boolean);
+        if (!names.length) { status.className = 'status err'; status.textContent = 'Type at least one username.'; return; }
+        btn.disabled = true;
+        status.className = 'status'; status.textContent = 'Adding…';
+        api('/students/add', { usernames: names }).then(function(r) {
+          var lines = [];
+          if (r.added.length) lines.push('Added ' + r.added.map(function(s) { return s.username; }).join(', ') + '.');
+          r.errors.forEach(function(er) { lines.push('“' + er.username + '” ' + (REASONS[er.reason] || 'could not be added') + '.'); });
+          status.className = 'status ' + (r.errors.length ? 'err' : 'ok');
+          status.textContent = lines.join(' ');
+          input.value = r.errors.map(function(er) { return er.username; }).join(', ');
+          return refresh();
+        }).catch(function(err) {
+          status.className = 'status err';
+          status.textContent = err.message === 'too_many_usernames' ? 'Add up to 50 at a time.' : 'Could not add students. Please try again.';
+        }).finally(function() { btn.disabled = false; });
+      });
+      refresh();
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(function() { if (!document.hidden) refresh(); }, 4000);
     }
     var auth = window.NexusAuth;
     if (!auth) return gate('Could not load sign-in. Please refresh.');

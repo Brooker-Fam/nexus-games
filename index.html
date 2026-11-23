@@ -508,6 +508,9 @@
     color: var(--ink); background: linear-gradient(90deg, #e6b800, var(--neon-coral));
     border: none; border-radius: 999px; cursor: pointer;
   }
+  .login-btns.student-mode .login-action-btn:not(#login-student-cancel), .login-btns.student-mode #login-email-row { display: none !important; }
+  .login-btns.student-mode #login-student-row { display: flex; }
+  .login-email-row button:disabled { opacity: 0.5; cursor: wait; }
   .login-msg { min-height: 1.3em; text-align: center; font-weight: 700; font-size: 0.9rem; color: #1f9d55; }
   .login-msg.error { color: #d63a1a; }
   .login-msg.hint { color: var(--text-dim); }
@@ -570,6 +573,11 @@
         <button type="submit">SEND</button>
       </form>
       <button class="login-action-btn" id="login-btn-passkey" style="display:none" disabled>🔑 SIGN IN WITH PASSKEY</button>
+      <form class="login-email-row" id="login-student-row" novalidate>
+        <input type="text" id="login-username" placeholder="Your username" aria-label="Student username" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="24" required>
+        <button type="submit" id="login-student-go">GO</button>
+      </form>
+      <button class="login-action-btn" id="login-student-cancel" style="display:none">CANCEL</button>
     </div>
     <div id="login-msg" class="login-msg hint" role="status" aria-live="polite">Pick one above to get started.</div>
     <button class="login-skip-btn" id="btn-skip-login">SKIP — PLAY AS GUEST</button>
@@ -752,10 +760,19 @@
     }
     function setMsg(text, isError) { msg.textContent = text; msg.className = 'login-msg' + (isError ? ' error' : ''); }
     function selectedRole() { var r = document.querySelector('input[name="kitty-role"]:checked'); return r ? r.value : null; }
+    var loginBtns = document.querySelector('.login-btns');
+    var studentRow = document.getElementById('login-student-row');
+    var usernameInput = document.getElementById('login-username');
+    var studentGo = document.getElementById('login-student-go');
+    var studentCancel = document.getElementById('login-student-cancel');
+    var STUDENT_TOKEN_KEY = 'kittygames.studentLoginToken';
+    var pollTimer = null;
     function syncButtons() {
       var role = selectedRole();
       actionBtns.forEach(function(b) { b.disabled = !role; });
-      if (role) setMsg(''); 
+      loginBtns.classList.toggle('student-mode', role === 'student');
+      if (role === 'student' && !pollTimer) setMsg('Type the username your teacher gave you.');
+      else if (role && !pollTimer) setMsg('');
     }
 
     // Restore a previous choice.
@@ -812,20 +829,94 @@
         setMsg('Passkey failed. Try Google or email instead.', true);
       });
     });
+    // ----- student sign-in: username + educator's permission -----
+    function stopWaiting() {
+      if (pollTimer) clearTimeout(pollTimer);
+      pollTimer = null;
+      store('sessionStorage', STUDENT_TOKEN_KEY, null);
+      usernameInput.disabled = false;
+      studentGo.disabled = false;
+      studentCancel.style.display = 'none';
+    }
+    function waitForTeacher(token, username) {
+      store('sessionStorage', STUDENT_TOKEN_KEY, token + ' ' + username);
+      usernameInput.value = username;
+      usernameInput.disabled = true;
+      studentGo.disabled = true;
+      studentCancel.style.display = '';
+      setMsg('⏳ Waiting for your teacher to let you in as ' + username + '…');
+      msg.className = 'login-msg hint';
+      function tick() {
+        auth.checkStudentLogin(token).then(function(status) {
+          if (status === 'pending') { pollTimer = setTimeout(tick, 3000); return; }
+          stopWaiting();
+          if (status === 'approved') setMsg('You\'re in! Have fun. 🐾');
+          else if (status === 'denied') setMsg('Your teacher said not right now. Ask them for help.', true);
+          else setMsg('That took too long. Try again and ask your teacher to say yes.', true);
+        }).catch(function() { pollTimer = setTimeout(tick, 5000); });
+      }
+      pollTimer = setTimeout(tick, 2000);
+    }
+    studentRow.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var username = usernameInput.value.trim().toLowerCase();
+      if (!username) { setMsg('Type your username first.', true); return; }
+      studentGo.disabled = true;
+      setMsg('Asking your teacher…');
+      auth.requestStudentLogin(username).then(function(r) {
+        waitForTeacher(r.token, r.username || username);
+      }).catch(function(err) {
+        studentGo.disabled = false;
+        if (err.code === 'unknown_username') setMsg('We couldn\'t find that username. Check the spelling or ask your teacher.', true);
+        else if (err.code === 'too_many_requests') setMsg('You already asked a few times. Wait for your teacher to answer.', true);
+        else setMsg('Something went wrong. Please try again.', true);
+      });
+    });
+    studentCancel.addEventListener('click', function() {
+      stopWaiting();
+      usernameInput.value = '';
+      setMsg('Type the username your teacher gave you.');
+    });
+    var pendingLogin = (store('sessionStorage', STUDENT_TOKEN_KEY) || '').split(' ');
+    if (pendingLogin.length === 2 && pendingLogin[0]) {
+      document.getElementById('role-student').checked = true;
+      store('localStorage', ROLE_KEY, 'student');
+      syncButtons();
+      waitForTeacher(pendingLogin[0], pendingLogin[1]);
+    }
+
     document.getElementById('btn-skip-login').addEventListener('click', function() {
       store('sessionStorage', SKIP_KEY, '1');
       closeLogin();
       render(auth.user());
     });
 
+    // Educators: show how many students are waiting for permission to sign in.
+    var requestTimer = null;
+    function watchRequests(link) {
+      function check() {
+        if (document.hidden) return;
+        fetch('/api/auth/students/list', { credentials: 'same-origin' }).then(function(r) { return r.ok ? r.json() : null; }).then(function(d) {
+          var n = d && d.requests ? d.requests.length : 0;
+          link.textContent = n ? 'MANAGE · ' + n + ' WAITING' : 'MANAGE';
+        }).catch(function() {});
+      }
+      check();
+      requestTimer = setInterval(check, 10000);
+    }
+
     function render(user) {
+      if (requestTimer) { clearInterval(requestTimer); requestTimer = null; }
       chip.innerHTML = '';
       var role = store('localStorage', ROLE_KEY);
       if (user && !user.isAnonymous) {
+        // Student accounts are always students, whatever was picked on screen.
+        if (user.isStudent) { role = 'student'; store('localStorage', ROLE_KEY, role); }
+        else if (role === 'student') role = 'player';
         closeLogin();
         var who = document.createElement('span');
         who.className = 'kitty-who';
-        who.textContent = (ROLE_LABELS[role] ? ROLE_LABELS[role] + ' · ' : '') + (user.name || user.email || 'Player');
+        who.textContent = (ROLE_LABELS[role] ? ROLE_LABELS[role] + ' · ' : '') + (user.username || user.name || user.email || 'Player');
         var out = document.createElement('button');
         out.textContent = 'SIGN OUT';
         out.addEventListener('click', function() { auth.signOut(); });
@@ -836,6 +927,7 @@
           manage.href = '/manage/';
           manage.textContent = 'MANAGE';
           chip.appendChild(manage);
+          watchRequests(manage);
         }
         chip.appendChild(out);
         return;

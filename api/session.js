@@ -1,5 +1,6 @@
 import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
+import { getSql } from "../lib/db.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -28,13 +29,24 @@ export default async function handler(req, res) {
     }
 
     const user = session?.user;
+    let student = null;
+    if (user && !user.isAnonymous) {
+      try {
+        const rows = await getSql()`SELECT username FROM student WHERE "userId" = ${user.id}`;
+        if (rows[0]) student = { username: rows[0].username };
+      } catch (e) {
+        console.warn("student lookup failed:", e?.message);
+      }
+    }
     res.status(200).json({
       user: user ? {
         id: user.id,
         name: user.name,
-        email: user.email,
+        email: student ? null : user.email,
         image: user.image,
         isAnonymous: !!user.isAnonymous,
+        isStudent: !!student,
+        username: student?.username ?? null,
       } : null,
     });
   } catch (err) {
