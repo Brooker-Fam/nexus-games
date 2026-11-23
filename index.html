@@ -134,13 +134,60 @@
   .edu-btn.primary { color: #fff; background: var(--neon-purple); border-color: var(--neon-purple); }
   .edu-list { list-style: none; margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
   .edu-list li {
-    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap;
     background: #fff; border: 1px solid var(--panel-border); border-radius: 12px; padding: 10px 12px;
   }
   .edu-item-name { font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
   .edu-item-meta { color: var(--text-dim); font-weight: 600; font-size: 0.85rem; overflow-wrap: anywhere; white-space: pre-line; }
   .edu-list li.empty { justify-content: center; color: var(--text-dim); font-style: italic; font-weight: 600; }
-  .edu-del { flex: none; padding: 3px 10px; font-size: 0.72rem; }
+  .edu-new[hidden], .edu-btn[hidden] { display: none; }
+  .edu-item-text { flex: 1 1 180px; min-width: 0; }
+  .edu-row-acts { display: flex; gap: 6px; flex: none; }
+  .edu-small { padding: 4px 12px; font-size: 0.75rem; }
+  .edu-todo { color: var(--neon-coral); }
+  .edu-done, .edu-count { color: #1f9d55; }
+  .edu-status { min-height: 1.2em; margin-top: 8px; font-weight: 700; font-size: 0.9rem; color: var(--text-dim); }
+  .edu-status:empty { display: none; }
+  .edu-status.ok { color: #1f9d55; } .edu-status.err { color: #d63a1a; }
+  .edu-box {
+    flex: 1 1 100%; margin-top: 4px; padding-top: 10px; border-top: 1px dashed var(--panel-border);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .edu-take-q { border: 0; display: flex; flex-direction: column; gap: 4px; }
+  .edu-take-q legend { font-weight: 700; margin-bottom: 4px; overflow-wrap: anywhere; }
+  .edu-choice {
+    display: flex; align-items: center; gap: 8px; padding: 6px 10px; cursor: pointer;
+    border: 1px solid var(--panel-border); border-radius: 10px; font-weight: 600; overflow-wrap: anywhere;
+  }
+  .edu-choice:has(input:checked) { background: rgba(176,107,255,0.12); border-color: var(--neon-purple); }
+  .edu-choice input { accent-color: var(--neon-purple); flex: none; }
+  .edu-answer {
+    width: 100%; min-height: 110px; resize: vertical; font: inherit; font-size: 1rem; font-weight: 600; color: var(--ink);
+    background: #fff; border: 1px solid var(--panel-border); border-radius: 12px; padding: 9px 12px;
+  }
+  .edu-response { white-space: pre-wrap; overflow-wrap: anywhere; font-weight: 600; background: var(--panel-bg); border-radius: 10px; padding: 8px 10px; flex-basis: 100%; }
+  .edu-big-score { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--neon-purple); }
+  .edu-review { padding: 6px 10px; border-radius: 10px; border-left: 4px solid; }
+  .edu-review.ok { border-color: #1f9d55; background: rgba(31,157,85,0.07); }
+  .edu-review.no { border-color: #d63a1a; background: rgba(214,58,26,0.07); }
+  .edu-review-q { font-weight: 700; overflow-wrap: anywhere; }
+  .edu-results { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .edu-results li { padding: 6px 10px; }
+  .edu-who { font-weight: 700; }
+  .edu-score { font-weight: 700; color: var(--neon-purple); }
+  .edu-key summary { cursor: pointer; font-weight: 700; color: var(--neon-purple); }
+  .edu-key ol { margin: 6px 0 0 20px; font-weight: 600; font-size: 0.9rem; }
+  .edu-questions { display: flex; flex-direction: column; gap: 10px; }
+  .edu-q { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--panel-border); border-radius: 12px; background: #fff; align-items: flex-start; }
+  .edu-q > input, .edu-choices { width: 100%; }
+  .edu-q-head { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+  .edu-q-num { font-weight: 800; color: var(--neon-purple); }
+  .edu-choices { display: flex; flex-direction: column; gap: 6px; }
+  .edu-choice-row { display: flex; align-items: center; gap: 8px; }
+  .edu-choice-row input[type=radio] { width: 20px; height: 20px; flex: none; accent-color: #1f9d55; }
+  .edu-choice-row input[type=text] { flex: 1 1 auto; min-width: 0; }
+  .edu-x { padding: 2px 10px; flex: none; }
+  .edu-hint { font-size: 0.8rem; color: var(--text-dim); font-weight: 600; }
 
   .membership-empty {
     padding: 40px 28px;
@@ -711,18 +758,21 @@
   </div>
 
   <div class="tab-panel" id="tab-tests">
-    <div class="edu-card" data-edu="tests" data-noun="test">
+    <div class="edu-card" data-kind="test">
       <div class="edu-head">
         <div>
           <div class="edu-title">Tests</div>
-          <div class="edu-sub">Plan the tests your class will take.</div>
+          <div class="edu-sub"></div>
         </div>
-        <button type="button" class="edu-new">+ NEW</button>
+        <button type="button" class="edu-new" hidden>+ NEW</button>
       </div>
+      <div class="edu-status" role="status" aria-live="polite"></div>
       <form class="edu-form" hidden novalidate>
         <label>Title<input type="text" name="title" maxlength="120" required></label>
         <label>Due date<input type="date" name="due"></label>
-        <label>Topics &amp; questions<textarea name="notes" maxlength="2000" placeholder="e.g. Cell parts: nucleus, mitochondria, cell wall…"></textarea></label>
+        <label>Instructions (optional)<textarea name="notes" maxlength="2000" placeholder="e.g. Chapter 3: cells. No notes allowed."></textarea></label>
+        <div class="edu-questions"></div>
+        <button type="button" class="edu-btn edu-small edu-add-q">+ ADD QUESTION</button>
         <div class="edu-acts">
           <button type="button" class="edu-btn edu-cancel">CANCEL</button>
           <button type="submit" class="edu-btn primary">SAVE</button>
@@ -733,18 +783,21 @@
   </div>
 
   <div class="tab-panel" id="tab-quizzes">
-    <div class="edu-card" data-edu="quizzes" data-noun="quiz">
+    <div class="edu-card" data-kind="quiz">
       <div class="edu-head">
         <div>
           <div class="edu-title">Quizzes</div>
-          <div class="edu-sub">Quick checks to see what stuck.</div>
+          <div class="edu-sub"></div>
         </div>
-        <button type="button" class="edu-new">+ NEW</button>
+        <button type="button" class="edu-new" hidden>+ NEW</button>
       </div>
+      <div class="edu-status" role="status" aria-live="polite"></div>
       <form class="edu-form" hidden novalidate>
         <label>Title<input type="text" name="title" maxlength="120" required></label>
         <label>Due date<input type="date" name="due"></label>
-        <label>Questions<textarea name="notes" maxlength="2000" placeholder="One question per line"></textarea></label>
+        <label>Instructions (optional)<textarea name="notes" maxlength="2000" placeholder="e.g. Quick check after Exploring Cells."></textarea></label>
+        <div class="edu-questions"></div>
+        <button type="button" class="edu-btn edu-small edu-add-q">+ ADD QUESTION</button>
         <div class="edu-acts">
           <button type="button" class="edu-btn edu-cancel">CANCEL</button>
           <button type="submit" class="edu-btn primary">SAVE</button>
@@ -755,18 +808,19 @@
   </div>
 
   <div class="tab-panel" id="tab-assignments">
-    <div class="edu-card" data-edu="assignments" data-noun="assignment">
+    <div class="edu-card" data-kind="assignment">
       <div class="edu-head">
         <div>
           <div class="edu-title">Assignments</div>
-          <div class="edu-sub">Homework and games for your students to finish.</div>
+          <div class="edu-sub"></div>
         </div>
-        <button type="button" class="edu-new">+ NEW</button>
+        <button type="button" class="edu-new" hidden>+ NEW</button>
       </div>
+      <div class="edu-status" role="status" aria-live="polite"></div>
       <form class="edu-form" hidden novalidate>
         <label>Title<input type="text" name="title" maxlength="120" required></label>
         <label>Due date<input type="date" name="due"></label>
-        <label>Instructions<textarea name="notes" maxlength="2000" placeholder="e.g. Play Exploring Cells and finish the quiz."></textarea></label>
+        <label>Instructions<textarea name="notes" maxlength="2000" placeholder="e.g. Play Exploring Cells, then write 3 things you learned."></textarea></label>
         <div class="edu-acts">
           <button type="button" class="edu-btn edu-cancel">CANCEL</button>
           <button type="submit" class="edu-btn primary">SAVE</button>
@@ -822,6 +876,7 @@
   Object.keys(tabs).forEach(function(key) {
     tabs[key].btn.onclick = function() {
       showTab(key);
+      if (CLASSWORK_TABS.indexOf(key) >= 0 && window.refreshClasswork) window.refreshClasswork();
       history.replaceState(null, '', key === 'games' ? location.pathname : '#' + key);
     };
   });
@@ -829,12 +884,13 @@
   if (tabs[initialTab]) showTab(initialTab);
 
   // Students don't get the general GAMES tab — only educational games and the rest.
-  // Educators also get TESTS, QUIZZES and ASSIGNMENTS.
-  var EDUCATOR_TABS = ['tests', 'quizzes', 'assignments'];
+  // Educators and students also get TESTS, QUIZZES and ASSIGNMENTS.
+  var CLASSWORK_TABS = ['tests', 'quizzes', 'assignments'];
   window.applyRoleTabs = function(role) {
     var hideGames = role === 'student';
     tabs.games.btn.hidden = hideGames;
-    EDUCATOR_TABS.forEach(function(k) { tabs[k].btn.hidden = role !== 'educator'; });
+    CLASSWORK_TABS.forEach(function(k) { tabs[k].btn.hidden = role !== 'educator' && role !== 'student'; });
+    if (window.refreshClasswork) window.refreshClasswork();
     var active = Object.keys(tabs).filter(function(k) { return tabs[k].btn.classList.contains('active'); })[0];
     if (active && tabs[active].btn.hidden) {
       var fallback = hideGames ? 'educational' : 'games';
@@ -847,71 +903,6 @@
     try { role = localStorage.getItem('kittygames.role'); } catch (e) {}
     window.applyRoleTabs(role);
   })();
-
-  // Educator tabs: create and list tests, quizzes and assignments (saved in this browser).
-  document.querySelectorAll('.edu-card').forEach(function(card) {
-    var key = 'kittygames.educator.' + card.getAttribute('data-edu');
-    var noun = card.getAttribute('data-noun');
-    var form = card.querySelector('.edu-form');
-    var list = card.querySelector('.edu-list');
-    var newBtn = card.querySelector('.edu-new');
-    function load() { try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; } }
-    function save(items) { try { localStorage.setItem(key, JSON.stringify(items)); } catch (e) {} }
-    function div(cls, text) { var d = document.createElement('div'); d.className = cls; d.textContent = text; return d; }
-    function fmtDate(iso) {
-      var d = new Date(iso + 'T00:00:00');
-      return isNaN(d) ? iso : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-    }
-    function draw() {
-      var items = load();
-      list.innerHTML = '';
-      if (!items.length) {
-        var li = document.createElement('li');
-        li.className = 'empty';
-        li.textContent = 'No ' + noun + (noun === 'quiz' ? 'zes' : 's') + ' yet. Tap + NEW to make one.';
-        list.appendChild(li);
-        return;
-      }
-      items.forEach(function(it) {
-        var li = document.createElement('li');
-        var text = document.createElement('div');
-        text.appendChild(div('edu-item-name', it.title));
-        if (it.due) text.appendChild(div('edu-item-meta', 'Due ' + fmtDate(it.due)));
-        if (it.notes) text.appendChild(div('edu-item-meta', it.notes));
-        var del = document.createElement('button');
-        del.type = 'button';
-        del.className = 'edu-btn edu-del';
-        del.textContent = 'DELETE';
-        del.addEventListener('click', function() {
-          if (!confirm('Delete "' + it.title + '"?')) return;
-          save(load().filter(function(x) { return x.id !== it.id; }));
-          draw();
-        });
-        li.appendChild(text);
-        li.appendChild(del);
-        list.appendChild(li);
-      });
-    }
-    function toggle(open) {
-      form.hidden = !open;
-      newBtn.hidden = open;
-      if (open) form.elements.title.focus(); else form.reset();
-    }
-    newBtn.addEventListener('click', function() { toggle(true); });
-    card.querySelector('.edu-cancel').addEventListener('click', function() { toggle(false); });
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      var title = form.elements.title.value.trim();
-      if (!title) { form.elements.title.focus(); return; }
-      var items = load();
-      items.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title: title, due: form.elements.due.value, notes: form.elements.notes.value.trim() });
-      items.sort(function(a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0; });
-      save(items);
-      toggle(false);
-      draw();
-    });
-    draw();
-  });
 
   (function() {
     var form = document.getElementById('feedback-form');
@@ -1170,6 +1161,409 @@
       }
     }
     auth.onChange(render);
+  })();
+</script>
+<script>
+  // Tests, quizzes and assignments. Educators make them for their students;
+  // students take them and turn them in. Scoring happens on the server.
+  (function() {
+    var auth = window.NexusAuth;
+    var KINDS = {
+      test: { plural: 'tests', label: 'test', educator: 'Make tests for your students. Answers are scored automatically.', student: 'Tests from your teacher.' },
+      quiz: { plural: 'quizzes', label: 'quiz', educator: 'Quick multiple-choice checks, scored automatically.', student: 'Quizzes from your teacher.' },
+      assignment: { plural: 'assignments', label: 'assignment', educator: 'Give your students work to turn in.', student: 'Work from your teacher to turn in.' },
+    };
+    var ERRORS = {
+      title_required: 'Give it a title.',
+      questions_required: 'Add at least one question.',
+      too_many_questions: 'Use 50 questions or fewer.',
+      question_prompt_required: 'Every question needs a question.',
+      question_choices_invalid: 'Every question needs 2 to 6 answers.',
+      question_answer_invalid: 'Pick the right answer for every question.',
+      already_turned_in: 'You already turned this in.',
+      response_required: 'Write something before turning it in.',
+      answers_required: 'Answer every question first.',
+    };
+    var cards = {};
+    document.querySelectorAll('.edu-card').forEach(function(c) { cards[c.getAttribute('data-kind')] = c; });
+    var mode = null;          // 'educator' | 'student' | null (not signed in)
+    var items = [];
+    var studentCount = 0;
+    var expanded = {};        // itemId -> true while its take/results area is open
+    var drafts = {};          // itemId -> unsent answers, kept across redraws
+    var loading = null;
+
+    function api(path, body) {
+      var opts = { credentials: 'same-origin' };
+      if (body !== undefined) {
+        opts.method = 'POST';
+        opts.headers = { 'content-type': 'application/json' };
+        opts.body = JSON.stringify(body);
+      }
+      return fetch('/api/auth' + path, opts).then(function(res) {
+        return res.json().catch(function() { return {}; }).then(function(json) {
+          if (!res.ok) { var e = new Error(json.code || 'request_failed'); e.status = res.status; throw e; }
+          return json;
+        });
+      });
+    }
+    function el(tag, cls, text) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;
+      return n;
+    }
+    function button(text, cls, onClick) {
+      var b = el('button', 'edu-btn' + (cls ? ' ' + cls : ''), text);
+      b.type = 'button';
+      if (onClick) b.addEventListener('click', onClick);
+      return b;
+    }
+    function fmtDate(iso) {
+      var d = new Date(iso + 'T00:00:00');
+      return isNaN(d) ? iso : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    function errText(err, fallback) { return ERRORS[err && err.message] || fallback; }
+    function setStatus(card, text, cls) {
+      var s = card.querySelector('.edu-status');
+      s.textContent = text || '';
+      s.className = 'edu-status' + (cls ? ' ' + cls : '');
+    }
+    function pct(sub) { return sub.total ? Math.round(sub.score / sub.total * 100) : 0; }
+
+    function currentMode() {
+      var user = auth && auth.user();
+      if (!user || user.isAnonymous) return null;
+      if (user.isStudent) return 'student';
+      var role = user.role;
+      if (!role) { try { role = localStorage.getItem('kittygames.role'); } catch (e) {} }
+      return role === 'educator' ? 'educator' : null;
+    }
+
+    function load() {
+      if (!mode) { items = []; drawAll(); return; }
+      if (loading) return loading;
+      loading = api('/classwork/list').then(function(d) {
+        items = d.items || [];
+        studentCount = d.studentCount || 0;
+      }).catch(function() {
+        items = [];
+        Object.keys(cards).forEach(function(k) { setStatus(cards[k], 'Could not load. Please try again.', 'err'); });
+      }).then(function() { loading = null; drawAll(); });
+      return loading;
+    }
+    window.refreshClasswork = function() {
+      var next = currentMode();
+      if (next !== mode) { mode = next; expanded = {}; drafts = {}; items = []; }
+      return load();
+    };
+
+    function drawAll() { Object.keys(cards).forEach(drawCard); }
+
+    function drawCard(kind) {
+      var card = cards[kind];
+      var info = KINDS[kind];
+      var sub = card.querySelector('.edu-sub');
+      var list = card.querySelector('.edu-list');
+      card.querySelector('.edu-new').hidden = mode !== 'educator' || !card.querySelector('.edu-form').hidden;
+      if (mode === 'educator') sub.textContent = info.educator;
+      else if (mode === 'student') sub.textContent = info.student;
+      else sub.textContent = 'Sign in to see ' + info.plural + '.';
+      list.innerHTML = '';
+      if (!mode) return;
+      var mine = items.filter(function(it) { return it.kind === kind; });
+      if (!mine.length) {
+        list.appendChild(el('li', 'empty', mode === 'educator'
+          ? 'No ' + info.plural + ' yet. Tap + NEW to make one.'
+          : 'No ' + info.plural + ' right now. 🎉'));
+      }
+      mine.forEach(function(it) { list.appendChild(mode === 'educator' ? educatorRow(it) : studentRow(it)); });
+      if (mode === 'educator' && !studentCount && !card.querySelector('.edu-status').textContent) {
+        setStatus(card, 'Add students on the MANAGE page so they can see your ' + info.plural + '.');
+      }
+    }
+
+    function rowHead(li, it) {
+      var text = el('div', 'edu-item-text');
+      text.appendChild(el('div', 'edu-item-name', it.title));
+      var meta = [];
+      if (it.dueDate) meta.push('Due ' + fmtDate(it.dueDate));
+      if (it.kind !== 'assignment') meta.push(it.questions.length + (it.questions.length === 1 ? ' question' : ' questions'));
+      if (meta.length) text.appendChild(el('div', 'edu-item-meta', meta.join(' · ')));
+      if (it.notes) text.appendChild(el('div', 'edu-item-meta', it.notes));
+      li.appendChild(text);
+      return text;
+    }
+
+    // ----- educator: list, results, delete -----
+    function educatorRow(it) {
+      var li = el('li');
+      var text = rowHead(li, it);
+      text.appendChild(el('div', 'edu-item-meta edu-count', it.turnedIn + ' of ' + studentCount + ' turned in'));
+      var acts = el('div', 'edu-row-acts');
+      acts.appendChild(button(expanded[it.id] ? 'HIDE' : 'RESULTS', 'edu-small', function() {
+        expanded[it.id] = !expanded[it.id];
+        drawCard(it.kind);
+      }));
+      acts.appendChild(button('DELETE', 'edu-small', function() {
+        if (!confirm('Delete "' + it.title + '"? Anything students turned in for it is deleted too.')) return;
+        api('/classwork/delete', { itemId: it.id }).then(load).catch(function() { alert('Could not delete. Please try again.'); });
+      }));
+      li.appendChild(acts);
+      if (expanded[it.id]) li.appendChild(resultsBox(it));
+      return li;
+    }
+
+    function resultsBox(it) {
+      var box = el('div', 'edu-box');
+      box.appendChild(el('div', 'edu-item-meta', 'Loading…'));
+      api('/classwork/submissions', { itemId: it.id }).then(function(d) {
+        box.innerHTML = '';
+        if (!d.students.length) { box.appendChild(el('div', 'edu-item-meta', 'No students yet.')); return; }
+        var table = el('ul', 'edu-results');
+        d.students.forEach(function(st) {
+          var row = el('li');
+          row.appendChild(el('span', 'edu-who', '🎒 ' + st.username));
+          var s = st.submission;
+          if (!s) row.appendChild(el('span', 'edu-item-meta', 'Not turned in'));
+          else if (s.total != null) row.appendChild(el('span', 'edu-score', s.score + '/' + s.total + ' · ' + pct(s) + '%'));
+          else row.appendChild(el('span', 'edu-score', 'Turned in ✓'));
+          if (s && s.response) row.appendChild(el('div', 'edu-response', s.response));
+          table.appendChild(row);
+        });
+        box.appendChild(table);
+        if (it.questions.length) {
+          var key = el('details', 'edu-key');
+          key.appendChild(el('summary', null, 'Answer key'));
+          var ol = el('ol');
+          it.questions.forEach(function(q) {
+            var li = el('li', null, q.prompt + ' ');
+            li.appendChild(el('strong', null, '→ ' + q.choices[q.answer]));
+            ol.appendChild(li);
+          });
+          key.appendChild(ol);
+          box.appendChild(key);
+        }
+      }).catch(function() {
+        box.innerHTML = '';
+        box.appendChild(el('div', 'edu-item-meta', 'Could not load results.'));
+      });
+      return box;
+    }
+
+    // ----- student: take, turn in, review -----
+    function studentRow(it) {
+      var li = el('li');
+      var text = rowHead(li, it);
+      var s = it.submission;
+      var status = !s ? 'Not turned in yet' : s.total != null ? 'Score: ' + s.score + '/' + s.total + ' (' + pct(s) + '%)' : 'Turned in ✓';
+      text.appendChild(el('div', 'edu-item-meta ' + (s ? 'edu-done' : 'edu-todo'), status));
+      var acts = el('div', 'edu-row-acts');
+      var label = expanded[it.id] ? 'CLOSE' : s ? 'REVIEW' : it.kind === 'assignment' ? 'TURN IN' : 'START';
+      acts.appendChild(button(label, expanded[it.id] || s ? 'edu-small' : 'edu-small primary', function() {
+        expanded[it.id] = !expanded[it.id];
+        drawCard(it.kind);
+      }));
+      li.appendChild(acts);
+      if (expanded[it.id]) li.appendChild(s ? reviewBox(it) : takeBox(it));
+      return li;
+    }
+
+    function takeBox(it) {
+      var box = el('form', 'edu-box');
+      box.noValidate = true;
+      var draft = drafts[it.id] || (drafts[it.id] = it.kind === 'assignment' ? { response: '' } : { answers: [] });
+      if (it.kind === 'assignment') {
+        var ta = el('textarea', 'edu-answer');
+        ta.maxLength = 5000;
+        ta.placeholder = 'Write your answer here…';
+        ta.setAttribute('aria-label', 'Your answer for ' + it.title);
+        ta.value = draft.response;
+        ta.addEventListener('input', function() { draft.response = ta.value; });
+        box.appendChild(ta);
+      } else {
+        it.questions.forEach(function(q, qi) {
+          var fs = el('fieldset', 'edu-take-q');
+          fs.appendChild(el('legend', null, (qi + 1) + '. ' + q.prompt));
+          q.choices.forEach(function(choice, ci) {
+            var lab = el('label', 'edu-choice');
+            var r = el('input');
+            r.type = 'radio';
+            r.name = 'take-' + it.id + '-' + qi;
+            r.checked = draft.answers[qi] === ci;
+            r.addEventListener('change', function() { draft.answers[qi] = ci; });
+            lab.appendChild(r);
+            lab.appendChild(el('span', null, choice));
+            fs.appendChild(lab);
+          });
+          box.appendChild(fs);
+        });
+      }
+      var msg = el('div', 'edu-status');
+      var send = el('button', 'edu-btn primary', it.kind === 'assignment' ? 'TURN IN' : 'SUBMIT');
+      send.type = 'submit';
+      var acts = el('div', 'edu-acts');
+      acts.appendChild(send);
+      box.appendChild(msg);
+      box.appendChild(acts);
+      box.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var payload = { itemId: it.id };
+        if (it.kind === 'assignment') {
+          payload.response = draft.response.trim();
+          if (!payload.response) { msg.className = 'edu-status err'; msg.textContent = ERRORS.response_required; return; }
+        } else {
+          var missing = it.questions.findIndex(function(q, i) { return draft.answers[i] == null; });
+          if (missing >= 0) { msg.className = 'edu-status err'; msg.textContent = 'Answer question ' + (missing + 1) + ' first.'; return; }
+          payload.answers = it.questions.map(function(q, i) { return draft.answers[i]; });
+        }
+        if (!confirm('Turn in "' + it.title + '"? You can only turn it in once.')) return;
+        send.disabled = true;
+        msg.className = 'edu-status'; msg.textContent = 'Sending…';
+        api('/classwork/submit', payload).then(function(r) {
+          it.submission = r.submission;
+          delete drafts[it.id];
+          drawCard(it.kind);
+        }).catch(function(err) {
+          send.disabled = false;
+          msg.className = 'edu-status err';
+          msg.textContent = errText(err, 'Could not turn it in. Please try again.');
+          if (err.message === 'already_turned_in') load();
+        });
+      });
+      return box;
+    }
+
+    function reviewBox(it) {
+      var box = el('div', 'edu-box');
+      var s = it.submission;
+      if (it.kind === 'assignment') {
+        box.appendChild(el('div', 'edu-item-meta', 'What you turned in:'));
+        box.appendChild(el('div', 'edu-response', s.response));
+        return box;
+      }
+      box.appendChild(el('div', 'edu-big-score', s.score + ' / ' + s.total + ' right · ' + pct(s) + '%'));
+      it.questions.forEach(function(q, qi) {
+        var ok = s.correct && s.correct[qi];
+        var row = el('div', 'edu-review ' + (ok ? 'ok' : 'no'));
+        row.appendChild(el('div', 'edu-review-q', (ok ? '✓ ' : '✗ ') + (qi + 1) + '. ' + q.prompt));
+        row.appendChild(el('div', 'edu-item-meta', 'Your answer: ' + (q.choices[s.answers[qi]] || '—')));
+        box.appendChild(row);
+      });
+      return box;
+    }
+
+    // ----- educator: new test / quiz / assignment -----
+    var qSeq = 0;
+    function choiceRow(qName, list, value, checked) {
+      var row = el('div', 'edu-choice-row');
+      var r = el('input');
+      r.type = 'radio'; r.name = qName; r.checked = !!checked;
+      r.setAttribute('aria-label', 'Right answer');
+      r.title = 'Right answer';
+      var inp = el('input');
+      inp.type = 'text'; inp.maxLength = 200; inp.placeholder = 'Answer'; inp.value = value || '';
+      var rm = button('×', 'edu-x', function() {
+        if (list.children.length <= 2) return;
+        var wasChecked = r.checked;
+        row.remove();
+        if (wasChecked) list.querySelector('input[type=radio]').checked = true;
+      });
+      rm.setAttribute('aria-label', 'Remove answer');
+      row.appendChild(r); row.appendChild(inp); row.appendChild(rm);
+      return row;
+    }
+    function addQuestion(container) {
+      var qName = 'q-' + (++qSeq);
+      var q = el('div', 'edu-q');
+      var head = el('div', 'edu-q-head');
+      head.appendChild(el('span', 'edu-q-num'));
+      head.appendChild(button('REMOVE', 'edu-small', function() { q.remove(); renumber(container); }));
+      q.appendChild(head);
+      var prompt = el('input', 'edu-q-prompt');
+      prompt.type = 'text'; prompt.maxLength = 500; prompt.placeholder = 'Question';
+      q.appendChild(prompt);
+      var list = el('div', 'edu-choices');
+      for (var i = 0; i < 3; i++) list.appendChild(choiceRow(qName, list, '', i === 0));
+      q.appendChild(list);
+      q.appendChild(el('div', 'edu-hint', 'Tap the circle next to the right answer.'));
+      q.appendChild(button('+ ANSWER', 'edu-small', function() {
+        if (list.children.length < 6) list.appendChild(choiceRow(qName, list, '', false));
+      }));
+      container.appendChild(q);
+      renumber(container);
+      prompt.focus();
+    }
+    function renumber(container) {
+      Array.prototype.forEach.call(container.children, function(q, i) { q.querySelector('.edu-q-num').textContent = 'Question ' + (i + 1); });
+    }
+    function collectQuestions(container) {
+      return Array.prototype.map.call(container.children, function(q) {
+        var choices = [], answer = -1;
+        q.querySelectorAll('.edu-choice-row').forEach(function(row) {
+          var v = row.querySelector('input[type=text]').value.trim();
+          if (!v) return;
+          if (row.querySelector('input[type=radio]').checked) answer = choices.length;
+          choices.push(v);
+        });
+        return { prompt: q.querySelector('.edu-q-prompt').value.trim(), choices: choices, answer: answer };
+      });
+    }
+
+    Object.keys(cards).forEach(function(kind) {
+      var card = cards[kind];
+      var form = card.querySelector('.edu-form');
+      var newBtn = card.querySelector('.edu-new');
+      var qs = card.querySelector('.edu-questions');
+      var addQ = card.querySelector('.edu-add-q');
+      var save = form.querySelector('button[type=submit]');
+      function toggle(open) {
+        form.hidden = !open;
+        newBtn.hidden = open || mode !== 'educator';
+        setStatus(card, '');
+        if (open) {
+          if (qs && !qs.children.length) addQuestion(qs);
+          form.elements.title.focus();
+        } else {
+          form.reset();
+          if (qs) qs.innerHTML = '';
+        }
+      }
+      newBtn.addEventListener('click', function() { toggle(true); });
+      card.querySelector('.edu-cancel').addEventListener('click', function() { toggle(false); });
+      if (addQ) addQ.addEventListener('click', function() { addQuestion(qs); });
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var payload = {
+          kind: kind,
+          title: form.elements.title.value.trim(),
+          dueDate: form.elements.due.value || null,
+          notes: form.elements.notes.value.trim(),
+        };
+        if (!payload.title) { setStatus(card, ERRORS.title_required, 'err'); form.elements.title.focus(); return; }
+        if (qs) {
+          payload.questions = collectQuestions(qs);
+          var badQ = payload.questions.findIndex(function(q) { return !q.prompt || q.choices.length < 2 || q.answer < 0; });
+          if (!payload.questions.length) { setStatus(card, ERRORS.questions_required, 'err'); return; }
+          if (badQ >= 0) {
+            setStatus(card, 'Question ' + (badQ + 1) + ' needs a question, at least 2 answers, and the right answer picked.', 'err');
+            return;
+          }
+        }
+        save.disabled = true;
+        setStatus(card, 'Saving…');
+        api('/classwork/create', payload).then(function() {
+          toggle(false);
+          setStatus(card, 'Saved! Your students can see it now.', 'ok');
+          return load();
+        }).catch(function(err) {
+          setStatus(card, errText(err, 'Could not save. Please try again.'), 'err');
+        }).finally(function() { save.disabled = false; });
+      });
+    });
+
+    if (!auth) return;
+    auth.onChange(function() { window.refreshClasswork(); });
   })();
 </script>
 </body>
