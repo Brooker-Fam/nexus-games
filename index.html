@@ -90,6 +90,57 @@
 
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
+  .tabs { flex-wrap: wrap; }
+  .tab-btn { flex: 1 1 auto; }
+  .tab-btn[hidden] { display: none; }
+
+  /* ===== educator tabs: tests, quizzes, assignments ===== */
+  .edu-card {
+    padding: 20px 22px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(176,107,255,0.14);
+    overflow-y: auto;
+    min-height: 0;
+  }
+  .edu-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .edu-title {
+    font-family: 'Baloo 2', sans-serif; font-size: 1.35rem; font-weight: 800;
+    background: linear-gradient(90deg, var(--neon-coral), var(--neon-purple));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .edu-sub { margin-top: 2px; color: var(--text-dim); font-weight: 600; font-size: 0.92rem; }
+  .edu-new {
+    flex: none; padding: 6px 16px;
+    font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.08em;
+    color: #fff; background: linear-gradient(90deg, var(--neon-coral), var(--neon-purple));
+    border: none; border-radius: 999px; cursor: pointer;
+  }
+  .edu-form { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .edu-form[hidden] { display: none; }
+  .edu-form input, .edu-form textarea {
+    width: 100%; font: inherit; font-size: 1rem; font-weight: 600; color: var(--ink);
+    background: #fff; border: 1px solid var(--panel-border); border-radius: 12px; padding: 9px 12px;
+  }
+  .edu-form textarea { min-height: 80px; resize: vertical; }
+  .edu-form input:focus, .edu-form textarea:focus { outline: 2px solid var(--neon-purple); outline-offset: 1px; }
+  .edu-form label { font-weight: 700; font-size: 0.85rem; color: var(--text-dim); display: flex; flex-direction: column; gap: 4px; }
+  .edu-acts { display: flex; gap: 8px; justify-content: flex-end; }
+  .edu-btn {
+    padding: 7px 18px; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 0.85rem; letter-spacing: 0.06em;
+    color: var(--ink); background: #fff; border: 1px solid var(--panel-border); border-radius: 999px; cursor: pointer;
+  }
+  .edu-btn.primary { color: #fff; background: var(--neon-purple); border-color: var(--neon-purple); }
+  .edu-list { list-style: none; margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .edu-list li {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+    background: #fff; border: 1px solid var(--panel-border); border-radius: 12px; padding: 10px 12px;
+  }
+  .edu-item-name { font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
+  .edu-item-meta { color: var(--text-dim); font-weight: 600; font-size: 0.85rem; overflow-wrap: anywhere; white-space: pre-line; }
+  .edu-list li.empty { justify-content: center; color: var(--text-dim); font-style: italic; font-weight: 600; }
+  .edu-del { flex: none; padding: 3px 10px; font-size: 0.72rem; }
 
   .membership-empty {
     padding: 40px 28px;
@@ -596,6 +647,9 @@
   <div class="tabs">
     <button class="tab-btn active" id="tab-btn-games">GAMES</button>
     <button class="tab-btn" id="tab-btn-educational">EDUCATIONAL GAMES</button>
+    <button class="tab-btn" id="tab-btn-tests" hidden>TESTS</button>
+    <button class="tab-btn" id="tab-btn-quizzes" hidden>QUIZZES</button>
+    <button class="tab-btn" id="tab-btn-assignments" hidden>ASSIGNMENTS</button>
     <button class="tab-btn" id="tab-btn-memberships">MEMBERSHIPS</button>
     <button class="tab-btn" id="tab-btn-feedback">FEEDBACK</button>
   </div>
@@ -656,6 +710,72 @@
     </a>
   </div>
 
+  <div class="tab-panel" id="tab-tests">
+    <div class="edu-card" data-edu="tests" data-noun="test">
+      <div class="edu-head">
+        <div>
+          <div class="edu-title">Tests</div>
+          <div class="edu-sub">Plan the tests your class will take.</div>
+        </div>
+        <button type="button" class="edu-new">+ NEW</button>
+      </div>
+      <form class="edu-form" hidden novalidate>
+        <label>Title<input type="text" name="title" maxlength="120" required></label>
+        <label>Due date<input type="date" name="due"></label>
+        <label>Topics &amp; questions<textarea name="notes" maxlength="2000" placeholder="e.g. Cell parts: nucleus, mitochondria, cell wall…"></textarea></label>
+        <div class="edu-acts">
+          <button type="button" class="edu-btn edu-cancel">CANCEL</button>
+          <button type="submit" class="edu-btn primary">SAVE</button>
+        </div>
+      </form>
+      <ul class="edu-list"></ul>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-quizzes">
+    <div class="edu-card" data-edu="quizzes" data-noun="quiz">
+      <div class="edu-head">
+        <div>
+          <div class="edu-title">Quizzes</div>
+          <div class="edu-sub">Quick checks to see what stuck.</div>
+        </div>
+        <button type="button" class="edu-new">+ NEW</button>
+      </div>
+      <form class="edu-form" hidden novalidate>
+        <label>Title<input type="text" name="title" maxlength="120" required></label>
+        <label>Due date<input type="date" name="due"></label>
+        <label>Questions<textarea name="notes" maxlength="2000" placeholder="One question per line"></textarea></label>
+        <div class="edu-acts">
+          <button type="button" class="edu-btn edu-cancel">CANCEL</button>
+          <button type="submit" class="edu-btn primary">SAVE</button>
+        </div>
+      </form>
+      <ul class="edu-list"></ul>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-assignments">
+    <div class="edu-card" data-edu="assignments" data-noun="assignment">
+      <div class="edu-head">
+        <div>
+          <div class="edu-title">Assignments</div>
+          <div class="edu-sub">Homework and games for your students to finish.</div>
+        </div>
+        <button type="button" class="edu-new">+ NEW</button>
+      </div>
+      <form class="edu-form" hidden novalidate>
+        <label>Title<input type="text" name="title" maxlength="120" required></label>
+        <label>Due date<input type="date" name="due"></label>
+        <label>Instructions<textarea name="notes" maxlength="2000" placeholder="e.g. Play Exploring Cells and finish the quiz."></textarea></label>
+        <div class="edu-acts">
+          <button type="button" class="edu-btn edu-cancel">CANCEL</button>
+          <button type="submit" class="edu-btn primary">SAVE</button>
+        </div>
+      </form>
+      <ul class="edu-list"></ul>
+    </div>
+  </div>
+
   <div class="tab-panel" id="tab-memberships">
     <div class="membership-empty">No memberships available right now.</div>
   </div>
@@ -687,6 +807,9 @@
   const tabs = {
     games: { btn: document.getElementById('tab-btn-games'), panel: document.getElementById('tab-games') },
     educational: { btn: document.getElementById('tab-btn-educational'), panel: document.getElementById('tab-educational') },
+    tests: { btn: document.getElementById('tab-btn-tests'), panel: document.getElementById('tab-tests') },
+    quizzes: { btn: document.getElementById('tab-btn-quizzes'), panel: document.getElementById('tab-quizzes') },
+    assignments: { btn: document.getElementById('tab-btn-assignments'), panel: document.getElementById('tab-assignments') },
     memberships: { btn: document.getElementById('tab-btn-memberships'), panel: document.getElementById('tab-memberships') },
     feedback: { btn: document.getElementById('tab-btn-feedback'), panel: document.getElementById('tab-feedback') },
   };
@@ -706,12 +829,17 @@
   if (tabs[initialTab]) showTab(initialTab);
 
   // Students don't get the general GAMES tab — only educational games and the rest.
+  // Educators also get TESTS, QUIZZES and ASSIGNMENTS.
+  var EDUCATOR_TABS = ['tests', 'quizzes', 'assignments'];
   window.applyRoleTabs = function(role) {
     var hideGames = role === 'student';
     tabs.games.btn.hidden = hideGames;
-    if (hideGames && tabs.games.btn.classList.contains('active')) {
-      showTab('educational');
-      if (!location.hash) history.replaceState(null, '', '#educational');
+    EDUCATOR_TABS.forEach(function(k) { tabs[k].btn.hidden = role !== 'educator'; });
+    var active = Object.keys(tabs).filter(function(k) { return tabs[k].btn.classList.contains('active'); })[0];
+    if (active && tabs[active].btn.hidden) {
+      var fallback = hideGames ? 'educational' : 'games';
+      showTab(fallback);
+      history.replaceState(null, '', fallback === 'games' ? location.pathname : '#' + fallback);
     }
   };
   (function() {
@@ -719,6 +847,71 @@
     try { role = localStorage.getItem('kittygames.role'); } catch (e) {}
     window.applyRoleTabs(role);
   })();
+
+  // Educator tabs: create and list tests, quizzes and assignments (saved in this browser).
+  document.querySelectorAll('.edu-card').forEach(function(card) {
+    var key = 'kittygames.educator.' + card.getAttribute('data-edu');
+    var noun = card.getAttribute('data-noun');
+    var form = card.querySelector('.edu-form');
+    var list = card.querySelector('.edu-list');
+    var newBtn = card.querySelector('.edu-new');
+    function load() { try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; } }
+    function save(items) { try { localStorage.setItem(key, JSON.stringify(items)); } catch (e) {} }
+    function div(cls, text) { var d = document.createElement('div'); d.className = cls; d.textContent = text; return d; }
+    function fmtDate(iso) {
+      var d = new Date(iso + 'T00:00:00');
+      return isNaN(d) ? iso : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    function draw() {
+      var items = load();
+      list.innerHTML = '';
+      if (!items.length) {
+        var li = document.createElement('li');
+        li.className = 'empty';
+        li.textContent = 'No ' + noun + (noun === 'quiz' ? 'zes' : 's') + ' yet. Tap + NEW to make one.';
+        list.appendChild(li);
+        return;
+      }
+      items.forEach(function(it) {
+        var li = document.createElement('li');
+        var text = document.createElement('div');
+        text.appendChild(div('edu-item-name', it.title));
+        if (it.due) text.appendChild(div('edu-item-meta', 'Due ' + fmtDate(it.due)));
+        if (it.notes) text.appendChild(div('edu-item-meta', it.notes));
+        var del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'edu-btn edu-del';
+        del.textContent = 'DELETE';
+        del.addEventListener('click', function() {
+          if (!confirm('Delete "' + it.title + '"?')) return;
+          save(load().filter(function(x) { return x.id !== it.id; }));
+          draw();
+        });
+        li.appendChild(text);
+        li.appendChild(del);
+        list.appendChild(li);
+      });
+    }
+    function toggle(open) {
+      form.hidden = !open;
+      newBtn.hidden = open;
+      if (open) form.elements.title.focus(); else form.reset();
+    }
+    newBtn.addEventListener('click', function() { toggle(true); });
+    card.querySelector('.edu-cancel').addEventListener('click', function() { toggle(false); });
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var title = form.elements.title.value.trim();
+      if (!title) { form.elements.title.focus(); return; }
+      var items = load();
+      items.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title: title, due: form.elements.due.value, notes: form.elements.notes.value.trim() });
+      items.sort(function(a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0; });
+      save(items);
+      toggle(false);
+      draw();
+    });
+    draw();
+  });
 
   (function() {
     var form = document.getElementById('feedback-form');
