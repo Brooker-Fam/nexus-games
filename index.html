@@ -529,14 +529,16 @@
     position: fixed; top: 16px; right: 16px; z-index: 10;
     display: flex; align-items: center; gap: 8px;
   }
-  .kitty-auth button, .kitty-auth .kitty-who {
+  .kitty-auth button, .kitty-auth .kitty-who, .kitty-auth .kitty-manage {
     font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.05em;
     padding: 6px 14px;
     color: var(--ink); background: var(--panel-bg);
     border: 1px solid var(--panel-border); border-radius: 999px;
   }
   .kitty-auth button { cursor: pointer; }
+  .kitty-auth .kitty-manage { text-decoration: none; color: #fff; background: var(--neon-purple); border-color: var(--neon-purple); }
   .kitty-auth button:hover { color: var(--neon-purple); border-color: var(--neon-purple); }
+  .kitty-auth .kitty-manage:hover { background: var(--neon-coral); border-color: var(--neon-coral); }
   @media (max-width: 480px) { .kitty-auth { top: 10px; right: 10px; } .kitty-auth .kitty-who { display: none; } }
 </style>
 </head>
@@ -828,6 +830,13 @@
         out.textContent = 'SIGN OUT';
         out.addEventListener('click', function() { auth.signOut(); });
         chip.appendChild(who);
+        if (role === 'educator') {
+          var manage = document.createElement('a');
+          manage.className = 'kitty-manage';
+          manage.href = '/manage/';
+          manage.textContent = 'MANAGE';
+          chip.appendChild(manage);
+        }
         chip.appendChild(out);
         return;
       }

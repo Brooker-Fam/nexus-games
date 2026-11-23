@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!-- Kitty Games - educator management page -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage · Kitty Games</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Rajdhani:wght@400;600&display=swap">
+<style>
+  :root {
+    --bg-deep: #ffffff; --bg-mid: #f7f1ff; --ink: #1a0e2b;
+    --neon-coral: #ff6a3d; --neon-purple: #b06bff;
+    --text-dim: rgba(26,14,43,0.62);
+    --panel-bg: #fbf6ff; --panel-border: rgba(176,107,255,0.3);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: radial-gradient(circle at 50% 20%, var(--bg-mid), var(--bg-deep));
+    color: var(--ink); font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh; padding: 40px 16px 60px;
+    display: flex; justify-content: center;
+  }
+  .wrap { width: 100%; max-width: 720px; }
+  .back { font-family: 'Baloo 2', sans-serif; font-weight: 700; color: var(--neon-purple); text-decoration: none; }
+  h1 { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 2.2rem; margin: 16px 0 4px; }
+  .sub { color: var(--text-dim); font-size: 1.1rem; margin-bottom: 24px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .card { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 16px; padding: 18px; }
+  .card h2 { font-family: 'Baloo 2', sans-serif; font-size: 1.15rem; margin-bottom: 6px; }
+  .card p { color: var(--text-dim); font-size: 1rem; }
+  .soon { display: inline-block; margin-top: 10px; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--neon-coral); }
+  .gate { text-align: center; padding: 40px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">← Back to Kitty Games</a>
+  <div id="content" class="gate">Loading…</div>
+</div>
+<script src="/nexus/js/shared/auth-client.js"></script>
+<script>
+  (function() {
+    var content = document.getElementById('content');
+    var role = null;
+    try { role = localStorage.getItem('kittygames.role'); } catch (e) {}
+    function gate(text) {
+      content.className = 'gate';
+      content.textContent = text;
+    }
+    function render(user) {
+      if (!user || user.isAnonymous) return gate('Please sign in as an educator to manage your students.');
+      if (role !== 'educator') return gate('This page is for educators. Sign in as an Educator to use it.');
+      content.className = '';
+      content.innerHTML =
+        '<h1>🍎 Educator Dashboard</h1>' +
+        '<div class="sub"></div>' +
+        '<div class="grid">' +
+          '<div class="card"><h2>👩‍🎓 Students</h2><p>Add students and see who is playing.</p><span class="soon">COMING SOON</span></div>' +
+          '<div class="card"><h2>📈 Progress</h2><p>Track quiz scores and games completed.</p><span class="soon">COMING SOON</span></div>' +
+          '<div class="card"><h2>🎮 Assign Games</h2><p>Pick which educational games your class should play.</p><span class="soon">COMING SOON</span></div>' +
+        '</div>';
+      content.querySelector('.sub').textContent = 'Signed in as ' + (user.name || user.email || 'Educator');
+    }
+    var auth = window.NexusAuth;
+    if (!auth) return gate('Could not load sign-in. Please refresh.');
+    auth.onChange(render);
+  })();
+</script>
+</body>
+</html>
