@@ -697,6 +697,21 @@
   var initialTab = location.hash.replace('#', '');
   if (tabs[initialTab]) showTab(initialTab);
 
+  // Students don't get the general GAMES tab — only educational games and the rest.
+  window.applyRoleTabs = function(role) {
+    var hideGames = role === 'student';
+    tabs.games.btn.hidden = hideGames;
+    if (hideGames && tabs.games.btn.classList.contains('active')) {
+      showTab('educational');
+      if (!location.hash) history.replaceState(null, '', '#educational');
+    }
+  };
+  (function() {
+    var role = null;
+    try { role = localStorage.getItem('kittygames.role'); } catch (e) {}
+    window.applyRoleTabs(role);
+  })();
+
   (function() {
     var form = document.getElementById('feedback-form');
     var msg = document.getElementById('fb-message');
@@ -763,6 +778,7 @@
     if (saved && document.getElementById('role-' + saved)) document.getElementById('role-' + saved).checked = true;
     document.getElementById('login-roles').addEventListener('change', function() {
       store('localStorage', ROLE_KEY, selectedRole());
+      window.applyRoleTabs(selectedRole());
       syncButtons();
     });
     syncButtons();
