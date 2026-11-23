@@ -344,6 +344,72 @@
     .game-modes { display: none; }
     .membership-empty { padding: 24px; }
   }
+
+  /* ===== feedback tab ===== */
+  .feedback-card {
+    padding: 22px 22px 20px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(176,107,255,0.14);
+    overflow-y: auto;
+    min-height: 0;
+  }
+  .feedback-title {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--neon-coral), var(--neon-purple));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .feedback-sub { margin-top: 2px; color: var(--text-dim); font-weight: 600; font-size: 0.92rem; }
+  .feedback-form { margin-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .fb-cats { display: flex; flex-wrap: wrap; gap: 6px; border: 0; }
+  .fb-cats legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .fb-cats input { position: absolute; opacity: 0; pointer-events: none; }
+  .fb-cats label {
+    padding: 6px 14px;
+    font-weight: 700; font-size: 0.85rem; letter-spacing: 0.04em;
+    color: var(--neon-purple);
+    background: rgba(176,107,255,0.1);
+    border: 1px solid var(--panel-border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .fb-cats input:checked + label { color: #fff; background: linear-gradient(90deg, var(--neon-coral), var(--neon-purple)); border-color: transparent; }
+  .fb-cats input:focus-visible + label { outline: 2px solid var(--neon-purple); outline-offset: 2px; }
+  .feedback-form textarea, .feedback-form input[type=text] {
+    width: 100%;
+    font: inherit; font-size: 1rem; font-weight: 600;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .feedback-form textarea { min-height: 110px; resize: vertical; }
+  .feedback-form textarea:focus, .feedback-form input[type=text]:focus { outline: 2px solid var(--neon-purple); outline-offset: 1px; }
+  .fb-count { align-self: flex-end; margin-top: -8px; font-size: 0.75rem; color: var(--text-dim); }
+  .fb-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .fb-send {
+    align-self: center;
+    padding: 10px 36px;
+    font-family: 'Baloo 2', sans-serif; font-size: 0.95rem; font-weight: 800; letter-spacing: 0.1em;
+    color: var(--ink);
+    background: linear-gradient(90deg, #e6b800, var(--neon-coral));
+    border: none; border-radius: 999px;
+    box-shadow: 0 6px 20px rgba(255,106,61,0.35);
+    cursor: pointer;
+  }
+  .fb-send:disabled { opacity: 0.6; cursor: default; }
+  .fb-status { min-height: 1.2em; text-align: center; font-weight: 700; font-size: 0.9rem; }
+  .fb-status.ok { color: #1f9d55; }
+  .fb-status.err { color: #d63a1a; }
+  @media (max-height: 640px) {
+    .feedback-card { padding: 14px 16px; }
+    .feedback-form textarea { min-height: 70px; }
+  }
 </style>
 </head>
 <body>
@@ -360,6 +426,7 @@
     <button class="tab-btn active" id="tab-btn-games">GAMES</button>
     <button class="tab-btn" id="tab-btn-educational">EDUCATIONAL GAMES</button>
     <button class="tab-btn" id="tab-btn-memberships">MEMBERSHIPS</button>
+    <button class="tab-btn" id="tab-btn-feedback">FEEDBACK</button>
   </div>
 
   <div class="tab-panel active" id="tab-games">
@@ -421,6 +488,28 @@
   <div class="tab-panel" id="tab-memberships">
     <div class="membership-empty">No memberships available right now.</div>
   </div>
+
+  <div class="tab-panel" id="tab-feedback">
+    <div class="feedback-card">
+      <div class="feedback-title">Tell us what you think</div>
+      <div class="feedback-sub">Ideas, bugs, favourite games &mdash; we read every message.</div>
+      <form class="feedback-form" id="feedback-form" novalidate>
+        <fieldset class="fb-cats">
+          <legend>Type of feedback</legend>
+          <input type="radio" name="category" id="fb-idea" value="idea" checked><label for="fb-idea">💡 Idea</label>
+          <input type="radio" name="category" id="fb-bug" value="bug"><label for="fb-bug">🐞 Bug</label>
+          <input type="radio" name="category" id="fb-praise" value="praise"><label for="fb-praise">❤️ Praise</label>
+          <input type="radio" name="category" id="fb-other" value="other"><label for="fb-other">💬 Other</label>
+        </fieldset>
+        <textarea id="fb-message" name="message" maxlength="2000" placeholder="What's on your mind?" aria-label="Your feedback" required></textarea>
+        <div class="fb-count" id="fb-count">0 / 2000</div>
+        <input type="text" id="fb-contact" name="contact" maxlength="200" placeholder="Email or name (optional, if you want a reply)" aria-label="Contact (optional)">
+        <div class="fb-hp" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div>
+        <button type="submit" class="fb-send" id="fb-send">SEND</button>
+        <div class="fb-status" id="fb-status" role="status" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -428,6 +517,7 @@
     games: { btn: document.getElementById('tab-btn-games'), panel: document.getElementById('tab-games') },
     educational: { btn: document.getElementById('tab-btn-educational'), panel: document.getElementById('tab-educational') },
     memberships: { btn: document.getElementById('tab-btn-memberships'), panel: document.getElementById('tab-memberships') },
+    feedback: { btn: document.getElementById('tab-btn-feedback'), panel: document.getElementById('tab-feedback') },
   };
   function showTab(key) {
     Object.keys(tabs).forEach(function(k) {
@@ -443,6 +533,43 @@
   });
   var initialTab = location.hash.replace('#', '');
   if (tabs[initialTab]) showTab(initialTab);
+
+  (function() {
+    var form = document.getElementById('feedback-form');
+    var msg = document.getElementById('fb-message');
+    var count = document.getElementById('fb-count');
+    var send = document.getElementById('fb-send');
+    var status = document.getElementById('fb-status');
+    function setStatus(text, cls) { status.textContent = text; status.className = 'fb-status' + (cls ? ' ' + cls : ''); }
+    msg.addEventListener('input', function() { count.textContent = msg.value.length + ' / 2000'; });
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var text = msg.value.trim();
+      if (!text) { setStatus('Please write a message first.', 'err'); msg.focus(); return; }
+      var data = new FormData(form);
+      send.disabled = true;
+      setStatus('Sending…');
+      fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          category: data.get('category'),
+          message: text,
+          contact: data.get('contact') || '',
+          website: data.get('website') || '',
+          page: location.pathname + location.hash,
+        }),
+      }).then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        form.reset();
+        count.textContent = '0 / 2000';
+        setStatus('Thanks! Your feedback was sent. 🐾', 'ok');
+      }).catch(function() {
+        setStatus('Sorry, that didn\'t send. Please try again.', 'err');
+      }).finally(function() { send.disabled = false; });
+    });
+  })();
 </script>
 </body>
 </html>
