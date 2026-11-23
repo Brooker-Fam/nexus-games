@@ -637,6 +637,10 @@
     border: 1px solid var(--panel-border); border-radius: 999px;
   }
   .kitty-auth button { cursor: pointer; }
+  .kitty-auth select.kitty-role {
+    font: inherit; font-family: 'Orbitron', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
+    padding: 6px 8px; border-radius: 20px; border: 2px solid var(--neon-purple); background: #fff; color: var(--ink); cursor: pointer;
+  }
   .kitty-auth .kitty-manage { text-decoration: none; color: #fff; background: var(--neon-purple); border-color: var(--neon-purple); }
   .kitty-auth button:hover { color: var(--neon-purple); border-color: var(--neon-purple); }
   .kitty-auth .kitty-manage:hover { background: var(--neon-coral); border-color: var(--neon-coral); }
@@ -978,6 +982,9 @@
     var saved = store('localStorage', ROLE_KEY);
     if (saved && document.getElementById('role-' + saved)) document.getElementById('role-' + saved).checked = true;
     document.getElementById('login-roles').addEventListener('change', function() {
+      // Switching away from Student stops waiting for a teacher's OK, so this
+      // browser doesn't get signed in as that student behind an educator's back.
+      if (selectedRole() !== 'student' && pollTimer) { stopWaiting(); usernameInput.value = ''; }
       store('localStorage', ROLE_KEY, selectedRole());
       window.applyRoleTabs(selectedRole());
       syncButtons();
@@ -1132,14 +1139,49 @@
       if (user && !user.isAnonymous) {
         // Student accounts are always students, whatever was picked on screen.
         if (user.isStudent && role !== 'student') adoptRole(role = 'student');
+        // Only educator-added student accounts are students. Anyone else who
+        // signed in (Google, email, passkey) picks Educator or Just Me.
+        if (!user.isStudent && role === 'student') {
+          store('localStorage', ROLE_KEY, null);
+          var studentInput = document.getElementById('role-student');
+          if (studentInput) studentInput.checked = false;
+          window.applyRoleTabs(role = null);
+          syncButtons();
+        }
         closeLogin();
         var who = document.createElement('span');
         who.className = 'kitty-who';
-        who.textContent = (ROLE_LABELS[role] ? ROLE_LABELS[role] + ' · ' : '') + (user.username || user.name || user.email || 'Player');
+        var label = user.isStudent ? ROLE_LABELS.student + ' · ' : '';
+        who.textContent = label + (user.username || user.name || user.email || 'Player');
         var out = document.createElement('button');
         out.textContent = 'SIGN OUT';
         out.addEventListener('click', function() { auth.signOut(); });
         chip.appendChild(who);
+        if (!user.isStudent) {
+          var pick = document.createElement('select');
+          pick.className = 'kitty-role';
+          pick.setAttribute('aria-label', 'Your role');
+          var opts = [['educator', ROLE_LABELS.educator], ['player', '🐾 Just Me']];
+          if (role !== 'educator' && role !== 'player') opts.unshift(['', 'CHOOSE ROLE…']);
+          opts.forEach(function(o) {
+            var el = document.createElement('option');
+            el.value = o[0];
+            el.textContent = o[1];
+            if (!o[0]) el.disabled = true;
+            pick.appendChild(el);
+          });
+          pick.value = role === 'educator' || role === 'player' ? role : '';
+          pick.addEventListener('change', function() {
+            var next = pick.value;
+            pick.disabled = true;
+            adoptRole(next);
+            auth.setRole(next).then(function(r) {
+              if (r.role) adoptRole(r.role);
+            }).catch(function(err) { console.warn('could not save role', err); })
+              .then(function() { render(auth.user()); });
+          });
+          chip.appendChild(pick);
+        }
         if (role === 'educator') {
           var manage = document.createElement('a');
           manage.className = 'kitty-manage';

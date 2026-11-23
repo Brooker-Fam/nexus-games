@@ -1,7 +1,7 @@
 import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
 import { getSql } from "../lib/db.js";
-import { canChangeRole, isValidRole } from "../lib/roles.js";
+import { canChangeRole, effectiveRole, isValidRole } from "../lib/roles.js";
 
 async function readJsonBody(req) {
   if (req.body && typeof req.body === "object") return req.body;
@@ -34,8 +34,14 @@ export default async function handler(req, res) {
       return;
     }
     const sql = getSql();
-    const rows = await sql`SELECT role FROM "user" WHERE id = ${user.id}`;
-    const current = rows[0]?.role ?? null;
+    const rows = await sql`
+      SELECT u.role, (s."userId" IS NOT NULL) AS "isStudentAccount"
+      FROM "user" u LEFT JOIN student s ON s."userId" = u.id
+      WHERE u.id = ${user.id}
+    `;
+    const isAnonymous = !!user.isAnonymous;
+    const isStudentAccount = !!rows[0]?.isStudentAccount;
+    const current = effectiveRole({ stored: rows[0]?.role ?? null, isAnonymous, isStudentAccount });
 
     if (req.method === "GET") {
       res.status(200).json({ role: current });
@@ -52,11 +58,11 @@ export default async function handler(req, res) {
       res.status(400).json({ error: "invalid_role" });
       return;
     }
-    if (!canChangeRole({ current, next, isAnonymous: !!user.isAnonymous })) {
+    if (!canChangeRole({ next, isAnonymous, isStudentAccount })) {
       res.status(403).json({ error: "role_locked", role: current });
       return;
     }
-    if (next !== current) {
+    if (next !== rows[0]?.role) {
       await sql`UPDATE "user" SET role = ${next}, "updatedAt" = NOW() WHERE id = ${user.id}`;
     }
     res.status(200).json({ role: next });

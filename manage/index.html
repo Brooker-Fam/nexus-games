@@ -82,7 +82,8 @@
       if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
       if (!user || user.isAnonymous) return gate('Please sign in as an educator to manage your students.');
       if (user.isStudent) return gate('Student accounts can\'t manage students.');
-      if (role !== 'educator') return gate('This page is for educators. Sign in as an Educator to use it.');
+      if (user.role) role = user.role;
+      if (role !== 'educator') return gate('This page is for educators. Pick 🍎 Educator from the role menu at the top of the Kitty Games home page.');
       content.className = '';
       content.innerHTML =
         '<h1>🍎 Educator Dashboard</h1>' +

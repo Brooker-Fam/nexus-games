@@ -32,10 +32,15 @@ export default async function middleware(request) {
   try {
     const sql = neon(process.env.DATABASE_URL);
     const rows = await sql`
-      SELECT u.role FROM session s JOIN "user" u ON u.id = s."userId"
+      SELECT u.role, u."isAnonymous", (st."userId" IS NOT NULL) AS "isStudentAccount"
+      FROM session s JOIN "user" u ON u.id = s."userId"
+      LEFT JOIN student st ON st."userId" = u.id
       WHERE s.token = ${token} AND s."expiresAt" > NOW()
     `;
-    if (rows[0]?.role === "student") {
+    const row = rows[0];
+    // Only guests who picked Student and real student accounts are students;
+    // an educator's account is never redirected here.
+    if (row && (row.isStudentAccount || (row.role === "student" && row.isAnonymous))) {
       return Response.redirect(new URL("/#educational", request.url), 302);
     }
   } catch (err) {

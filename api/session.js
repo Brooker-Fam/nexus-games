@@ -1,6 +1,7 @@
 import { auth } from "../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
 import { getSql } from "../lib/db.js";
+import { effectiveRole } from "../lib/roles.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -38,8 +39,8 @@ export default async function handler(req, res) {
           FROM "user" u LEFT JOIN student s ON s."userId" = u.id
           WHERE u.id = ${user.id}
         `;
-        role = rows[0]?.role ?? null;
         if (rows[0]?.username) student = { username: rows[0].username };
+        role = effectiveRole({ stored: rows[0]?.role ?? null, isAnonymous: !!user.isAnonymous, isStudentAccount: !!student });
       } catch (err) {
         console.error("session role lookup failed:", err);
       }
