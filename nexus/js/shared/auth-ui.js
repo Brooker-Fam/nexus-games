@@ -1,5 +1,4 @@
 // Renders a small SIGN IN / avatar chip into #auth-slot in the header.
-// Also manages the full-screen login overlay shown on first load.
 
 (function(){
   function el(tag, props, ...kids){
@@ -10,70 +9,6 @@
       n.appendChild(typeof k === 'string' ? document.createTextNode(k) : k);
     }
     return n;
-  }
-
-  // ── Login overlay ──
-
-  function dismissLoginScreen(){
-    const screen = document.getElementById('login-screen');
-    if (!screen) return;
-    screen.classList.add('hidden');
-    screen.addEventListener('transitionend', () => screen.remove(), { once: true });
-  }
-
-  function setLoginMsg(text, isError){
-    const msg = document.getElementById('login-msg');
-    if (!msg) return;
-    msg.textContent = text;
-    msg.className = 'login-msg' + (isError ? ' error' : '');
-  }
-
-  function initLoginScreen(){
-    const screen = document.getElementById('login-screen');
-    if (!screen) return;
-
-    // Show passkey button only if supported
-    const passkeyBtn = document.getElementById('login-btn-passkey');
-    if (passkeyBtn && window.NexusAuth.passkeysSupported()) {
-      passkeyBtn.style.display = '';
-    }
-
-    document.getElementById('login-btn-google').addEventListener('click', async () => {
-      setLoginMsg('Redirecting to Google…', false);
-      try {
-        await window.NexusAuth.signInWithGoogle();
-      } catch (err) {
-        console.error('google sign-in failed', err);
-        setLoginMsg('Could not sign in with Google. Try email or passkey instead.', true);
-      }
-    });
-
-    document.getElementById('login-btn-mail').addEventListener('click', async () => {
-      const email = prompt('Enter your email for a sign-in link:');
-      if (!email) return;
-      setLoginMsg('Sending link…', false);
-      try {
-        await window.NexusAuth.signInWithMagicLink(email.trim());
-        setLoginMsg('Check your email for a sign-in link.', false);
-      } catch (err) {
-        console.error('magic link failed', err);
-        setLoginMsg('Could not send link: ' + (err?.message || 'unknown error'), true);
-      }
-    });
-
-    if (passkeyBtn) {
-      passkeyBtn.addEventListener('click', async () => {
-        setLoginMsg('Authenticating…', false);
-        try {
-          await window.NexusAuth.signInWithPasskey();
-        } catch (err) {
-          console.error('passkey sign-in failed', err);
-          setLoginMsg('Passkey failed. Try Google or email instead.', true);
-        }
-      });
-    }
-
-    document.getElementById('btn-skip-login').addEventListener('click', dismissLoginScreen);
   }
 
   // ── Header auth chip ──
@@ -120,9 +55,6 @@
       return;
     }
 
-    // User is logged in — dismiss login screen if still visible
-    dismissLoginScreen();
-
     const wrap = el('div', { className: 'auth-chip' });
     if (user.image) {
       const img = el('img', { src: user.image, alt: '', className: 'auth-avatar' });
@@ -154,7 +86,6 @@
 
   function init(){
     if (!window.NexusAuth) return;
-    initLoginScreen();
     window.NexusAuth.onChange(render);
   }
 
