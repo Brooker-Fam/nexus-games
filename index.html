@@ -969,6 +969,24 @@
     var studentGo = document.getElementById('login-student-go');
     var studentCancel = document.getElementById('login-student-cancel');
     var STUDENT_TOKEN_KEY = 'kittygames.studentLoginToken';
+    // The role picked on this screen when a sign-in starts. It wins over the
+    // role saved on the account, so an educator can sign in as "Just Me".
+    // Kept in localStorage because a magic link can open in another tab.
+    var PICKED_KEY = 'kittygames.signInRole';
+    var PICKED_TTL_MS = 30 * 60 * 1000;
+    function rememberPickedRole() {
+      var role = selectedRole();
+      if (role === 'educator' || role === 'player') store('localStorage', PICKED_KEY, JSON.stringify({ role: role, at: Date.now() }));
+    }
+    function takePickedRole() {
+      var raw = store('localStorage', PICKED_KEY);
+      if (!raw) return null;
+      store('localStorage', PICKED_KEY, null);
+      try {
+        var p = JSON.parse(raw);
+        return p && Date.now() - p.at < PICKED_TTL_MS ? p.role : null;
+      } catch (e) { return null; }
+    }
     var pollTimer = null;
     function syncButtons() {
       var role = selectedRole();
@@ -1026,6 +1044,7 @@
 
     document.getElementById('login-btn-google').addEventListener('click', function() {
       setMsg('Redirecting to Google…');
+      rememberPickedRole();
       auth.signInWithGoogle().catch(function(err) {
         console.error('google sign-in failed', err);
         setMsg('Could not sign in with Google. Try email or passkey instead.', true);
@@ -1040,6 +1059,7 @@
       var email = emailInput.value.trim();
       if (!email || !emailInput.checkValidity()) { setMsg('Please enter a valid email.', true); return; }
       setMsg('Sending link…');
+      rememberPickedRole();
       auth.signInWithMagicLink(email).then(function() {
         setMsg('Check your email for a sign-in link. 🐾');
       }).catch(function(err) {
@@ -1049,6 +1069,7 @@
     });
     document.getElementById('login-btn-passkey').addEventListener('click', function() {
       setMsg('Authenticating…');
+      rememberPickedRole();
       auth.signInWithPasskey().catch(function(err) {
         console.error('passkey sign-in failed', err);
         setMsg('Passkey failed. Try Google or email instead.', true);
@@ -1133,6 +1154,16 @@
     function render(user) {
       if (requestTimer) { clearInterval(requestTimer); requestTimer = null; }
       chip.innerHTML = '';
+      // Just signed in: use the role picked on the sign-in screen.
+      if (user && !user.isAnonymous && !user.isStudent) {
+        var picked = takePickedRole();
+        if (picked && picked !== user.role) {
+          user.role = picked;
+          auth.setRole(picked).then(function(r) {
+            if (r.role && r.role !== picked) render(auth.user());
+          }).catch(function(err) { console.warn('could not save role', err); });
+        }
+      }
       if (user && user.role) adoptRole(user.role);
       else if (user) saveRoleToAccount(store('localStorage', ROLE_KEY));
       var role = store('localStorage', ROLE_KEY);
