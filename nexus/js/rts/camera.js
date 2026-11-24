@@ -92,6 +92,11 @@ function setupCameraControls(){
       e.preventDefault();
       return;
     }
+    if((e.key==='m'||e.key==='M') && !e.ctrlKey && !e.metaKey && !e.altKey && !(e.target && e.target.closest && e.target.closest('input,textarea,[contenteditable]'))){
+      rtsToggleMoveMode();
+      e.preventDefault();
+      return;
+    }
     keysHeld[e.key] = true;
     // prevent page scroll with arrow keys when game is open
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
