@@ -180,3 +180,50 @@ test("tests and quizzes need valid multiple-choice questions", async () => {
   const r = await call("/classwork/list", { method: "GET" });
   assert.equal(r.status, 401);
 });
+
+test("educators grade and comment on assignments; students see it", async () => {
+  const { call, signUp, addStudent } = await setup();
+  const teacher = await signUp("teacher@example.com");
+  const other = await signUp("other@example.com");
+  const alex = await addStudent(teacher, "alex.k");
+
+  let r = await call("/classwork/create", { cookie: teacher, body: { kind: "assignment", title: "Draw a cell" } });
+  const id = r.json.item.id;
+  r = await call("/classwork/submit", { cookie: alex, body: { itemId: id, response: "My drawing" } });
+  const subId = r.json.submission.id;
+  assert.equal(r.json.submission.grade, null);
+
+  // Only the educator who set the work can grade it.
+  r = await call("/classwork/grade", { cookie: other, body: { submissionId: subId, grade: "A" } });
+  assert.equal(r.status, 404);
+  r = await call("/classwork/grade", { cookie: alex, body: { submissionId: subId, grade: "A" } });
+  assert.equal(r.status, 403);
+  r = await call("/classwork/grade", { cookie: teacher, body: { submissionId: subId, grade: "x".repeat(21) } });
+  assert.equal(r.status, 400);
+
+  r = await call("/classwork/grade", { cookie: teacher, body: { submissionId: subId, grade: " 9/10 ", comment: "Great labels!" } });
+  assert.equal(r.status, 200, JSON.stringify(r.json));
+  assert.equal(r.json.submission.grade, "9/10");
+  assert.equal(r.json.submission.comment, "Great labels!");
+
+  r = await call("/classwork/list", { method: "GET", cookie: alex });
+  assert.equal(r.json.items[0].submission.grade, "9/10");
+  assert.equal(r.json.items[0].submission.comment, "Great labels!");
+
+  r = await call("/classwork/list", { method: "GET", cookie: teacher });
+  assert.equal(r.json.items[0].graded, 1);
+  r = await call("/classwork/submissions", { cookie: teacher, body: { itemId: id } });
+  assert.equal(r.json.students[0].submission.comment, "Great labels!");
+
+  // Grades can be changed, or cleared.
+  r = await call("/classwork/grade", { cookie: teacher, body: { submissionId: subId, grade: "", comment: "" } });
+  assert.equal(r.json.submission.grade, null);
+  r = await call("/classwork/list", { method: "GET", cookie: teacher });
+  assert.equal(r.json.items[0].graded, 0);
+
+  // Quizzes are scored automatically, not graded by hand.
+  r = await call("/classwork/create", { cookie: teacher, body: QUIZ });
+  r = await call("/classwork/submit", { cookie: alex, body: { itemId: r.json.item.id, answers: [0, 1] } });
+  r = await call("/classwork/grade", { cookie: teacher, body: { submissionId: r.json.submission.id, grade: "A" } });
+  assert.equal(r.status, 400);
+});
