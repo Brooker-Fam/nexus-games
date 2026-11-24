@@ -644,6 +644,8 @@
   .kitty-auth .kitty-manage { text-decoration: none; color: #fff; background: var(--neon-purple); border-color: var(--neon-purple); }
   .kitty-auth button:hover { color: var(--neon-purple); border-color: var(--neon-purple); }
   .kitty-auth .kitty-manage:hover { background: var(--neon-coral); border-color: var(--neon-coral); }
+  .kitty-auth button.kitty-work { color: #fff; background: var(--neon-purple); border-color: var(--neon-purple); }
+  .kitty-auth button.kitty-work:hover { color: #fff; background: var(--neon-coral); border-color: var(--neon-coral); }
   @media (max-width: 480px) { .kitty-auth { top: 10px; right: 10px; } .kitty-auth .kitty-who { display: none; } }
 </style>
 </head>
@@ -1188,6 +1190,14 @@
         out.textContent = 'SIGN OUT';
         out.addEventListener('click', function() { auth.signOut(); });
         chip.appendChild(who);
+        if (user.isStudent) {
+          // Students: jump straight to their classwork.
+          var work = document.createElement('button');
+          work.className = 'kitty-work';
+          work.textContent = 'WORK';
+          work.addEventListener('click', function() { tabs.assignments.btn.click(); });
+          chip.appendChild(work);
+        }
         if (!user.isStudent) {
           var pick = document.createElement('select');
           pick.className = 'kitty-role';
