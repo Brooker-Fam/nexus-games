@@ -499,6 +499,13 @@ function rtsHandleClick(e){
     rtsUpdateViewportCursor();
     return;
   }
+  if(S.moveMode){
+    // Move mode: a left-click acts exactly like a right-click.
+    S.moveMode=false;
+    rtsHandleRightClick(e);
+    rtsUpdateViewportCursor();
+    return;
+  }
   if(S.attackMoveMode){
     const selectedWarriorIds=S.selected.filter(s=>s.side===mySide()&&s.type==='warrior').map(s=>s.id);
     if(selectedWarriorIds.length>0){
@@ -670,8 +677,24 @@ function rtsHandleClick(e){
   }
 }
 
+// MOVE button: arms move mode — the cursor turns green and the next left-click
+// on the map is treated as a right-click (move / attack / gather / build).
+function rtsToggleMoveMode(){
+  if(S.gameOver) return;
+  if(S.moveMode){ S.moveMode=false; rtsUpdateViewportCursor(); return; }
+  if(!S.selected.some(u=>u.side===mySide())){
+    rtsSetLog('Select units first, then press MOVE.');
+    return;
+  }
+  S.attackMoveMode=false;
+  S.moveMode=true;
+  rtsUpdateViewportCursor();
+  rtsSetLog('Move armed — click a destination or target.');
+}
+
 function rtsHandleRightClick(e){
   e.preventDefault();
+  S.moveMode=false;
   if(S.gameOver) return;
   const sp=canvasPos(e);
   const wp=screenToWorld(sp.x,sp.y);

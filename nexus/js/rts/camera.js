@@ -32,7 +32,7 @@ const S = {
   particles: [], goldNodes: [], projectiles: [],
   map: null, mapDecor: [], mapSeed: 1,
   // selection / UI
-  selected: [], buildPopupOpen: false, buildStructureMode: false, buildingSource: null, attackMoveMode: false,
+  selected: [], buildPopupOpen: false, buildStructureMode: false, buildingSource: null, attackMoveMode: false, moveMode: false,
   deployDarkShipMode: false,
   // AI
   aiTimer: 0,
@@ -48,7 +48,7 @@ function resetRtsState(){
   S.entities=[]; S.playerBase=null; S.enemyBase=null;
   S.particles=[]; S.goldNodes=[]; S.projectiles=[];
   S.map=null; S.mapDecor=[];
-  S.selected=[]; S.buildPopupOpen=false; S.buildStructureMode=false; S.buildingSource=null; S.attackMoveMode=false; S.deployDarkShipMode=false;
+  S.selected=[]; S.buildPopupOpen=false; S.buildStructureMode=false; S.buildingSource=null; S.attackMoveMode=false; S.moveMode=false; S.deployDarkShipMode=false;
   S.aiTimer=0;
   S.stats={ kills:0, deaths:0, goldEarned:0, oilEarned:0, unitsBuilt:0 };
   S.camX=0; S.camY=RH/2-VH/2; S.camZoom=1; S.mouseWorld=null;
@@ -86,6 +86,7 @@ function setupCameraControls(){
     if(!game || game.style.display==='none') return;
     if((e.key==='a'||e.key==='A') && S.selected.some(u=>u.side===mySide()&&u.type==='warrior')){
       S.attackMoveMode = true;
+      S.moveMode = false;
       rtsUpdateViewportCursor();
       rtsSetLog('Attack-move armed — click a destination.');
       e.preventDefault();
@@ -188,7 +189,10 @@ function rtsUpdateViewportCursor(){
   const wrap=document.getElementById('rts-viewport-wrap');
   if(!wrap) return;
   wrap.classList.toggle('rts-attack-move-armed', S.attackMoveMode);
-  if(!S.attackMoveMode){
+  wrap.classList.toggle('rts-move-armed', !!S.moveMode && !S.attackMoveMode);
+  const moveBtn=document.getElementById('btn-move-mode');
+  if(moveBtn) moveBtn.classList.toggle('active', !!S.moveMode);
+  if(!S.attackMoveMode && !S.moveMode){
     wrap.style.cursor=S.buildStructureMode||S.deployDarkShipMode||dragSelActive?'crosshair':'default';
   } else {
     wrap.style.cursor='';
