@@ -619,7 +619,7 @@
     color: var(--ink); background: linear-gradient(90deg, #e6b800, var(--neon-coral));
     border: none; border-radius: 999px; cursor: pointer;
   }
-  .login-btns.student-mode .login-action-btn:not(#login-student-cancel), .login-btns.student-mode #login-email-row { display: none !important; }
+  .login-btns.student-mode .login-action-btn:not(#login-student-cancel):not(#login-btn-google), .login-btns.student-mode #login-email-row { display: none !important; }
   .login-btns.student-mode #login-student-row { display: flex; }
   .login-email-row button:disabled { opacity: 0.5; cursor: wait; }
   .login-msg { min-height: 1.3em; text-align: center; font-weight: 700; font-size: 0.9rem; color: #1f9d55; }
@@ -1003,11 +1003,12 @@
       } catch (e) { return null; }
     }
     var pollTimer = null;
+    var STUDENT_HINT = 'Sign in with the Google account your teacher added, or type the username they gave you.';
     function syncButtons() {
       var role = selectedRole();
       actionBtns.forEach(function(b) { b.disabled = !role; });
       loginBtns.classList.toggle('student-mode', role === 'student');
-      if (role === 'student' && !pollTimer) setMsg('Type the username your teacher gave you.');
+      if (role === 'student' && !pollTimer) setMsg(STUDENT_HINT);
       else if (role && !pollTimer) setMsg('');
     }
 
@@ -1079,7 +1080,8 @@
         setMsg('Check your email for a sign-in link. 🐾');
       }).catch(function(err) {
         console.error('magic link failed', err);
-        setMsg('Could not send link. Please try again.', true);
+        if (String(err && err.message).indexOf('use_google') >= 0) setMsg('This is a student account. Use SIGN IN WITH GOOGLE.', true);
+        else setMsg('Could not send link. Please try again.', true);
       });
     });
     document.getElementById('login-btn-passkey').addEventListener('click', function() {
@@ -1122,6 +1124,7 @@
       e.preventDefault();
       var username = usernameInput.value.trim().toLowerCase();
       if (!username) { setMsg('Type your username first.', true); return; }
+      if (username.indexOf('@') > 0) { setMsg('Your teacher added your Google account. Use SIGN IN WITH GOOGLE above.', true); return; }
       studentGo.disabled = true;
       setMsg('Asking your teacher…');
       auth.requestStudentLogin(username).then(function(r) {
@@ -1129,6 +1132,7 @@
       }).catch(function(err) {
         studentGo.disabled = false;
         if (err.code === 'unknown_username') setMsg('We couldn\'t find that username. Check the spelling or ask your teacher.', true);
+        else if (err.code === 'use_google') setMsg('Your teacher added your Google account. Use SIGN IN WITH GOOGLE above.', true);
         else if (err.code === 'too_many_requests') setMsg('You already asked a few times. Wait for your teacher to answer.', true);
         else setMsg('Something went wrong. Please try again.', true);
       });
@@ -1136,7 +1140,7 @@
     studentCancel.addEventListener('click', function() {
       stopWaiting();
       usernameInput.value = '';
-      setMsg('Type the username your teacher gave you.');
+      setMsg(STUDENT_HINT);
     });
     var pendingLogin = (store('sessionStorage', STUDENT_TOKEN_KEY) || '').split(' ');
     if (pendingLogin.length === 2 && pendingLogin[0]) {

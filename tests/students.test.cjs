@@ -157,3 +157,87 @@ test("a guest browser can sign in as an approved student", async () => {
   assert.equal(s.json.user.name, "kid2");
   assert.equal(db.user.filter((u) => u.isAnonymous).length, 0);
 });
+
+test("students added by Google email can only sign in with Google", async () => {
+  const { betterAuth } = await import("better-auth");
+  const { memoryAdapter } = await import("better-auth/adapters/memory");
+  const { magicLink } = await import("better-auth/plugins");
+  const { passkey } = await import("@better-auth/passkey");
+  const { students } = await import("../lib/students.js");
+  const db = { user: [], session: [], account: [], verification: [], student: [], studentLoginRequest: [], passkey: [] };
+  const links = [];
+  // Fake Google: the ID token is just the email address, always verified.
+  const auth = betterAuth({
+    baseURL: BASE,
+    secret: "test-secret-test-secret-test-secret-123",
+    database: memoryAdapter(db),
+    emailAndPassword: { enabled: true },
+    rateLimit: { enabled: false },
+    socialProviders: {
+      google: {
+        clientId: "x", clientSecret: "y",
+        verifyIdToken: async () => true,
+        getUserInfo: async ({ idToken }) => ({
+          user: { id: "g-" + idToken, email: idToken, name: "Kid", emailVerified: true },
+          data: {},
+        }),
+      },
+    },
+    plugins: [students(), passkey({ rpID: "localhost", rpName: "t", origin: BASE }), magicLink({ sendMagicLink: async ({ email, url }) => { links.push({ email, url }); } })],
+  });
+  async function call(path, { method = "POST", body, cookie } = {}) {
+    const headers = { origin: BASE };
+    if (body !== undefined) headers["content-type"] = "application/json";
+    if (cookie) headers.cookie = cookie;
+    const res = await auth.handler(new Request(BASE + "/api/auth" + path, {
+      method, headers, body: body === undefined ? undefined : JSON.stringify(body), redirect: "manual",
+    }));
+    const setCookie = res.headers.getSetCookie().map((c) => c.split(";")[0]).join("; ");
+    let json = null;
+    try { json = await res.json(); } catch {}
+    return { status: res.status, json, cookie: setCookie, location: res.headers.get("location") };
+  }
+  const google = (email) => call("/sign-in/social", { body: { provider: "google", idToken: { token: email } } });
+
+  const teacher = (await call("/sign-up/email", { body: { email: "t@example.com", password: "password1234", name: "T" } })).cookie;
+  await call("/sign-up/email", { body: { email: "grownup@example.com", password: "password1234", name: "G" } });
+
+  let r = await call("/students/add", { cookie: teacher, body: { usernames: ["Kid@Gmail.com", "grownup@example.com", "bad@x", "kid3"] } });
+  assert.deepEqual(r.json.added.map((s) => [s.username, s.loginMethod]), [["kid@gmail.com", "google"], ["kid3", "username"]]);
+  // Someone's existing account is never turned into a student account.
+  assert.deepEqual(r.json.errors, [
+    { username: "grownup@example.com", reason: "has_account" },
+    { username: "bad@x", reason: "invalid" },
+  ]);
+  const kidId = r.json.added[0].id;
+
+  // Signing in with Google claims the student account.
+  r = await google("kid@gmail.com");
+  assert.equal(r.status, 200, JSON.stringify(r.json));
+  const kid = r.cookie;
+  r = await call("/get-session", { method: "GET", cookie: kid });
+  assert.equal(r.json.user.id, kidId);
+
+  // No email sign-in link for that address.
+  r = await call("/sign-in/magic-link", { body: { email: "KID@gmail.com", callbackURL: "/" } });
+  assert.equal(r.status, 403);
+  assert.equal(links.length, 0);
+  // Other people's magic links still work.
+  r = await call("/sign-in/magic-link", { body: { email: "someone@example.com", callbackURL: "/" } });
+  assert.equal(r.status, 200);
+  assert.equal(links.length, 1);
+
+  // A magic link that was already sent before the address became a student
+  // can't be used to get in either.
+  await call("/sign-in/magic-link", { body: { email: "late@gmail.com", callbackURL: "/" } });
+  await call("/students/add", { cookie: teacher, body: { usernames: ["late@gmail.com"] } });
+  const lateLink = new URL(links.at(-1).url);
+  r = await call("/magic-link/verify" + lateLink.search, { method: "GET" });
+  assert.equal(r.cookie.includes("session_token"), false);
+
+  // No username sign-in, and no passkeys.
+  r = await call("/student-login/request", { body: { username: "kid@gmail.com" } });
+  assert.notEqual(r.status, 200);
+  r = await call("/passkey/generate-register-options", { method: "GET", cookie: kid });
+  assert.equal(r.status, 403);
+});

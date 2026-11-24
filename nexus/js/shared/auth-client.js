@@ -125,7 +125,7 @@
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
       const err = new Error(body?.code || `student login request failed (${res.status})`);
-      err.code = res.status === 404 ? 'unknown_username' : res.status === 429 ? 'too_many_requests' : 'failed';
+      err.code = res.status === 404 ? 'unknown_username' : res.status === 429 ? 'too_many_requests' : body?.code === 'use_google' ? 'use_google' : 'failed';
       throw err;
     }
     return body;

@@ -95,10 +95,11 @@
         '</section>' +
         '<section class="panel">' +
           '<h2>👩‍🎓 Students</h2>' +
-          '<p>Type usernames to add students. Separate several with commas, spaces or new lines. ' +
-            'Students sign in by typing their username, and you approve each sign-in here.</p>' +
+          '<p>Type a student\'s Google email address or a username. Separate several with commas, spaces or new lines.</p>' +
+          '<p>Students added by Google email sign in with Google, and that Google account can only sign in with Google. ' +
+            'Students added by username sign in by typing it, and you approve each sign-in here.</p>' +
           '<form class="add-form" id="add-form">' +
-            '<textarea id="add-names" placeholder="e.g. alex.k, sam_1, jordan" aria-label="Student usernames" autocapitalize="none" spellcheck="false"></textarea>' +
+            '<textarea id="add-names" placeholder="e.g. alex@school.org, sam_1, jordan" aria-label="Student Google emails or usernames" autocapitalize="none" spellcheck="false"></textarea>' +
             '<button class="btn primary" type="submit" id="add-btn">ADD STUDENTS</button>' +
             '<div class="status" id="add-status" role="status" aria-live="polite"></div>' +
           '</form>' +
@@ -113,7 +114,8 @@
     }
 
     var REASONS = {
-      invalid: 'must be 3–24 letters, numbers, dots, dashes or underscores',
+      invalid: 'is not a valid email address or username (3–24 letters, numbers, dots, dashes or underscores)',
+      has_account: 'already has a Kitty Games account, so it can\'t be added as a student',
       taken: 'is already used by someone else, try another',
       already_yours: 'is already one of your students',
     };
@@ -149,7 +151,7 @@
       if (!students.length) { list.appendChild(el('li', 'No students yet. Add some above.', 'empty')); return; }
       students.forEach(function(st) {
         var li = el('li');
-        li.appendChild(el('span', '🎒 ' + st.username));
+        li.appendChild(el('span', '🎒 ' + st.username + (st.loginMethod === 'google' ? ' · Google sign-in' : '')));
         var rm = el('button', 'REMOVE', 'btn small');
         rm.addEventListener('click', function() {
           if (!confirm('Remove ' + st.username + '? Their account and game progress will be deleted.')) return;
@@ -201,7 +203,7 @@
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         var names = input.value.split(/[\s,;]+/).map(function(n) { return n.trim(); }).filter(Boolean);
-        if (!names.length) { status.className = 'status err'; status.textContent = 'Type at least one username.'; return; }
+        if (!names.length) { status.className = 'status err'; status.textContent = 'Type at least one email address or username.'; return; }
         btn.disabled = true;
         status.className = 'status'; status.textContent = 'Adding…';
         api('/students/add', { usernames: names }).then(function(r) {
