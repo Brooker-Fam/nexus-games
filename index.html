@@ -415,7 +415,7 @@
     overflow: hidden auto;
   }
   /* logo sits in the page flow (top-left) so it can never cover the tabs or tagline */
-  .site-logo-wrap { position: static; flex: none; align-self: flex-start; }
+  .site-logo-wrap { position: static; flex: none; }
   .shell { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; padding-top: 8px; }
   .shell > * { flex: none; }
   header { margin-bottom: 18px; }
@@ -659,7 +659,14 @@
   .kitty-auth .kitty-manage:hover { background: var(--neon-coral); border-color: var(--neon-coral); }
   .kitty-auth button.kitty-work { color: #fff; background: var(--neon-purple); border-color: var(--neon-purple); }
   .kitty-auth button.kitty-work:hover { color: #fff; background: var(--neon-coral); border-color: var(--neon-coral); }
-  @media (max-width: 480px) { .kitty-auth { top: 10px; right: 10px; } .kitty-auth .kitty-who { display: none; } }
+  @media (max-width: 480px) { .kitty-auth .kitty-who { display: none; } }
+  /* logo (left) and sign-in chip (right) share one row, so they can never overlap;
+     on narrow screens the chip drops below the logo instead */
+  .topbar {
+    flex: none; display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px 12px; width: 100%;
+  }
+  .topbar .kitty-auth { position: static; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
 </style>
 </head>
 <body>
@@ -700,10 +707,12 @@
     <button class="login-skip-btn" id="btn-skip-login">SKIP — PLAY AS GUEST</button>
   </div>
 </div>
-<div class="kitty-auth" id="kitty-auth"></div>
-<div class="site-logo-wrap">
-  <img class="site-logo" src="/assets/kitty-games-logo.webp" alt="Kitty Games logo">
-  <span class="site-logo-name">Kitty Games</span>
+<div class="topbar">
+  <div class="site-logo-wrap">
+    <img class="site-logo" src="/assets/kitty-games-logo.webp" alt="Kitty Games logo">
+    <span class="site-logo-name">Kitty Games</span>
+  </div>
+  <div class="kitty-auth" id="kitty-auth"></div>
 </div>
 <div class="shell">
   <header>
